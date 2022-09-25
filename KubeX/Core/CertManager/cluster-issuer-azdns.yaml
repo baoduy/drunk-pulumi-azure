@@ -1,0 +1,51 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-azdns
+  namespace: ''
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ''
+    privateKeySecretRef:
+      name: letsencrypt-prod-azdns
+    solvers:
+      - dns01:
+          azuredns:
+            clientID: ''
+            clientSecretSecretRef:
+              name: cert-manager-identity
+              key: clientSecret
+            # Azure subscription Id
+            subscriptionID: ''
+            # Azure AD tenant Id
+            tenantID: ''
+            # ResourceGroup name where dns zone is provisioned
+            resourceGroupName: ''
+            hostedZoneName: ''
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging-azdns
+  namespace: ''
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: ''
+    privateKeySecretRef:
+      name: letsencrypt-staging-azdns
+    solvers:
+      - dns01:
+          azuredns:
+            clientID: ''
+            clientSecretSecretRef:
+              name: cert-manager-identity
+              key: clientSecret
+            # Azure subscription Id
+            subscriptionID: ''
+            # Azure AD tenant Id
+            tenantID: ''
+            # ResourceGroup name where dns zone is provisioned
+            resourceGroupName: ''
+            hostedZoneName: ''

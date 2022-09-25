@@ -1,0 +1,13 @@
+import * as compute from '@pulumi/azure-native/compute';
+import * as pulumi from '@pulumi/pulumi';
+import { BasicResourceArgs } from '../types';
+
+
+export default ({ name, group }: BasicResourceArgs) => {
+ 
+
+  return new compute.SshPublicKey(name, {
+    sshPublicKeyName: name,
+    ...group,
+  });
+};
