@@ -58,7 +58,7 @@ describe('ServiceBus Creator tests', function () {
         const sn1 = await outputPromise(
           (t.subs![0].resource as any).subscriptionName
         );
-        expect(sn1).to.equal('eat-cake-sub');
+        expect(sn1).to.equal('eat-cakev1-sub');
 
         const sn2 = await outputPromise(
           (t.subs![1].resource as any).subscriptionName

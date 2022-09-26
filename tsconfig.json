@@ -12,6 +12,7 @@
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "resolveJsonModule": true
   },

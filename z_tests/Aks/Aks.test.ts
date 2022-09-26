@@ -6,6 +6,8 @@ import { outputPromise } from '../../Common/Helpers';
 
 describe('Aks Creator tests', () => {
   it('Aks Creator', async () => {
+
+
     const group = { resourceGroupName: 'RG' };
     const rs = await creator({
       name: 'cluster',

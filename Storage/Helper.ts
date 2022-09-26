@@ -2,7 +2,7 @@ import { BasicResourceArgs, KeyVaultInfo } from '../types';
 import { getResourceInfoFromId } from '../Common/ResourceEnv';
 import * as storage from '@pulumi/azure-native/storage';
 import { getSecret } from '../KeyVault/Helper';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { getConnectionName, getKeyName, getSecretName } from '../Common/Naming';
 import { globalKeyName } from '../Common/config';
 
