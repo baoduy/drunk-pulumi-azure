@@ -1,6 +1,6 @@
 import { DefaultAksArgs } from './types';
 import * as pulumi from '@pulumi/pulumi';
-import * as kx from './index';
+import * as kx from './KubX';
 import { Input } from '@pulumi/pulumi';
 
 interface Props extends DefaultAksArgs {

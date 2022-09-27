@@ -1,5 +1,5 @@
 import * as k8s from '@pulumi/kubernetes';
-import * as kx from '../index';
+import * as kx from '../KubX';
 import { NginxIngress } from '../Ingress';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getDomainFromUrl, getRootDomainFromUrl } from '../../Common/Helpers';

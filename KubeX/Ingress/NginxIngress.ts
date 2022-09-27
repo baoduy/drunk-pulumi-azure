@@ -1,5 +1,5 @@
 import * as k8s from '@pulumi/kubernetes';
-import * as kx from '../index';
+import * as kx from '../KubX';
 import { Input, Resource } from '@pulumi/pulumi';
 import { envDomain } from '../../Common/AzureEnv';
 import { organizationName } from '../../Common/config';

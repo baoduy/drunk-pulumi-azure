@@ -4,6 +4,7 @@ import { organizationName } from './config';
 import { all, output, interpolate } from '@pulumi/pulumi';
 import { KeyVaultInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
+import { ResourceInfoArg } from './ResourceEnv';
 
 const config = output(native.authorization.getClientConfig());
 
@@ -12,6 +13,7 @@ export const subscriptionId = config.subscriptionId;
 export const currentServicePrincipal = config.objectId;
 export const defaultLocation = 'SoutheastAsia';
 export const defaultScope = subscriptionId.apply((s) => `/subscriptions/${s}`);
+
 //Print and Check
 all([subscriptionId, tenantId]).apply(([s, t]) => {
   console.log(`Current Azure:`, { TenantId: t, SubscriptionId: s });
@@ -79,3 +81,16 @@ export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
 };
 
 export const envDomain = 'drunkcoding.net';
+
+export const getResourceIdFromInfo = ({
+  group,
+  name,
+  provider,
+}: ResourceInfoArg) => {
+  if (!name && !provider)
+    return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}`;
+  else if (name && provider)
+    return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
+
+  throw new Error('Resource Info is invalid.');
+};

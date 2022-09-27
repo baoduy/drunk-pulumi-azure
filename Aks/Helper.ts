@@ -1,7 +1,8 @@
-import * as containerservice from "@pulumi/azure-native/containerservice";
-import { KeyVaultInfo } from "../types";
-import { getIdentitySecrets } from "../AzAd/Helper";
-import { getAksName, getResourceGroupName } from "../Common/Naming";
+import * as containerservice from '@pulumi/azure-native/containerservice';
+import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { getIdentitySecrets } from '../AzAd/Helper';
+import { getAksName, getResourceGroupName } from '../Common/Naming';
+import { createProvider } from '../KubeX/Providers';
 
 export const getAksConfig = async ({
   name,
@@ -18,7 +19,7 @@ export const getAksConfig = async ({
     resourceGroupName: group,
   });
 
-  return Buffer.from(aks.kubeconfigs[0].value, "base64").toString("utf8");
+  return Buffer.from(aks.kubeconfigs[0].value, 'base64').toString('utf8');
 };
 
 export const getAksIdentitySecrets = async ({
@@ -31,3 +32,23 @@ export const getAksIdentitySecrets = async ({
   name = getAksName(name);
   return getIdentitySecrets({ name, vaultInfo });
 };
+
+interface AksProps {
+  aksName: string;
+  namespace?: string;
+  group: ResourceGroupInfo;
+}
+
+export const createAksProvider = async ({
+  aksName,
+  namespace,
+  group,
+}: AksProps) =>
+  createProvider({
+    name: aksName,
+    namespace,
+    kubeconfig: await getAksConfig({
+      name: aksName,
+      groupName: group.resourceGroupName,
+    }),
+  });
