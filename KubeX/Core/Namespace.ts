@@ -1,6 +1,5 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
-
 import { DefaultAksArgs } from '../types';
 
 interface Props extends Omit<DefaultAksArgs, 'namespace'> {

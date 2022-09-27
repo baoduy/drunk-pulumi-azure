@@ -1,12 +1,6 @@
-import {
-  BasicMonitorArgs,
-  ConventionProps,
-  KeyVaultInfo,
-  ResourceGroupInfo,
-} from '../types';
-import { Environments, subscriptionId } from './AzureEnv';
+import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { subscriptionId } from './AzureEnv';
 import { getResourceName } from './ResourceEnv';
-import { getCdnProfileName } from './Naming';
 import {
   globalConvention,
   defaultAlertEmails,

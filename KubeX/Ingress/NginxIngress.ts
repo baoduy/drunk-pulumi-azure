@@ -1,7 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as kx from '../KubX';
 import { Input, Resource } from '@pulumi/pulumi';
-import { envDomain } from '../../Common/AzureEnv';
 import { organizationName } from '../../Common/config';
 
 export const defaultResponseHeaders = {
@@ -11,7 +10,7 @@ export const defaultResponseHeaders = {
   'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
   'X-XSS-Protection': '1; mode=block',
   'X-Frame-Options': `SAMEORIGIN`,
-  'Content-Security-Policy': `default-src 'self' data: 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.${envDomain}`,
+  'Content-Security-Policy': `default-src 'self' data: 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self'`,
   'X-Content-Type-Options': 'nosniff',
   'Expect-Ct': 'max-age=604800,enforce',
   'Cache-Control': 'max-age=10', //10 second only
