@@ -1,4 +1,4 @@
-export { defaultResponseHeaders } from '../Ingress/NginxIngress';
+export { defaultResponseHeaders } from '../Ingress/Conts';
 
 export const defaultSecurityContext = {
   runAsUser: 1000,
