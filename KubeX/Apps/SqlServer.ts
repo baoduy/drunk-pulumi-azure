@@ -1,14 +1,14 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass, StorageClassNameTypes } from '../Storage';
-import { envDomain } from '../../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
+  host: string;
   /**The database name that will create the connection string and store in the key vault*/
   databaseNames?: string[];
   vaultInfo?: KeyVaultInfo;
@@ -17,6 +17,7 @@ interface Props extends DefaultAksArgs {
 
 export default async ({
   name,
+  host,
   namespace,
   databaseNames,
   vaultInfo,
@@ -79,7 +80,7 @@ export default async ({
 
   const rs = {
     sql,
-    host: `sql.${envDomain}`,
+    host,
     username: 'sa',
     password: password.result,
   };

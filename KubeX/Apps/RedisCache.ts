@@ -1,15 +1,15 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { envDomain } from '../../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
+  host: string;
   version?: string;
   vaultInfo?: KeyVaultInfo;
   storageClassName?: StorageClassNameTypes;
@@ -17,6 +17,7 @@ interface Props extends DefaultAksArgs {
 
 export default async ({
   name,
+  host,
   namespace,
   version = 'latest',
   vaultInfo,
@@ -72,5 +73,5 @@ export default async ({
     serviceConfig: { port },
   });
 
-  return { redis, password, host: `redis.${envDomain}` };
+  return { redis, password, host };
 };

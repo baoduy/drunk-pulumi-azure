@@ -1,7 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
 import NginxIngress, { IngressCanary, IngressClassName } from './NginxIngress';
-import { envDomain } from '../../Common/AzureEnv';
 import { getTlsName } from '../CertImports';
 import { getRootDomainFromUrl } from '../../Common/Helpers';
 
@@ -9,7 +8,7 @@ interface Props {
   name: string;
   namespace: Input<string>;
   ingressClass?: IngressClassName;
-  host?: string;
+  host: string;
 
   port?: number;
   proxyUrl: string;
@@ -31,7 +30,7 @@ export default ({
   namespace,
   host,
   certManagerIssuer = true,
-
+  cors,
   proxyUrl,
   proxyTlsSecretName,
   ingressClass,
@@ -61,8 +60,6 @@ export default ({
     { dependsOn, provider }
   );
 
-  if (!host) host = `${name}.${envDomain}`;
-
   return NginxIngress({
     name,
 
@@ -73,6 +70,7 @@ export default ({
     tlsSecretName: getTlsName(getRootDomainFromUrl(host), certManagerIssuer),
 
     responseHeaders: { 'x-backend-service-name': name },
+    cors: cors && { origins: cors },
     proxy: {
       backendProtocol: port === 80 ? 'HTTP' : 'HTTPS',
       backendUrl: proxyUrl,

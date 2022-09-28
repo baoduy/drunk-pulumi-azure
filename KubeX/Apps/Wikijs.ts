@@ -1,12 +1,12 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import Deployment from '../Deployment';
-import { envDomain } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import Identity from '../../AzAd/Identity';
 import { KeyVaultInfo } from '../../types';
 import { getGraphPermissions } from '../../AzAd/GraphDefinition';
 
-export interface WikiJsProps extends DefaultAksArgs {
+export interface WikiJsProps extends DefaultK8sArgs {
+  host: string;
   vaultInfo?: KeyVaultInfo;
   createAzureAdIdentity?: boolean;
   useVirtualHost?: boolean;
@@ -20,6 +20,7 @@ export interface WikiJsProps extends DefaultAksArgs {
 
 export default async ({
   name = 'wiki',
+  host,
   namespace,
   createAzureAdIdentity,
   useVirtualHost,
@@ -27,7 +28,6 @@ export default async ({
   postgresql,
   provider,
 }: WikiJsProps) => {
-  const hostName = `${name}.${envDomain}`;
   const graphAccess = getGraphPermissions(
     { name: 'User.Read.All', type: 'Role' },
     { name: 'User.Read', type: 'Scope' },
@@ -76,7 +76,7 @@ export default async ({
 
     ingressConfig: {
       certManagerIssuer: true,
-      hostNames: [hostName],
+      hostNames: [host],
       responseHeaders: {
         'Content-Security-Policy': `default-src 'self' *.diagrams.net *.msecnd.net *.services.visualstudio.com data: 'unsafe-inline' 'unsafe-eval'`,
         'referrer-policy': 'no-referrer',

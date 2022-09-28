@@ -1,6 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
-import { DefaultAksArgs } from '../../types';
+import { DefaultK8sArgs } from '../../types';
 import { applyDeploymentRules } from '../SecurityRules';
 
 const defaultConfigs = {
@@ -22,7 +22,7 @@ const defaultConfigs = {
     'load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},\\', //Remove single quote from annotation-value-word-blocklist to allows security content.
 };
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
   version?: string;
 
   replicaCount?: number;

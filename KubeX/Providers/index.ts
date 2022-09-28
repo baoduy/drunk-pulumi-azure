@@ -1,8 +1,8 @@
-import { DefaultAksArgs } from '../types.d';
+import { DefaultK8sArgs } from '../types.d';
 import * as k8s from '@pulumi/kubernetes';
 import { getK8sProviderName } from '../../Common/Naming';
 
-interface Props extends Omit<DefaultAksArgs, 'provider' | 'namespace'> {
+interface Props extends Omit<DefaultK8sArgs, 'provider' | 'namespace'> {
   namespace?: string;
   kubeconfig: string;
 }

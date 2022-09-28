@@ -1,14 +1,14 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomLogin, randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import * as k8s from '@pulumi/kubernetes';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { envDomain } from '../../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
+  host: string;
   version?: string;
   type?: 'mysql' | 'mariadb';
   debug?: boolean;
@@ -18,6 +18,7 @@ interface Props extends DefaultAksArgs {
 
 export default async ({
   name = 'my-sql',
+  host,
   namespace,
   version,
   type = 'mariadb',
@@ -66,7 +67,7 @@ export default async ({
 
   return {
     mysql,
-    host: `mysql.${envDomain}`,
+    host,
     internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: name,
     password,

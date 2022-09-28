@@ -1,11 +1,11 @@
-import { DefaultAksArgs } from '../../types';
+import { DefaultK8sArgs } from '../../types';
 import { KeyVaultInfo } from '../../../types';
 import Deployment, { DeploymentIngress } from '../../Deployment';
 import { defaultConfig } from '../../../Common/AppConfigs/dotnetConfig';
 import { ReverseProxy, ForwardedProxy } from './type';
 import VariableResolver from '../../VairableResolvers';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
   reverseProxy?: ReverseProxy;
   forwardedProxy?: ForwardedProxy[];
   ingressConfig?: DeploymentIngress;

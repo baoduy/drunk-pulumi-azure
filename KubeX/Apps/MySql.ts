@@ -1,15 +1,15 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { envDomain } from '../../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
+  host: string;
   version?: string;
   customPort?: number;
   useClusterIP?: boolean;
@@ -19,6 +19,7 @@ interface Props extends DefaultAksArgs {
 
 export default async ({
   name,
+  host,
   namespace,
   version = 'latest',
   customPort,
@@ -74,7 +75,7 @@ export default async ({
 
   return {
     mysql,
-    host: `mysql.${envDomain}`,
+    host,
     internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: name,
     password,

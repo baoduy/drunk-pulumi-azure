@@ -3,11 +3,10 @@ import * as kx from '../KubX';
 import { NginxIngress } from '../Ingress';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getDomainFromUrl, getRootDomainFromUrl } from '../../Common/Helpers';
-import { getTlsName } from '../CertImports';
+import { getTlsName } from '../CertHelper';
 import { IngressProps } from '../Ingress/NginxIngress';
 import * as pulumi from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/kubernetes/types';
-import { enableVirtualNode } from '../../Common/AppConfigs/aksConfig';
 import { PodAutoScale, PodAutoScaleProps } from './PodAutoscaler';
 import ConfigSecret from '../ConfigSecret';
 
@@ -72,7 +71,7 @@ const buildPod = ({
     podConfig.tolerations = virtualHostConfig.tolerations;
 
     if (!podConfig.resources) podConfig.resources = false;
-  }
+  } else if (!podConfig.nodeSelector) podConfig.nodeSelector = { app: name };
 
   const resources =
     podConfig.resources === false
@@ -242,7 +241,7 @@ export default async ({
         podConfig,
         envFrom,
         args: deploymentConfig.args,
-        useVirtualHost: enableVirtualNode && deploymentConfig.useVirtualHost,
+        useVirtualHost: deploymentConfig.useVirtualHost,
       }).asDeploymentSpec({
         replicas: deploymentConfig.replicas,
         revisionHistoryLimit: 1,
