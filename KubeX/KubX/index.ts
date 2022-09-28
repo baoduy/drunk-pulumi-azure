@@ -402,7 +402,11 @@ export class Deployment extends k8s.apps.v1.Deployment {
     return new Service(
       this.name,
       {
-        metadata: { name, namespace: this.metadata.namespace },
+        metadata: {
+          name,
+          namespace: this.metadata.namespace,
+          annotations: { 'pulumi.com/skipAwait': 'true' },
+        },
         spec: serviceSpec,
       },
       { ...this.opts, parent: this }

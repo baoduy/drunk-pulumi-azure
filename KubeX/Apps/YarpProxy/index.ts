@@ -1,7 +1,7 @@
 import { DefaultK8sArgs } from '../../types';
 import { KeyVaultInfo } from '../../../types';
 import Deployment, { DeploymentIngress } from '../../Deployment';
-import { defaultConfig } from '../../../Common/AppConfigs/dotnetConfig';
+import { defaultDotNetConfig } from '../../../Common/AppConfigs/dotnetConfig';
 import { ReverseProxy, ForwardedProxy } from './type';
 import VariableResolver from '../../VairableResolvers';
 
@@ -137,7 +137,7 @@ export default async ({
     name,
     namespace,
     configMap: {
-      ...defaultConfig,
+      ...defaultDotNetConfig,
       Logging__LogLevel__Yarp: enableDebug ? 'Debug' : 'Warning',
       FeatureManagement__EnableForwarder: reverseProxy ? 'true' : 'false',
       FeatureManagement__EnableReverseProxy: forwarderConfig ? 'true' : 'false',

@@ -1,4 +1,4 @@
-export const defaultConfig = {
+export const defaultDotNetConfig = {
   COMPlus_EnableDiagnostics: '0',
   ASPNETCORE_URLS: 'http://*:8080',
   //ASPNETCORE_ENVIRONMENT: 'Production',

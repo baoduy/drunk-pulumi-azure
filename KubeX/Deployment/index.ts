@@ -71,7 +71,8 @@ const buildPod = ({
     podConfig.tolerations = virtualHostConfig.tolerations;
 
     if (!podConfig.resources) podConfig.resources = false;
-  } else if (!podConfig.nodeSelector) podConfig.nodeSelector = { app: name };
+  }
+  //else if (!podConfig.nodeSelector) podConfig.nodeSelector = { app: name };
 
   const resources =
     podConfig.resources === false
