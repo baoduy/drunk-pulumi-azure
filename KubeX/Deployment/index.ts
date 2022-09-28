@@ -1,6 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as kx from '../KubX';
-import { NginxIngress } from '../Ingress';
+import { NginxIngress, TraefikIngress } from '../Ingress';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getDomainFromUrl, getRootDomainFromUrl } from '../../Common/Helpers';
 import { getTlsName } from '../CertHelper';
@@ -177,6 +177,7 @@ interface Props {
   }>;
 
   ingressConfig?: DeploymentIngress;
+  ingressType?: 'nginx' | 'traefik';
 
   configMap?: Input<{
     [key: string]: Input<string>;
@@ -205,6 +206,7 @@ export default async ({
   serviceConfig,
   jobConfigs,
   ingressConfig,
+  ingressType = 'nginx',
 
   enableHA,
   provider,
@@ -326,8 +328,7 @@ export default async ({
 
   //Ingress
   if (ingressConfig) {
-    //Ingress
-    NginxIngress({
+    const ingressProps = {
       ...ingressConfig,
       className: ingressConfig.className || 'nginx',
 
@@ -350,7 +351,10 @@ export default async ({
       service,
       provider,
       dependsOn,
-    });
+    };
+
+    if (ingressType === 'nginx') NginxIngress(ingressProps);
+    else TraefikIngress(ingressProps);
   }
 
   if (enableHA) {

@@ -2,6 +2,7 @@ import * as k8s from '@pulumi/kubernetes';
 import * as kx from '../KubX';
 import { Input, Resource } from '@pulumi/pulumi';
 import { organizationName } from '../../Common/config';
+import { ServicePort } from './type';
 
 export const defaultResponseHeaders = {
   server: organizationName,
@@ -18,15 +19,6 @@ export const defaultResponseHeaders = {
 
 const corsDefaultHeaders =
   'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
-
-interface ServicePort {
-  appProtocol?: Input<string>;
-  name?: Input<string>;
-  nodePort?: Input<number>;
-  port: Input<number>;
-  protocol?: Input<string>;
-  targetPort?: Input<number | string>;
-}
 
 export type IngressClassName = 'public' | 'private' | 'nginx';
 
