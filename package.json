@@ -3,7 +3,13 @@
   "version": "1.0.2",
   "scripts": {
     "preinstall": "node install-chilkat.js",
+    "new-stack": "pulumi stack init --secrets-provider=passphrase",
+    "up": "pulumi up --yes --skip-preview",
+    "reup": "pulumi up --refresh --yes --skip-preview",
+    "destroy": "pulumi destroy --yes --skip-preview",
     "update": "ncu -u && yarn install",
+    "export": "pulumi stack export --file state.json",
+    "import": "pulumi stack import --file state.json",
     "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
     "test": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
     "test-cover": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'"

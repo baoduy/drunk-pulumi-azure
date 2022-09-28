@@ -29,6 +29,7 @@ interface ServicePort {
 }
 
 export type IngressClassName = 'public' | 'private' | 'nginx';
+
 export type IngressCanary = {
   headerKey?: Input<string>;
   headerValue?: Input<string>;
