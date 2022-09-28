@@ -80,9 +80,9 @@ export default async ({
                 http01: {
                   ingress: {
                     class: http01Issuer.publicIngressClass,
-                    podTemplate: {
-                      spec: { nodeSelector: { 'kubernetes.io/os': 'linux' } },
-                    },
+                    // podTemplate: {
+                    //   spec: { nodeSelector: { 'kubernetes.io/os': 'linux' } },
+                    // },
                   },
                   selector: http01Issuer.domains
                     ? { dnsZones: http01Issuer.domains }

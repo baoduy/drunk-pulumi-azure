@@ -19,7 +19,11 @@ export default ({ namespace, useVirtualHost, ...others }: ToolPodProps) => {
   new k8s.apps.v1.Deployment(
     name,
     {
-      metadata: { name, namespace },
+      metadata: {
+        name,
+        namespace,
+        annotations: { 'pulumi.com/skipAwait': 'true' },
+      },
       spec: {
         selector: { matchLabels: { app: name } },
         template: {
