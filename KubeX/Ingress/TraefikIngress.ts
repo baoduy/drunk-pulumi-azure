@@ -33,9 +33,7 @@ export const TcpIngress = ({
   );
 };
 
-export interface TraefikIngressProps extends IngressProps {
-
-}
+export interface TraefikIngressProps extends IngressProps {}
 
 export default ({
   name,
@@ -46,10 +44,18 @@ export default ({
   certManagerIssuer,
   ...others
 }: TraefikIngressProps) => {
-  const annotations = {'traefik.ingress.kubernetes.io/router.entrypoints':'websecure,web'} as any;
+  const annotations = {
+    'traefik.ingress.kubernetes.io/router.entrypoints': 'websecure,web',
+  } as any;
 
   if (!allowHttp) {
     annotations['ttraefik.ingress.kubernetes.io/router.tls'] = 'true';
+  }
+
+  if (certManagerIssuer) {
+    if (typeof certManagerIssuer === 'string')
+      annotations['cert-manager.io/cluster-issuer'] = certManagerIssuer;
+    else annotations['kubernetes.io/tls-acme'] = 'true';
   }
 
   return new k8s.networking.v1.Ingress(

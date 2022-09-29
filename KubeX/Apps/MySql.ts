@@ -77,7 +77,7 @@ export default async ({
     mysql,
     host,
     internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
-    username: name,
+    username: 'root',
     password,
   };
 };

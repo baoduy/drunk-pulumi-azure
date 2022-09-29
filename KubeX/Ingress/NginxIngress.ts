@@ -1,8 +1,7 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Input } from '@pulumi/pulumi';
-import { defaultResponseHeaders,corsDefaultHeaders } from './Conts';
+import { defaultResponseHeaders, corsDefaultHeaders } from './Conts';
 import { IngressProps } from './type';
-
 
 export default ({
   name,
@@ -38,6 +37,7 @@ export default ({
       'nginx.ingress.kubernetes.io/proxy-body-size'
     ] = `${maxUploadSizeMb}m`;
   }
+
   if (certManagerIssuer) {
     if (typeof certManagerIssuer === 'string')
       annotations['cert-manager.io/cluster-issuer'] = certManagerIssuer;
