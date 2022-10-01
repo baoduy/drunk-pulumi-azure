@@ -123,7 +123,7 @@ export default async ({
   });
 
   const secrets: any = {
-    SQLPAD_PASSPHRASE: randomPassword({ name, policy: false }),
+    SQLPAD_PASSPHRASE: randomPassword({ name, policy: false }).result,
 
     //localhost used in dev
     //SQLPAD_BASE_URL: '/',
@@ -167,7 +167,7 @@ export default async ({
     secrets['SQLPAD_ADMIN_PASSWORD'] = randomPassword({
       name: `${name}-admin`,
       policy: false,
-    });
+    }).result;
   }
 
   // ======== Db Connection Strings =========================
