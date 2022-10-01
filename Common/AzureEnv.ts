@@ -43,7 +43,7 @@ export const isDev = isEnv(Environments.Dev);
 export const isSandbox = isEnv(Environments.Sandbox);
 export const isPrd = isEnv(Environments.Prd);
 /** Protect Private API that only allows accessing from APIM */
-export const apimEnabled = isPrd;
+//export const apimEnabled = isPrd;
 
 const getCurrentEnv = () => {
   if (isPrd) return Environments.Prd;

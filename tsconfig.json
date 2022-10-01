@@ -3,6 +3,9 @@
     "strict": true,
     "outDir": "bin",
     "target": "esnext",
+    "lib": [
+      "es2019"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
