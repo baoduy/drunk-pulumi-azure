@@ -1,6 +1,7 @@
 import * as k8s from '@pulumi/kubernetes';
 import { createPVCForStorageClass } from '../Storage';
-import Deployment from '../Deployment';
+import Deployment, { IngressTypes } from '../Deployment';
+import { CertManagerIssuerTypes } from '../Ingress/type';
 import roleCreator from '../../AzAd/Role';
 import IdentityCreator from '../../AzAd/Identity';
 import { Input, interpolate, Resource } from '@pulumi/pulumi';
@@ -73,7 +74,8 @@ const createIdentity = async ({
 export interface SqlPadProps {
   namespace: Input<string>;
   hostName: string;
-  certManagerIssuer?: boolean | 'letsencrypt-staging' | 'letsencrypt-prod';
+  ingressType: IngressTypes;
+  certManagerIssuer?: CertManagerIssuerTypes;
   useVirtualHost?: boolean;
   provider: k8s.Provider;
 
@@ -88,6 +90,7 @@ export interface SqlPadProps {
 export default async ({
   namespace,
   hostName,
+  ingressType,
   certManagerIssuer,
   useVirtualHost,
   databases,
@@ -187,7 +190,9 @@ export default async ({
       volumes: [volume],
     },
     deploymentConfig: { replicas: 1, useVirtualHost },
+
     ingressConfig: {
+      type: ingressType,
       hostNames: [hostName.toLowerCase().replace('https://', '')],
       certManagerIssuer,
     },

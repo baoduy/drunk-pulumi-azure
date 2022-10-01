@@ -141,6 +141,7 @@ export type DeploymentIngress = Omit<
   'name' | 'internalIngress' | 'service' | 'provider' | 'dependsOn'
 >;
 
+export type IngressTypes = 'nginx' | 'traefik';
 interface Props {
   name: string;
   namespace: Input<string>;
@@ -176,8 +177,7 @@ interface Props {
     ttlSecondsAfterFinished?: number;
   }>;
 
-  ingressConfig?: DeploymentIngress;
-  ingressType?: 'nginx' | 'traefik';
+  ingressConfig?: { type: IngressTypes } & DeploymentIngress;
 
   configMap?: Input<{
     [key: string]: Input<string>;
@@ -206,7 +206,6 @@ export default async ({
   serviceConfig,
   jobConfigs,
   ingressConfig,
-  ingressType = 'nginx',
 
   enableHA,
   provider,
@@ -353,7 +352,7 @@ export default async ({
       dependsOn,
     };
 
-    if (ingressType === 'nginx') NginxIngress(ingressProps);
+    if (ingressConfig.type === 'nginx') NginxIngress(ingressProps);
     else TraefikIngress(ingressProps);
   }
 

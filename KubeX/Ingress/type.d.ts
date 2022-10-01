@@ -20,10 +20,15 @@ export type IngressCanary = {
   headerPattern?: Input<string>;
 };
 
+export type CertManagerIssuerTypes =
+  | boolean
+  | 'letsencrypt-staging'
+  | 'letsencrypt-prod';
+
 export interface IngressProps {
   name: string;
   className?: IngressClassName;
-  certManagerIssuer?: boolean | 'letsencrypt-staging' | 'letsencrypt-prod';
+  certManagerIssuer?: CertManagerIssuerTypes;
 
   hostNames: Input<string>[];
   allowHttp?: boolean;
@@ -59,13 +64,13 @@ export interface IngressProps {
     | kx.Service
     | k8s.core.v1.Service
     | {
-    metadata: {
-      name: Input<string>;
-      namespace: Input<string>;
-      labels?: Input<{ [key: string]: Input<string> }>;
-    };
-    spec: { ports: Array<ServicePort> };
-  };
+        metadata: {
+          name: Input<string>;
+          namespace: Input<string>;
+          labels?: Input<{ [key: string]: Input<string> }>;
+        };
+        spec: { ports: Array<ServicePort> };
+      };
   provider: k8s.Provider;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
