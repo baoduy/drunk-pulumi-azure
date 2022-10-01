@@ -73,6 +73,7 @@ const createIdentity = async ({
 export interface SqlPadProps {
   namespace: Input<string>;
   hostName: string;
+  certManagerIssuer?: boolean | string;
   useVirtualHost?: boolean;
   provider: k8s.Provider;
 
@@ -87,6 +88,7 @@ export interface SqlPadProps {
 export default async ({
   namespace,
   hostName,
+  certManagerIssuer,
   useVirtualHost,
   databases,
   auth,
@@ -187,6 +189,7 @@ export default async ({
     deploymentConfig: { replicas: 1, useVirtualHost },
     ingressConfig: {
       hostNames: [hostName.toLowerCase().replace('https://', '')],
+      certManagerIssuer,
     },
     ...others,
   });
