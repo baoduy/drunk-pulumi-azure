@@ -75,11 +75,11 @@ export interface SqlPadProps {
   hostName: string;
   useVirtualHost?: boolean;
   provider: k8s.Provider;
-  vaultInfo: KeyVaultInfo;
-  /**The database configuration follow this instruction: https://sqlpad.github.io/sqlpad/#/connections*/
+
+  /**The database configuration follow this instruction: https://getsqlpad.com/en/connections/ */
   databases?: { [key: string]: Input<string> };
   auth: {
-    azureAd?: { allowedDomain?: string };
+    azureAd?: { allowedDomain?: string; vaultInfo: KeyVaultInfo };
     admin?: { email: Input<string> };
   };
 }
@@ -88,7 +88,6 @@ export default async ({
   namespace,
   hostName,
   useVirtualHost,
-  vaultInfo,
   databases,
   auth,
   ...others
@@ -98,8 +97,12 @@ export default async ({
   const image = 'sqlpad/sqlpad:latest';
   const callbackUrl = `https://${hostName}/auth/oidc/callback`.toLowerCase();
 
-  const adIdentity = Boolean(auth.azureAd)
-    ? await createIdentity({ name, callbackUrl, vaultInfo })
+  const adIdentity = Boolean(auth?.azureAd)
+    ? await createIdentity({
+        name,
+        callbackUrl,
+        vaultInfo: auth!.azureAd!.vaultInfo,
+      })
     : undefined;
 
   const volume = {
@@ -153,7 +156,7 @@ export default async ({
     ] = interpolate`https://graph.microsoft.com/oidc/userinfo`;
 
     secrets['SQLPAD_OIDC_SCOPE'] = 'openid profile email';
-    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth.azureAd?.allowedDomain;
+    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth!.azureAd?.allowedDomain;
   } else {
     secrets['SQLPAD_ADMIN'] = auth.admin?.email;
     secrets['SQLPAD_ADMIN_PASSWORD'] = randomPassword({

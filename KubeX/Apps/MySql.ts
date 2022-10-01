@@ -9,7 +9,7 @@ import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
 interface Props extends DefaultK8sArgs {
-  host: string;
+  //host: string;
   version?: string;
   customPort?: number;
   useClusterIP?: boolean;
@@ -19,7 +19,7 @@ interface Props extends DefaultK8sArgs {
 
 export default async ({
   name,
-  host,
+  //host,
   namespace,
   version = 'latest',
   customPort,
@@ -75,7 +75,7 @@ export default async ({
 
   return {
     mysql,
-    host,
+    //host,
     internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: 'root',
     password,
