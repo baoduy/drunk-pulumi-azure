@@ -73,7 +73,7 @@ const createIdentity = async ({
 export interface SqlPadProps {
   namespace: Input<string>;
   hostName: string;
-  certManagerIssuer?: boolean | string;
+  certManagerIssuer?: boolean | 'letsencrypt-staging' | 'letsencrypt-prod';
   useVirtualHost?: boolean;
   provider: k8s.Provider;
 
