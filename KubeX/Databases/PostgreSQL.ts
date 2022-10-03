@@ -8,13 +8,11 @@ import { getPasswordName } from '../../Common/Naming';
 import { interpolate } from '@pulumi/pulumi';
 
 interface Props extends DefaultK8sArgs {
-  host: string;
   vaultInfo?: KeyVaultInfo;
   storageClassName: StorageClassNameTypes;
 }
 
 export default async ({
-  host,
   name = 'postgre-sql',
   namespace,
   vaultInfo,
@@ -65,8 +63,7 @@ export default async ({
 
   return {
     postgre,
-    host,
-    internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
+    host: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: 'postgres',
     password,
   };

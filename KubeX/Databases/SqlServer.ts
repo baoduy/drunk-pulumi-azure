@@ -8,7 +8,6 @@ import { createPVCForStorageClass, StorageClassNameTypes } from '../Storage';
 import { interpolate } from '@pulumi/pulumi';
 
 interface Props extends DefaultK8sArgs {
-  host: string;
   /**The database name that will create the connection string and store in the key vault*/
   databaseNames?: string[];
   vaultInfo?: KeyVaultInfo;
@@ -17,7 +16,6 @@ interface Props extends DefaultK8sArgs {
 
 export default async ({
   name,
-  host,
   namespace,
   databaseNames,
   vaultInfo,
@@ -80,7 +78,7 @@ export default async ({
 
   const rs = {
     sql,
-    host,
+    host: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: 'sa',
     password: password.result,
   };

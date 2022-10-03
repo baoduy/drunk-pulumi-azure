@@ -13,6 +13,7 @@ import {
   defaultSecurityContext,
   defaultPodSecurityContext,
 } from '../Core/SecurityRules';
+import { DefaultK8sArgs, DefaultKsAppArgs } from '../types';
 
 interface identityProps {
   name: string;
@@ -71,11 +72,8 @@ const createIdentity = async ({
   return adIdentity;
 };
 
-export interface SqlPadProps {
+export interface SqlPadProps extends Omit<DefaultKsAppArgs, 'name'> {
   namespace: Input<string>;
-  hostName: string;
-  ingressType: IngressTypes;
-  certManagerIssuer?: CertManagerIssuerTypes;
   useVirtualHost?: boolean;
   provider: k8s.Provider;
 
@@ -89,15 +87,14 @@ export interface SqlPadProps {
 
 export default async ({
   namespace,
-  hostName,
-  ingressType,
-  certManagerIssuer,
+  ingress,
   useVirtualHost,
   databases,
   auth,
   ...others
 }: SqlPadProps) => {
   const name = 'sql-pad';
+  const hostName = `${name}.${ingress?.domain}`;
   const port = 3000;
   const image = 'sqlpad/sqlpad:latest';
   const callbackUrl = `https://${hostName}/auth/oidc/callback`.toLowerCase();
@@ -191,11 +188,12 @@ export default async ({
     },
     deploymentConfig: { replicas: 1, useVirtualHost },
 
-    ingressConfig: {
-      type: ingressType,
-      hostNames: [hostName.toLowerCase().replace('https://', '')],
-      certManagerIssuer,
-    },
+    ingressConfig: ingress
+      ? {
+          ...ingress,
+          hostNames: [hostName],
+        }
+      : undefined,
     ...others,
   });
 };

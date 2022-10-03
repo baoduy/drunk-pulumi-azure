@@ -1,12 +1,11 @@
-import { DefaultK8sArgs } from '../types';
+import { DefaultKsAppArgs } from '../types';
 import Deployment from '../Deployment';
 import { Input } from '@pulumi/pulumi';
 import Identity from '../../AzAd/Identity';
 import { KeyVaultInfo } from '../../types';
 import { getGraphPermissions } from '../../AzAd/GraphDefinition';
 
-export interface WikiJsProps extends DefaultK8sArgs {
-  host: string;
+export interface WikiJsProps extends DefaultKsAppArgs {
   vaultInfo?: KeyVaultInfo;
   createAzureAdIdentity?: boolean;
   useVirtualHost?: boolean;
@@ -20,14 +19,16 @@ export interface WikiJsProps extends DefaultK8sArgs {
 
 export default async ({
   name = 'wiki',
-  host,
   namespace,
+  ingress,
   createAzureAdIdentity,
   useVirtualHost,
   vaultInfo,
   postgresql,
   provider,
 }: WikiJsProps) => {
+  const hostName = `${name}.${ingress?.domain}`;
+
   const graphAccess = getGraphPermissions(
     { name: 'User.Read.All', type: 'Role' },
     { name: 'User.Read', type: 'Scope' },
@@ -74,14 +75,16 @@ export default async ({
       useVirtualHost,
     },
 
-    ingressConfig: {
-      certManagerIssuer: true,
-      hostNames: [host],
-      responseHeaders: {
-        'Content-Security-Policy': `default-src 'self' *.diagrams.net *.msecnd.net *.services.visualstudio.com data: 'unsafe-inline' 'unsafe-eval'`,
-        'referrer-policy': 'no-referrer',
-      },
-    },
+    ingressConfig: ingress
+      ? {
+          ...ingress,
+          hostNames: [hostName],
+          responseHeaders: {
+            'Content-Security-Policy': `default-src 'self' *.diagrams.net *.msecnd.net *.services.visualstudio.com data: 'unsafe-inline' 'unsafe-eval'`,
+            'referrer-policy': 'no-referrer',
+          },
+        }
+      : undefined,
   });
 
   return { wiki, identity };

@@ -1,18 +1,18 @@
-import { DefaultK8sArgs } from '../../types';
+import { DefaultKsAppArgs } from '../../types';
 import { KeyVaultInfo } from '../../../types';
-import Deployment, { DeploymentIngress } from '../../Deployment';
+import Deployment from '../../Deployment';
 import { defaultDotNetConfig } from '../../../Common/AppConfigs/dotnetConfig';
 import { ReverseProxy, ForwardedProxy } from './type';
 import VariableResolver from '../../VairableResolvers';
 
-interface Props extends DefaultK8sArgs {
+interface Props extends DefaultKsAppArgs {
   reverseProxy?: ReverseProxy;
   forwardedProxy?: ForwardedProxy[];
-  ingressConfig?: DeploymentIngress;
   vaultInfo?: KeyVaultInfo;
   enableHA?: boolean;
   enableDebug?: boolean;
 }
+
 const createReverseProxyConfig = (
   reverseProxy: ReverseProxy,
   vaultInfo?: KeyVaultInfo
@@ -119,6 +119,7 @@ export default async ({
   reverseProxy,
   forwardedProxy,
   namespace,
+  ingress,
   name,
   enableDebug,
   enableHA,
@@ -147,6 +148,14 @@ export default async ({
       ...forwarderConfig.configMap,
     },
     secrets: { ...proxyConfig.secrets, ...forwarderConfig.secrets },
+
+    ingressConfig: ingress
+      ? {
+          ...ingress,
+          hostNames: [`${name}.${ingress.domain}`],
+        }
+      : undefined,
+
     podConfig: {
       port: 8080,
       image: 'baoduy2412/hbd.yarp-proxy:latest',
