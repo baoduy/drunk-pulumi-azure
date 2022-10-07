@@ -55,7 +55,7 @@ export default ({
     const resourceInfo = getResourceInfoFromId(id);
 
     if (useGlobalDnsZone) {
-      //Add A Rescord
+      //Add A Record
       addARecord({
         ipAddresses,
         recordName: resourceInfo?.name || '',

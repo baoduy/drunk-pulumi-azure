@@ -1,9 +1,8 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
+import { DefaultK8sArgs } from '../types';
 
-import { DefaultAksArgs } from '../types';
-
-interface Props extends Omit<DefaultAksArgs, 'namespace'> {
+interface Props extends Omit<DefaultK8sArgs, 'namespace'> {
   labels?: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
   }>;

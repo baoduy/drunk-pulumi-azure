@@ -2,8 +2,7 @@ import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as path from 'path';
 import { Input, Resource } from '@pulumi/pulumi';
-import { subscriptionId, tenantId } from '../../../Common/AzureEnv';
-import * as global from '../../../Common/GlobalEnv';
+//import * as global from '../../../Common/GlobalEnv';
 
 export interface CertManagerProps {
   name: string;
@@ -17,6 +16,9 @@ export interface CertManagerProps {
     dnsZoneName: string;
     clientId: string;
     clientSecret: string;
+    resourceGroupName: Input<string>;
+    subscriptionId: Input<string>;
+    tenantId: Input<string>;
   };
 
   provider: k8s.Provider;
@@ -30,7 +32,6 @@ export default async ({
   version,
   provider,
   email,
-
   http01Issuer,
   azureDnsIssuer,
   dependsOn,
@@ -79,9 +80,9 @@ export default async ({
                 http01: {
                   ingress: {
                     class: http01Issuer.publicIngressClass,
-                    podTemplate: {
-                      spec: { nodeSelector: { 'kubernetes.io/os': 'linux' } },
-                    },
+                    // podTemplate: {
+                    //   spec: { nodeSelector: { 'kubernetes.io/os': 'linux' } },
+                    // },
                   },
                   selector: http01Issuer.domains
                     ? { dnsZones: http01Issuer.domains }
@@ -136,9 +137,9 @@ export default async ({
               p.dns01.azuredns.clientID = azureDnsIssuer.clientId;
               p.dns01.azuredns.hostedZoneName = azureDnsIssuer.dnsZoneName;
               p.dns01.azuredns.resourceGroupName =
-                global.groupInfo.resourceGroupName;
-              p.dns01.azuredns.subscriptionID = subscriptionId;
-              p.dns01.azuredns.tenantID = tenantId;
+                azureDnsIssuer.resourceGroupName;
+              p.dns01.azuredns.subscriptionID = azureDnsIssuer.subscriptionId;
+              p.dns01.azuredns.tenantID = azureDnsIssuer.tenantId;
             });
           },
         ],

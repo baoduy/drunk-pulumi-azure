@@ -1,13 +1,9 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { Input } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
-import {
-  createPVCForAzureFileShare,
-  createPVCForStorageClass,
-} from '../Storage';
-import { envDomain } from '../../Common/AzureEnv';
+import { createPVCForStorageClass } from '../Storage';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
   hostNames: Input<string>[];
   volume?: {
     storageClass: string;
@@ -71,7 +67,9 @@ export default ({
       certManagerIssuer: true,
       hostNames: hostNames,
       responseHeaders: {
-        'Content-Security-Policy': `default-src 'self' *.${envDomain} *.githubusercontent.com codesandbox.io *.gravatar.com *.wp.com *.w.org wp-themes.com *.rating-widget.com rating-widget.com *.googleapis.com *.googletagmanager.com *.gstatic.com *.google.com *.cloudflare.com data: 'unsafe-inline' 'unsafe-eval'; frame-src *.${envDomain} wp-themes.com codesandbox.io *.google.com;`,
+        'Content-Security-Policy': `default-src 'self' ${hostNames.concat(
+          ' '
+        )} *.githubusercontent.com codesandbox.io *.gravatar.com *.wp.com *.w.org wp-themes.com *.rating-widget.com rating-widget.com *.googleapis.com *.googletagmanager.com *.gstatic.com *.google.com *.cloudflare.com data: 'unsafe-inline' 'unsafe-eval'; frame-src *.${envDomain} wp-themes.com codesandbox.io *.google.com;`,
         'referrer-policy': 'no-referrer',
       },
     },

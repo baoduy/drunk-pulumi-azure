@@ -1,6 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Provider } from '@pulumi/kubernetes';
-import * as kx from '../index';
+import * as kx from '../KubX';
 
 export interface PodAutoScaleProps {
   maxReplicas: number;

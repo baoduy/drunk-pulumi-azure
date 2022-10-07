@@ -1,9 +1,9 @@
-import { DefaultAksArgs } from './types';
+import { DefaultK8sArgs } from './types';
 import * as pulumi from '@pulumi/pulumi';
-import * as kx from './index';
+import * as kx from './KubX';
 import { Input } from '@pulumi/pulumi';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
   fixedName?: boolean;
   configMap?: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
@@ -57,7 +57,7 @@ export const ConfigSecret = ({
   return result;
 };
 
-interface AzureStorageSecret extends DefaultAksArgs {
+interface AzureStorageSecret extends DefaultK8sArgs {
   fixedName?: boolean;
   accountKey: Input<string>;
   accountName: Input<string>;

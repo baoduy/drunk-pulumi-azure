@@ -1,90 +1,7 @@
 import * as k8s from '@pulumi/kubernetes';
-import * as kx from '../index';
-import { Input, Resource } from '@pulumi/pulumi';
-import { envDomain } from '../../Common/AzureEnv';
-import { organizationName } from '../../Common/config';
-
-export const defaultResponseHeaders = {
-  server: organizationName,
-  'X-Powered-By': organizationName,
-  'X-AspNet-Version': organizationName,
-  'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
-  'X-XSS-Protection': '1; mode=block',
-  'X-Frame-Options': `SAMEORIGIN`,
-  'Content-Security-Policy': `default-src 'self' data: 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.${envDomain}`,
-  'X-Content-Type-Options': 'nosniff',
-  'Expect-Ct': 'max-age=604800,enforce',
-  'Cache-Control': 'max-age=10', //10 second only
-};
-
-const corsDefaultHeaders =
-  'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
-
-interface ServicePort {
-  appProtocol?: Input<string>;
-  name?: Input<string>;
-  nodePort?: Input<number>;
-  port: Input<number>;
-  protocol?: Input<string>;
-  targetPort?: Input<number | string>;
-}
-
-export type IngressClassName = 'public' | 'private' | 'nginx';
-export type IngressCanary = {
-  headerKey?: Input<string>;
-  headerValue?: Input<string>;
-  headerPattern?: Input<string>;
-};
-
-export interface IngressProps {
-  name: string;
-  className?: IngressClassName;
-  certManagerIssuer?: boolean | 'letsencrypt-staging' | 'letsencrypt-prod';
-
-  hostNames: Input<string>[];
-  allowHttp?: boolean;
-  internalIngress?: boolean;
-  tlsSecretName?: Input<string>;
-  maxUploadSizeMb?: number;
-
-  responseHeaders?: Partial<
-    typeof defaultResponseHeaders & { [key: string]: string }
-  >;
-  whitelistIps?: Array<Input<string>>;
-  enableModSecurity?: boolean;
-  cors?: { origins: string[]; headers?: string[] };
-
-  canary?: IngressCanary;
-
-  proxy?: {
-    backendProtocol?: 'HTTP' | 'HTTPS' | 'GRPC' | 'GRPCS' | 'AJP' | 'FCGI';
-    backendUrl: string;
-    sslVerify?: boolean;
-    tlsSecretName?: Input<string>;
-  };
-
-  auth?: {
-    enableClientTls?: boolean;
-    alwaysRequireCert?: boolean;
-    caSecret?: string;
-    upstreamHeaderKey?: string;
-    errorPage?: string;
-  };
-
-  service:
-    | kx.Service
-    | k8s.core.v1.Service
-    | {
-        metadata: {
-          name: Input<string>;
-          namespace: Input<string>;
-          labels?: Input<{ [key: string]: Input<string> }>;
-        };
-        spec: { ports: Array<ServicePort> };
-      };
-  provider: k8s.Provider;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
-}
+import { Input } from '@pulumi/pulumi';
+import { defaultResponseHeaders, corsDefaultHeaders } from './Conts';
+import { IngressProps } from './type';
 
 export default ({
   name,
@@ -120,6 +37,7 @@ export default ({
       'nginx.ingress.kubernetes.io/proxy-body-size'
     ] = `${maxUploadSizeMb}m`;
   }
+
   if (certManagerIssuer) {
     if (typeof certManagerIssuer === 'string')
       annotations['cert-manager.io/cluster-issuer'] = certManagerIssuer;

@@ -1,13 +1,12 @@
 import * as k8s from '@pulumi/kubernetes';
-import * as kx from '../index';
-import { NginxIngress } from '../Ingress';
+import * as kx from '../KubX';
+import { NginxIngress, TraefikIngress } from '../Ingress';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getDomainFromUrl, getRootDomainFromUrl } from '../../Common/Helpers';
-import { getTlsName } from '../CertImports';
-import { IngressProps } from '../Ingress/NginxIngress';
+import { getTlsName } from '../CertHelper';
+import { IngressProps } from '../Ingress/type';
 import * as pulumi from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/kubernetes/types';
-import { enableVirtualNode } from '../../Common/AppConfigs/aksConfig';
 import { PodAutoScale, PodAutoScaleProps } from './PodAutoscaler';
 import ConfigSecret from '../ConfigSecret';
 
@@ -73,6 +72,7 @@ const buildPod = ({
 
     if (!podConfig.resources) podConfig.resources = false;
   }
+  //else if (!podConfig.nodeSelector) podConfig.nodeSelector = { app: name };
 
   const resources =
     podConfig.resources === false
@@ -141,6 +141,7 @@ export type DeploymentIngress = Omit<
   'name' | 'internalIngress' | 'service' | 'provider' | 'dependsOn'
 >;
 
+export type IngressTypes = 'nginx' | 'traefik';
 interface Props {
   name: string;
   namespace: Input<string>;
@@ -176,7 +177,7 @@ interface Props {
     ttlSecondsAfterFinished?: number;
   }>;
 
-  ingressConfig?: DeploymentIngress;
+  ingressConfig?: { type: IngressTypes } & DeploymentIngress;
 
   configMap?: Input<{
     [key: string]: Input<string>;
@@ -242,7 +243,7 @@ export default async ({
         podConfig,
         envFrom,
         args: deploymentConfig.args,
-        useVirtualHost: enableVirtualNode && deploymentConfig.useVirtualHost,
+        useVirtualHost: deploymentConfig.useVirtualHost,
       }).asDeploymentSpec({
         replicas: deploymentConfig.replicas,
         revisionHistoryLimit: 1,
@@ -326,8 +327,7 @@ export default async ({
 
   //Ingress
   if (ingressConfig) {
-    //Ingress
-    NginxIngress({
+    const ingressProps = {
       ...ingressConfig,
       className: ingressConfig.className || 'nginx',
 
@@ -350,7 +350,10 @@ export default async ({
       service,
       provider,
       dependsOn,
-    });
+    };
+
+    if (ingressConfig.type === 'nginx') NginxIngress(ingressProps);
+    else TraefikIngress(ingressProps);
   }
 
   if (enableHA) {

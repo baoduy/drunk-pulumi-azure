@@ -1,28 +1,23 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { envDomain } from '../../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
   version?: string;
-  customPort?: number;
-  useClusterIP?: boolean;
   vaultInfo?: KeyVaultInfo;
-  storageClassName: StorageClassNameTypes;
+  storageClassName?: StorageClassNameTypes;
 }
 
 export default async ({
   name,
   namespace,
   version = 'latest',
-  customPort,
-  useClusterIP,
   vaultInfo,
   storageClassName,
   ...others
@@ -42,41 +37,43 @@ export default async ({
     });
   }
 
-  const persisVolume = createPVCForStorageClass({
-    name,
-    namespace,
-    ...others,
-    storageClassName,
-  });
+  const persisVolume = storageClassName
+    ? createPVCForStorageClass({
+        name,
+        namespace,
+        ...others,
+        storageClassName,
+      })
+    : undefined;
 
-  const port = 3306;
-  const mysql = Deployment({
+  const port = 6379;
+  const redis = Deployment({
     name,
     namespace,
     ...others,
-    secrets: { MYSQL_ROOT_PASSWORD: password },
+    secrets: { PASSWORD: password },
     podConfig: {
       port,
-      image: `mysql:${version}`,
-      volumes: [
-        {
-          name: 'mysql-data',
-          persistentVolumeClaim: persisVolume.metadata.name,
-          mountPath: '/var/lib/mysql',
-        },
-      ],
+      image: `redis:${version}`,
+      volumes: persisVolume
+        ? [
+            {
+              name: 'redis-data',
+              persistentVolumeClaim: persisVolume.metadata.name,
+              mountPath: '/data',
+            },
+          ]
+        : undefined,
     },
     deploymentConfig: {
-      args: ['--default-authentication-plugin=mysql_native_password'],
+      args: [interpolate`--requirepass ${password}`],
     },
-    serviceConfig: { port: customPort || port, useClusterIP },
+    serviceConfig: { port },
   });
 
   return {
-    mysql,
-    host: `mysql.${envDomain}`,
-    internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
-    username: name,
+    redis,
+    host: interpolate`${name}.${namespace}.svc.cluster.local`,
     password,
   };
 };

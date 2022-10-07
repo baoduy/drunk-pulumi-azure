@@ -1,14 +1,13 @@
-import { DefaultAksArgs } from '../types';
+import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomLogin, randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import * as k8s from '@pulumi/kubernetes';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { envDomain } from '../../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 
-interface Props extends DefaultAksArgs {
+interface Props extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
   storageClassName: StorageClassNameTypes;
 }
@@ -64,8 +63,7 @@ export default async ({
 
   return {
     postgre,
-    host: `postgres.${envDomain}`,
-    internalHost: interpolate`${name}.${namespace}.svc.cluster.local`,
+    host: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: 'postgres',
     password,
   };

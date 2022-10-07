@@ -1,6 +1,7 @@
 import * as k8s from '@pulumi/kubernetes';
 import { createPVCForStorageClass } from '../Storage';
-import Deployment from '../Deployment';
+import Deployment, { IngressTypes } from '../Deployment';
+import { CertManagerIssuerTypes } from '../Ingress/type';
 import roleCreator from '../../AzAd/Role';
 import IdentityCreator from '../../AzAd/Identity';
 import { Input, interpolate, Resource } from '@pulumi/pulumi';
@@ -12,6 +13,7 @@ import {
   defaultSecurityContext,
   defaultPodSecurityContext,
 } from '../Core/SecurityRules';
+import { DefaultK8sArgs, DefaultKsAppArgs } from '../types';
 
 interface identityProps {
   name: string;
@@ -70,36 +72,39 @@ const createIdentity = async ({
   return adIdentity;
 };
 
-export interface SqlPadProps {
+export interface SqlPadProps extends Omit<DefaultKsAppArgs, 'name'> {
   namespace: Input<string>;
-  hostName: string;
   useVirtualHost?: boolean;
   provider: k8s.Provider;
-  vaultInfo: KeyVaultInfo;
-  /**The database configuration follow this instruction: https://sqlpad.github.io/sqlpad/#/connections*/
+
+  /**The database configuration follow this instruction: https://getsqlpad.com/en/connections/ */
   databases?: { [key: string]: Input<string> };
   auth: {
-    azureAd?: { allowedDomain?: string };
+    azureAd?: { allowedDomain?: string; vaultInfo: KeyVaultInfo };
     admin?: { email: Input<string> };
   };
 }
 
 export default async ({
   namespace,
-  hostName,
+  ingress,
   useVirtualHost,
-  vaultInfo,
   databases,
   auth,
   ...others
 }: SqlPadProps) => {
   const name = 'sql-pad';
+  const hostName = `${name}.${ingress?.domain}`;
   const port = 3000;
   const image = 'sqlpad/sqlpad:latest';
   const callbackUrl = `https://${hostName}/auth/oidc/callback`.toLowerCase();
 
-  const adIdentity = Boolean(auth.azureAd)
-    ? await createIdentity({ name, callbackUrl, vaultInfo })
+  const adIdentity = Boolean(auth?.azureAd)
+    ? await createIdentity({
+        name,
+        callbackUrl,
+        vaultInfo: auth!.azureAd!.vaultInfo,
+      })
     : undefined;
 
   const volume = {
@@ -115,7 +120,7 @@ export default async ({
   });
 
   const secrets: any = {
-    SQLPAD_PASSPHRASE: randomPassword({ name, policy: false }),
+    SQLPAD_PASSPHRASE: randomPassword({ name, policy: false }).result,
 
     //localhost used in dev
     //SQLPAD_BASE_URL: '/',
@@ -153,13 +158,13 @@ export default async ({
     ] = interpolate`https://graph.microsoft.com/oidc/userinfo`;
 
     secrets['SQLPAD_OIDC_SCOPE'] = 'openid profile email';
-    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth.azureAd?.allowedDomain;
+    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth!.azureAd?.allowedDomain;
   } else {
     secrets['SQLPAD_ADMIN'] = auth.admin?.email;
     secrets['SQLPAD_ADMIN_PASSWORD'] = randomPassword({
       name: `${name}-admin`,
       policy: false,
-    });
+    }).result;
   }
 
   // ======== Db Connection Strings =========================
@@ -182,9 +187,13 @@ export default async ({
       volumes: [volume],
     },
     deploymentConfig: { replicas: 1, useVirtualHost },
-    ingressConfig: {
-      hostNames: [hostName.toLowerCase().replace('https://', '')],
-    },
+
+    ingressConfig: ingress
+      ? {
+          ...ingress,
+          hostNames: [hostName],
+        }
+      : undefined,
     ...others,
   });
 };

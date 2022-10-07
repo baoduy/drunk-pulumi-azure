@@ -41,6 +41,7 @@ export const createPVCForAzureFileShare = ({
       metadata: {
         name,
         namespace,
+        annotations: { 'pulumi.com/skipAwait': 'true' },
       },
       spec: {
         capacity: {
@@ -69,6 +70,7 @@ export const createPVCForAzureFileShare = ({
       metadata: {
         name,
         namespace,
+        annotations: { 'pulumi.com/skipAwait': 'true' },
       },
       spec: {
         accessModes: ['ReadWriteMany'],
@@ -119,6 +121,7 @@ export const createPVCForStorageClass = ({
     {
       metadata: {
         name: `${name}-claim`,
+        annotations: { 'pulumi.com/skipAwait': 'true' },
         namespace,
       },
       spec: {

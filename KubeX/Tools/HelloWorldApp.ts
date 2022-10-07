@@ -1,4 +1,4 @@
-import deployment from '../Deployment';
+import deployment, { IngressTypes } from '../Deployment';
 
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
@@ -11,6 +11,7 @@ export interface HelloAppProps {
   namespace: Input<string>;
   provider: k8s.Provider;
   hostName: Input<string>;
+  ingressType: IngressTypes;
   useVirtualHost?: boolean;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
@@ -18,6 +19,7 @@ export interface HelloAppProps {
 export default async ({
   namespace,
   hostName,
+  ingressType,
   useVirtualHost,
   ...others
 }: HelloAppProps) => {
@@ -37,6 +39,7 @@ export default async ({
     deploymentConfig: { replicas: 1, useVirtualHost },
 
     ingressConfig: {
+      type: ingressType,
       hostNames: [hostName],
       allowHttp: !enableCertManager,
       certManagerIssuer: enableCertManager,

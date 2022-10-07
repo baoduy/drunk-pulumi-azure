@@ -1,5 +1,6 @@
 import * as forge from 'node-forge';
 import * as os from 'os';
+import { replaceAll } from '../Common/Helpers';
 
 const getChilkatTool = () => {
   const v = process.version.split('.')[0].replace('v', '');
@@ -107,3 +108,8 @@ export function convertPfxToPem({ pfxBase64, password, includeAll }: Props) {
 
 export const DecodeBase64Cert = (pfxBase64: string) =>
   forge.util.decode64(pfxBase64);
+
+export const getTlsName = (domain: string, enableCertIssuer: boolean) =>
+  enableCertIssuer
+    ? `tls-${replaceAll(domain, '.', '-')}-lets`
+    : `tls-${replaceAll(domain, '.', '-')}-imported`;

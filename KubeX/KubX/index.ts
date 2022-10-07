@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+// Copy from https://github.com/pulumi/pulumi-kubernetesx
 
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
@@ -401,7 +402,11 @@ export class Deployment extends k8s.apps.v1.Deployment {
     return new Service(
       this.name,
       {
-        metadata: { name, namespace: this.metadata.namespace },
+        metadata: {
+          name,
+          namespace: this.metadata.namespace,
+          annotations: { 'pulumi.com/skipAwait': 'true' },
+        },
         spec: serviceSpec,
       },
       { ...this.opts, parent: this }
