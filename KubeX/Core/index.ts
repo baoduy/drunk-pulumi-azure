@@ -22,8 +22,8 @@ interface NginxProps {
   namespace: string;
   version?: string;
   replicaCount?: number;
-  vnetResourceGroup: string;
-  internalIngress: boolean;
+  vnetResourceGroup?: string;
+  internalIngress?: boolean;
   public?: NginxItemProps & { forceUseIngressClass?: boolean };
   private?: Omit<NginxItemProps, 'publicIpAddress'>;
 }
@@ -38,7 +38,9 @@ interface Props {
   nginx?: NginxProps;
   monitoring?: Omit<MonitoringProps, 'provider' | 'dependsOn'>;
   certManager?: Omit<CertManagerProps, 'namespace' | 'provider' | 'dependsOn'>;
-  storageClasses?: { [key: string]: Omit<StorageClassProps, 'provider'|'name'> };
+  storageClasses?: {
+    [key: string]: Omit<StorageClassProps, 'provider' | 'name'>;
+  };
   enableStaticIpEgress?: { publicIpAddress?: Input<string> };
   provider: k8s.Provider;
 }

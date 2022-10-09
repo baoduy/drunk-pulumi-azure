@@ -1,6 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
-import { DefaultK8sArgs } from '../types';
-import { IngressProps } from './type';
+import { DefaultK8sArgs } from '../../types';
+import { IngressProps } from '../type';
 
 export interface TraefikTcpIngressProps extends DefaultK8sArgs {
   port: number;
@@ -42,6 +42,7 @@ export default ({
   tlsSecretName,
   service,
   certManagerIssuer,
+  cors,
   ...others
 }: TraefikIngressProps) => {
   const annotations = {
@@ -56,6 +57,16 @@ export default ({
     if (typeof certManagerIssuer === 'string')
       annotations['cert-manager.io/cluster-issuer'] = certManagerIssuer;
     else annotations['kubernetes.io/tls-acme'] = 'true';
+  }
+  if (cors) {
+    const origin = cors.origins.join(',');
+    const header = cors.headers
+      ? cors.headers.join(',')
+      : 'GET,POST,PUT,OPTIONS,DELETE';
+
+    annotations[
+      'traefik.ingress.kubernetes.io/custom-response-headers'
+    ] = `Access-Control-Allow-Origin:${origin}||Access-Control-Allow-Methods:${header}||Access-Control-Allow-Headers:DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range||Access-Control-Expose-Headers:Content-Length,Content-Range`;
   }
 
   return new k8s.networking.v1.Ingress(
