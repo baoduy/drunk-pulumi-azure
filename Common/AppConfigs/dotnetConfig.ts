@@ -4,11 +4,11 @@ export const defaultDotNetConfig = {
   //ASPNETCORE_ENVIRONMENT: 'Production',
   AllowedHosts: '*',
 
-  Logging__LogLevel__Default: 'Information',
+  Logging__LogLevel__Default: 'Warning',
   Logging__LogLevel__System: 'Error',
   Logging__LogLevel__Microsoft: 'Error',
   Console__IncludeScopes: 'false',
-  Console__LogLevel__Default: 'Information',
+  Console__LogLevel__Default: 'Warning',
   Console__LogLevel__System: 'Error',
   Console__LogLevel__Microsoft: 'Error',
   Debug__LogLevel__Default: 'None',
