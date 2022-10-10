@@ -46,6 +46,11 @@ interface PodConfigProps {
   nodeSelector?: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
   }>;
+  probes?: {
+    liveness?: {
+      httpGet: string;
+    };
+  };
 }
 
 interface PodBuilderProps {
@@ -121,11 +126,27 @@ const buildPod = ({
         securityContext: podConfig.podSecurityContext,
         resources,
         args,
+
         volumeMounts: podConfig.volumes
           ? podConfig.volumes.map((v) => ({
               name: v.name,
               mountPath: v.mountPath,
             }))
+          : undefined,
+
+        livenessProbe: podConfig.probes?.liveness
+          ? {
+              initialDelaySeconds: 30,
+              periodSeconds: 300,
+              timeoutSeconds: 20,
+
+              httpGet: podConfig.probes.liveness.httpGet
+                ? {
+                    path: podConfig.probes.liveness.httpGet,
+                    port: podConfig.port!,
+                  }
+                : undefined,
+            }
           : undefined,
       },
     ],
