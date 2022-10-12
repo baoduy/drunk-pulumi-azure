@@ -49,6 +49,9 @@ interface PodConfigProps {
   probes?: {
     liveness?: {
       httpGet: string;
+      initialDelaySeconds?: number;
+      periodSeconds?: number;
+      timeoutSeconds?: number;
     };
   };
 }
@@ -136,9 +139,9 @@ const buildPod = ({
 
         livenessProbe: podConfig.probes?.liveness
           ? {
-              initialDelaySeconds: 30,
-              periodSeconds: 300,
-              timeoutSeconds: 20,
+              initialDelaySeconds:podConfig.probes.liveness.initialDelaySeconds|| 30,
+              periodSeconds: podConfig.probes.liveness.periodSeconds|| 300,
+              timeoutSeconds:podConfig.probes.liveness.timeoutSeconds|| 5,
 
               httpGet: podConfig.probes.liveness.httpGet
                 ? {
