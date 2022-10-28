@@ -7,71 +7,53 @@ interface BasicRuleProps {
 }
 
 interface NatRuleProps extends BasicRuleProps {
-  publicIpAddress: Input<string>;
-  //The internal IpAddress that allow public request go in
-  internalIpAddress: Input<string>;
-  //DNAT Apim request to dedicated internal IpAddress (The private APIs only allows access from APIM).
-  apim?: {
-    apimPublicIpAddress: Input<string>;
-    internalIpAddress: Input<string>;
-  };
+  publicIpAddresses: Input<string>[];
+  dNATs: [
+    {
+      name: string;
+      allowHttp?: boolean;
+      externalIpAddress: Input<string>;
+      internalIpAddress: Input<string>;
+    }
+  ];
 }
 
-const getNATRules = ({
+const getDnatRules = ({
   startPriority,
-  internalIpAddress,
-  publicIpAddress,
-  apim,
+  publicIpAddresses,
+  dNATs,
 }: NatRuleProps): Array<inputs.network.AzureFirewallNatRuleCollectionArgs> => {
   const rules = new Array<inputs.network.AzureFirewallNatRuleCollectionArgs>();
-  //Inbound DNAT rules for API Ingress
-  if (apim) {
-    rules.push({
-      name: 'aks-apim-nat-rules',
-      action: { type: enums.network.AzureFirewallNatRCActionType.Dnat },
-      priority: ++startPriority,
-
-      rules: [
-        {
-          name: 'api-inbound-443',
-          description: 'Forward APIM inbound port 443 to api IP of Ingress',
-          sourceAddresses: [apim.apimPublicIpAddress],
-          destinationAddresses: [publicIpAddress],
-          destinationPorts: ['443'],
-          protocols: ['TCP'],
-          translatedAddress: apim.internalIpAddress,
-          translatedPort: '443',
-        },
-      ],
-    });
-  }
 
   rules.push({
-    name: 'aks-public-nat-rules',
+    name: 'dnat-rules',
     action: { type: enums.network.AzureFirewallNatRCActionType.Dnat },
     priority: ++startPriority,
-    rules: [
-      {
-        name: 'public-inbound-443',
-        description: 'Forward public inbound port 443 to api IP of Ingress',
-        sourceAddresses: ['*'],
-        destinationAddresses: [publicIpAddress],
+
+    rules: dNATs.flatMap((nat) => {
+      const httpsRule = {
+        name: `${nat.name}-inbound-443`,
+        description: `Forward port 443 external IpAddress of ${nat.name} to internal IpAddress`,
+        sourceAddresses: [nat.externalIpAddress],
+        destinationAddresses: publicIpAddresses,
         destinationPorts: ['443'],
         protocols: ['TCP'],
-        translatedAddress: internalIpAddress,
+        translatedAddress: nat.internalIpAddress,
         translatedPort: '443',
-      },
-      {
-        name: 'public-inbound-80',
-        description: 'Forward public inbound port 80 to api IP of Ingress',
-        sourceAddresses: ['*'],
-        destinationAddresses: [publicIpAddress],
+      };
+
+      const httpRule = {
+        name: `${nat.name}-inbound-80`,
+        description: `Forward port 80 external IpAddress of ${nat.name} to internal IpAddress`,
+        sourceAddresses: [nat.externalIpAddress],
+        destinationAddresses: publicIpAddresses,
         destinationPorts: ['80'],
         protocols: ['TCP'],
-        translatedAddress: internalIpAddress,
+        translatedAddress: nat.internalIpAddress,
         translatedPort: '80',
-      },
-    ],
+      };
+      return nat.allowHttp ? [httpsRule, httpRule] : [httpsRule];
+    }),
   });
 
   return rules;
@@ -166,19 +148,6 @@ const getAksNetRules = ({
         ],
         destinationPorts: ['443'],
       },
-      // {
-      //   name: 'azure-dns',
-      //   description: 'Azure DNS.',
-      //   protocols: ['TCP', 'UDP'],
-      //   sourceAddresses: vnetAddressSpace,
-      //   destinationFqdns: [
-      //     'ns1-01.azure-dns.com',
-      //     'ns2-01.azure-dns.net',
-      //     'ns3-01.azure-dns.org',
-      //     'ns4-01.azure-dns.info',
-      //   ],
-      //   destinationPorts: ['53'],
-      // },
       {
         name: 'others-dns',
         description: 'Others DNS.',
@@ -193,7 +162,7 @@ const getAksNetRules = ({
   return rules;
 };
 
-const getAKSAppRules = ({
+const getAksAppRules = ({
   startPriority,
   vnetAddressSpace,
 }: BasicRuleProps & {
@@ -268,11 +237,17 @@ const getAKSAppRules = ({
         name: 'docker-services',
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
-          '*quay.io', //For Cert Manager
-          '*auth.docker.io',
-          '*cloudflare.docker.io',
-          '*cloudflare.docker.com',
-          '*registry-1.docker.io',
+          'quay.io', //For Cert Manager
+          '*.quay.io',
+          'auth.docker.io',
+          '*.auth.docker.io',
+          '*.cloudflare.docker.io',
+          'docker.io',
+          'cloudflare.docker.io',
+          'cloudflare.docker.com',
+          '*.cloudflare.docker.com',
+          '*.registry-1.docker.io',
+          'registry-1.docker.io',
         ],
         protocols: [{ protocolType: 'Https', port: 443 }],
       },
@@ -283,7 +258,9 @@ const getAKSAppRules = ({
         targetFqdns: [
           'k8s.gcr.io', //nginx images
           '*.k8s.io',
-          'storage.googleapis.com',
+          'asia-east1-docker.pkg.dev',
+          '*.gcr.io',
+          '*.googleapis.com',
         ],
         protocols: [{ protocolType: 'Https', port: 443 }],
       },
@@ -313,7 +290,7 @@ export default ({
   vnetAddressSpace,
   ...others
 }: AksFirewallProps): FirewallRuleResults => {
-  const natRuleCollections = getNATRules({
+  const natRuleCollections = getDnatRules({
     startPriority,
     ...others,
   });
@@ -324,7 +301,7 @@ export default ({
     ...others,
   });
 
-  const applicationRuleCollections = getAKSAppRules({
+  const applicationRuleCollections = getAksAppRules({
     startPriority,
     vnetAddressSpace,
   });
