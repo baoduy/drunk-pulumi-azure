@@ -1,31 +1,31 @@
-import * as network from "@pulumi/azure-native/network";
-import { input as inputs, enums } from "@pulumi/azure-native/types";
-import { Input, Resource } from "@pulumi/pulumi";
-import ResourceCreator from "../Core/ResourceCreator";
+import * as network from '@pulumi/azure-native/network';
+import { input as inputs, enums } from '@pulumi/azure-native/types';
+import { Input, Resource } from '@pulumi/pulumi';
+import ResourceCreator from '../Core/ResourceCreator';
 import {
   BasicResourceArgs,
   DefaultResourceArgs,
   BasicMonitorArgs,
-} from "../types";
-import { defaultTags, isPrd } from "../Common/AzureEnv";
+} from '../types';
+import { defaultTags, isPrd } from '../Common/AzureEnv';
 import {
   getFirewallName,
   getFirewallPolicyGroupName,
   getFirewallPolicyName,
-} from "../Common/Naming";
-import { deniedOthersRule } from "./FirewallRules/DefaultRules";
-import { FirewallRuleProps } from "./FirewallRules/types";
+} from '../Common/Naming';
+import { deniedOthersRule } from './FirewallRules/DefaultRules';
+import { FirewallRuleProps } from './FirewallRules/types';
 
 export const denyOtherAppRule: inputs.network.ApplicationRuleArgs = {
-  name: "deny-others-websites",
-  ruleType: "ApplicationRule",
-  description: "Deny All Others websites",
-  sourceAddresses: ["*"],
-  targetFqdns: ["*"],
+  name: 'deny-others-websites',
+  ruleType: 'ApplicationRule',
+  description: 'Deny All Others websites',
+  sourceAddresses: ['*'],
+  targetFqdns: ['*'],
   protocols: [
-    { protocolType: "Http", port: 80 },
-    { protocolType: "Https", port: 443 },
-    { protocolType: "Mssql", port: 1433 },
+    { protocolType: 'Http', port: 80 },
+    { protocolType: 'Https', port: 443 },
+    { protocolType: 'Mssql', port: 1433 },
   ],
 };
 
@@ -62,7 +62,7 @@ export const linkRulesToPolicy = ({
         action: {
           type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
         },
-        ruleCollectionType: "FirewallPolicyNatRuleCollection",
+        ruleCollectionType: 'FirewallPolicyNatRuleCollection',
         rules: r.dnatRules,
       });
     }
@@ -75,7 +75,7 @@ export const linkRulesToPolicy = ({
           type: enums.network.FirewallPolicyFilterRuleCollectionActionType
             .Allow,
         },
-        ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
         rules: r.networkRules,
       });
     }
@@ -88,7 +88,7 @@ export const linkRulesToPolicy = ({
           type: enums.network.FirewallPolicyFilterRuleCollectionActionType
             .Allow,
         },
-        ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
         rules: r.applicationRules,
       });
     }
@@ -102,7 +102,7 @@ export const linkRulesToPolicy = ({
       action: {
         type: enums.network.FirewallPolicyFilterRuleCollectionActionType.Allow,
       },
-      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
       rules: [denyOtherAppRule],
     });
   }
@@ -123,14 +123,14 @@ export const linkRulesToPolicy = ({
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, "monitoring">,
-    Omit<PolicyRulesProps, "firewallPolicyName" | "rules"> {
+    Omit<DefaultResourceArgs, 'monitoring'>,
+    Omit<PolicyRulesProps, 'firewallPolicyName' | 'rules'> {
   basePolicyId?: Input<string>;
 
   dnsSettings?: Input<inputs.network.DnsSettingsArgs>;
   transportSecurityCA?: inputs.network.FirewallPolicyCertificateAuthorityArgs;
 
-  sku?: enums.network.FirewallPolicySkuTier;
+  sku?: enums.network.v20220501.FirewallPolicySkuTier;
   insights?: {
     defaultWorkspaceId?: Input<string>;
     workspaces: Array<{
@@ -149,7 +149,7 @@ export default ({
 
   transportSecurityCA,
   insights,
-  sku = enums.network.FirewallPolicySkuTier.Standard,
+  sku = enums.network.v20220501.FirewallPolicySkuTier.Basic,
   dependsOn,
 }: Props) => {
   name = getFirewallPolicyName(name);

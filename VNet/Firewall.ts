@@ -1,5 +1,4 @@
 import * as network from '@pulumi/azure-native/network';
-import { input as inputs, enums } from '@pulumi/azure-native/types';
 import { Input, Output } from '@pulumi/pulumi';
 import ResourceCreator from '../Core/ResourceCreator';
 import {
@@ -19,20 +18,22 @@ import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 export interface OutboundConfig {
   name?: string;
   subnetId: Input<string>;
-  publicIpAddressId: Input<string>;
+  publicIpAddressId?: Input<string>;
 }
 
 interface Props
   extends BasicResourceArgs,
     Omit<DefaultResourceArgs, 'monitoring'> {
   outbound: Array<OutboundConfig>;
+  /** This must be provided if sku is Basic */
+  management?: OutboundConfig;
 
   rules?: FirewallRuleResults;
   policy?: FirewallPolicyProps;
 
   sku?: {
-    name: network.AzureFirewallSkuName;
-    tier: network.AzureFirewallSkuTier;
+    name: network.v20220501.AzureFirewallSkuName;
+    tier: network.v20220501.AzureFirewallSkuTier;
   };
 
   monitorConfig?: BasicMonitorArgs;
@@ -44,10 +45,11 @@ export default async ({
   rules,
   policy,
   outbound,
+  management,
   monitorConfig,
   sku = {
     name: network.AzureFirewallSkuName.AZFW_VNet,
-    tier: network.AzureFirewallSkuTier.Standard,
+    tier: network.v20220501.AzureFirewallSkuTier.Basic,
   },
   ...others
 }: Props) => {
@@ -68,7 +70,7 @@ export default async ({
       })
     : undefined;
 
-  const { resource } = await ResourceCreator(network.AzureFirewall, {
+  const { resource } = await ResourceCreator(network.v20220501.AzureFirewall, {
     azureFirewallName: fwName,
     ...group,
     ...rules,
@@ -78,9 +80,19 @@ export default async ({
     threatIntelMode: network.AzureFirewallThreatIntelMode.Deny,
     sku,
 
+    managementIpConfiguration: management
+      ? {
+          name: management.name,
+          publicIPAddress: { id: management.publicIpAddressId },
+          subnet: { id: management.subnetId },
+        }
+      : undefined,
+
     ipConfigurations: outbound.map((o, i) => ({
       name: o.name || `outbound-${i}`,
-      publicIPAddress: { id: o.publicIpAddressId },
+      publicIPAddress: o.publicIpAddressId
+        ? { id: o.publicIpAddressId }
+        : undefined,
       subnet: { id: o.subnetId },
     })),
 
@@ -101,7 +113,7 @@ export default async ({
 
     tags: defaultTags,
     ...others,
-  } as network.AzureFirewallArgs & DefaultResourceArgs);
+  } as network.v20220501.AzureFirewallArgs & DefaultResourceArgs);
 
   //Link Rule to Policy
   if (fwPolicy && policy?.rules) {
