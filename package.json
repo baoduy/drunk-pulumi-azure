@@ -31,6 +31,7 @@
     "@azure/identity": "^3.0.0",
     "@azure/keyvault-keys": "^4.6.0",
     "@azure/keyvault-secrets": "^4.6.0",
+    "@chilkat/ck-node18-linux64": "^9.50.92",
     "@pulumi/azure": "^5.21.0",
     "@pulumi/azure-native": "^1.80.0",
     "@pulumi/azuread": "5.28.0",
