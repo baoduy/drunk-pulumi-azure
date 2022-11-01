@@ -121,8 +121,20 @@ export const getNICName = (name: string) =>
 export const getVnetName = (name: string) =>
   getResourceName(name, { suffix: 'vnt' });
 
+export const getWanName = (name: string) =>
+  getResourceName(name, { suffix: 'wan' });
+
+export const getHubName = (name: string) =>
+  getResourceName(name, { suffix: 'hub' });
+
+export const getRouteName = (name: string) =>
+  getResourceName(name, { suffix: 'route' });
+
 export const getRouteItemName = (name: string) =>
   getResourceName(name, { suffix: '', includeOrgName: false });
+
+export const getNetworkSecurityGroupName = (name: string) =>
+  getResourceName(name, { suffix: 'nsg' });
 
 export const getIpAddressName = (name: string) =>
   getResourceName(name, { suffix: 'ip' });

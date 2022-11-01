@@ -1,5 +1,5 @@
 import * as insights from '@pulumi/azure-native/insights';
-import { input as inputs, enums } from '@pulumi/azure-native/types';
+import { input as inputs } from '@pulumi/azure-native/types';
 import { AzureResourceItem, findVMScaleSet } from '../../Core/Helper';
 import { BasicMonitorArgs, ResourceGroupInfo } from '../../types';
 import { Input, Resource } from '@pulumi/pulumi';

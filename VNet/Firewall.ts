@@ -1,5 +1,5 @@
 import * as network from '@pulumi/azure-native/network';
-import { Input, Output } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import ResourceCreator from '../Core/ResourceCreator';
 import {
   BasicResourceArgs,
@@ -15,7 +15,7 @@ import {
 } from './FirewallRules/types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 
-export interface OutboundConfig {
+export interface FwOutboundConfig {
   name?: string;
   subnetId: Input<string>;
   publicIpAddressId?: Input<string>;
@@ -24,9 +24,9 @@ export interface OutboundConfig {
 interface Props
   extends BasicResourceArgs,
     Omit<DefaultResourceArgs, 'monitoring'> {
-  outbound: Array<OutboundConfig>;
+  outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
-  management?: OutboundConfig;
+  management?: FwOutboundConfig;
 
   rules?: FirewallRuleResults;
   policy?: FirewallPolicyProps;
