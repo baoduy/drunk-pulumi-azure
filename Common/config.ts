@@ -10,9 +10,6 @@ export const organizationName = testMode
   ? 'hbd'
   : getValue('organization') || projectName.split('-')[1];
 
-// export const apimHeaderKey = `x-${organizationName.toLowerCase()}-key`;
-// export const apimHookHeaderKey = `x-${organizationName.toLowerCase()}-hook`;
-
 export const globalKeyName = 'global';
 
 /**The Global resource group name.*/
