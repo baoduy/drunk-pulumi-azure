@@ -1,15 +1,15 @@
-import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import {BasicMonitorArgs, ConventionProps, KeyVaultInfo, ResourceGroupInfo} from '../types';
 import { subscriptionId } from './AzureEnv';
 import { getResourceName } from './ResourceEnv';
-import {
-  globalConvention,
-  defaultAlertEmails,
-  organizationName,
-  globalKeyName,
-} from './config';
 import { interpolate } from '@pulumi/pulumi';
+import {organization} from "./StackEnv";
+export const globalKeyName = 'global';
 
-export { globalConvention, defaultAlertEmails };
+/**The Global resource group name.*/
+export const globalConvention: ConventionProps = {
+  prefix: globalKeyName,
+  suffix: organization ? `grp-${organization}` : 'grp',
+};
 
 export const groupInfo: ResourceGroupInfo = {
   resourceGroupName: getResourceName(globalKeyName, globalConvention),
@@ -20,22 +20,22 @@ export const logGroupInfo: ResourceGroupInfo = {
 };
 
 export const cdnProfileInfo = {
-  profileName: `${globalKeyName}-${organizationName}-cdn-pfl`,
+  profileName: `${globalKeyName}-${organization}-cdn-pfl`,
   ...groupInfo,
 };
 
 /** Global Key Vault Info */
 export const keyVaultInfo: KeyVaultInfo = {
-  name: `${globalKeyName}-${organizationName.toLowerCase()}-vlt`,
+  name: `${globalKeyName}-${organization}-vlt`,
   group: groupInfo,
-  id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${groupInfo.resourceGroupName}/providers/Microsoft.KeyVault/vaults/${globalKeyName}-${organizationName}-vlt`,
+  id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${groupInfo.resourceGroupName}/providers/Microsoft.KeyVault/vaults/${globalKeyName}-${organization}-vlt`,
 };
 
 /** Log will send to either storage or log workspace. Only a few important resources will use workspace like Firewall, Aks */
 export const logWpInfo: BasicMonitorArgs = {
-  logWpId: interpolate`/subscriptions/${subscriptionId}/resourcegroups/${logGroupInfo.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${globalKeyName}-${organizationName}-logs-log`,
+  logWpId: interpolate`/subscriptions/${subscriptionId}/resourcegroups/${logGroupInfo.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${globalKeyName}-${organization}-logs-log`,
 };
 
 export const logStorageInfo: BasicMonitorArgs = {
-  logStorageId: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${logGroupInfo.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${globalKeyName}${organizationName}logsstg`,
+  logStorageId: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${logGroupInfo.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${globalKeyName}${organization}logsstg`,
 };

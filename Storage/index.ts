@@ -228,7 +228,7 @@ export default ({
     const origin = stg.name.apply((n) => `${n}.z23.web.core.windows.net`);
     cdnCreator({
       name,
-      domainName: customDomain,
+      domainName: customDomain!,
       origin,
       httpsEnabled: true,
       includesDefaultResponseHeaders:

@@ -1,13 +1,11 @@
 import * as native from '@pulumi/azure-native';
-import { projectName, stack, testMode } from './StackEnv';
-import { organizationName } from './config';
+import { projectName, stack, testMode,organization } from './StackEnv';
 import { all, output, interpolate } from '@pulumi/pulumi';
 import { KeyVaultInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { ResourceInfoArg } from './ResourceEnv';
 
 const config = output(native.authorization.getClientConfig());
-
 export const tenantId = config.tenantId;
 export const subscriptionId = config.subscriptionId;
 export const currentServicePrincipal = config.objectId;
@@ -20,11 +18,10 @@ all([subscriptionId, tenantId]).apply(([s, t]) => {
 });
 
 /** ======== Default Variables ================*/
-export const lockResourceGroup = true;
 
 export const defaultTags = {
   environment: stack,
-  organization: organizationName,
+  organization: organization,
   'pulumi-project': projectName,
 };
 
@@ -79,8 +76,6 @@ export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
     id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
   };
 };
-
-export const envDomain = 'drunkcoding.net';
 
 export const getResourceIdFromInfo = ({
   group,

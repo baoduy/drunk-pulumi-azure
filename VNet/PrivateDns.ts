@@ -1,7 +1,6 @@
 import * as native from '@pulumi/azure-native';
 import { Input, all, Resource, output } from '@pulumi/pulumi';
 import * as global from '../Common/GlobalEnv';
-import { globalKeyName } from '../Common/config';
 import { getResourceInfoFromId } from '../Common/ResourceEnv';
 import { ResourceGroupInfo } from '../types';
 
@@ -66,7 +65,7 @@ export const linkVnetToPrivateDns = ({
     `${zoneName}-link-${vnetInfo!.name}`,
     {
       ...group,
-      location: globalKeyName,
+      location: global.globalKeyName,
       privateZoneName: zoneName,
       registrationEnabled: registrationEnabled || false,
       virtualNetwork: { id: vnetId },

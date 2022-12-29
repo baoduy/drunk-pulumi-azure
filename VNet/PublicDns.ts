@@ -1,7 +1,6 @@
 import * as network from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
 import { global } from '../Common';
-import { globalKeyName } from '../Common/config';
 
 interface RecordProps {
   zoneName: Input<string>;
@@ -40,7 +39,7 @@ const zoneCreator = ({ name, defaultIpAddress }: Props) => {
   const zone = new network.Zone(name, {
     zoneName: name,
     zoneType: network.ZoneType.Public,
-    location: globalKeyName,
+    location: global.globalKeyName,
     ...global.groupInfo,
   });
 

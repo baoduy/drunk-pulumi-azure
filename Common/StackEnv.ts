@@ -1,25 +1,10 @@
-import { Config, runtime, getProject } from '@pulumi/pulumi';
+import * as pulumi from '@pulumi/pulumi';
 
-export const projectName = getProject();
-console.log(`Current Pulumi Project:`, projectName);
+export const testMode = Boolean(process.env.TEST_MODE);
+export const organization =testMode? "hbd" : pulumi.getOrganization().toLowerCase();
+export const projectName = pulumi.getProject().toLowerCase();
+export const stack = pulumi.getStack().toLowerCase();
 
-const getStack = (): {
-  stack: string;
-  config: Config | undefined;
-  testMode: boolean;
-} => {
-  let stack: string = 'test-stack';
-  let config: Config | undefined = undefined;
-  let testMode = true;
+console.log(`Current Pulumi Project: ${projectName}, Organization: ${organization} and Stack: ${stack}`);
+if (testMode) console.log(` & Running in Test mode.`);
 
-  if (!process.env.TEST_MODE) {
-    //Config
-    config = new Config();
-    stack = runtime.getStack().toLowerCase();
-    testMode = false;
-  } else console.log('TEST_MODE', process.env.TEST_MODE);
-
-  return { config, stack, testMode };
-};
-
-export const { config, stack, testMode } = getStack();

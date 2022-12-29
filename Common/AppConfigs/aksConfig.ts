@@ -1,9 +1,9 @@
 //Vnet Peering
 import { isPrd } from '../AzureEnv';
-import { organizationName } from '../config';
+import { organization } from '../StackEnv';
 
 export const aksGroupName = 'aks';
-export const aksClusterName = organizationName;
+export const aksClusterName = organization;
 export const privateCluster = false;
 export const enableVirtualNode = false;
 export const enableFirewall = false;

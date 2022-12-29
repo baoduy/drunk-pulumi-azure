@@ -1,7 +1,6 @@
 import * as native from '@pulumi/azure-native';
-import { envDomain } from '../Common/AzureEnv';
 
-const securities = [
+const getSecurities =(envDomain:string) => [
   "default-src 'self' data: 'unsafe-inline' 'unsafe-eval'",
   `https://*.${envDomain}`,
   'https://*.services.visualstudio.com',
@@ -15,12 +14,12 @@ const securities = [
   `frame-ancestors 'self' https://login.microsoftonline.com https://*.${envDomain}`,
 ];
 
-export const defaultResponseHeaders: any = {
+export const getDefaultResponseHeaders =(envDomain:string)=> ({
   'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
   'X-XSS-Protection': '1; mode=block',
   'X-Content-Type-Options': 'nosniff',
-  'Content-Security-Policy': securities.join(' '),
-};
+  'Content-Security-Policy': getSecurities(envDomain).join(' '),
+});
 
 export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
   name: 'enforceHttps',
@@ -80,8 +79,9 @@ export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
   ],
 };
 
-export const defaultResponseHeadersRule: native.types.input.cdn.DeliveryRuleArgs =
-  {
+export const getDefaultResponseHeadersRule=(envDomain:string): native.types.input.cdn.DeliveryRuleArgs => {
+  const defaultResponseHeaders:any = getDefaultResponseHeaders(envDomain);
+  return {
     name: 'defaultResponseHeaders',
     order: 3,
     conditions: [
@@ -93,7 +93,7 @@ export const defaultResponseHeadersRule: native.types.input.cdn.DeliveryRuleArgs
           matchValues: [],
           transforms: [],
           odataType:
-            '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlPathMatchConditionParameters',
+              '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlPathMatchConditionParameters',
         },
       },
     ],
@@ -104,7 +104,8 @@ export const defaultResponseHeadersRule: native.types.input.cdn.DeliveryRuleArgs
         headerName: k,
         value: defaultResponseHeaders[k],
         odataType:
-          '#Microsoft.Azure.Cdn.Models.DeliveryRuleHeaderActionParameters',
+            '#Microsoft.Azure.Cdn.Models.DeliveryRuleHeaderActionParameters',
       },
     })),
   };
+}

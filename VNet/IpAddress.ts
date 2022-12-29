@@ -6,7 +6,7 @@ import { BasicResourceArgs } from '../types';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 import { getIpAddressName } from '../Common/Naming';
 import Locker from '../Core/Locker';
-import { organizationName } from '../Common/config';
+import { organization } from '../Common/StackEnv';
 
 interface Props extends BasicResourceArgs {
   version?: network.IPVersion;
@@ -42,7 +42,7 @@ export default ({
   const ipAddress = new network.PublicIPAddress(name, {
     publicIpAddressName: name,
     ...group,
-    dnsSettings: { domainNameLabel: `${name}-${organizationName}` },
+    dnsSettings: { domainNameLabel: `${name}-${organization}` },
     publicIPAddressVersion: version,
     publicIPAllocationMethod: allocationMethod,
     publicIPPrefix: publicIPPrefixId ? { id: publicIPPrefixId } : undefined,

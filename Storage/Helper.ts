@@ -4,7 +4,7 @@ import * as storage from '@pulumi/azure-native/storage';
 import { getSecret } from '../KeyVault/Helper';
 import dayjs from 'dayjs';
 import { getConnectionName, getKeyName, getSecretName } from '../Common/Naming';
-import { globalKeyName } from '../Common/config';
+import { globalKeyName } from '../Common/GlobalEnv';
 
 interface Props {
   id: string;

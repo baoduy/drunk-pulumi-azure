@@ -1,13 +1,12 @@
 import { replaceAll } from '../Helpers';
 import { getResourceName } from '../ResourceEnv';
-import { stack } from '../StackEnv';
+import { stack, organization } from '../StackEnv';
 import { ConventionProps } from '../../types';
-import { organizationName } from '../config';
 
 /** The method to get Resource group Name*/
 export const getResourceGroupName = (name: string): string =>
   getResourceName(name, {
-    suffix: organizationName ? `grp-${organizationName}` : 'grp',
+    suffix: organization ? `grp-${organization}` : 'grp',
   });
 
 /** Get Azure Storage Account and CosmosDb Name*/

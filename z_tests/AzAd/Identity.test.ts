@@ -18,7 +18,7 @@ describe('Identity Creator tests', () => {
       },
     });
 
-    expect(item.name).to.equal('test-stack-test');
+    expect(item.name).to.equal('stack-test');
     expect(item.clientSecret).to.not.undefined;
     expect(item.clientId).to.not.undefined;
     expect(item.objectId).to.not.undefined;

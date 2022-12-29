@@ -2,7 +2,7 @@ import { Output } from '@pulumi/pulumi';
 import * as native from '@pulumi/azure-native';
 import CdnHttpsEnable from './CdnHttpsEnable';
 import {
-  defaultResponseHeadersRule,
+  getDefaultResponseHeadersRule,
   enforceHttpsRule,
   indexFileCacheRule,
 } from './CdnRules';
@@ -13,7 +13,7 @@ import { getCdnEndpointName } from '../Common/Naming';
 interface Props {
   name: string;
   origin: Output<string>;
-  domainName?: string;
+  domainName: string;
   httpsEnabled?: boolean;
   includesDefaultResponseHeaders?: boolean;
 }
@@ -29,7 +29,7 @@ export default ({
 
   const rules = [enforceHttpsRule, indexFileCacheRule];
   if (includesDefaultResponseHeaders) {
-    rules.push(defaultResponseHeadersRule);
+    rules.push(getDefaultResponseHeadersRule(domainName));
   }
 
   const endpoint = new native.cdn.Endpoint(name, {

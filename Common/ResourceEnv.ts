@@ -2,7 +2,12 @@ import { replaceAll } from './Helpers';
 import { ConventionProps, ResourceGroupInfo } from '../types';
 import { Input } from '@pulumi/pulumi';
 import { BaseOptions } from '../CustomProviders/Base';
-import { resourceConvention } from './config';
+import {stack} from "./StackEnv";
+
+export const resourceConvention = {
+  prefix: stack,
+  suffix: undefined, //This may be specified by each resource name
+};
 
 /** ==================== Resources Variables ========================= */
 

@@ -1,7 +1,6 @@
 import creator from '../../Sql';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { defaultAlertEmails } from '../../Common/GlobalEnv';
 
 describe('Sql Creator tests', () => {
   it('Sql Creator', async () => {
@@ -15,7 +14,7 @@ describe('Sql Creator tests', () => {
       elasticPool: { name: 'Basic', capacity: 100 },
 
       vulnerabilityAssessment: {
-        alertEmails: defaultAlertEmails,
+        alertEmails: ['hbd@abc.com'],
         storageAccessKey: '123',
         storageEndpoint: 'https://1234',
         logStorageId: '123456',
