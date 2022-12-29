@@ -25,12 +25,12 @@ export default async ({
     const vmScaleSets = await findVMScaleSet(group.resourceGroupName);
     if (!vmScaleSets) return;
 
-    const logWp = await getLogWpSecrets(lId, vaultInfo);
-    const logStorage = await getStorageSecrets({
-      id: sId,
+    const logWp =lId? await getLogWpSecrets(lId!, vaultInfo):undefined;
+    const logStorage =sId? await getStorageSecrets({
+      id: sId!,
       vaultInfo,
       globalResource: true,
-    });
+    }):undefined;
 
     if (!logWp || !logStorage) return;
 

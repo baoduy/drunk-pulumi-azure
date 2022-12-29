@@ -63,7 +63,7 @@ describe('ServiceBus Creator tests', function () {
         const sn2 = await outputPromise(
           (t.subs![1].resource as any).subscriptionName
         );
-        expect(sn2).to.equal('eat-cake-session-sub');
+        expect(sn2).to.equal('eat-cakev1-session-sub');
       })
     );
   });

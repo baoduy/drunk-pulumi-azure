@@ -48,15 +48,7 @@ export default async ({
   permissions = new Array<PermissionProps>(),
   network,
   ...others
-}: Props): Promise<
-  ResourceResultProps<native.keyvault.Vault> & {
-    toVaultInfo: () => KeyVaultInfo;
-    addDiagnostic: (logInfo: BasicMonitorArgs) => Promise<void>;
-    createPrivateLink: (
-      props: PrivateLinkProps
-    ) => Promise<native.network.PrivateEndpoint>;
-  }
-> => {
+}: Props) => {
   const vaultName = getKeyVaultName(name, nameConvention);
 
   const accessPolicies =
@@ -142,17 +134,15 @@ export default async ({
   const toVaultInfo = () => ({ name: vaultName, group, id: resource.id });
 
   //Add Diagnostic
-  const addDiagnostic = async (logInfo: BasicMonitorArgs) => {
-    await createDiagnostic({
+  const addDiagnostic = (logInfo: BasicMonitorArgs) => createDiagnostic({
       name,
       targetResourceId: resource.id,
       ...logInfo,
       logsCategories: ['AuditEvent'],
     });
-  };
 
   // Create Private Link
-  const createPrivateLink = async (props: PrivateLinkProps) =>
+  const createPrivateLink = (props: PrivateLinkProps) =>
     PrivateEndpoint({
       name: getPrivateEndpointName(name),
       group,
@@ -172,6 +162,7 @@ export default async ({
       contentType: 'KeyVault Default Values',
       dependsOn: resource,
     });
+
     await addLegacySecret({
       name: 'subscription-id',
       value: subscriptionId,
@@ -179,7 +170,8 @@ export default async ({
       contentType: 'KeyVault Default Values',
       dependsOn: resource,
     });
-    addLegacyKey({
+
+    await addLegacyKey({
       name: 'default-encryption-key',
       vaultInfo,
       dependsOn: resource,

@@ -1,11 +1,9 @@
 import { Input } from '@pulumi/pulumi';
-
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getGraphPermissions } from '../AzAd/GraphDefinition';
 import identityCreator from '../AzAd/Identity';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { getResourceIdFromInfo } from '../Common/ResourceEnv';
-import { defaultScope } from '../Common/AzureEnv';
+import { defaultScope,getResourceIdFromInfo } from '../Common/AzureEnv';
 
 interface Props {
   name: string;
