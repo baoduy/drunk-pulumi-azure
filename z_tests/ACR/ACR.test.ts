@@ -1,7 +1,7 @@
 import creator from '../../ContainerRegistry';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
+
 
 describe('ContainerRegistry Creator tests', () => {
   it('ContainerRegistry Creator', async () => {
@@ -9,11 +9,11 @@ describe('ContainerRegistry Creator tests', () => {
       name: 'drunkcoding',
     });
 
-    const [n, g] = await outputPromise([
-      (rs.registry as any).registryName,
-      (rs.registry as any).resourceGroupName,
-    ]);
-    expect(n).to.equal('drunkcoding4acr');
-    expect(g).to.equal('global-grp-hbd');
+    (rs.registry as any).registryName.apply(n => {
+      expect(n).to.equal('drunkcoding4acr');
+      console.log(n);
+    });
+
+    (rs.registry as any).resourceGroupName.apply(g => expect(g).to.equal('global-grp-hbd'));
   });
 });

@@ -1,7 +1,6 @@
 import creator from '../../Sql';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 import { defaultAlertEmails } from '../../Common/GlobalEnv';
 
 describe('Sql Creator tests', () => {
@@ -25,16 +24,14 @@ describe('Sql Creator tests', () => {
       databases: [{ name: 'hello' }],
     });
 
-    const n = await outputPromise((rs.resource as any).serverName);
-    expect(n).to.equal('test-stack-aks-sql');
+    (rs.resource as any).serverName.apply(n => expect(n).to.equal('test-stack-aks-sql'));
 
     expect(rs.elasticPool).to.not.undefined;
     expect(rs.databases).to.not.undefined;
 
     await Promise.all(
       rs.databases!.map(async (db) => {
-        const n = await outputPromise((db.resource as any).databaseName);
-        expect(n).to.equal('test-stack-hello-db');
+        (db.resource as any).databaseName.apply(n => expect(n).to.equal('test-stack-hello-db'));
       })
     );
   });

@@ -1,7 +1,6 @@
 import creator from '../../VNet/IpAddress';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('IpAddress Creator tests', () => {
   it('IpAddress Creator', async () => {
@@ -10,7 +9,6 @@ describe('IpAddress Creator tests', () => {
       group: { resourceGroupName: 'drunk' },
     });
 
-    const n = await outputPromise((rs as any).publicIpAddressName);
-    expect(n).to.equal('test-stack-drunk-ip');
+    (rs as any).publicIpAddressName.apply(n => expect(n).to.equal('test-stack-drunk-ip'));
   });
 });

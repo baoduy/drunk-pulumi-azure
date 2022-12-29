@@ -1,7 +1,6 @@
 import creator from '../../VNet/Vnet';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('Vnet Creator tests', () => {
   it('Vnet Creator', async () => {
@@ -21,13 +20,11 @@ describe('Vnet Creator tests', () => {
       features: { securityGroup: {} },
     });
 
-    const n = await outputPromise((rs.vnet as any).virtualNetworkName);
-    expect(n).to.equal('test-stack-aks-vnt');
+    (rs.vnet as any).virtualNetworkName.apply(n => expect(n).to.equal('test-stack-aks-vnt'));
 
     expect(rs.routeTable).to.not.undefined;
     expect(rs.securityGroup).to.not.undefined;
 
-    const sl = await outputPromise(rs.vnet.subnets.apply((s) => s!.length));
-    expect(sl).to.be.equal(1);
+    rs.vnet.subnets.apply((s) => expect(s!.length).to.be.equal(1));
   });
 });

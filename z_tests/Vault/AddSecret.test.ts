@@ -1,7 +1,6 @@
 import { addKey, addSecret, getKey } from '../../KeyVault/Helper';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 import { KeyVaultInfo } from '../../types';
 
 describe('Key Vault tests', () => {
@@ -17,8 +16,8 @@ describe('Key Vault tests', () => {
       vaultInfo,
     });
 
-    const n = await outputPromise((rs as any).keyName);
-    expect(n).to.equal('cache-primary-connection-string');
+
+    (rs as any).keyName.apply(n => expect(n).to.equal('cache-primary-connection-string'));
   });
 
   it('Add Secret test', async () => {
@@ -28,7 +27,6 @@ describe('Key Vault tests', () => {
       vaultInfo,
     });
 
-    const n = await outputPromise((rs as any).secretName);
-    expect(n).to.equal('cache-primary');
+    (rs as any).secretName.apply(n => expect(n).to.equal('cache-primary'));
   });
 });

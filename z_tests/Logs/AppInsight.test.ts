@@ -2,7 +2,6 @@ import '../_tools/Mocks';
 
 import creator from '../../Logs/AppInsight';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('AppInsight Creator tests', () => {
   it('AppInsight Creator', async () => {
@@ -12,7 +11,6 @@ describe('AppInsight Creator tests', () => {
       group,
     });
 
-    const n = await outputPromise((rs as any).resourceName);
-    expect(n).to.equal('test-stack-dev-isg');
+    (rs as any).resourceName.apply(n => expect(n).to.equal('test-stack-dev-isg'));
   });
 });

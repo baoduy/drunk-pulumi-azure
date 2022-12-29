@@ -1,7 +1,6 @@
 import { convertToIpRange } from '../../VNet/Helper';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('Vnet Helper tests', () => {
   it('convertToIpRange test', async () => {

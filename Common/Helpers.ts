@@ -1,23 +1,3 @@
-import { Output, all } from '@pulumi/pulumi';
-
-/*** This is using for unit test */
-export function outputPromise<T>(
-  values: Array<Output<T | undefined> | undefined>
-): Promise<T[]>;
-
-export function outputPromise<T>(
-  value: Output<T | undefined> | undefined
-): Promise<T>;
-
-export function outputPromise<T>(values: any): any {
-  if (Array.isArray(values))
-    return new Promise<T[]>((resolve) =>
-      all(values).apply((v) => resolve(v as T[]))
-    );
-  return new Promise<T>((resolve) =>
-    all([values]).apply((v) => resolve(v[0] as T))
-  );
-}
 
 /** Replace all characters in string*/
 export function replaceAll(value: string, search: string, replace: string) {

@@ -1,7 +1,6 @@
 import creator from '../../ServiceBus';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('ServiceBus Creator tests', function () {
   this.timeout(5000);
@@ -15,8 +14,7 @@ describe('ServiceBus Creator tests', function () {
       //vaultInfo,
     });
 
-    const n = await outputPromise((rs.resource as any).namespaceName);
-    expect(n).to.equal('test-stack-aks-bus');
+    (rs.resource as any).namespaceName.apply(n => expect(n).to.equal('test-stack-aks-bus'));
 
     expect(rs.topics).to.undefined;
     expect(rs.queues).to.undefined;
@@ -51,19 +49,11 @@ describe('ServiceBus Creator tests', function () {
     await Promise.all(
       rs.topics!.map(async (t) => {
         //Verify the topic name
-        const n = await outputPromise((t.topic as any).topicName);
-        expect(n).to.equal('cake-v1-tp');
+        (t.topic as any).topicName.apply(n => expect(n).to.equal('cake-v1-tp'));
 
         //Verify the Subscription name
-        const sn1 = await outputPromise(
-          (t.subs![0].resource as any).subscriptionName
-        );
-        expect(sn1).to.equal('eat-cakev1-sub');
-
-        const sn2 = await outputPromise(
-          (t.subs![1].resource as any).subscriptionName
-        );
-        expect(sn2).to.equal('eat-cakev1-session-sub');
+        (t.subs![0].resource as any).subscriptionName.apply(sn1 => expect(sn1).to.equal('eat-cakev1-sub'));
+        (t.subs![1].resource as any).subscriptionName.apply(sn2 => expect(sn2).to.equal('eat-cakev1-session-sub'));
       })
     );
   });
@@ -83,8 +73,7 @@ describe('ServiceBus Creator tests', function () {
     await Promise.all(
       rs.queues!.map(async (t) => {
         //Verify the topic name
-        const n = await outputPromise((t.queue as any).queueName);
-        expect(n).to.equal('cake-v1-que');
+        (t.queue as any).queueName.apply(n => expect(n).to.equal('cake-v1-que'));
       })
     );
   });

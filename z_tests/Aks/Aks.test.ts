@@ -2,13 +2,11 @@ import '../_tools/Mocks';
 
 import creator from '../../Aks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('Aks Creator tests', () => {
   it('Aks Creator', async () => {
-
-
     const group = { resourceGroupName: 'RG' };
+
     const rs = await creator({
       name: 'cluster',
       group,
@@ -32,12 +30,8 @@ describe('Aks Creator tests', () => {
 
     expect(rs!.aks).to.not.undefined;
 
-    const [g, n] = await outputPromise([
-      (rs!.aks as any).nodeResourceGroup,
-      (rs!.aks as any).resourceName,
-    ]);
+    (rs!.aks as any).nodeResourceGroup.apply(g => expect(g).to.equal('test-stack-cluster-aks-nodes'));
+    (rs!.aks as any).resourceName.apply(n => expect(n).to.equal('test-stack-cluster-aks'));
 
-    expect(g).to.equal('test-stack-cluster-aks-nodes');
-    expect(n).to.equal('test-stack-cluster-aks');
-  });
+  }).timeout(5000);
 });

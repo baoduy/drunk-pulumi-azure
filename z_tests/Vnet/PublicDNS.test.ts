@@ -1,7 +1,6 @@
 import creator from '../../VNet/PublicDns';
 import '../_tools/Mocks';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 
 describe('PublicDns Creator tests', () => {
   it('PublicDns Creator', async () => {
@@ -20,14 +19,9 @@ describe('PublicDns Creator tests', () => {
       ],
     });
 
-    const [n, g] = await outputPromise([
-      (rs.zone as any).zoneName,
-      (rs.zone as any).resourceGroupName,
-    ]);
+    (rs.zone as any).zoneName.apply(n => expect(n).to.equal('drunkcoding.net'));
+    (rs.zone as any).resourceGroupName.apply(g => expect(g).to.equal('global-grp-hbd'));
 
-    expect(n).to.equal('drunkcoding.net');
-    expect(g).to.equal('global-grp-hbd');
-
-    if (rs.child) rs.child.forEach((c) => {});
+    if (rs.child) rs.child.forEach((c) => { });
   });
 });

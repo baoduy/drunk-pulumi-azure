@@ -4,7 +4,6 @@ import * as native from '@pulumi/azure-native';
 
 import { DefaultResourceArgs } from '../../types';
 import { expect } from 'chai';
-import { outputPromise } from '../../Common/Helpers';
 import rsCreator from '../../Core/ResourceCreator';
 
 describe('Resource Creator tests. The resource creator will not reformat the name', () => {
@@ -13,8 +12,7 @@ describe('Resource Creator tests. The resource creator will not reformat the nam
       resourceGroupName: 'resource-group',
     } as native.resources.ResourceGroupArgs & DefaultResourceArgs);
 
-    const u = await outputPromise(rs.resource.urn);
-    expect(u).to.include('resource-group');
+    rs.resource.urn.apply(n => expect(n).to.include('resource-group'));
   });
 
   it('Resource Creator with lock', async () => {
@@ -25,8 +23,7 @@ describe('Resource Creator tests. The resource creator will not reformat the nam
 
     expect(locker).to.not.undefined;
 
-    const n = await outputPromise(locker!.name);
-    expect(n).to.be.equal('resource-group-CanNotDelete');
+    locker!.name.apply(n => expect(n).to.be.equal('resource-group-CanNotDelete'));
   });
 
   it('Resource Creator with diagnostic', async () => {
@@ -37,7 +34,6 @@ describe('Resource Creator tests. The resource creator will not reformat the nam
 
     expect(diagnostic).to.not.undefined;
 
-    const n = await outputPromise(diagnostic!.name);
-    expect(n).to.be.equal('resource-group-diag');
+    diagnostic!.name.apply(n => expect(n).to.be.equal('resource-group-diag'));
   });
 });
