@@ -9,11 +9,7 @@ describe('ContainerRegistry Creator tests', () => {
       name: 'drunkcoding',
     });
 
-    (rs.registry as any).registryName.apply(n => {
-      expect(n).to.equal('drunkcoding4acr');
-      console.log(n);
-    });
-
+    (rs.registry as any).registryName.apply(n => expect(n).to.equal('drunkcoding4acr'));
     (rs.registry as any).resourceGroupName.apply(g => expect(g).to.equal('global-grp-hbd'));
   });
 });
