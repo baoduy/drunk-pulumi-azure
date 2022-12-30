@@ -60,8 +60,8 @@ const createSubnet = ({
   const serviceEndpoints = Array.isArray(subnet.allowedServiceEndpoints)
     ? subnet.allowedServiceEndpoints
     : subnet.allowedServiceEndpoints === true
-    ? defaultServicesEndpoints
-    : undefined;
+      ? defaultServicesEndpoints
+      : undefined;
 
   return {
     name: subnet.name,
@@ -90,9 +90,9 @@ const createSubnet = ({
 
     delegations: subnet.delegateServices
       ? subnet.delegateServices.map((d) => ({
-          name: `${subnet.name}-${d.split('/').pop()}-delegate`,
-          serviceName: d,
-        }))
+        name: `${subnet.name}-${d.split('/').pop()}-delegate`,
+        serviceName: d,
+      }))
       : undefined,
   };
 };
@@ -122,10 +122,16 @@ interface VnetProps extends BasicResourceArgs {
     };
 
     firewall?: {
+      /** Subnet address Prefix */
       addressPrefix: string;
     };
     //Enable Bastion host for Remove desktop via a web browser without open RDP port.
-    bastion?: { addressPrefix: string; donotCreateBastionHost?: boolean };
+    bastion?: {
+      /** Subnet address Prefix */
+      addressPrefix: string;
+      /** In case just want to create subnet only without bastion host */
+      donotCreateBastionHost?: boolean
+    };
   };
 }
 
@@ -234,9 +240,9 @@ export default ({
 
         securityGroupId:
           s.enableSecurityGroup === false ||
-          [azFirewallSubnet, azBastionSubnetName, gatewaySubnetName].includes(
-            s.name
-          )
+            [azFirewallSubnet, azBastionSubnetName, gatewaySubnetName].includes(
+              s.name
+            )
             ? undefined
             : securityGroup?.id,
 

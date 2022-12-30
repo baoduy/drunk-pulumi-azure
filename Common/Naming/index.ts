@@ -73,7 +73,7 @@ export const getAppInsightName = (name: string) =>
   getResourceName(name, { suffix: 'isg' });
 
 export const getLogWpName = (name: string) =>
-  getResourceName(name, { suffix: 'log' });
+  getResourceName(name, { suffix: 'wp' });
 
 export const getWebTestName = (name: string) =>
   getResourceName(name, { suffix: 'hlz' });
@@ -138,6 +138,9 @@ export const getNetworkSecurityGroupName = (name: string) =>
 export const getIpAddressName = (name: string) =>
   getResourceName(name, { suffix: 'ip' });
 
+export const getIpAddressPrefixName = (name: string) =>
+    getResourceName(name, { suffix: 'ipx' });
+
 export const getAppGatewayName = (name: string) =>
   getResourceName(name, { suffix: 'gtw' });
 
@@ -165,7 +168,7 @@ export const getCdnProfileName = (name: string) =>
 
 /**The Azure Container Registry is created to Global group so no prefix*/
 export const getAcrName = (name: string) =>
-  replaceAll(getResourceName(name, { prefix: '', suffix: 'acr' }), '-', '4');
+  replaceAll(getResourceName(name, { prefix: '', suffix: 'acr' }), '-', '');
 
 /**The App Cert Order is created to Global group so no prefix*/
 export const getCertOrderName = (name: string) =>

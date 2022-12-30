@@ -1,4 +1,3 @@
-
 /** Replace all characters in string*/
 export function replaceAll(value: string, search: string, replace: string) {
   if (!value) return value;
@@ -11,10 +10,14 @@ export const shallowEquals = (obj1: any, obj2: any) =>
 
 /** Get Domain from Url*/
 export const getDomainFromUrl = (url: string) =>
-  url.replace('https://', '').replace('http://', '').split('/')[0];
+  url.replace("https://", "").replace("http://", "").split("/")[0];
 
 /** Get Root Domain from Url or Sub domain*/
 export const getRootDomainFromUrl = (url: string) => {
-  const array = getDomainFromUrl(url).split('.');
-  return array.slice(Math.max(array.length - 2, 0)).join('.');
+  const array = getDomainFromUrl(url).split(".");
+  return array.slice(Math.max(array.length - 2, 0)).join(".");
 };
+
+/** Create Range*/
+export const RangeOf = (length: number) =>
+  Array.from({ length: length }, (v, k) => k + 1);

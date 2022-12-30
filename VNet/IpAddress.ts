@@ -1,16 +1,16 @@
-import * as network from '@pulumi/azure-native/network';
+import * as network from "@pulumi/azure-native/network";
 
-import { Input } from '@pulumi/pulumi';
+import { Input } from "@pulumi/pulumi";
 
-import { BasicResourceArgs } from '../types';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
-import { getIpAddressName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import { organization } from '../Common/StackEnv';
+import { BasicResourceArgs } from "../types";
+import { defaultTags, isPrd } from "../Common/AzureEnv";
+import { getIpAddressName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { organization } from "../Common/StackEnv";
 
 interface Props extends BasicResourceArgs {
   version?: network.IPVersion;
-  publicIPPrefixId?: Input<string>;
+  publicIPPrefix?: network.PublicIPPrefix;
   enableDdos?: boolean;
   ddosCustomPolicyId?: Input<string>;
   allocationMethod?: network.IPAllocationMethod;
@@ -27,7 +27,7 @@ export default ({
   name,
   group,
   version = network.IPVersion.IPv4,
-  publicIPPrefixId,
+  publicIPPrefix,
   enableDdos,
   ddosCustomPolicyId,
   allocationMethod = network.IPAllocationMethod.Static,
@@ -39,31 +39,37 @@ export default ({
 }: Props) => {
   name = getIpName(name);
 
-  const ipAddress = new network.PublicIPAddress(name, {
-    publicIpAddressName: name,
-    ...group,
-    dnsSettings: { domainNameLabel: `${name}-${organization}` },
-    publicIPAddressVersion: version,
-    publicIPAllocationMethod: allocationMethod,
-    publicIPPrefix: publicIPPrefixId ? { id: publicIPPrefixId } : undefined,
-    ddosSettings:
-      enableDdos && sku.name === network.PublicIPAddressSkuName.Standard
-        ? {
-            protectedIP: true,
-            protectionCoverage: network.DdosSettingsProtectionCoverage.Standard,
-            ddosCustomPolicy: ddosCustomPolicyId
-              ? { id: ddosCustomPolicyId }
-              : undefined,
-          }
-        : undefined,
-    sku,
-    zones: isPrd ? ['1', '2', '3'] : undefined,
-    tags: defaultTags,
-  });
+  const ipAddress = new network.PublicIPAddress(
+    name,
+    {
+      publicIpAddressName: name,
+      ...group,
+      dnsSettings: { domainNameLabel: `${name}-${organization}` },
+      publicIPAddressVersion: version,
+      publicIPAllocationMethod: allocationMethod,
+      publicIPPrefix: publicIPPrefix ? { id: publicIPPrefix.id } : undefined,
+      ddosSettings:
+        enableDdos && sku.name === network.PublicIPAddressSkuName.Standard
+          ? {
+              protectedIP: true,
+              protectionCoverage:
+                network.DdosSettingsProtectionCoverage.Standard,
+              ddosCustomPolicy: ddosCustomPolicyId
+                ? { id: ddosCustomPolicyId }
+                : undefined,
+            }
+          : undefined,
+      sku,
+      zones: isPrd ? ["1", "2", "3"] : undefined,
+      tags: defaultTags,
+    },
+    { dependsOn: publicIPPrefix }
+  );
 
   if (lock) {
     Locker({ name, resourceId: ipAddress.id, dependsOn: ipAddress });
   }
+
   return ipAddress;
 };
 
