@@ -11,8 +11,7 @@ You should add the Organization code to the name of some resources and resource 
 There are two ways to config your organization code.
 
 1. Name your project with the following convention: "ProjectName-OrgCode".
-2. Set "projectName:organization: YourOrgCode" in your project stack YAML configuration file.
-**Note**: With option two, you must repeat the configuration on all stack YAML files.
+2. The organization will be retrieved directly from the Pulumi portal.
 
 ## Private Link Dns Name
 https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-dns
