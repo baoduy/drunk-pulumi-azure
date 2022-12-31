@@ -8,6 +8,7 @@ import { subscriptionId } from "../Common/AzureEnv";
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
 export const azFirewallSubnet = "AzureFirewallSubnet";
+export const azFirewallManagementSubnet = "AzureFirewallManagementSubnet";
 export const azBastionSubnetName = "AzureBastionSubnet";
 
 export const getIpsRange = (prefix: string) => {

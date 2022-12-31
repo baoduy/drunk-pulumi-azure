@@ -1,101 +1,22 @@
-import * as network from '@pulumi/azure-native/network';
-import * as pulumi from '@pulumi/pulumi';
-import { input as inputs, enums } from '@pulumi/azure-native/types';
-import { BasicResourceArgs, ResourceGroupInfo } from '../types';
-import { defaultTags } from '../Common/AzureEnv';
+import * as network from "@pulumi/azure-native/network";
+import * as pulumi from "@pulumi/pulumi";
+import { input as inputs } from "@pulumi/azure-native/types";
+import { BasicResourceArgs } from "../types";
+import { defaultTags } from "../Common/AzureEnv";
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
+  azFirewallManagementSubnet,
   azFirewallSubnet,
   gatewaySubnetName,
-} from './Helper';
-import { getVnetName } from '../Common/Naming';
-import Bastion from './Bastion';
-
-const defaultServicesEndpoints = [
-  'Microsoft.AzureActiveDirectory',
-  'Microsoft.AzureCosmosDB',
-  'Microsoft.ContainerRegistry',
-  'Microsoft.EventHub',
-  'Microsoft.KeyVault',
-  'Microsoft.ServiceBus',
-  'Microsoft.Sql',
-  'Microsoft.Storage',
-  'Microsoft.Web',
-];
+} from "./Helper";
+import { getVnetName } from "../Common/Naming";
+import Bastion from "./Bastion";
+import CreateSubnet, { SubnetProps } from "./Subnet";
 
 export type DelegateServices =
-  | 'Microsoft.ContainerInstance/containerGroups'
-  | 'Microsoft.Web/serverFarms';
-
-export interface SubnetProps {
-  name: string;
-  /** The index of prefixSpaces*/
-  addressPrefix: string;
-  /** Enable this to allow to link private endpoint network policies */
-  enablePrivateEndpoint?: boolean;
-  /** Enable this to allow to link private link service network policies*/
-  enablePrivateLinkService?: boolean;
-  enableSecurityGroup?: boolean;
-  enableRouteTable?: boolean;
-  allowedServiceEndpoints?: boolean | string[];
-  delegateServices?: DelegateServices[];
-}
-
-interface Props {
-  subnet: SubnetProps;
-  vnetName: pulumi.Input<string>;
-  group: ResourceGroupInfo;
-  securityGroupId?: pulumi.Output<string>;
-  routeTableId?: pulumi.Output<string>;
-}
-
-const createSubnet = ({
-  group,
-  subnet,
-  vnetName,
-  routeTableId,
-  securityGroupId,
-}: Props) => {
-  const serviceEndpoints = Array.isArray(subnet.allowedServiceEndpoints)
-    ? subnet.allowedServiceEndpoints
-    : subnet.allowedServiceEndpoints === true
-      ? defaultServicesEndpoints
-      : undefined;
-
-  return {
-    name: subnet.name,
-    subnetName: subnet.name,
-    ...group,
-    addressPrefix: subnet.addressPrefix,
-    virtualNetworkName: vnetName,
-
-    routeTable:
-      subnet.enableRouteTable !== false && routeTableId
-        ? { id: routeTableId }
-        : undefined,
-    networkSecurityGroup: securityGroupId ? { id: securityGroupId } : undefined,
-
-    privateLinkServiceNetworkPolicies: subnet.enablePrivateLinkService
-      ? network.VirtualNetworkPrivateLinkServiceNetworkPolicies.Enabled
-      : network.VirtualNetworkPrivateLinkServiceNetworkPolicies.Disabled,
-
-    privateEndpointNetworkPolicies: subnet.enablePrivateEndpoint
-      ? network.VirtualNetworkPrivateEndpointNetworkPolicies.Enabled
-      : network.VirtualNetworkPrivateEndpointNetworkPolicies.Disabled,
-
-    serviceEndpoints: serviceEndpoints
-      ? serviceEndpoints.map((service) => ({ service }))
-      : undefined,
-
-    delegations: subnet.delegateServices
-      ? subnet.delegateServices.map((d) => ({
-        name: `${subnet.name}-${d.split('/').pop()}-delegate`,
-        serviceName: d,
-      }))
-      : undefined,
-  };
-};
+  | "Microsoft.ContainerInstance/containerGroups"
+  | "Microsoft.Web/serverFarms";
 
 interface VnetProps extends BasicResourceArgs {
   ddosId?: pulumi.Input<string>;
@@ -118,19 +39,20 @@ interface VnetProps extends BasicResourceArgs {
 
     appGatewaySubnet?: {
       addressPrefix: string;
-      version: 'v1' | 'v2';
+      version: "v1" | "v2";
     };
 
     firewall?: {
       /** Subnet address Prefix */
       addressPrefix: string;
+      managementAddressPrefix?: string;
     };
     //Enable Bastion host for Remove desktop via a web browser without open RDP port.
     bastion?: {
       /** Subnet address Prefix */
       addressPrefix: string;
       /** In case just want to create subnet only without bastion host */
-      donotCreateBastionHost?: boolean
+      disableBastionHostCreation?: boolean;
     };
   };
 }
@@ -142,7 +64,6 @@ export default ({
   addressSpaces,
   subnets = [],
   dnsServers,
-  //publicIpAddress,
   features = {},
 }: VnetProps) => {
   const vName = getVnetName(name);
@@ -170,14 +91,14 @@ export default ({
 
     //Only Allows Https with port 443 from public IP address to Bastion Host Ips
     securityRules.push({
-      name: 'allow-internet-bastion',
-      sourceAddressPrefix: '*',
-      sourcePortRange: '*',
+      name: "allow-internet-bastion",
+      sourceAddressPrefix: "*",
+      sourcePortRange: "*",
       destinationAddressPrefix: features.bastion.addressPrefix,
-      destinationPortRange: '443',
-      protocol: 'TCP',
-      access: 'Allow',
-      direction: 'Inbound',
+      destinationPortRange: "443",
+      protocol: "TCP",
+      access: "Allow",
+      direction: "Inbound",
       priority: 200 + securityRules.length + 1,
     });
   }
@@ -189,6 +110,13 @@ export default ({
       addressPrefix: features.firewall.addressPrefix,
       allowedServiceEndpoints: false,
     });
+
+    if (features.firewall.managementAddressPrefix)
+      subnets.push({
+        name: azFirewallManagementSubnet,
+        addressPrefix: features.firewall.managementAddressPrefix,
+        allowedServiceEndpoints: false,
+      });
   }
 
   //NetworkSecurityGroup
@@ -196,14 +124,14 @@ export default ({
   if (features.securityGroup) {
     if (!features.securityGroup.allowInternetAccess) {
       securityRules.push({
-        name: 'deny-internet',
-        sourceAddressPrefix: '*',
-        sourcePortRange: '*',
-        destinationAddressPrefix: 'Internet',
-        destinationPortRange: '*',
-        protocol: '*',
-        access: 'Deny',
-        direction: 'Outbound',
+        name: "deny-internet",
+        sourceAddressPrefix: "*",
+        sourcePortRange: "*",
+        destinationAddressPrefix: "Internet",
+        destinationPortRange: "*",
+        protocol: "*",
+        access: "Deny",
+        direction: "Outbound",
         priority: 4096, //The last rule in the list});
       });
     }
@@ -233,26 +161,26 @@ export default ({
     dhcpOptions: dnsServers ? { dnsServers } : undefined,
 
     subnets: subnets.map((s) =>
-      createSubnet({
+      CreateSubnet({
         subnet: s,
         vnetName: name,
         group,
 
-        securityGroupId:
+        securityGroup:
           s.enableSecurityGroup === false ||
-            [azFirewallSubnet, azBastionSubnetName, gatewaySubnetName].includes(
-              s.name
-            )
+          [azFirewallSubnet, azBastionSubnetName, gatewaySubnetName].includes(
+            s.name
+          )
             ? undefined
-            : securityGroup?.id,
+            : securityGroup,
 
-        routeTableId: [
+        routeTable: [
           azBastionSubnetName,
           azFirewallSubnet,
           gatewaySubnetName,
         ].includes(s.name)
           ? undefined
-          : routeTable.id,
+          : routeTable,
       })
     ),
 
@@ -267,7 +195,7 @@ export default ({
 
   const bastionSubnet = findSubnet(azBastionSubnetName);
   //Create Bastion
-  if (features.bastion && !features.bastion.donotCreateBastionHost) {
+  if (features.bastion && !features.bastion.disableBastionHostCreation) {
     Bastion({
       name,
       group,
@@ -281,6 +209,7 @@ export default ({
     vnet,
 
     firewallSubnet: findSubnet(azFirewallSubnet),
+    firewallManageSubnet: findSubnet(azFirewallManagementSubnet),
     appGatewaySubnet: findSubnet(appGatewaySubnetName),
     bastionSubnet,
 
@@ -295,53 +224,53 @@ const getAppGatewayRules = ({
   version,
 }: {
   addressPrefix: string;
-  version: 'v1' | 'v2';
+  version: "v1" | "v2";
 }): pulumi.Input<inputs.network.SecurityRuleArgs>[] => {
   let start = 100;
 
   return [
     //Add inbound rule for app gateway subnet
     {
-      name: 'allow_internet_in_gateway_health',
-      description: 'Allow Health check access from internet to Gateway',
+      name: "allow_internet_in_gateway_health",
+      description: "Allow Health check access from internet to Gateway",
       priority: 200 + start++,
-      protocol: 'Tcp',
-      access: 'Allow',
-      direction: 'Inbound',
+      protocol: "Tcp",
+      access: "Allow",
+      direction: "Inbound",
 
-      sourceAddressPrefix: 'Internet',
-      sourcePortRange: '*',
+      sourceAddressPrefix: "Internet",
+      sourcePortRange: "*",
       destinationAddressPrefix: addressPrefix,
       destinationPortRanges:
-        version === 'v1' ? ['65503-65534'] : ['65200-65535'],
+        version === "v1" ? ["65503-65534"] : ["65200-65535"],
     },
 
     {
-      name: 'allow_https_internet_in_gateway',
-      description: 'Allow HTTPS access from internet to Gateway',
+      name: "allow_https_internet_in_gateway",
+      description: "Allow HTTPS access from internet to Gateway",
       priority: 200 + start++,
-      protocol: 'Tcp',
-      access: 'Allow',
-      direction: 'Inbound',
+      protocol: "Tcp",
+      access: "Allow",
+      direction: "Inbound",
 
-      sourceAddressPrefix: 'Internet',
-      sourcePortRange: '*',
+      sourceAddressPrefix: "Internet",
+      sourcePortRange: "*",
       destinationAddressPrefix: addressPrefix,
-      destinationPortRange: '443',
+      destinationPortRange: "443",
     },
 
     {
-      name: 'allow_loadbalancer_in_gateway',
-      description: 'Allow Load balancer to Gateway',
+      name: "allow_loadbalancer_in_gateway",
+      description: "Allow Load balancer to Gateway",
       priority: 200 + start++,
-      protocol: 'Tcp',
-      access: 'Allow',
-      direction: 'Inbound',
+      protocol: "Tcp",
+      access: "Allow",
+      direction: "Inbound",
 
-      sourceAddressPrefix: 'AzureLoadBalancer',
-      sourcePortRange: '*',
+      sourceAddressPrefix: "AzureLoadBalancer",
+      sourcePortRange: "*",
       destinationAddressPrefix: addressPrefix,
-      destinationPortRange: '*',
+      destinationPortRange: "*",
     },
 
     //Denied others

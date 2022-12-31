@@ -1,6 +1,6 @@
-import { input as inputs, enums } from '@pulumi/azure-native/types';
-import * as network from '@pulumi/azure-native/network';
-import { Input, Output } from '@pulumi/pulumi';
+import { input as inputs, enums } from "@pulumi/azure-native/types";
+import * as network from "@pulumi/azure-native/network";
+import { Input, Output } from "@pulumi/pulumi";
 
 export interface FirewallRuleProps {
   name: string;
@@ -23,10 +23,5 @@ export interface FirewallRuleResults {
   networkRuleCollections?: inputs.network.AzureFirewallNetworkRuleCollectionArgs[];
 }
 
-type FirewallRuleCreator = (props: {
-  publicIpAddress: network.PublicIPAddress;
-}) => FirewallRuleResults;
-
-type FirewallPolicyCreator = (props: {
-  publicIpAddress: network.PublicIPAddress;
-}) => Omit<FirewallPolicyProps, 'enabled'>;
+//type FirewallRuleCreator = () => FirewallRuleResults;
+//type FirewallPolicyCreator = () => Omit<FirewallPolicyProps, "enabled">;

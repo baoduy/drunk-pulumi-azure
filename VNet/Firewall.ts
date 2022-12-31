@@ -1,40 +1,40 @@
-import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
-import ResourceCreator from '../Core/ResourceCreator';
+import * as network from "@pulumi/azure-native/network";
+import * as pulumi from "@pulumi/pulumi";
+import ResourceCreator from "../Core/ResourceCreator";
 import {
   BasicResourceArgs,
   DefaultResourceArgs,
   BasicMonitorArgs,
-} from '../types';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
-import { getFirewallName } from '../Common/Naming';
-import { deniedOthersRule } from './FirewallRules/DefaultRules';
+} from "../types";
+import { defaultTags, isPrd } from "../Common/AzureEnv";
+import { getFirewallName } from "../Common/Naming";
+import { deniedOthersRule } from "./FirewallRules/DefaultRules";
 import {
   FirewallPolicyProps,
   FirewallRuleResults,
-} from './FirewallRules/types';
-import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
+} from "./FirewallRules/types";
+import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
 
 export interface FwOutboundConfig {
   name?: string;
-  subnetId: Input<string>;
-  publicIpAddressId?: Input<string>;
+  subnetId: pulumi.Input<string>;
+  publicIpAddress: network.PublicIPAddress;
 }
+
+export type FirewallSkus = {
+  name: network.v20220501.AzureFirewallSkuName;
+  tier: network.v20220501.AzureFirewallSkuTier;
+};
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, 'monitoring'> {
+    Omit<DefaultResourceArgs, "monitoring"> {
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
   management?: FwOutboundConfig;
-
   rules?: FirewallRuleResults;
   policy?: FirewallPolicyProps;
-
-  sku?: {
-    name: network.v20220501.AzureFirewallSkuName;
-    tier: network.v20220501.AzureFirewallSkuTier;
-  };
+  sku?: FirewallSkus;
 
   monitorConfig?: BasicMonitorArgs;
 }
@@ -53,6 +53,15 @@ export default async ({
   },
   ...others
 }: Props) => {
+  if (
+    sku.tier === network.v20220501.AzureFirewallSkuTier.Basic &&
+    !management
+  ) {
+    throw new Error(
+      "Management Public Ip Address is required for Firewall Basic tier."
+    );
+  }
+
   const fwName = getFirewallName(name);
 
   if (rules?.applicationRuleCollections) {
@@ -70,49 +79,54 @@ export default async ({
       })
     : undefined;
 
+  const dependsOn = new Array<pulumi.Resource>();
+  outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
+  if (management) dependsOn.push(management.publicIpAddress);
+
   const { resource } = await ResourceCreator(network.v20220501.AzureFirewall, {
     azureFirewallName: fwName,
     ...group,
     ...rules,
     firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
 
-    zones: isPrd ? ['1', '2', '3'] : undefined,
+    zones: isPrd ? ["1", "2", "3"] : undefined,
     threatIntelMode: network.AzureFirewallThreatIntelMode.Deny,
     sku,
 
     managementIpConfiguration: management
       ? {
           name: management.name,
-          publicIPAddress: { id: management.publicIpAddressId },
+          publicIPAddress: { id: management.publicIpAddress.id },
           subnet: { id: management.subnetId },
         }
       : undefined,
 
     ipConfigurations: outbound.map((o, i) => ({
       name: o.name || `outbound-${i}`,
-      publicIPAddress: o.publicIpAddressId
-        ? { id: o.publicIpAddressId }
+      publicIPAddress: o.publicIpAddress.id
+        ? { id: o.publicIpAddress.id }
         : undefined,
       subnet: { id: o.subnetId },
     })),
 
     additionalProperties: rules
       ? {
-          'Network.DNS.EnableProxy': 'true',
+          "Network.DNS.EnableProxy": "true",
         }
       : undefined,
 
     monitoring: {
       ...monitorConfig,
       logsCategories: [
-        'AzureFirewallApplicationRule',
-        'AzureFirewallNetworkRule',
-        'AzureFirewallDnsProxy',
+        "AzureFirewallApplicationRule",
+        "AzureFirewallNetworkRule",
+        "AzureFirewallDnsProxy",
       ],
     },
 
     tags: defaultTags,
     ...others,
+    dependsOn,
   } as network.v20220501.AzureFirewallArgs & DefaultResourceArgs);
 
   //Link Rule to Policy

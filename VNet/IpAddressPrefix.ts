@@ -5,6 +5,7 @@ import { getIpAddressPrefixName } from "../Common/Naming";
 import { RangeOf } from "../Common/Helpers";
 import IpAddress from "./IpAddress";
 import Locker from "../Core/Locker";
+import { Dictionary } from "../Tools/Dictionary";
 interface Props extends BasicResourceArgs {
   prefixLength: number;
   ipAddressConfig?: {
@@ -41,18 +42,22 @@ export default ({
     });
   }
 
-  let ipAddresses: network.PublicIPAddress[] | undefined = undefined;
+  const ipAddresses = new Dictionary<network.PublicIPAddress>();
+
   if (ipAddressConfig) {
-    ipAddresses = RangeOf(ipAddressConfig.numberOfIps).map((i) =>
-      IpAddress({
+    RangeOf(ipAddressConfig.numberOfIps).forEach((i) => {
+      const name = `${name}-${i}`;
+      const ip = IpAddress({
         ...ipAddressConfig,
-        name: `${name}-${i}`,
+        name,
         group,
         publicIPPrefix: ipAddressPrefix,
         sku: { name: "Standard", tier: "Regional" },
         lock,
-      })
-    );
+      });
+
+      ipAddresses.add(name, ip);
+    });
   }
 
   return { ipAddressPrefix, ipAddresses };
