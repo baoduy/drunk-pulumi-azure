@@ -1,11 +1,7 @@
-import deployment, { IngressTypes } from '../Deployment';
-
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
-import {
-  enableCertManager,
-  enableFirewall,
-} from '../../Common/AppConfigs/aksConfig';
+
+import deployment, { IngressTypes } from '../Deployment';
 
 export interface HelloAppProps {
   namespace: Input<string>;
