@@ -122,7 +122,7 @@ export const KeyVaultAdminPolicy = {
     'ListSAS',
     'Purge',
     'Recover',
-    'Regeneratekey',
+    'RegenerateKey',
     'Restore',
     'Set',
     'SetSAS',
