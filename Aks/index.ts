@@ -237,7 +237,7 @@ export default async ({
       dnsPrefix: aksName,
       kubernetesVersion,
 
-      enableRBAC: aksAccess.enableAzureRBAC,
+      enableRBAC: Boolean(aksAccess.enableAzureRBAC),
       apiServerAccessProfile: {
         authorizedIPRanges: !aksAccess.enablePrivateCluster
           ? aksAccess.authorizedIPRanges || []
@@ -375,7 +375,7 @@ export default async ({
       //autoUpgradeProfile: { upgradeChannel: containerservice.UpgradeChannel.Patch },
 
       aadProfile: {
-        enableAzureRBAC: aksAccess.enableAzureRBAC,
+        enableAzureRBAC: Boolean(aksAccess.enableAzureRBAC),
         managed: true,
         adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
         tenantID: tenantId,
