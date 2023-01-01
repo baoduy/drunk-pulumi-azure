@@ -1,23 +1,23 @@
-import * as native from '@pulumi/azure-native';
-import * as pulumi from '@pulumi/pulumi';
-import { Input, output } from '@pulumi/pulumi';
-import vmsDiagnostic from './VmSetMonitor';
-import vmsAutoScale from './VmSetAutoScale';
-import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from '../types';
-import { currentEnv, Environments, isPrd, tenantId } from '../Common/AzureEnv';
-import Locker from '../Core/Locker';
-import aksIdentityCreator from './Identity';
-import roleCreator from '../AzAd/Role';
-import { stack } from '../Common/StackEnv';
-import { createDiagnostic } from '../Logs/Helpers';
-import { getAksName } from '../Common/Naming';
-import PrivateDns from '../VNet/PrivateDns';
-import { getVnetIdFromSubnetId } from '../VNet/Helper';
-import { defaultAksAdmins } from '../Common/AppConfigs/aksConfig';
+import * as native from "@pulumi/azure-native";
+import * as pulumi from "@pulumi/pulumi";
+import { Input, output } from "@pulumi/pulumi";
+import vmsDiagnostic from "./VmSetMonitor";
+import vmsAutoScale from "./VmSetAutoScale";
+import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from "../types";
+import { currentEnv, Environments, isPrd, tenantId } from "../Common/AzureEnv";
+import Locker from "../Core/Locker";
+import aksIdentityCreator from "./Identity";
+import roleCreator from "../AzAd/Role";
+import { stack } from "../Common/StackEnv";
+import { createDiagnostic } from "../Logs/Helpers";
+import { getAksName } from "../Common/Naming";
+import PrivateDns from "../VNet/PrivateDns";
+import { getVnetIdFromSubnetId } from "../VNet/Helper";
+import { defaultAksAdmins } from "../Common/AppConfigs/aksConfig";
 
 const autoScaleFor = (
   env: Environments,
-  nodeType: 'Default' | 'System' | 'User'
+  nodeType: "Default" | "System" | "User"
 ) => {
   const enableAutoScaling = true;
   let nodeCount = 1;
@@ -26,12 +26,12 @@ const autoScaleFor = (
 
   if (env === Environments.Prd) {
     switch (nodeType) {
-      case 'User':
+      case "User":
         maxCount = 5;
         break;
 
-      case 'Default':
-      case 'System':
+      case "Default":
+      case "System":
       default:
         maxCount = 3;
         break;
@@ -47,10 +47,10 @@ const autoScaleFor = (
 };
 
 const defaultNodePool = {
-  availabilityZones: isPrd ? ['1', '2', '3'] : undefined,
+  availabilityZones: isPrd ? ["1", "2", "3"] : undefined,
   type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
-  vmSize: 'Standard_B2s',
-  ...autoScaleFor(currentEnv, 'Default'),
+  vmSize: "Standard_B2s",
+  ...autoScaleFor(currentEnv, "Default"),
   maxPods: 50,
   enableFIPS: false,
   enableNodePublicIP: false,
@@ -70,25 +70,25 @@ const defaultNodePool = {
 
 export enum VmSizes {
   /** 32G RAM - 4CPU - $221.92 */
-  Standard_E4as_v4_221 = 'Standard_E4as_v4',
+  Standard_E4as_v4_221 = "Standard_E4as_v4",
   /** 4G RAM - 2CPU - $38.54 */
-  Standard_B2s_38 = 'Standard_B2s',
+  Standard_B2s_38 = "Standard_B2s",
   /** 8G RAM - 2CPU - $77.38 */
-  Standard_B2ms_77 = 'Standard_B2ms',
+  Standard_B2ms_77 = "Standard_B2ms",
   /** 16G RAM - 4CPU - $154.03 */
-  Standard_B4ms_154 = 'Standard_B4ms',
+  Standard_B4ms_154 = "Standard_B4ms",
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2as_v4_87 = 'Standard_D2as_v4',
+  Standard_D2as_v4_87 = "Standard_D2as_v4",
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2s_v3_87 = 'Standard_D2s_v3',
+  Standard_D2s_v3_87 = "Standard_D2s_v3",
   /** 16G RAM - 4CPU - $175.20 */
-  Standard_D4as_v4_175 = 'Standard_D4as_v4',
+  Standard_D4as_v4_175 = "Standard_D4as_v4",
   /** 4G RAM - 2CPU - $69.35 */
-  Standard_A2_v2_69 = 'Standard_A2_v2',
+  Standard_A2_v2_69 = "Standard_A2_v2",
   /** 8G RAM - 4CPU - $144.54 */
-  Standard_A4_v2_144 = 'Standard_A4_v2',
+  Standard_A4_v2_144 = "Standard_A4_v2",
   /** 32G RAM - 4CPU - $205.13 */
-  Standard_A4m_v2_205 = 'Standard_A4m_v2',
+  Standard_A4m_v2_205 = "Standard_A4m_v2",
 }
 
 interface NodePoolProps {
@@ -118,9 +118,9 @@ interface Props extends BasicResourceArgs {
     sshKeys: Array<pulumi.Input<string>>;
   };
 
-  kubernetesVersion?: '1.22.6';
-  nodePools: Array<Omit<NodePoolProps, 'subnetId' | 'aksId'>>;
-  enableVMAutoScale?: boolean;
+  kubernetesVersion?: "1.22.6";
+  nodePools: Array<Omit<NodePoolProps, "subnetId" | "aksId">>;
+  //enableVMAutoScale?: boolean;
 
   featureFlags?: {
     createServicePrincipal?: boolean;
@@ -161,9 +161,9 @@ export default async ({
   nodeResourceGroup,
   name,
   linux,
-  kubernetesVersion = '1.22.6',
+  kubernetesVersion = "1.22.6",
   nodePools,
-  enableVMAutoScale,
+  //enableVMAutoScale,
   network,
   log,
   aksAccess = {},
@@ -204,30 +204,29 @@ export default async ({
     ? roleCreator({
         env: currentEnv,
         appName: name,
-        roleName: 'Aks-Admin',
+        roleName: "Aks-Admin",
         members: defaultAksAdmins.map((m) => m.objectId),
       })
     : undefined;
 
   //=================Validate ===================================/
   if (!network?.subnetId) {
-    console.error('Aks subnetId is required:', name);
+    console.error("Aks subnetId is required:", name);
     return undefined;
   }
   if (!linux?.sshKeys || !linux.sshKeys[0]) {
-    console.error('Aks sshKeys is required:', name);
+    console.error("Aks sshKeys is required:", name);
     return undefined;
   }
 
-  let privateZone: native.network.PrivateZone | undefined;
   //Private DNS Zone for Private CLuster
-  if (aksAccess.enablePrivateCluster) {
-    privateZone = PrivateDns({
-      name: 'privatelink.southeastasia.azmk8s.io',
-      group,
-      vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
-    });
-  }
+  const privateZone = aksAccess.enablePrivateCluster
+    ? PrivateDns({
+        name: "privatelink.southeastasia.azmk8s.io",
+        group,
+        vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
+      })
+    : undefined;
 
   //Create AKS Cluster
   const aks = new native.containerservice.ManagedCluster(
@@ -254,7 +253,7 @@ export default async ({
         azureKeyvaultSecretsProvider: {
           config: addon.enableAzureKeyVault
             ? {
-                enableSecretRotation: 'true',
+                enableSecretRotation: "true",
               }
             : undefined,
           enabled: Boolean(addon.enableAzureKeyVault),
@@ -300,9 +299,10 @@ export default async ({
 
       sku: {
         name: native.containerservice.ManagedClusterSKUName.Basic,
-        tier: isPrd
-          ? native.containerservice.ManagedClusterSKUTier.Paid
-          : native.containerservice.ManagedClusterSKUTier.Free,
+        tier: native.containerservice.ManagedClusterSKUTier.Free,
+        // tier: isPrd
+        //   ? native.containerservice.ManagedClusterSKUTier.Paid
+        //   : native.containerservice.ManagedClusterSKUTier.Free,
       },
 
       agentPoolProfiles: nodePools.map((p) => ({
@@ -310,13 +310,13 @@ export default async ({
         ...p,
 
         //name: `${p.name}-${p.mode}`,
-        count: p.mode === 'System' ? 1 : 0,
+        count: p.mode === "System" ? 1 : 0,
         orchestratorVersion: kubernetesVersion,
         vnetSubnetID: network.subnetId,
 
-        kubeletDiskType: 'OS',
-        osSKU: 'Ubuntu',
-        osType: 'Linux',
+        kubeletDiskType: "OS",
+        osSKU: "Ubuntu",
+        osType: "Linux",
 
         tags: {
           ...defaultNodePool.tags,
@@ -332,23 +332,23 @@ export default async ({
         : undefined,
 
       autoScalerProfile: {
-        balanceSimilarNodeGroups: 'false',
-        expander: 'random',
-        maxEmptyBulkDelete: '10',
-        maxGracefulTerminationSec: '600',
-        maxNodeProvisionTime: '15m',
-        maxTotalUnreadyPercentage: '45',
-        newPodScaleUpDelay: '0s',
-        okTotalUnreadyCount: '3',
-        scaleDownDelayAfterAdd: '30m',
-        scaleDownDelayAfterDelete: '60s',
-        scaleDownDelayAfterFailure: '10m',
-        scaleDownUnneededTime: '10m',
-        scaleDownUnreadyTime: '20m',
-        scaleDownUtilizationThreshold: '0.5',
-        scanInterval: '60s',
-        skipNodesWithLocalStorage: 'false',
-        skipNodesWithSystemPods: 'true',
+        balanceSimilarNodeGroups: "true",
+        expander: "random",
+        maxEmptyBulkDelete: "10",
+        maxGracefulTerminationSec: "600",
+        maxNodeProvisionTime: "15m",
+        maxTotalUnreadyPercentage: "45",
+        newPodScaleUpDelay: "0s",
+        okTotalUnreadyCount: "3",
+        scaleDownDelayAfterAdd: "30m",
+        scaleDownDelayAfterDelete: "60s",
+        scaleDownDelayAfterFailure: "10m",
+        scaleDownUnneededTime: "10m",
+        scaleDownUnreadyTime: "20m",
+        scaleDownUtilizationThreshold: "0.5",
+        scanInterval: "60s",
+        skipNodesWithLocalStorage: "false",
+        skipNodesWithSystemPods: "true",
       },
 
       // identity: !featureFlags.createServicePrincipal
@@ -387,9 +387,9 @@ export default async ({
         networkPolicy: native.containerservice.NetworkPolicy.Azure,
         networkPlugin: native.containerservice.NetworkPlugin.Azure,
 
-        dnsServiceIP: '10.0.0.10',
-        dockerBridgeCidr: '172.17.0.1/16',
-        serviceCidr: '10.0.0.0/16',
+        dnsServiceIP: "10.0.0.10",
+        dockerBridgeCidr: "172.17.0.1/16",
+        serviceCidr: "10.0.0.0/16",
 
         outboundType:
           network.enableFirewall || aksAccess.enablePrivateCluster
@@ -400,8 +400,8 @@ export default async ({
           network.outboundIpAddress?.ipAddressId ||
           network.enableFirewall ||
           aksAccess.enablePrivateCluster
-            ? 'Standard'
-            : 'Basic',
+            ? "Standard"
+            : "Basic",
 
         loadBalancerProfile:
           network.outboundIpAddress &&
@@ -430,9 +430,9 @@ export default async ({
       deleteBeforeReplace: true,
       //replaceOnChanges: [ 'servicePrincipalProfile'],
       ignoreChanges: [
-        'privateLinkResources',
-        'networkProfile',
-        'linuxProfile',
+        "privateLinkResources",
+        "networkProfile",
+        "linuxProfile",
         //'windowsProfile',
         //'servicePrincipalProfile.secret',
       ],
@@ -453,24 +453,24 @@ export default async ({
         targetResourceId: id,
         ...log,
         logsCategories: [
-          'guard',
-          'kube-controller-manager',
-          'kube-audit-admin',
-          'kube-audit',
-          'kube-scheduler',
-          'cluster-autoscaler',
+          "guard",
+          "kube-controller-manager",
+          "kube-audit-admin",
+          "kube-audit",
+          "kube-scheduler",
+          "cluster-autoscaler",
         ],
       });
     });
   }
 
-  if (enableVMAutoScale) {
-    //Apply auto scale
-    await vmsAutoScale({
-      group: { resourceGroupName: nodeResourceGroup },
-      dependsOn: aks,
-    });
-  }
+  // if (enableVMAutoScale) {
+  //   //Apply auto scale
+  //   await vmsAutoScale({
+  //     group: { resourceGroupName: nodeResourceGroup },
+  //     dependsOn: aks,
+  //   });
+  // }
 
   //Apply monitoring for VMScale Sets
   await vmsDiagnostic({

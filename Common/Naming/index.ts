@@ -1,7 +1,7 @@
+import { ConventionProps } from '../../types';
 import { replaceAll } from '../Helpers';
 import { getResourceName } from '../ResourceEnv';
-import { stack, organization } from '../StackEnv';
-import { ConventionProps } from '../../types';
+import { organization, stack } from '../StackEnv';
 
 /** The method to get Resource group Name*/
 export const getResourceGroupName = (name: string): string =>
@@ -48,6 +48,9 @@ export const getPasswordName = (
 
 export const getAutomationAccountName = (name: string) =>
   getResourceName(name, { suffix: 'acc-auto' });
+
+export const getB2cName = (name: string) =>
+  getResourceName(name, { suffix: 'b2c' });
 
 export const getCosmosDbName = (name: string) =>
   getResourceName(name, { suffix: 'cdb' });
@@ -139,7 +142,7 @@ export const getIpAddressName = (name: string) =>
   getResourceName(name, { suffix: 'ip' });
 
 export const getIpAddressPrefixName = (name: string) =>
-    getResourceName(name, { suffix: 'ipx' });
+  getResourceName(name, { suffix: 'ipx' });
 
 export const getAppGatewayName = (name: string) =>
   getResourceName(name, { suffix: 'gtw' });
