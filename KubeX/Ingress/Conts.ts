@@ -1,9 +1,9 @@
-import { organizationName } from '../../Common/config';
+import { organization } from '../../Common/StackEnv';
 
 export const defaultResponseHeaders = {
-  server: organizationName,
-  'X-Powered-By': organizationName,
-  'X-AspNet-Version': organizationName,
+  server: organization,
+  'X-Powered-By': organization,
+  'X-AspNet-Version': organization,
   'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
   'X-XSS-Protection': '1; mode=block',
   'X-Frame-Options': `SAMEORIGIN`,

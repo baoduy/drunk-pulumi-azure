@@ -7,7 +7,7 @@ import { getResourceInfoFromId } from '../Common/ResourceEnv';
 import { NetworkRouteResource } from '../CustomProviders/NetworkRuote';
 import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs, ResourceGroupInfo } from '../types';
 import Firewall, { FirewallSkus, FwOutboundConfig } from './Firewall';
-import { FirewallPolicyProps, FirewallRuleResults } from './FirewallRules/types';
+import { FirewallPolicyProps } from './FirewallRules/types';
 import VnetPeering from './NetworkPeering';
 import { SubnetProps } from './Subnet';
 import Vnet from './Vnet';
@@ -36,7 +36,7 @@ interface Props {
       sku?: FirewallSkus;
       publicManageIpAddress?: network.PublicIPAddress;
 
-      policies: Omit<FirewallPolicyProps, "enabled">;
+      policy: Omit<FirewallPolicyProps, "enabled">;
 
       /** set this is TRUE if want to create firewall subnet but not create firewall component */
       disabledFirewallCreation?: boolean;
@@ -197,7 +197,7 @@ export default async ({
 
       policy: {
         enabled: true,
-        ...features.enableFirewall.policies,
+        ...features.enableFirewall.policy,
       },
 
       outbound: [
@@ -273,8 +273,7 @@ interface FirewallProps
   /** This must be provided if sku is Basic */
   management?: FwOutboundConfig;
   routeTableName?: Input<string>;
-  policy?: FirewallPolicyProps;
-  rules?: FirewallRuleResults;
+  policy: FirewallPolicyProps;
   monitorConfig?: BasicMonitorArgs;
   dependsOn?: Input<Resource>[];
 }

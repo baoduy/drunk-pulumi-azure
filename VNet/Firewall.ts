@@ -6,7 +6,6 @@ import { getFirewallName } from '../Common/Naming';
 import ResourceCreator from '../Core/ResourceCreator';
 import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs } from '../types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
-import { deniedOthersRule } from './FirewallRules/DefaultRules';
 import { FirewallPolicyProps } from './FirewallRules/types';
 
 export interface FwOutboundConfig {
@@ -28,6 +27,7 @@ interface Props
   management?: FwOutboundConfig;
   //rules?: FirewallRuleResults;
   policy: FirewallPolicyProps;
+  enableDnsProxy?: boolean;
   sku?: FirewallSkus;
 
   monitorConfig?: BasicMonitorArgs;
@@ -41,6 +41,7 @@ export default async ({
   outbound,
   management,
   monitorConfig,
+  enableDnsProxy,
   sku = {
     name: network.AzureFirewallSkuName.AZFW_VNet,
     tier: network.v20220501.AzureFirewallSkuTier.Basic,
@@ -58,10 +59,10 @@ export default async ({
 
   const fwName = getFirewallName(name);
 
-  if (rules?.applicationRuleCollections) {
-    //Add Denied other rules
-    rules.applicationRuleCollections.push(deniedOthersRule);
-  }
+  // if (rules?.applicationRuleCollections) {
+  //   //Add Denied other rules
+  //   rules.applicationRuleCollections.push(deniedOthersRule);
+  // }
 
   const fwPolicy = policy.enabled
     ? FirewallPolicy({
@@ -103,7 +104,7 @@ export default async ({
       subnet: { id: o.subnetId },
     })),
 
-    additionalProperties: rules
+    additionalProperties: enableDnsProxy && sku.tier !== network.v20220501.AzureFirewallSkuTier.Basic
       ? {
         "Network.DNS.EnableProxy": "true",
       }

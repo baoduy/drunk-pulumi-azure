@@ -1,6 +1,5 @@
 import { isPrd } from '../../Common/AzureEnv';
 import { getIpsRange } from '../../VNet/Helper';
-import { organizationName } from '../../Common/config';
 
 const defaultRateLimit = isPrd ? 60 : 120;
 const enableApimEventHub = false;
@@ -86,20 +85,16 @@ const getInClientCertValidate = ({
   verifyCert,
 }: ClientCertProps) =>
   `   <choose>
-        <when condition="@(context.Request.Certificate == null${
-          verifyCert
-            ? ' || !context.Request.Certificate.VerifyNoRevocation()'
-            : ''
-        }${
-    issuer ? ` || context.Request.Certificate.Issuer != "${issuer}"` : ''
-  }${
-    subject
-      ? ` || context.Request.Certificate.SubjectName.Name != "${subject}"`
-      : ''
-  }${
-    thumbprint
-      ? ` || context.Request.Certificate.Thumbprint != "${thumbprint}"`
-      : ''
+        <when condition="@(context.Request.Certificate == null${verifyCert
+    ? ' || !context.Request.Certificate.VerifyNoRevocation()'
+    : ''
+  }${issuer ? ` || context.Request.Certificate.Issuer != "${issuer}"` : ''
+  }${subject
+    ? ` || context.Request.Certificate.SubjectName.Name != "${subject}"`
+    : ''
+  }${thumbprint
+    ? ` || context.Request.Certificate.Thumbprint != "${thumbprint}"`
+    : ''
   })" >
           <return-response>
             <set-status code="403" reason="Invalid client certificate" />
@@ -146,8 +141,7 @@ const getEventHubPolicy = ({
 
   const rs = `
   <set-variable name="message-id" value="@(Guid.NewGuid())" />
-  ${
-    enableIpStack
+  ${enableIpStack
       ? `
   <set-variable name="ipstackBaseUrl" value="@("${azFuncUrl}?ipAddress=" + context.Request.IpAddress)" />
   <send-request mode="new" response-variable-name="ipstackResponse" timeout="2" ignore-error="true">
@@ -158,7 +152,7 @@ const getEventHubPolicy = ({
     </set-header>
   </send-request>`
       : ''
-  }
+    }
 
   <log-to-eventhub logger-id="${eventHubName}" partition-id="0">@{
       string accountId = "";
@@ -186,22 +180,20 @@ const getEventHubPolicy = ({
       }
 
       string ipLocation = "";
-${
-  enableIpStack
-    ? `
+${enableIpStack
+      ? `
       try {
         var ipstackResponse = ((IResponse)context.Variables["ipstackResponse"]);
         if (ipstackResponse.StatusCode == 200) { 
             ipLocation = (((IResponse)context.Variables["ipstackResponse"]).Body?.As<JObject>()["country_name"]).ToString();
         }
       }catch {}`
-    : ''
-}
+      : ''
+    }
 
       string clientThumbprint = "";
-${
-  captureClientCertThumbprint
-    ? `
+${captureClientCertThumbprint
+      ? `
       string xCert = context.Request.Headers.GetValueOrDefault("X-ARR-ClientCert", "");
       if(context.Request.Certificate != null){
         clientThumbprint = context.Request.Certificate.Thumbprint;
@@ -211,8 +203,8 @@ ${
       }
       else{ clientThumbprint = "Not found";}
 `
-    : ''
-}
+      : ''
+    }
 
       return new JObject(
         new JProperty("MessageId", context.Variables["message-id"]),
@@ -343,11 +335,9 @@ interface CheckHeaders {
 const checkHeaderPolicy = ({ checkHeaders }: CheckHeaders) => {
   return checkHeaders
     .map((c) => {
-      return `<check-header name="${
-        c.name
-      }" failed-check-httpcode="401" failed-check-error-message="The header ${
-        c.name
-      } is not found" ignore-case="true">
+      return `<check-header name="${c.name
+        }" failed-check-httpcode="401" failed-check-error-message="The header ${c.name
+        } is not found" ignore-case="true">
     ${c.value ? c.value.map((v) => `<value>${v}</value>`).join('\n') : ''}
 </check-header>`;
     })
@@ -355,7 +345,7 @@ const checkHeaderPolicy = ({ checkHeaders }: CheckHeaders) => {
 };
 
 /** Set Client IP address to 'x-ts-client-ip' header key */
-const setClientIpHeader = (key: string = `x-${organizationName}-clientIp`) =>
+const setClientIpHeader = (key: string = `x-${organization}-clientIp`) =>
   setHeader({
     name: key,
     value: '@(context.Request.IpAddress)',
@@ -515,29 +505,27 @@ export const getPolicies = ({
       <set-header name="X-AspNet-Version" exists-action="delete" />
       
       ${outbound.join('\n')}
-      ${
-        enableApimEventHub && props.logEventHubName
-          ? getEventHubPolicy({
-              eventHubName: props.logEventHubName,
-              azFuncUrl: props.azFuncUrl,
-              azFuncKey: props.azFuncKey,
-              captureClientCertThumbprint: props.captureClientCertThumbprint,
-            })
-          : ''
-      }
+      ${enableApimEventHub && props.logEventHubName
+      ? getEventHubPolicy({
+        eventHubName: props.logEventHubName,
+        azFuncUrl: props.azFuncUrl,
+        azFuncKey: props.azFuncKey,
+        captureClientCertThumbprint: props.captureClientCertThumbprint,
+      })
+      : ''
+    }
   </outbound>
   <on-error>
       <base />
-      ${
-        enableApimEventHub && props.logEventHubName
-          ? getEventHubPolicy({
-              eventHubName: props.logEventHubName,
-              azFuncUrl: props.azFuncUrl,
-              azFuncKey: props.azFuncKey,
-              captureClientCertThumbprint: props.captureClientCertThumbprint,
-            })
-          : ''
-      }
+      ${enableApimEventHub && props.logEventHubName
+      ? getEventHubPolicy({
+        eventHubName: props.logEventHubName,
+        azFuncUrl: props.azFuncUrl,
+        azFuncKey: props.azFuncKey,
+        captureClientCertThumbprint: props.captureClientCertThumbprint,
+      })
+      : ''
+    }
   </on-error>
 </policies>`;
 };
