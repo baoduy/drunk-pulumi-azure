@@ -1,6 +1,8 @@
-import creator from '../../VNet/Vnet';
 import '../_tools/Mocks';
+
 import { expect } from 'chai';
+
+import creator from '../../VNet/Vnet';
 
 describe('Vnet Creator tests', () => {
   it('Vnet Creator', async () => {

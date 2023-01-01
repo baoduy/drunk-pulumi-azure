@@ -1,15 +1,15 @@
-import * as native from '@pulumi/azure-native';
-import { projectName, stack, testMode,organization } from './StackEnv';
-import { all, output, interpolate } from '@pulumi/pulumi';
-import { KeyVaultInfo } from '../types';
-import { getKeyVaultName, getResourceGroupName } from './Naming';
-import { ResourceInfoArg } from './ResourceEnv';
+import * as native from "@pulumi/azure-native";
+import { projectName, stack, testMode, organization } from "./StackEnv";
+import { all, output, interpolate } from "@pulumi/pulumi";
+import { KeyVaultInfo } from "../types";
+import { getKeyVaultName, getResourceGroupName } from "./Naming";
+import { ResourceInfoArg } from "./ResourceEnv";
 
 const config = output(native.authorization.getClientConfig());
 export const tenantId = config.tenantId;
 export const subscriptionId = config.subscriptionId;
 export const currentServicePrincipal = config.objectId;
-export const defaultLocation = 'SoutheastAsia';
+export const defaultLocation = "SoutheastAsia";
 export const defaultScope = subscriptionId.apply((s) => `/subscriptions/${s}`);
 
 //Print and Check
@@ -22,17 +22,13 @@ all([subscriptionId, tenantId]).apply(([s, t]) => {
 export const defaultTags = {
   environment: stack,
   organization: organization,
-  'pulumi-project': projectName,
+  "pulumi-project": projectName,
 };
-
-/** Enable Rbac or using Access policy for Key Vault*/
-export const vaultEnableRbac = true;
-
 export enum Environments {
-  Global = 'global',
-  Dev = 'dev',
-  Sandbox = 'sandbox',
-  Prd = 'prd',
+  Global = "global",
+  Dev = "dev",
+  Sandbox = "sandbox",
+  Prd = "prd",
 }
 
 export const isEnv = (env: Environments) => stack.includes(env);
@@ -87,5 +83,5 @@ export const getResourceIdFromInfo = ({
   else if (name && provider)
     return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
 
-  throw new Error('Resource Info is invalid.');
+  throw new Error("Resource Info is invalid.");
 };

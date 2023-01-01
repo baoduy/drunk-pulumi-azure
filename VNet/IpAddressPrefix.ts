@@ -1,11 +1,13 @@
-import * as network from "@pulumi/azure-native/network";
-import { Input } from "@pulumi/pulumi";
-import { BasicResourceArgs } from "../types";
-import { getIpAddressPrefixName } from "../Common/Naming";
-import { RangeOf } from "../Common/Helpers";
-import IpAddress from "./IpAddress";
-import Locker from "../Core/Locker";
-import { Dictionary } from "../Tools/Dictionary";
+import * as network from '@pulumi/azure-native/network';
+import { Input } from '@pulumi/pulumi';
+
+import { RangeOf } from '../Common/Helpers';
+import { getIpAddressPrefixName } from '../Common/Naming';
+import Locker from '../Core/Locker';
+import { Dictionary } from '../Tools/Dictionary';
+import { BasicResourceArgs } from '../types';
+import IpAddress from './IpAddress';
+
 interface Props extends BasicResourceArgs {
   prefixLength: number;
   ipAddressConfig?: {
@@ -46,17 +48,17 @@ export default ({
 
   if (ipAddressConfig) {
     RangeOf(ipAddressConfig.numberOfIps).forEach((i) => {
-      const name = `${name}-${i}`;
+      const n = `${name}-${i}`;
       const ip = IpAddress({
         ...ipAddressConfig,
-        name,
+        name: n,
         group,
         publicIPPrefix: ipAddressPrefix,
         sku: { name: "Standard", tier: "Regional" },
         lock,
       });
 
-      ipAddresses.add(name, ip);
+      ipAddresses.add(n, ip);
     });
   }
 

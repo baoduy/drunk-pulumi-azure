@@ -1,19 +1,13 @@
-import * as network from "@pulumi/azure-native/network";
-import * as pulumi from "@pulumi/pulumi";
-import ResourceCreator from "../Core/ResourceCreator";
-import {
-  BasicResourceArgs,
-  DefaultResourceArgs,
-  BasicMonitorArgs,
-} from "../types";
-import { defaultTags, isPrd } from "../Common/AzureEnv";
-import { getFirewallName } from "../Common/Naming";
-import { deniedOthersRule } from "./FirewallRules/DefaultRules";
-import {
-  FirewallPolicyProps,
-  FirewallRuleResults,
-} from "./FirewallRules/types";
-import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
+import * as network from '@pulumi/azure-native/network';
+import * as pulumi from '@pulumi/pulumi';
+
+import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { getFirewallName } from '../Common/Naming';
+import ResourceCreator from '../Core/ResourceCreator';
+import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs } from '../types';
+import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
+import { deniedOthersRule } from './FirewallRules/DefaultRules';
+import { FirewallPolicyProps } from './FirewallRules/types';
 
 export interface FwOutboundConfig {
   name?: string;
@@ -28,12 +22,12 @@ export type FirewallSkus = {
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, "monitoring"> {
+  Omit<DefaultResourceArgs, "monitoring"> {
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
   management?: FwOutboundConfig;
-  rules?: FirewallRuleResults;
-  policy?: FirewallPolicyProps;
+  //rules?: FirewallRuleResults;
+  policy: FirewallPolicyProps;
   sku?: FirewallSkus;
 
   monitorConfig?: BasicMonitorArgs;
@@ -42,7 +36,7 @@ interface Props
 export default async ({
   name,
   group,
-  rules,
+  //rules,
   policy,
   outbound,
   management,
@@ -69,14 +63,14 @@ export default async ({
     rules.applicationRuleCollections.push(deniedOthersRule);
   }
 
-  const fwPolicy = policy?.enabled
+  const fwPolicy = policy.enabled
     ? FirewallPolicy({
-        name,
-        group,
-        basePolicyId: policy.parentPolicyId,
-        sku: sku.tier,
-        dnsSettings: { enableProxy: true },
-      })
+      name,
+      group,
+      basePolicyId: policy.parentPolicyId,
+      sku: sku.tier,
+      dnsSettings: { enableProxy: true },
+    })
     : undefined;
 
   const dependsOn = new Array<pulumi.Resource>();
@@ -86,7 +80,7 @@ export default async ({
   const { resource } = await ResourceCreator(network.v20220501.AzureFirewall, {
     azureFirewallName: fwName,
     ...group,
-    ...rules,
+    //...rules,
     firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
 
     zones: isPrd ? ["1", "2", "3"] : undefined,
@@ -95,10 +89,10 @@ export default async ({
 
     managementIpConfiguration: management
       ? {
-          name: management.name,
-          publicIPAddress: { id: management.publicIpAddress.id },
-          subnet: { id: management.subnetId },
-        }
+        name: management.name,
+        publicIPAddress: { id: management.publicIpAddress.id },
+        subnet: { id: management.subnetId },
+      }
       : undefined,
 
     ipConfigurations: outbound.map((o, i) => ({
@@ -111,8 +105,8 @@ export default async ({
 
     additionalProperties: rules
       ? {
-          "Network.DNS.EnableProxy": "true",
-        }
+        "Network.DNS.EnableProxy": "true",
+      }
       : undefined,
 
     monitoring: {

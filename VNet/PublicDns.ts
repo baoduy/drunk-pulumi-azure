@@ -1,6 +1,6 @@
-import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
-import { global } from '../Common';
+import * as network from "@pulumi/azure-native/network";
+import { Input } from "@pulumi/pulumi";
+import { global } from "../Common";
 
 interface RecordProps {
   zoneName: Input<string>;
@@ -14,16 +14,16 @@ export const addARecord = ({
   ipAddresses,
 }: RecordProps) =>
   new network.RecordSet(
-    recordName === '*'
-      ? 'All-ARecord'
-      : recordName === '@'
-      ? 'Root-ARecord'
+    recordName === "*"
+      ? "All-ARecord"
+      : recordName === "@"
+      ? "Root-ARecord"
       : `${recordName}-ARecord`,
     {
       zoneName,
       ...global.groupInfo,
       relativeRecordSetName: recordName,
-      recordType: 'A',
+      recordType: "A",
       aRecords: ipAddresses.map((i) => ({ ipv4Address: i })),
       ttl: 3600,
     }
@@ -47,7 +47,7 @@ const zoneCreator = ({ name, defaultIpAddress }: Props) => {
     addARecord({
       ipAddresses: [defaultIpAddress],
       zoneName: name,
-      recordName: '@',
+      recordName: "@",
     });
   }
 
@@ -59,7 +59,7 @@ interface Props extends ZoneProps {
   childZones?: Array<ZoneProps>;
 }
 
-/** Create Private DNS zone. This should be created in the GLobal resource group. */
+/** Create Private DNS zone. */
 export default ({ name, defaultIpAddress, childZones }: Props) => {
   const zone = zoneCreator({ name, defaultIpAddress });
 
@@ -76,7 +76,7 @@ export default ({ name, defaultIpAddress, childZones }: Props) => {
             zoneName: zone.name,
             ...global.groupInfo,
             relativeRecordSetName: z.name,
-            recordType: 'NS',
+            recordType: "NS",
             nsRecords: ns.map((s) => ({ nsdname: s })),
             ttl: 3600,
           },

@@ -1,25 +1,16 @@
-import { Input, output, Resource } from "@pulumi/pulumi";
-import { input as inputs } from "@pulumi/azure-native/types";
-import * as network from "@pulumi/azure-native/network";
-import IpAddress from "./IpAddress";
-import {
-  BasicMonitorArgs,
-  BasicResourceArgs,
-  DefaultResourceArgs,
-  ResourceGroupInfo,
-} from "../types";
-import Vnet, { SubnetProps } from "./Vnet";
-import Firewall, { FirewallSkus, FwOutboundConfig } from "./Firewall";
-import VnetPeering from "./NetworkPeering";
-import {
-  FirewallPolicyCreator,
-  FirewallPolicyProps,
-  FirewallRuleCreator,
-  FirewallRuleResults,
-} from "./FirewallRules/types";
-import { getResourceInfoFromId } from "../Common/ResourceEnv";
-import * as pulumi from "@pulumi/pulumi";
-import { NetworkRouteResource } from "../CustomProviders/NetworkRuote";
+import * as network from '@pulumi/azure-native/network';
+import { input as inputs } from '@pulumi/azure-native/types';
+import { Input, output, Resource } from '@pulumi/pulumi';
+import * as pulumi from '@pulumi/pulumi';
+
+import { getResourceInfoFromId } from '../Common/ResourceEnv';
+import { NetworkRouteResource } from '../CustomProviders/NetworkRuote';
+import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs, ResourceGroupInfo } from '../types';
+import Firewall, { FirewallSkus, FwOutboundConfig } from './Firewall';
+import { FirewallPolicyProps, FirewallRuleResults } from './FirewallRules/types';
+import VnetPeering from './NetworkPeering';
+import { SubnetProps } from './Subnet';
+import Vnet from './Vnet';
 
 interface Props {
   name: string;
@@ -45,8 +36,7 @@ interface Props {
       sku?: FirewallSkus;
       publicManageIpAddress?: network.PublicIPAddress;
 
-      rules?: FirewallRuleResults;
-      policies?: Omit<FirewallPolicyProps, "enabled">;
+      policies: Omit<FirewallPolicyProps, "enabled">;
 
       /** set this is TRUE if want to create firewall subnet but not create firewall component */
       disabledFirewallCreation?: boolean;
@@ -160,33 +150,33 @@ export default async ({
     features: {
       securityGroup: features.securityGroup
         ? {
-            allowInternetAccess: features.securityGroup.allowInternetAccess,
-            rules: securities,
-          }
+          allowInternetAccess: features.securityGroup.allowInternetAccess,
+          rules: securities,
+        }
         : undefined,
       routeTable: { rules: routes },
 
       appGatewaySubnet: features.enableAppGateway
         ? {
-            addressPrefix: features.enableAppGateway.subnetPrefix,
-            version: "v1",
-          }
+          addressPrefix: features.enableAppGateway.subnetPrefix,
+          version: "v1",
+        }
         : undefined,
 
       firewall: features.enableFirewall
         ? {
-            addressPrefix: features.enableFirewall.subnetPrefix,
-            managementAddressPrefix:
-              features.enableFirewall.managementSubnetPrefix,
-          }
+          addressPrefix: features.enableFirewall.subnetPrefix,
+          managementAddressPrefix:
+            features.enableFirewall.managementSubnetPrefix,
+        }
         : undefined,
 
       bastion: features.enableBastion
         ? {
-            addressPrefix: features.enableBastion.subnetPrefix,
-            donotCreateBastionHost:
-              features.enableBastion.donotCreateBastionHost,
-          }
+          addressPrefix: features.enableBastion.subnetPrefix,
+          disableBastionHostCreation:
+            features.enableBastion.disableBastionHostCreation,
+        }
         : undefined,
     },
     ...others,
@@ -195,37 +185,34 @@ export default async ({
   //Firewall
   let firewall:
     | {
-        firewall: network.AzureFirewall;
-        policy: network.FirewallPolicy | undefined;
-      }
+      firewall: network.AzureFirewall;
+      policy: network.FirewallPolicy | undefined;
+    }
     | undefined;
 
-  if (features.enableFirewall && !features.enableFirewall.donotCreateFirewall) {
+  if (features.enableFirewall && !features.enableFirewall.disabledFirewallCreation) {
     firewall = await createFirewall({
       name,
       group,
 
-      rules: features.enableFirewall.rules,
-      policy: features.enableFirewall.policies
-        ? {
-            enabled: true,
-            ...features.enableFirewall.policies,
-          }
-        : undefined,
+      policy: {
+        enabled: true,
+        ...features.enableFirewall.policies,
+      },
 
       outbound: [
         {
           name: `${name}-outbound`,
-          publicIpAddress,
-          subnetId: vnet.firewallSubnet!.apply((c) => c.id!),
+          publicIpAddress: publicIpAddress!,
+          subnetId: vnet.firewallSubnet!.apply((c) => c!.id!),
         },
       ],
       management: features.enableFirewall.publicManageIpAddress
         ? {
-            name: `${name}-management`,
-            publicIpAddress: features.enableFirewall.publicManageIpAddress,
-            subnetId: vnet.firewallManageSubnet!.apply((c) => c.id!),
-          }
+          name: `${name}-management`,
+          publicIpAddress: features.enableFirewall.publicManageIpAddress,
+          subnetId: vnet.firewallManageSubnet!.apply((c) => c!.id!),
+        }
         : undefined,
       sku: features.enableFirewall.sku,
 
@@ -236,8 +223,8 @@ export default async ({
   }
 
   //Vnet Peering
-  if (features.vnetPeerings) {
-    features.vnetPeerings.map((pp) => {
+  if (features.vnetPeering) {
+    features.vnetPeering.map((pp) => {
       //get info
       output(pp.vnetId).apply((id) => {
         const info = getResourceInfoFromId(id);
@@ -280,7 +267,7 @@ export default async ({
 
 interface FirewallProps
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, "monitoring"> {
+  Omit<DefaultResourceArgs, "monitoring"> {
   sku?: FirewallSkus;
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
