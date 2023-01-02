@@ -6,17 +6,10 @@ import { getSecret } from '../KeyVault/Helper';
 import { BasicResourceArgs, KeyVaultInfo } from '../types';
 import { ResourceGroupInfo } from './../types.d';
 
-interface Props {
-  id: string;
-  vaultInfo: KeyVaultInfo;
-  globalResource?: boolean;
-}
 
-export const getStorageSecrets = async({
- { name, group, vaultInfo }: { name: string, group: ResourceGroupInfo, vaultInfo: KeyVaultInfo }
-}: Props) => {
-
-
+export const getStorageSecrets = async (
+  { name, group, vaultInfo }: { name: string, group: ResourceGroupInfo, vaultInfo: KeyVaultInfo }
+) => {
   const primaryKeyName = getKeyName(name, 'primary');
   const secondaryKeyName = getKeyName(name, 'secondary');
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
