@@ -3,10 +3,13 @@ import * as native from "@pulumi/azure-native";
 
 import { DiagnosticProps, KeyVaultInfo } from "../types";
 import * as global from "../Common/GlobalEnv";
-import { Input } from "@pulumi/pulumi";
+import { Input, interpolate } from "@pulumi/pulumi";
 import { getResourceInfoFromId } from "../Common/ResourceEnv";
 import { getSecret } from "../KeyVault/Helper";
-import { getKeyName, getLogWpName } from "../Common/Naming";
+import { getKeyName, getLogWpName, getStorageName } from "../Common/Naming";
+import { logGroupInfo } from "../Common/GlobalEnv";
+import { subscriptionId } from "../Common/AzureEnv";
+import { getStorageSecrets } from "../Storage/Helper";
 
 export const createDiagnostic = async ({
   name,
@@ -99,4 +102,38 @@ export const getLogWpSecrets = async (id: string, vaultInfo: KeyVaultInfo) => {
   ]);
 
   return { wpId, primaryKey, secondaryKey, info };
+};
+
+export const getLogWpInfo = async ({
+  logWpName,
+  vaultInfo,
+}: {
+  logWpName: string;
+  vaultInfo?: KeyVaultInfo;
+}) => {
+  const name = getLogWpName(logWpName);
+  const group = logGroupInfo;
+  const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${name}`;
+
+  const secrets = vaultInfo ? await getLogWpSecrets(id, vaultInfo) : undefined;
+
+  return { name, group, id, secrets };
+};
+
+export const getLogStorageInfo = async ({
+  storageName,
+  vaultInfo,
+}: {
+  storageName: string;
+  vaultInfo?: KeyVaultInfo;
+}) => {
+  const name = getStorageName(storageName);
+  const group = logGroupInfo;
+  const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`;
+
+  const secrets = vaultInfo
+    ? await getStorageSecrets(id, vaultInfo)
+    : undefined;
+
+  return { name, group, id, secrets };
 };

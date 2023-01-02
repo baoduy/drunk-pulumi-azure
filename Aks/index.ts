@@ -128,7 +128,9 @@ interface Props extends BasicResourceArgs {
   };
 
   aksAccess?: {
-    enableAzureRBAC?: boolean | { adminMembers: Array<{ objectId: Input<string> }> };
+    enableAzureRBAC?:
+      | boolean
+      | { adminMembers: Array<{ objectId: Input<string> }> };
     enablePrivateCluster?: boolean;
     authorizedIPRanges?: Input<string>[];
     //privateDNSName?: string;
@@ -192,21 +194,24 @@ export default async ({
 
   const serviceIdentity = featureFlags.createServicePrincipal
     ? await aksIdentityCreator({
-      name: aksName,
-      group,
-      privateCluster: aksAccess.enablePrivateCluster,
-      vaultInfo,
-    })
+        name: aksName,
+        group,
+        privateCluster: aksAccess.enablePrivateCluster,
+        vaultInfo,
+      })
     : undefined;
 
-  const adminGroup = typeof aksAccess.enableAzureRBAC === "object"
-    ? roleCreator({
-      env: currentEnv,
-      appName: name,
-      roleName: "Aks-Admin",
-      members: aksAccess.enableAzureRBAC.adminMembers.map((m) => m.objectId),
-    })
-    : undefined;
+  const adminGroup =
+    typeof aksAccess.enableAzureRBAC === "object"
+      ? roleCreator({
+          env: currentEnv,
+          appName: name,
+          roleName: "Aks-Admin",
+          members: aksAccess.enableAzureRBAC.adminMembers.map(
+            (m) => m.objectId
+          ),
+        })
+      : undefined;
 
   //=================Validate ===================================/
   if (!network?.subnetId) {
@@ -221,10 +226,10 @@ export default async ({
   //Private DNS Zone for Private CLuster
   const privateZone = aksAccess.enablePrivateCluster
     ? PrivateDns({
-      name: "privatelink.southeastasia.azmk8s.io",
-      group,
-      vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
-    })
+        name: "privatelink.southeastasia.azmk8s.io",
+        group,
+        vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
+      })
     : undefined;
 
   //Create AKS Cluster
@@ -252,8 +257,8 @@ export default async ({
         azureKeyvaultSecretsProvider: {
           config: addon.enableAzureKeyVault
             ? {
-              enableSecretRotation: "true",
-            }
+                enableSecretRotation: "true",
+              }
             : undefined,
           enabled: Boolean(addon.enableAzureKeyVault),
         },
@@ -280,9 +285,9 @@ export default async ({
           enabled: Boolean(addon.applicationGateway),
           config: addon.applicationGateway
             ? {
-              gatewayName: `${name}-gateway`,
-              subnetId: addon.applicationGateway.gatewaySubnetId,
-            }
+                gatewayName: `${name}-gateway`,
+                subnetId: addon.applicationGateway.gatewaySubnetId,
+              }
             : undefined,
         },
 
@@ -290,8 +295,8 @@ export default async ({
           enabled: Boolean(log?.logWpId),
           config: log
             ? {
-              logAnalyticsWorkspaceResourceID: log.logWpId!,
-            }
+                logAnalyticsWorkspaceResourceID: log.logWpId!,
+              }
             : undefined,
         },
       },
@@ -325,9 +330,9 @@ export default async ({
 
       linuxProfile: linux
         ? {
-          adminUsername: linux.adminUsername,
-          ssh: { publicKeys: linux.sshKeys.map((k) => ({ keyData: k })) },
-        }
+            adminUsername: linux.adminUsername,
+            ssh: { publicKeys: linux.sshKeys.map((k) => ({ keyData: k })) },
+          }
         : undefined,
 
       autoScalerProfile: {
@@ -357,17 +362,17 @@ export default async ({
 
       servicePrincipalProfile: serviceIdentity
         ? {
-          clientId: serviceIdentity.clientId,
-          secret: serviceIdentity.clientSecret!,
-        }
+            clientId: serviceIdentity.clientId,
+            secret: serviceIdentity.clientSecret!,
+          }
         : undefined,
 
       podIdentityProfile: featureFlags.enablePodIdentity
         ? {
-          enabled: featureFlags.enablePodIdentity,
-          //Not allow pod to using kublet command
-          allowNetworkPluginKubenet: false,
-        }
+            enabled: featureFlags.enablePodIdentity,
+            //Not allow pod to use kublet command
+            allowNetworkPluginKubenet: false,
+          }
         : undefined,
 
       //Preview Features
@@ -397,26 +402,26 @@ export default async ({
 
         loadBalancerSku:
           network.outboundIpAddress?.ipAddressId ||
-            network.enableFirewall ||
-            aksAccess.enablePrivateCluster
+          network.enableFirewall ||
+          aksAccess.enablePrivateCluster
             ? "Standard"
             : "Basic",
 
         loadBalancerProfile:
           network.outboundIpAddress &&
-            !(network.enableFirewall || aksAccess.enablePrivateCluster)
+          !(network.enableFirewall || aksAccess.enablePrivateCluster)
             ? {
-              outboundIPs: {
-                publicIPs: [{ id: network.outboundIpAddress.ipAddressId }],
-              },
-              outboundIPPrefixes: network.outboundIpAddress.ipAddressPrefixId
-                ? {
-                  publicIPPrefixes: [
-                    { id: network.outboundIpAddress.ipAddressPrefixId },
-                  ],
-                }
-                : undefined,
-            }
+                outboundIPs: {
+                  publicIPs: [{ id: network.outboundIpAddress.ipAddressId }],
+                },
+                outboundIPPrefixes: network.outboundIpAddress.ipAddressPrefixId
+                  ? {
+                      publicIPPrefixes: [
+                        { id: network.outboundIpAddress.ipAddressPrefixId },
+                      ],
+                    }
+                  : undefined,
+              }
             : undefined,
       },
     },

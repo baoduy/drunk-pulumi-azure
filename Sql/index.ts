@@ -1,29 +1,29 @@
-import * as azuread from '@pulumi/azuread';
-import * as sql from '@pulumi/azure-native/sql';
+import * as azuread from "@pulumi/azuread";
+import * as sql from "@pulumi/azure-native/sql";
 import {
   BasicResourceArgs,
   BasicResourceResultProps,
   KeyVaultInfo,
   PrivateLinkProps,
-} from '../types';
-import { Input, Output, interpolate, all } from '@pulumi/pulumi';
+} from "../types";
+import { Input, Output, interpolate, all } from "@pulumi/pulumi";
 import {
   currentEnv,
   defaultTags,
   isPrd,
   tenantId,
   subscriptionId,
-} from '../Common/AzureEnv';
-import { randomLogin } from '../Core/Random';
-import { addSecret } from '../KeyVault/Helper';
-import sqlDbCreator, { SqlDbProps } from './SqlDb';
+} from "../Common/AzureEnv";
+import { randomLogin } from "../Core/Random";
+import { addSecret } from "../KeyVault/Helper";
+import sqlDbCreator, { SqlDbProps } from "./SqlDb";
 
-import privateEndpointCreator from '../VNet/PrivateEndpoint';
-import { roleAssignment } from '../AzAd/RoleAssignment';
-import roleCreator from '../AzAd/Role';
-import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import { convertToIpRange } from '../VNet/Helper';
+import privateEndpointCreator from "../VNet/PrivateEndpoint";
+import { roleAssignment } from "../AzAd/RoleAssignment";
+import roleCreator from "../AzAd/Role";
+import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { convertToIpRange } from "../VNet/Helper";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -31,7 +31,7 @@ interface ElasticPoolProps extends BasicResourceArgs {
   sqlName: Output<string>;
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
-  sku?: { name: 'Standard' | 'Basic'; capacity: ElasticPoolCapacityProps };
+  sku?: { name: "Standard" | "Basic"; capacity: ElasticPoolCapacityProps };
   lock?: boolean;
 }
 
@@ -41,7 +41,7 @@ const createElasticPool = ({
   sqlName,
   //Minimum is 50 GD
   maxSizeBytesGb = 50,
-  sku = { name: isPrd ? 'Standard' : 'Basic', capacity: 50 },
+  sku = { name: isPrd ? "Standard" : "Basic", capacity: 50 },
   lock = true,
 }: ElasticPoolProps): BasicResourceResultProps<sql.ElasticPool> => {
   //Create Sql Elastic
@@ -60,9 +60,9 @@ const createElasticPool = ({
     },
     perDatabaseSettings: {
       minCapacity: 0,
-      maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
+      maxCapacity: sku.name === "Basic" ? 5 : sku.capacity,
     },
-    
+
     //licenseType: sql.ElasticPoolLicenseType.BasePrice,
     //zoneRedundant: isPrd,
   });
@@ -77,26 +77,28 @@ const createElasticPool = ({
 interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
 
+  /** if Auth is not provided it will be auto generated */
   auth?: {
-    enableAdAdministrator?: boolean;
-    adminLogin?: Input<string>;
-    password?: Input<string>;
+    /** create a Admin group on AzAD for SQL accessing.*/
+    enableAdAdministrator: boolean;
+    adminLogin: Input<string>;
+    password: Input<string>;
   };
 
   elasticPool?: {
-    name: 'Standard' | 'Basic';
+    name: "Standard" | "Basic";
     capacity: ElasticPoolCapacityProps;
   };
 
   databases: Array<
-    Omit<SqlDbProps, 'sqlServerName' | 'group' | 'elasticPoolId' | 'dependsOn'>
+    Omit<SqlDbProps, "sqlServerName" | "group" | "elasticPoolId" | "dependsOn">
   >;
 
   network?: {
     subnetId?: Input<string>;
     ipAddresses?: Input<string>[];
     /** To enable Private Link need to ensure the subnetId is provided. */
-    privateLink?: Omit<PrivateLinkProps, 'subnetId'>;
+    privateLink?: Omit<PrivateLinkProps, "subnetId">;
   };
 
   vulnerabilityAssessment?: {
@@ -130,7 +132,7 @@ export default async ({
   const sqlName = getSqlServerName(name);
 
   if (vaultInfo && !auth) {
-    const login = await randomLogin({ name, loginPrefix: 'sql', vaultInfo });
+    const login = await randomLogin({ name, loginPrefix: "sql", vaultInfo });
     auth = {
       enableAdAdministrator: true,
       adminLogin: login.userName,
@@ -142,17 +144,17 @@ export default async ({
     ? roleCreator({
         env: currentEnv,
         appName: name,
-        roleName: 'Admin',
+        roleName: "Admin",
       })
     : undefined;
 
   const sqlServer = new sql.Server(sqlName, {
     serverName: sqlName,
     ...group,
-    version: '12.0',
-    minimalTlsVersion: '1.2',
+    version: "12.0",
+    minimalTlsVersion: "1.2",
 
-    identity: { type: 'SystemAssigned' },
+    identity: { type: "SystemAssigned" },
 
     administratorLogin: auth?.adminLogin,
     administratorLoginPassword: auth?.password,
@@ -196,10 +198,10 @@ export default async ({
         group,
         name,
         resourceId: sqlServer.id,
-        privateDnsZoneName: 'privatelink.database.windows.net',
+        privateDnsZoneName: "privatelink.database.windows.net",
         ...network.privateLink,
         subnetId: network.subnetId,
-        linkServiceGroupIds: ['sqlServer'],
+        linkServiceGroupIds: ["sqlServer"],
       });
     } else {
       //Link to Vnet
@@ -236,9 +238,9 @@ export default async ({
     if (vulnerabilityAssessment.logStorageId) {
       await roleAssignment({
         name,
-        principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
-        principalType: 'ServicePrincipal',
-        roleName: 'Storage Blob Data Contributor',
+        principalId: sqlServer.identity.apply((i) => i?.principalId || ""),
+        principalType: "ServicePrincipal",
+        roleName: "Storage Blob Data Contributor",
         scope: vulnerabilityAssessment.logStorageId,
       });
     }
@@ -246,20 +248,20 @@ export default async ({
     //Server Audit
     new sql.ExtendedServerBlobAuditingPolicy(name, {
       auditActionsAndGroups: [
-        'SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP',
-        'FAILED_DATABASE_AUTHENTICATION_GROUP',
-        'BATCH_COMPLETED_GROUP',
+        "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+        "FAILED_DATABASE_AUTHENTICATION_GROUP",
+        "BATCH_COMPLETED_GROUP",
       ],
       serverName: sqlServer.name,
       ...group,
 
-      blobAuditingPolicyName: 'default',
+      blobAuditingPolicyName: "default",
       isAzureMonitorTargetEnabled: true,
       isStorageSecondaryKeyInUse: false,
       predicateExpression: "object_name = 'SensitiveData'",
       queueDelayMs: 4000,
       retentionDays: isPrd ? 30 : 6,
-      state: 'Enabled',
+      state: "Enabled",
       isDevopsAuditEnabled: true,
 
       storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
@@ -279,7 +281,7 @@ export default async ({
 
       storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
       storageEndpoint: vulnerabilityAssessment.storageEndpoint,
-      state: 'Enabled',
+      state: "Enabled",
     });
 
     //ServerVulnerabilityAssessment
