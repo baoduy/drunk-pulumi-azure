@@ -1,15 +1,14 @@
-import * as azure from "@pulumi/azure";
-import * as native from "@pulumi/azure-native";
+import * as azure from '@pulumi/azure';
+import * as native from '@pulumi/azure-native';
+import { Input, interpolate } from '@pulumi/pulumi';
 
-import { DiagnosticProps, KeyVaultInfo } from "../types";
-import * as global from "../Common/GlobalEnv";
-import { Input, interpolate } from "@pulumi/pulumi";
-import { getResourceInfoFromId } from "../Common/ResourceEnv";
-import { getSecret } from "../KeyVault/Helper";
-import { getKeyName, getLogWpName, getStorageName } from "../Common/Naming";
-import { logGroupInfo } from "../Common/GlobalEnv";
-import { subscriptionId } from "../Common/AzureEnv";
-import { getStorageSecrets } from "../Storage/Helper";
+import { subscriptionId } from '../Common/AzureEnv';
+import { logGroupInfo } from '../Common/GlobalEnv';
+import { getKeyName, getLogWpName, getStorageName } from '../Common/Naming';
+import { getSecret } from '../KeyVault/Helper';
+import { getStorageSecrets } from '../Storage/Helper';
+import { DiagnosticProps, KeyVaultInfo } from '../types';
+import { ResourceGroupInfo } from './../types.d';
 
 export const createDiagnostic = async ({
   name,
@@ -48,18 +47,18 @@ export const createDiagnostic = async ({
       //Metric
       metrics: metricsCategories
         ? metricsCategories.map((c) => ({
-            category: c,
-            retentionPolicy: { enabled: false, days: 7 },
-            enabled: true,
-          }))
+          category: c,
+          retentionPolicy: { enabled: false, days: 7 },
+          enabled: true,
+        }))
         : undefined,
       //Logs
       logs: logsCategories
         ? logsCategories.map((c) => ({
-            category: c,
-            retentionPolicy: { enabled: false, days: 7 },
-            enabled: true,
-          }))
+          category: c,
+          retentionPolicy: { enabled: false, days: 7 },
+          enabled: true,
+        }))
         : undefined,
     },
     { dependsOn }
@@ -81,15 +80,7 @@ export const createThreatProtection = ({
   });
 };
 
-export const getLogWpSecrets = async (id: string, vaultInfo: KeyVaultInfo) => {
-  const info = getResourceInfoFromId(id);
-  if (!info) return undefined;
-
-  let name = getLogWpName(info.name);
-  if (name.includes("global-")) {
-    name = name.replace("global-", "");
-    vaultInfo = global.keyVaultInfo;
-  }
+export const getLogWpSecrets = async ({ name, group, vaultInfo }: { name: string, group: ResourceGroupInfo, vaultInfo: KeyVaultInfo }) => {
 
   const workspaceIdKeyName = `${name}-Id`;
   const primaryKeyName = getKeyName(name, "primary");
@@ -101,7 +92,7 @@ export const getLogWpSecrets = async (id: string, vaultInfo: KeyVaultInfo) => {
     getSecret({ name: secondaryKeyName, nameFormatted: true, vaultInfo }),
   ]);
 
-  return { wpId, primaryKey, secondaryKey, info };
+  return { wpId, primaryKey, secondaryKey };
 };
 
 export const getLogWpInfo = async ({
@@ -115,7 +106,7 @@ export const getLogWpInfo = async ({
   const group = logGroupInfo;
   const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${name}`;
 
-  const secrets = vaultInfo ? await getLogWpSecrets(id, vaultInfo) : undefined;
+  const secrets = vaultInfo ? await getLogWpSecrets({ name, group, vaultInfo }) : undefined;
 
   return { name, group, id, secrets };
 };
@@ -132,7 +123,7 @@ export const getLogStorageInfo = async ({
   const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`;
 
   const secrets = vaultInfo
-    ? await getStorageSecrets(id, vaultInfo)
+    ? await getStorageSecrets({ name, group, vaultInfo })
     : undefined;
 
   return { name, group, id, secrets };
