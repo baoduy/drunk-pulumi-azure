@@ -1,16 +1,19 @@
-import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
+import * as network from "@pulumi/azure-native/network";
+import { Input } from "@pulumi/pulumi";
 
-import { RangeOf } from '../Common/Helpers';
-import { getIpAddressPrefixName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import { Dictionary } from '../Tools/Dictionary';
-import { BasicResourceArgs } from '../types';
-import IpAddress from './IpAddress';
+import { RangeOf } from "../Common/Helpers";
+import { getIpAddressPrefixName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { Dictionary } from "../Tools/Dictionary";
+import { BasicResourceArgs } from "../types";
+import IpAddress from "./IpAddress";
 
 interface Props extends BasicResourceArgs {
   prefixLength: number;
   ipAddressConfig?: {
+    /** By default, the Ip address name will be formatted by: `${name}-${i}`.
+     * Use this method if you would like to provide meaning full name for each Ip address by it index */
+    nameFormatter?: (index: number) => string;
     /** How many Ip address would like to be created. This must be <= prefixLength */
     numberOfIps: number;
     version?: network.IPVersion;
@@ -48,7 +51,10 @@ export default ({
 
   if (ipAddressConfig) {
     RangeOf(ipAddressConfig.numberOfIps).forEach((i) => {
-      const n = `${name}-${i}`;
+      const n = ipAddressConfig.nameFormatter
+        ? ipAddressConfig.nameFormatter(i)
+        : `${name}-${i}`;
+
       const ip = IpAddress({
         ...ipAddressConfig,
         name: n,

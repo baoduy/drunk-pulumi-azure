@@ -72,9 +72,3 @@ export default ({
 
   return ipAddress;
 };
-
-export const getIpAddressResource = ({ name, group }: BasicResourceArgs) =>
-  network.getPublicIPAddress({
-    publicIpAddressName: getIpName(name),
-    ...group,
-  });
