@@ -1,7 +1,7 @@
 import * as native from "@pulumi/azure-native";
 import { projectName, stack, testMode, organization } from "./StackEnv";
 import { all, output, interpolate } from "@pulumi/pulumi";
-import { KeyVaultInfo } from "../types";
+import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import { getKeyVaultName, getResourceGroupName } from "./Naming";
 import { ResourceInfoArg } from "./ResourceEnv";
 
@@ -62,16 +62,16 @@ export const getAlertActionGroupInfo = (
 };
 
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
-export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
-  const vaultName = getKeyVaultName(groupName);
-  const resourceGroupName = getResourceGroupName(groupName);
-
-  return {
-    name: vaultName,
-    group: { resourceGroupName: resourceGroupName },
-    id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
-  };
-};
+// export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
+//   const vaultName = getKeyVaultName(groupName);
+//   const resourceGroupName = getResourceGroupName(groupName);
+//
+//   return {
+//     name: vaultName,
+//     group: { resourceGroupName: resourceGroupName },
+//     id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
+//   };
+// };
 
 export const getResourceIdFromInfo = ({
   group,
@@ -84,4 +84,30 @@ export const getResourceIdFromInfo = ({
     return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
 
   throw new Error("Resource Info is invalid.");
+};
+
+/**Get Resource Info from Resource ID. Sample ID is "/subscriptions/01af663e-76dd-45ac-9e57-9c8e0d3ee350/resourceGroups/sandbox-codehbd-group-hbd/providers/Microsoft.Network/virtualNetworks/sandbox-codehbd-vnet-hbd"*/
+export interface ResourceInfo {
+  name: string;
+  group: ResourceGroupInfo;
+  subscriptionId: string;
+  id: string;
+}
+
+export const getResourceInfoFromId = (id: string): ResourceInfo | undefined => {
+  if (!id) return undefined;
+
+  const details = id.split("/");
+  let name = "";
+  let groupName = "";
+  let subscriptionId = "";
+
+  details.forEach((d, index) => {
+    if (d === "subscriptions") subscriptionId = details[index + 1];
+    if (d === "resourceGroups" || d === "resourcegroups")
+      groupName = details[index + 1];
+    if (index === details.length - 1) name = d;
+  });
+
+  return { name, id, group: { resourceGroupName: groupName }, subscriptionId };
 };

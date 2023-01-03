@@ -1,4 +1,5 @@
 import * as common from "../../Common/ResourceEnv";
+import { getResourceInfoFromId } from "../../Common/AzureEnv";
 import { expect } from "chai";
 import {
   getResourceGroupName,
@@ -33,7 +34,7 @@ describe("ResourceEnv tests", () => {
   });
 
   it("Get Resource Info from Id", () => {
-    const info = common.getResourceInfoFromId(
+    const info = getResourceInfoFromId(
       "/subscriptions/1234567890/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-dev-vnet-trans"
     );
 

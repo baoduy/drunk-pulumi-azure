@@ -1,14 +1,13 @@
-import * as azure from '@pulumi/azure';
-import * as native from '@pulumi/azure-native';
-import { Input, interpolate } from '@pulumi/pulumi';
+import * as azure from "@pulumi/azure";
+import * as native from "@pulumi/azure-native";
+import { Input, interpolate } from "@pulumi/pulumi";
 
-import { subscriptionId } from '../Common/AzureEnv';
-import { logGroupInfo } from '../Common/GlobalEnv';
-import { getKeyName, getLogWpName, getStorageName } from '../Common/Naming';
-import { getSecret } from '../KeyVault/Helper';
-import { getStorageSecrets } from '../Storage/Helper';
-import { DiagnosticProps, KeyVaultInfo } from '../types';
-import { ResourceGroupInfo } from './../types.d';
+import { getResourceInfoFromId, subscriptionId } from "../Common/AzureEnv";
+import { logGroupInfo } from "../Common/GlobalEnv";
+import { getKeyName, getLogWpName, getStorageName } from "../Common/Naming";
+import { getSecret } from "../KeyVault/Helper";
+import { getStorageSecrets } from "../Storage/Helper";
+import { DiagnosticProps, KeyVaultInfo } from "../types";
 
 export const createDiagnostic = async ({
   name,
@@ -47,18 +46,18 @@ export const createDiagnostic = async ({
       //Metric
       metrics: metricsCategories
         ? metricsCategories.map((c) => ({
-          category: c,
-          retentionPolicy: { enabled: false, days: 7 },
-          enabled: true,
-        }))
+            category: c,
+            retentionPolicy: { enabled: false, days: 7 },
+            enabled: true,
+          }))
         : undefined,
       //Logs
       logs: logsCategories
         ? logsCategories.map((c) => ({
-          category: c,
-          retentionPolicy: { enabled: false, days: 7 },
-          enabled: true,
-        }))
+            category: c,
+            retentionPolicy: { enabled: false, days: 7 },
+            enabled: true,
+          }))
         : undefined,
     },
     { dependsOn }
@@ -80,11 +79,18 @@ export const createThreatProtection = ({
   });
 };
 
-export const getLogWpSecrets = async ({ name, group, vaultInfo }: { name: string, group: ResourceGroupInfo, vaultInfo: KeyVaultInfo }) => {
-
-  const workspaceIdKeyName = `${name}-Id`;
-  const primaryKeyName = getKeyName(name, "primary");
-  const secondaryKeyName = getKeyName(name, "secondary");
+export const getLogWpSecrets = async ({
+  fullName,
+  //group,
+  vaultInfo,
+}: {
+  fullName: string;
+  //group: ResourceGroupInfo;
+  vaultInfo: KeyVaultInfo;
+}) => {
+  const workspaceIdKeyName = `${fullName}-Id`;
+  const primaryKeyName = getKeyName(fullName, "primary");
+  const secondaryKeyName = getKeyName(fullName, "secondary");
 
   const [wpId, primaryKey, secondaryKey] = await Promise.all([
     getSecret({ name: workspaceIdKeyName, vaultInfo }),
@@ -93,6 +99,21 @@ export const getLogWpSecrets = async ({ name, group, vaultInfo }: { name: string
   ]);
 
   return { wpId, primaryKey, secondaryKey };
+};
+
+export const getLogWpSecretsById = async ({
+  logWpId,
+  vaultInfo,
+}: {
+  logWpId: string;
+  vaultInfo: KeyVaultInfo;
+}) => {
+  const info = getResourceInfoFromId(logWpId);
+  const secrets = info
+    ? await getLogWpSecrets({ fullName: info.name, vaultInfo })
+    : undefined;
+
+  return secrets ? { info, secrets } : undefined;
 };
 
 export const getLogWpInfo = async ({
@@ -106,7 +127,9 @@ export const getLogWpInfo = async ({
   const group = logGroupInfo;
   const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${name}`;
 
-  const secrets = vaultInfo ? await getLogWpSecrets({ name, group, vaultInfo }) : undefined;
+  const secrets = vaultInfo
+    ? await getLogWpSecrets({ fullName: name, vaultInfo })
+    : undefined;
 
   return { name, group, id, secrets };
 };
@@ -123,7 +146,7 @@ export const getLogStorageInfo = async ({
   const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`;
 
   const secrets = vaultInfo
-    ? await getStorageSecrets({ name, group, vaultInfo })
+    ? await getStorageSecrets({ fullName: name, vaultInfo })
     : undefined;
 
   return { name, group, id, secrets };

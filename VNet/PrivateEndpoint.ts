@@ -1,20 +1,12 @@
-import * as network from '@pulumi/azure-native/network';
+import * as network from "@pulumi/azure-native/network";
 
-import { Input, output, Output } from '@pulumi/pulumi';
+import { Input, output } from "@pulumi/pulumi";
 
-import {
-  BasicResourceArgs,
-  PrivateLinkProps,
-  ResourceGroupInfo,
-} from '../types';
-import { defaultTags } from '../Common/AzureEnv';
-import { getVnetIdFromSubnetId } from './Helper';
-import PrivateZone, {
-  linkVnetToPrivateDns,
-  addARecord,
-  getPrivateZone,
-} from './PrivateDns';
-import { getResourceInfoFromId } from '../Common/ResourceEnv';
+import { BasicResourceArgs, PrivateLinkProps } from "../types";
+import { defaultTags } from "../Common/AzureEnv";
+import { getVnetIdFromSubnetId } from "./Helper";
+import PrivateZone, { linkVnetToPrivateDns, addARecord } from "./PrivateDns";
+import { getResourceInfoFromId } from "../Common/AzureEnv";
 
 interface Props extends BasicResourceArgs, PrivateLinkProps {
   resourceId: Input<string>;
@@ -58,7 +50,7 @@ export default ({
       //Add A Record
       addARecord({
         ipAddresses,
-        recordName: resourceInfo?.name || '',
+        recordName: resourceInfo?.name || "",
         zoneName: privateDnsZoneName,
       });
 
@@ -80,7 +72,7 @@ export default ({
       //Add Root Record
       addARecord({
         ipAddresses,
-        recordName: '@',
+        recordName: "@",
         zoneName: privateDnsZoneName,
         dependsOn: zone,
       });

@@ -1,19 +1,24 @@
-import * as storage from '@pulumi/azure-native/storage';
-import dayjs from 'dayjs';
+import * as storage from "@pulumi/azure-native/storage";
+import dayjs from "dayjs";
 
-import { getConnectionName, getKeyName, getSecretName } from '../Common/Naming';
-import { getSecret } from '../KeyVault/Helper';
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
-import { ResourceGroupInfo } from './../types.d';
+import { getConnectionName, getKeyName, getSecretName } from "../Common/Naming";
+import { getSecret } from "../KeyVault/Helper";
+import { BasicResourceArgs, KeyVaultInfo } from "../types";
+import { getResourceInfoFromId } from "../Common/AzureEnv";
 
-
-export const getStorageSecrets = async (
-  { name, group, vaultInfo }: { name: string, group: ResourceGroupInfo, vaultInfo: KeyVaultInfo }
-) => {
-  const primaryKeyName = getKeyName(name, 'primary');
-  const secondaryKeyName = getKeyName(name, 'secondary');
-  const primaryConnectionKeyName = getConnectionName(name, 'primary');
-  const secondConnectionKeyName = getConnectionName(name, 'secondary');
+export const getStorageSecrets = async ({
+  fullName,
+  //group,
+  vaultInfo,
+}: {
+  fullName: string;
+  //group: ResourceGroupInfo,
+  vaultInfo: KeyVaultInfo;
+}) => {
+  const primaryKeyName = getKeyName(fullName, "primary");
+  const secondaryKeyName = getKeyName(fullName, "secondary");
+  const primaryConnectionKeyName = getConnectionName(fullName, "primary");
+  const secondConnectionKeyName = getConnectionName(fullName, "secondary");
 
   const [primaryConnection, secondaryConnection, primaryKey, secondaryKey] =
     await Promise.all(
@@ -29,20 +34,34 @@ export const getStorageSecrets = async (
     );
 
   return {
-
     primaryConnection: primaryConnection?.value,
     secondaryConnection: secondaryConnection?.value,
     primaryKey: primaryKey?.value,
     secondaryKey: secondaryKey?.value,
 
     endpoints: {
-      blob: `https://${name}.blob.core.windows.net`,
-      file: `https://${name}.file.core.windows.net`,
-      table: `https://${name}.table.core.windows.net`,
-      staticSite: `https://${name}.z23.web.core.windows.net`,
-      DataLake: `https://${name}.dfs.core.windows.net`,
+      blob: `https://${fullName}.blob.core.windows.net`,
+      file: `https://${fullName}.file.core.windows.net`,
+      table: `https://${fullName}.table.core.windows.net`,
+      staticSite: `https://${fullName}.z23.web.core.windows.net`,
+      DataLake: `https://${fullName}.dfs.core.windows.net`,
     },
   };
+};
+
+export const getStorageSecretsById = async ({
+  storageId,
+  vaultInfo,
+}: {
+  storageId: string;
+  vaultInfo: KeyVaultInfo;
+}) => {
+  const info = getResourceInfoFromId(storageId);
+  const secrets = info
+    ? await getStorageSecrets({ fullName: info.name, vaultInfo })
+    : undefined;
+
+  return secrets ? { info, secrets } : undefined;
 };
 
 export const getAccountSAS = ({ group, name }: BasicResourceArgs) =>
@@ -54,5 +73,5 @@ export const getAccountSAS = ({ group, name }: BasicResourceArgs) =>
     permissions: storage.Permissions.W,
     protocols: storage.HttpProtocol.Https,
     sharedAccessStartTime: dayjs().toISOString(),
-    sharedAccessExpiryTime: dayjs().add(3, 'year').toISOString(),
+    sharedAccessExpiryTime: dayjs().add(3, "year").toISOString(),
   });
