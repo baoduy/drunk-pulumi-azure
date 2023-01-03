@@ -1,15 +1,15 @@
+import * as network from "@pulumi/azure-native/network";
+import { input as inputs } from "@pulumi/azure-native/types";
 import { interpolate, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
-import { FirewallRuleResults } from "./FirewallRules/types";
-import { input as inputs } from "@pulumi/azure-native/types";
+
+import { subscriptionId } from "../Common/AzureEnv";
 import {
   getIpAddressName,
   getResourceGroupName,
   getVnetName,
 } from "../Common/Naming";
-import { subscriptionId } from "../Common/AzureEnv";
-import { BasicResourceArgs } from "../types";
-import * as network from "@pulumi/azure-native/network";
+import { FirewallRuleResults } from "./FirewallRules/types";
 
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
@@ -107,4 +107,20 @@ export const getIpAddressId = ({
   const n = getIpAddressName(name);
   const group = getResourceGroupName(groupName);
   return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.Network/publicIPAddresses/${n}`;
+};
+
+export const getIpAddressResource = ({
+  name,
+  groupName,
+}: {
+  name: string;
+  groupName: string;
+}) => {
+  const n = getIpAddressName(name);
+  const group = getResourceGroupName(groupName);
+
+  return network.getPublicIPAddress({
+    publicIpAddressName: n,
+    resourceGroupName: group,
+  });
 };

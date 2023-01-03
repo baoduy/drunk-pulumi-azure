@@ -1,8 +1,9 @@
 import * as containerservice from '@pulumi/azure-native/containerservice';
-import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+
 import { getIdentitySecrets } from '../AzAd/Helper';
 import { getAksName, getResourceGroupName } from '../Common/Naming';
 import { createProvider } from '../KubeX/Providers';
+import { KeyVaultInfo } from '../types';
 
 export const getAksConfig = async ({
   name,
@@ -35,20 +36,23 @@ export const getAksIdentitySecrets = async ({
 
 interface AksProps {
   aksName: string;
+  formatedName?: boolean;
   namespace?: string;
-  group: ResourceGroupInfo;
+  groupName: string;
+
 }
 
 export const createAksProvider = async ({
   aksName,
   namespace,
-  group,
+  groupName,
+  formatedName,
 }: AksProps) =>
   createProvider({
     name: aksName,
     namespace,
     kubeconfig: await getAksConfig({
-      name: aksName,
-      groupName: group.resourceGroupName,
+      name: formatedName ? aksName : getAksName(aksName),
+      groupName: formatedName ? groupName : getResourceGroupName(groupName),
     }),
   });
