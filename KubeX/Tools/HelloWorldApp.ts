@@ -37,10 +37,10 @@ export default async ({
     ingressConfig: {
       type: ingressType,
       hostNames: [hostName],
-      allowHttp: !enableCertManager,
-      certManagerIssuer: enableCertManager,
-      tlsSecretName: enableCertManager ? `tls-${name}-lets` : undefined,
-      className: enableFirewall ? 'public' : 'nginx',
+      allowHttp: true,
+      certManagerIssuer: true,
+      tlsSecretName: `tls-${name}-lets`,
+      className: 'nginx',
     },
 
     ...others,

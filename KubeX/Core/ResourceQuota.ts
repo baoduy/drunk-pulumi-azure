@@ -2,10 +2,10 @@ import { DefaultK8sArgs } from "../types";
 import * as k8s from "@pulumi/kubernetes";
 
 export type ResourceQuotaSpec = {
-  cpu?: string;
-  memory?: string;
-  pods?: string;
-  persistentvolumeclaims?: string;
+  cpu: string;
+  memory: string;
+  pods: string;
+  persistentvolumeclaims: string;
 };
 
 interface Props extends DefaultK8sArgs {

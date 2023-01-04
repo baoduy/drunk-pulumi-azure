@@ -2,7 +2,6 @@ import { DefaultK8sArgs } from '../types';
 import { Input } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
-
 interface Props extends DefaultK8sArgs {
   hostNames: Input<string>[];
   volume?: {
