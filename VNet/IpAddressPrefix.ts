@@ -36,7 +36,7 @@ export default ({
     publicIpPrefixName: n,
     ...group,
     prefixLength: prefixLength,
-    sku: { name: "Regional", tier: "Standard" },
+    sku: { name: "Standard", tier: "Regional" },
   });
 
   if (lock) {
