@@ -1,3 +1,4 @@
 z_tests/
 **/*.d.ts
 **/*.js
+**/*.eslintrc.cjs
