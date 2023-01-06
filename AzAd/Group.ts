@@ -1,9 +1,8 @@
 import * as azuread from '@pulumi/azuread';
-
 import { Input, Output } from '@pulumi/pulumi';
 
-import { roleAssignment } from './RoleAssignment';
 import { subscriptionId } from '../Common/AzureEnv';
+import { roleAssignment } from './RoleAssignment';
 
 export interface GroupPermissionProps {
   /** The name of the roles would like to assign to this group*/
@@ -49,7 +48,7 @@ export default ({ name, permissions, members, owners }: AdGroupProps) => {
       return roleAssignment({
         name,
         principalId: group.objectId,
-        principalType: 'Group',
+        principalType: "Group",
         roleName: p.roleName,
         scope: p.scope,
       });
@@ -59,17 +58,29 @@ export default ({ name, permissions, members, owners }: AdGroupProps) => {
   return group;
 };
 
-export const addUserToGroup = async (
-  userName: string,
-  groupObjectId: string
-) => {
-  const user = userName.includes('@')
-    ? await azuread.getUser({ userPrincipalName: userName })
-    : { objectId: userName };
+export const addUserToGroup = async ({
+  name,
+  userName,
+  objectId,
+  groupObjectId,
+}: {
+  name: string;
+  userName?: string;
+  objectId?: Input<string>;
+  groupObjectId: Input<string>;
+}) => {
+  if (userName && !userName.includes("@"))
+    throw new Error("UserName must include suffix @domain.name");
+  else if (!objectId) throw new Error("Either UserName or ObjectId must be defined.");
 
-  return new azuread.GroupMember(`${groupObjectId}-${userName}`, {
+  const user = userName
+    ? await azuread.getUser({ userPrincipalName: userName! })
+    : { objectId: objectId! };
+
+  return new azuread.GroupMember(name, {
     groupObjectId,
     memberObjectId: user.objectId,
+
   });
 };
 
