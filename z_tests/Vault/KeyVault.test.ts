@@ -14,7 +14,7 @@ describe("Key Vault Creator tests", () => {
     expect(rs.name).to.equal("stack-root-vlt");
     expect(rs.toVaultInfo().group).to.equal(group);
 
-    rs.resource.urn.apply((n) => expect(n).to.include("stack-root-vlt"));
+    rs.vault.urn.apply((n) => expect(n).to.include("stack-root-vlt"));
   }).timeout(5000);
 
   it("Vault Creator with custom prefix", async () => {
@@ -29,6 +29,6 @@ describe("Key Vault Creator tests", () => {
     expect(rs.name).to.equal("steven-root-vlt");
     expect(rs.toVaultInfo().group).to.equal(group);
 
-    rs.resource.urn.apply((n) => expect(n).to.include("steven-root-vlt"));
+    rs.vault.urn.apply((n) => expect(n).to.include("steven-root-vlt"));
   }).timeout(5000);
 });

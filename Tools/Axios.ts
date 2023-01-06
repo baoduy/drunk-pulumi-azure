@@ -1,5 +1,5 @@
 import { InternalCredentials } from "../CustomProviders/Base/Credentials";
-import axios from "axios";
+import axios, { AxiosRequestHeaders } from "axios";
 import { urlJoin } from "url-join-ts";
 
 export const createAxios = () => {
@@ -24,9 +24,13 @@ export const createAxios = () => {
         : urlJoin(baseUrl!, config.url!);
     }
 
-    if(!config.headers)
-    config.headers={Authorization:token ? `Bearer ${token}` : ""};
-    else config.headers.Authorization = token ? `Bearer ${token}` : "";
+    if (!config.headers)
+      config.headers = { Authorization: token ? `Bearer ${token}` : "" };
+    else
+      (config.headers as AxiosRequestHeaders).set(
+        "Authorization",
+        token ? `Bearer ${token}` : ""
+      );
 
     return config;
   });

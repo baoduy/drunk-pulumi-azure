@@ -20,4 +20,4 @@ export const getRootDomainFromUrl = (url: string) => {
 
 /** Create Range*/
 export const RangeOf = (length: number) =>
-  Array.from({ length: length }, (v, k) => k + 1);
+  Array.from({ length: length }, (v, k) => k);
