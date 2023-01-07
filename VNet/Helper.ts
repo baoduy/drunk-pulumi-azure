@@ -84,7 +84,7 @@ export const mergeFirewallRules = (
 interface SubnetProps {
   subnetName: string;
   //The Key name used to create resource group and Vnet
-  vnetKeyName: string;
+  vnetAndGroupName: string;
 }
 
 /**Get Subnet Id from Naming rules*/
