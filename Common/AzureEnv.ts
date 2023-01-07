@@ -1,9 +1,10 @@
-import * as native from "@pulumi/azure-native";
-import { projectName, stack, testMode, organization } from "./StackEnv";
-import { all, output, interpolate } from "@pulumi/pulumi";
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
-import { getKeyVaultName, getResourceGroupName } from "./Naming";
-import { ResourceInfoArg } from "./ResourceEnv";
+import * as native from '@pulumi/azure-native';
+import { all, interpolate, output } from '@pulumi/pulumi';
+
+import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { getKeyVaultName, getResourceGroupName } from './Naming';
+import { ResourceInfoArg } from './ResourceEnv';
+import { organization, projectName, stack, testMode } from './StackEnv';
 
 const config = output(native.authorization.getClientConfig());
 export const tenantId = config.tenantId;
@@ -62,16 +63,16 @@ export const getAlertActionGroupInfo = (
 };
 
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
-// export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
-//   const vaultName = getKeyVaultName(groupName);
-//   const resourceGroupName = getResourceGroupName(groupName);
-//
-//   return {
-//     name: vaultName,
-//     group: { resourceGroupName: resourceGroupName },
-//     id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
-//   };
-// };
+export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
+  const vaultName = getKeyVaultName(groupName);
+  const resourceGroupName = getResourceGroupName(groupName);
+
+  return {
+    name: vaultName,
+    group: { resourceGroupName: resourceGroupName },
+    id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
+  };
+};
 
 export const getResourceIdFromInfo = ({
   group,

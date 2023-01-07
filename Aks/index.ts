@@ -2,9 +2,14 @@ import * as native from "@pulumi/azure-native";
 import * as pulumi from "@pulumi/pulumi";
 import { Input, output } from "@pulumi/pulumi";
 import vmsDiagnostic from "./VmSetMonitor";
-import vmsAutoScale from "./VmSetAutoScale";
 import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from "../types";
-import { currentEnv, Environments, isPrd, tenantId } from "../Common/AzureEnv";
+import {
+  currentEnv,
+  defaultTags,
+  Environments,
+  isPrd,
+  tenantId,
+} from "../Common/AzureEnv";
 import Locker from "../Core/Locker";
 import aksIdentityCreator from "./Identity";
 import roleCreator from "../AzAd/Role";
@@ -119,7 +124,7 @@ interface Props extends BasicResourceArgs {
 
   kubernetesVersion?: "1.22.6";
   nodePools: Array<Omit<NodePoolProps, "subnetId" | "aksId">>;
-  //enableVMAutoScale?: boolean;
+  enableAutoScale?: boolean;
 
   featureFlags?: {
     createServicePrincipal?: boolean;
@@ -164,7 +169,7 @@ export default async ({
   linux,
   kubernetesVersion = "1.22.6",
   nodePools,
-  //enableVMAutoScale,
+  enableAutoScale,
   network,
   log,
   aksAccess = {},
@@ -335,31 +340,32 @@ export default async ({
           }
         : undefined,
 
-      autoScalerProfile: {
-        balanceSimilarNodeGroups: "true",
-        expander: "random",
-        maxEmptyBulkDelete: "10",
-        maxGracefulTerminationSec: "600",
-        maxNodeProvisionTime: "15m",
-        maxTotalUnreadyPercentage: "45",
-        newPodScaleUpDelay: "0s",
-        okTotalUnreadyCount: "3",
-        scaleDownDelayAfterAdd: "30m",
-        scaleDownDelayAfterDelete: "60s",
-        scaleDownDelayAfterFailure: "10m",
-        scaleDownUnneededTime: "10m",
-        scaleDownUnreadyTime: "20m",
-        scaleDownUtilizationThreshold: "0.5",
-        scanInterval: "60s",
-        skipNodesWithLocalStorage: "false",
-        skipNodesWithSystemPods: "true",
-      },
+      autoScalerProfile: enableAutoScale
+        ? {
+            balanceSimilarNodeGroups: "true",
+            expander: "random",
+            maxEmptyBulkDelete: "10",
+            maxGracefulTerminationSec: "600",
+            maxNodeProvisionTime: "15m",
+            maxTotalUnreadyPercentage: "45",
+            newPodScaleUpDelay: "0s",
+            okTotalUnreadyCount: "3",
+            scaleDownDelayAfterAdd: "30m",
+            scaleDownDelayAfterDelete: "60s",
+            scaleDownDelayAfterFailure: "10m",
+            scaleDownUnneededTime: "10m",
+            scaleDownUnreadyTime: "20m",
+            scaleDownUtilizationThreshold: "0.5",
+            scanInterval: "60s",
+            skipNodesWithLocalStorage: "false",
+            skipNodesWithSystemPods: "true",
+          }
+        : undefined,
 
       // identity: !featureFlags.createServicePrincipal
       //   ? { type: 'SystemAssigned' }
       //   : undefined,
       //identityProfile: {},
-
       servicePrincipalProfile: serviceIdentity
         ? {
             clientId: serviceIdentity.clientId,
@@ -376,9 +382,10 @@ export default async ({
         : undefined,
 
       //Preview Features
-      //disableLocalAccounts: auth.enableAzureRBAC,
-      //autoUpgradeProfile: { upgradeChannel: containerservice.UpgradeChannel.Patch },
-
+      autoUpgradeProfile: {
+        upgradeChannel: native.containerservice.UpgradeChannel.Stable,
+      },
+      disableLocalAccounts: Boolean(aksAccess.enableAzureRBAC),
       aadProfile: {
         enableAzureRBAC: Boolean(aksAccess.enableAzureRBAC),
         managed: true,
@@ -424,6 +431,8 @@ export default async ({
               }
             : undefined,
       },
+
+      tags: defaultTags,
     },
     {
       protect: lock,

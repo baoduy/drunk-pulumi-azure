@@ -90,10 +90,10 @@ interface SubnetProps {
 /**Get Subnet Id from Naming rules*/
 export const getSubnetIdByName = ({
   subnetName,
-  vnetKeyName,
+  vnetAndGroupName,
 }: SubnetProps): Output<string> => {
-  const vnetName = getVnetName(vnetKeyName);
-  const group = getResourceGroupName(vnetKeyName);
+  const vnetName = getVnetName(vnetAndGroupName);
+  const group = getResourceGroupName(vnetAndGroupName);
   return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}`;
 };
 
