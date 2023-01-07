@@ -9,6 +9,7 @@ describe("Key Vault Creator tests", () => {
     const rs = await vaultCreator({
       name: "root",
       group,
+      enableRbac: false,
     });
 
     expect(rs.name).to.equal("stack-root-vlt");
@@ -24,6 +25,7 @@ describe("Key Vault Creator tests", () => {
       name: "root",
       nameConvention: { prefix: "steven", suffix: "vlt" },
       group,
+      enableRbac: false,
     });
 
     expect(rs.name).to.equal("steven-root-vlt");

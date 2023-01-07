@@ -1,35 +1,44 @@
-import * as storage from '@pulumi/azure-native/storage';
-import * as pulumi from '@pulumi/pulumi';
+import * as storage from "@pulumi/azure-native/storage";
+import * as pulumi from "@pulumi/pulumi";
 
 import {
   AppInsightInfo,
   ConventionProps,
   KeyVaultInfo,
   BasicResourceArgs,
-} from '../types';
-import { Input, Output } from '@pulumi/pulumi';
-import { createThreatProtection } from '../Logs/Helpers';
-import { addInsightMonitor } from '../Logs/WebTest';
-import { addSecret, parseKeyUrl } from '../KeyVault/Helper';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+} from "../types";
+import { Input, Output } from "@pulumi/pulumi";
+import { createThreatProtection } from "../Logs/Helpers";
+import { addInsightMonitor } from "../Logs/WebTest";
+import { addSecret, parseKeyUrl } from "../KeyVault/Helper";
+import { defaultTags, isPrd } from "../Common/AzureEnv";
 
-import cdnCreator from './CdnEndpoint';
-import { addLegacySecret } from '../KeyVault/LegacyHelper';
+import cdnCreator from "./CdnEndpoint";
+import { addLegacySecret } from "../KeyVault/LegacyHelper";
 import {
   getConnectionName,
   getKeyName,
   getStorageName,
-} from '../Common/Naming';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import Locker from '../Core/Locker';
+} from "../Common/Naming";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import Locker from "../Core/Locker";
+import { createManagementRules, ManagementRules } from "./ManagementRules";
 
-type ContainerProps = { name: string; public?: boolean };
+type ContainerProps = {
+  name: string;
+  public?: boolean;
+  /** The management rule applied to Container level*/
+  managementRules: Array<ManagementRules>;
+};
 
 interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
 
   encryptionKeyUrl?: Output<string> | string;
   vaultInfo?: KeyVaultInfo;
+
+  /** The management rule applied to Storage level (all containers)*/
+  defaultManagementRules: Array<ManagementRules>;
 
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
@@ -72,6 +81,7 @@ export default ({
   customDomain,
   vaultInfo,
   encryptionKeyUrl,
+  defaultManagementRules,
   containers = [],
   queues = [],
   fileShares = [],
@@ -83,13 +93,13 @@ export default ({
   lock = true,
 }: StorageProps) => {
   name = getStorageName(name);
-  const primaryKeyName = getKeyName(name, 'primary');
-  const secondaryKeyName = getKeyName(name, 'secondary');
-  const primaryConnectionKeyName = getConnectionName(name, 'primary');
-  const secondConnectionKeyName = getConnectionName(name, 'secondary');
+  const primaryKeyName = getKeyName(name, "primary");
+  const secondaryKeyName = getKeyName(name, "secondary");
+  const primaryConnectionKeyName = getConnectionName(name, "primary");
+  const secondConnectionKeyName = getConnectionName(name, "secondary");
 
   const keyInfo = encryptionKeyUrl
-    ? typeof encryptionKeyUrl === 'string'
+    ? typeof encryptionKeyUrl === "string"
       ? parseKeyUrl(encryptionKeyUrl)
       : encryptionKeyUrl.apply(parseKeyUrl)
     : undefined;
@@ -106,14 +116,14 @@ export default ({
           ? storage.SkuName.Standard_ZRS
           : storage.SkuName.Standard_LRS,
     },
-    accessTier: 'Hot',
+    accessTier: "Hot",
 
     isHnsEnabled: true,
     enableHttpsTrafficOnly: true,
     allowBlobPublicAccess: false,
     allowSharedKeyAccess: featureFlags.allowSharedKeyAccess,
-    identity: { type: 'SystemAssigned' },
-    minimumTlsVersion: 'TLS1_2',
+    identity: { type: "SystemAssigned" },
+    minimumTlsVersion: "TLS1_2",
 
     //1 Year Months
     keyPolicy: {
@@ -123,7 +133,7 @@ export default ({
     encryption:
       keyInfo && featureFlags.enableAccountLevelEncryption
         ? {
-            keySource: 'Microsoft.Keyvault',
+            keySource: "Microsoft.Keyvault",
             keyVaultProperties: {
               keyName: keyInfo.name,
               keyVaultUri: keyInfo.vaultUrl,
@@ -131,6 +141,11 @@ export default ({
             },
           }
         : undefined,
+
+    sasPolicy: {
+      expirationAction: storage.ExpirationAction.Log,
+      sasExpirationPeriod: "00.00:30:00",
+    },
 
     customDomain:
       customDomain && !featureFlags.enableStaticWebsite
@@ -147,8 +162,8 @@ export default ({
 
     networkRuleSet: firewall
       ? {
-          bypass: 'Logging, Metrics',
-          defaultAction: 'Allow',
+          bypass: "Logging, Metrics",
+          defaultAction: "Allow",
 
           virtualNetworkRules: firewall.subnetId
             ? [{ virtualNetworkResourceId: firewall.subnetId }]
@@ -157,68 +172,42 @@ export default ({
           ipRules: firewall.ipAddresses
             ? firewall.ipAddresses.map((i) => ({
                 iPAddressOrRange: i,
-                action: 'Allow',
+                action: "Allow",
               }))
             : undefined,
         }
-      : { defaultAction: 'Allow' },
+      : { defaultAction: "Allow" },
 
     tags: defaultTags,
   });
 
+  //Blob Policy
+  if (defaultManagementRules) {
+    createManagementRules({
+      name,
+      storageAccountName: stg.name,
+      group,
+      rules: defaultManagementRules,
+    });
+  }
+
   if (lock) {
     Locker({ name, resourceId: stg.id, dependsOn: stg });
   }
-
-  // new storage.BlobServiceProperties(name, {
-  //   accountName: stg.name,
-  //   ...group,
-  //
-  //   deleteRetentionPolicy: {
-  //     enabled:
-  //       policies.blobSoftDeleteDays != undefined &&
-  //       policies.blobSoftDeleteDays > 0,
-  //     days: policies.blobSoftDeleteDays,
-  //   },
-  //   containerDeleteRetentionPolicy: {
-  //     enabled:
-  //       policies.containerSoftDeleteDays != undefined &&
-  //       policies.containerSoftDeleteDays > 0,
-  //     days: policies.containerSoftDeleteDays,
-  //   },
-  // });
 
   //Enable Static Website for SPA
   if (featureFlags.enableStaticWebsite) {
     new storage.StorageAccountStaticWebsite(name, {
       accountName: stg.name,
       ...group,
-      indexDocument: 'index.html',
-      error404Document: 'index.html',
+      indexDocument: "index.html",
+      error404Document: "index.html",
     });
 
     if (appInsight && customDomain) {
       addInsightMonitor({ name, appInsight, url: customDomain });
     }
   } else createThreatProtection({ name, targetResourceId: stg.id });
-
-  //Retention Policy
-  // if (!enableStaticWebsite) {
-  //   new native.storage.BlobServiceProperties(n, {
-  //     accountName: storage.name,
-  //     ...group,
-  //     blobServicesName: '',
-  //     //restorePolicy: { days: isPrd ? 90 : 7, enabled: true },
-  //     containerDeleteRetentionPolicy: { days: isPrd ? 90 : 7, enabled: true },
-  //     deleteRetentionPolicy: { days: isPrd ? 90 : 7, enabled: true },
-  //     // lastAccessTimeTrackingPolicy: {
-  //     //   enable: true,
-  //     //   name: 'AccessTimeTracking',
-  //     //   blobType: [''],
-  //     // },
-  //     isVersioningEnabled: true,
-  //   });
-  // }
 
   //Create Azure CDN if customDomain provided
   if (
@@ -238,16 +227,27 @@ export default ({
 
   //Create Containers
   containers.map((c) => {
-    new storage.BlobContainer(c.name, {
+    const container = new storage.BlobContainer(c.name, {
       containerName: c.name.toLowerCase(),
       ...group,
       accountName: stg.name,
       defaultEncryptionScope: featureFlags.enableAccountLevelEncryption
-        ? 'AccountScope'
+        ? "AccountScope"
         : undefined,
       //denyEncryptionScopeOverride: true,
-      publicAccess: c.public ? 'Blob' : 'None',
+      publicAccess: c.public ? "Blob" : "None",
     });
+
+    if (c.managementRules) {
+      createManagementRules({
+        name,
+        storageAccountName: stg.name,
+        containerNames: [container.name],
+        group,
+        rules: defaultManagementRules,
+      });
+    }
+    return container;
   });
 
   //Create Queues
@@ -290,7 +290,7 @@ export default ({
         name: primaryKeyName,
         value: keys[0].key,
         vaultInfo,
-        contentType: 'Storage',
+        contentType: "Storage",
         formattedName: true,
       });
 
@@ -298,7 +298,7 @@ export default ({
         name: secondaryKeyName,
         value: keys[0].connectionString,
         vaultInfo,
-        contentType: 'Storage',
+        contentType: "Storage",
         formattedName: true,
       });
 
@@ -307,7 +307,7 @@ export default ({
         name: primaryConnectionKeyName,
         value: keys[0].connectionString,
         vaultInfo,
-        contentType: 'Storage',
+        contentType: "Storage",
         formattedName: true,
       });
 
@@ -315,7 +315,7 @@ export default ({
         name: secondConnectionKeyName,
         value: keys[0].connectionString,
         vaultInfo,
-        contentType: 'Storage',
+        contentType: "Storage",
         formattedName: true,
       });
     }
