@@ -33,25 +33,38 @@ interface PolicyVersionArgs {
   tierToCool?: pulumi.Input<DateAfterCreationArgs>;
 }
 
+type ManagementRuleActions = {
+  baseBlob?: {
+    delete?: DateAfterModificationArgs;
+    tierToArchive?: DateAfterModificationArgs;
+    tierToCool?: DateAfterModificationArgs;
+    enableAutoTierToHotFromCool?: boolean;
+  };
+  snapshot?: PolicyVersionArgs;
+  version?: PolicyVersionArgs;
+};
+
+type ManagementRuleFilters = {
+  blobTypes: Array<"blockBlob" | "appendBlob">;
+  tagFilters?: pulumi.Input<{
+    name: pulumi.Input<string>;
+    op: "==";
+    value: pulumi.Input<string>;
+  }>[];
+};
+
+interface DefaultManagementRuleFilters extends ManagementRuleFilters {
+  containerNames?: pulumi.Input<string>[];
+}
+
+export type DefaultManagementRules = {
+  actions: ManagementRuleActions;
+  filters?: DefaultManagementRuleFilters;
+};
+
 export type ManagementRules = {
-  actions: {
-    baseBlob?: {
-      delete?: DateAfterModificationArgs;
-      tierToArchive?: DateAfterModificationArgs;
-      tierToCool?: DateAfterModificationArgs;
-      enableAutoTierToHotFromCool?: boolean;
-    };
-    snapshot?: PolicyVersionArgs;
-    version?: PolicyVersionArgs;
-  };
-  filters?: {
-    blobTypes: Array<"blockBlob" | "appendBlob">;
-    tagFilters?: pulumi.Input<{
-      name: pulumi.Input<string>;
-      op: "==";
-      value: pulumi.Input<string>;
-    }>[];
-  };
+  actions: ManagementRuleActions;
+  filters?: ManagementRuleFilters;
 };
 
 export const createManagementRules = ({
@@ -65,7 +78,7 @@ export const createManagementRules = ({
   group: ResourceGroupInfo;
   storageAccountName: pulumi.Input<string>;
   containerNames?: pulumi.Input<string>[];
-  rules: ManagementRules[];
+  rules: Array<ManagementRules | DefaultManagementRules>;
 }) => {
   name = `${name}-mnp`;
   return new storage.ManagementPolicy(name, {
@@ -82,9 +95,11 @@ export const createManagementRules = ({
 
           filters: m.filters
             ? {
-                blobTypes: m.filters!.blobTypes,
-                prefixMatch: containerNames,
-                blobIndexMatch: m.filters!.tagFilters,
+                blobTypes: m.filters.blobTypes,
+                prefixMatch:
+                  containerNames ??
+                  (m.filters as DefaultManagementRuleFilters).containerNames,
+                blobIndexMatch: m.filters.tagFilters,
               }
             : undefined,
         },

@@ -1,20 +1,14 @@
 import * as storage from "@pulumi/azure-native/storage";
-import * as pulumi from "@pulumi/pulumi";
 
-import {
-  AppInsightInfo,
-  ConventionProps,
-  KeyVaultInfo,
-  BasicResourceArgs,
-} from "../types";
+import { AppInsightInfo, KeyVaultInfo, BasicResourceArgs } from "../types";
 import { Input, Output } from "@pulumi/pulumi";
 import { createThreatProtection } from "../Logs/Helpers";
 import { addInsightMonitor } from "../Logs/WebTest";
-import { addSecret, parseKeyUrl } from "../KeyVault/Helper";
+import { parseKeyUrl } from "../KeyVault/Helper";
 import { defaultTags, isPrd } from "../Common/AzureEnv";
 
 import cdnCreator from "./CdnEndpoint";
-import { addLegacySecret } from "../KeyVault/LegacyHelper";
+
 import {
   getConnectionName,
   getKeyName,
@@ -22,13 +16,17 @@ import {
 } from "../Common/Naming";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import Locker from "../Core/Locker";
-import { createManagementRules, ManagementRules } from "./ManagementRules";
+import {
+  createManagementRules,
+  DefaultManagementRules,
+  ManagementRules,
+} from "./ManagementRules";
 
 type ContainerProps = {
   name: string;
   public?: boolean;
   /** The management rule applied to Container level*/
-  managementRules: Array<ManagementRules>;
+  managementRules?: Array<ManagementRules>;
 };
 
 interface StorageProps extends BasicResourceArgs {
@@ -38,7 +36,7 @@ interface StorageProps extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
 
   /** The management rule applied to Storage level (all containers)*/
-  defaultManagementRules: Array<ManagementRules>;
+  defaultManagementRules?: Array<DefaultManagementRules>;
 
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
@@ -244,7 +242,7 @@ export default ({
         storageAccountName: stg.name,
         containerNames: [container.name],
         group,
-        rules: defaultManagementRules,
+        rules: c.managementRules,
       });
     }
     return container;
