@@ -18,6 +18,7 @@ import { createDiagnostic } from "../Logs/Helpers";
 import { getAksName } from "../Common/Naming";
 import PrivateDns from "../VNet/PrivateDns";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
+import ManagedIdentity from "../AzAd/ManagedIdentity";
 
 const autoScaleFor = (
   env: Environments,
@@ -75,8 +76,6 @@ const defaultNodePool = {
 export enum VmSizes {
   /** 32G RAM - 4CPU - $221.92 */
   Standard_E4as_v4_221 = "Standard_E4as_v4",
-  /** 4G RAM - 2CPU - $38.54 */
-  Standard_B2s_38 = "Standard_B2s",
   /** 8G RAM - 2CPU - $77.38 */
   Standard_B2ms_77 = "Standard_B2ms",
   /** 16G RAM - 4CPU - $154.03 */
@@ -122,7 +121,7 @@ interface Props extends BasicResourceArgs {
     sshKeys: Array<pulumi.Input<string>>;
   };
 
-  kubernetesVersion?: "1.22.6";
+  kubernetesVersion?: Input<string>;
   nodePools: Array<Omit<NodePoolProps, "subnetId" | "aksId">>;
   enableAutoScale?: boolean;
 
@@ -167,7 +166,7 @@ export default async ({
   nodeResourceGroup,
   name,
   linux,
-  kubernetesVersion = "1.22.6",
+  kubernetesVersion,
   nodePools,
   enableAutoScale,
   network,
@@ -196,6 +195,14 @@ export default async ({
   //         subnetId: addon.applicationGateway.gatewaySubnetId,
   //       })
   //     : undefined;
+
+  // const podIdentity = featureFlags?.enablePodIdentity
+  //   ? ManagedIdentity({
+  //       name,
+  //       group,
+  //       lock,
+  //     })
+  //   : undefined;
 
   const serviceIdentity = featureFlags.createServicePrincipal
     ? await aksIdentityCreator({
@@ -245,7 +252,7 @@ export default async ({
       ...group,
       nodeResourceGroup,
       dnsPrefix: aksName,
-      kubernetesVersion,
+      //kubernetesVersion,
 
       enableRBAC: Boolean(aksAccess.enableAzureRBAC),
       apiServerAccessProfile: {
@@ -318,7 +325,7 @@ export default async ({
         ...defaultNodePool,
         ...p,
 
-        //name: `${p.name}-${p.mode}`,
+        enableAutoScaling: enableAutoScale,
         count: p.mode === "System" ? 1 : 0,
         orchestratorVersion: kubernetesVersion,
         vnetSubnetID: network.subnetId,
@@ -340,32 +347,25 @@ export default async ({
           }
         : undefined,
 
-      autoScalerProfile: enableAutoScale
-        ? {
-            balanceSimilarNodeGroups: "true",
-            expander: "random",
-            maxEmptyBulkDelete: "10",
-            maxGracefulTerminationSec: "600",
-            maxNodeProvisionTime: "15m",
-            maxTotalUnreadyPercentage: "45",
-            newPodScaleUpDelay: "0s",
-            okTotalUnreadyCount: "3",
-            scaleDownDelayAfterAdd: "30m",
-            scaleDownDelayAfterDelete: "60s",
-            scaleDownDelayAfterFailure: "10m",
-            scaleDownUnneededTime: "10m",
-            scaleDownUnreadyTime: "20m",
-            scaleDownUtilizationThreshold: "0.5",
-            scanInterval: "60s",
-            skipNodesWithLocalStorage: "false",
-            skipNodesWithSystemPods: "true",
-          }
-        : undefined,
-
-      // identity: !featureFlags.createServicePrincipal
-      //   ? { type: 'SystemAssigned' }
-      //   : undefined,
-      //identityProfile: {},
+      autoScalerProfile: {
+        balanceSimilarNodeGroups: "true",
+        expander: "random",
+        maxEmptyBulkDelete: "10",
+        maxGracefulTerminationSec: "600",
+        maxNodeProvisionTime: "15m",
+        maxTotalUnreadyPercentage: "45",
+        newPodScaleUpDelay: "0s",
+        okTotalUnreadyCount: "3",
+        scaleDownDelayAfterAdd: "30m",
+        scaleDownDelayAfterDelete: "60s",
+        scaleDownDelayAfterFailure: "10m",
+        scaleDownUnneededTime: "10m",
+        scaleDownUnreadyTime: "20m",
+        scaleDownUtilizationThreshold: "0.5",
+        scanInterval: "60s",
+        skipNodesWithLocalStorage: "false",
+        skipNodesWithSystemPods: "true",
+      },
       servicePrincipalProfile: serviceIdentity
         ? {
             clientId: serviceIdentity.clientId,
@@ -373,13 +373,28 @@ export default async ({
           }
         : undefined,
 
+      //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
+      enablePodSecurityPolicy: false,
       podIdentityProfile: featureFlags.enablePodIdentity
         ? {
             enabled: featureFlags.enablePodIdentity,
             //Not allow pod to use kublet command
-            allowNetworkPluginKubenet: false,
+            allowNetworkPluginKubenet: true,
           }
         : undefined,
+
+      identity: {
+        type: native.containerservice.ResourceIdentityType.SystemAssigned,
+      },
+      // identityProfile: podIdentity
+      //   ? {
+      //       kubeletidentity: {
+      //         clientId: podIdentity.clientId,
+      //         objectId: podIdentity.principalId,
+      //         resourceId: podIdentity.id,
+      //       },
+      //     }
+      //   : undefined,
 
       //Preview Features
       autoUpgradeProfile: {
@@ -453,7 +468,7 @@ export default async ({
   );
 
   if (lock) {
-    Locker({ name, resourceId: aks.id, dependsOn: aks });
+    Locker({ name: aksName, resourceId: aks.id, dependsOn: aks });
   }
 
   if (featureFlags.enableDiagnosticSetting) {
@@ -493,5 +508,5 @@ export default async ({
     dependsOn: aks,
   });
 
-  return { aks, privateZone };
+  return { aks, serviceIdentity, adminGroup, privateZone };
 };

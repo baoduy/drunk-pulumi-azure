@@ -8,7 +8,7 @@ interface Props extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export default ({ name, group }: Props) => {
+export default ({ name, group, lock }: Props) => {
   const n = getManagedIdentityName(name);
   const managedIdentity = new azure.managedidentity.UserAssignedIdentity(n, {
     resourceName: n,
@@ -18,7 +18,7 @@ export default ({ name, group }: Props) => {
 
   if (lock) {
     Locker({
-      name,
+      name: n,
       resourceId: managedIdentity.id,
       dependsOn: managedIdentity,
     });
