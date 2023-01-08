@@ -20,11 +20,15 @@ import PrivateDns from "../VNet/PrivateDns";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
 import ManagedIdentity from "../AzAd/ManagedIdentity";
 
-const autoScaleFor = (
-  env: Environments,
-  nodeType: "Default" | "System" | "User"
-) => {
-  const enableAutoScaling = true;
+const autoScaleFor = ({
+  enableAutoScaling,
+  nodeType,
+  env,
+}: {
+  env: Environments;
+  nodeType: "Default" | "System" | "User";
+  enableAutoScaling?: boolean;
+}) => {
   let nodeCount = 1;
   let minCount = 1;
   let maxCount = 3;
@@ -55,7 +59,7 @@ const defaultNodePool = {
   availabilityZones: isPrd ? ["1", "2", "3"] : undefined,
   type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
   vmSize: "Standard_B2s",
-  ...autoScaleFor(currentEnv, "Default"),
+
   maxPods: 50,
   enableFIPS: false,
   enableNodePublicIP: false,
@@ -325,7 +329,12 @@ export default async ({
         ...defaultNodePool,
         ...p,
 
-        enableAutoScaling: enableAutoScale,
+        ...autoScaleFor({
+          env: currentEnv,
+          nodeType: p.mode,
+          enableAutoScaling: enableAutoScale,
+        }),
+
         count: p.mode === "System" ? 1 : 0,
         orchestratorVersion: kubernetesVersion,
         vnetSubnetID: network.subnetId,

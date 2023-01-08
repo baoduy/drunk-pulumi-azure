@@ -52,12 +52,12 @@ export default async ({
   //Permission Groups
   const readOnlyGroup = GroupRole({
     env: currentEnv,
-    appName: "Vault",
+    appName: `${name}-vault`,
     roleName: "ReadOnly",
   });
   const adminGroup = GroupRole({
     env: currentEnv,
-    appName: "Vault",
+    appName: `${name}-vault`,
     roleName: "Admin",
   });
 
