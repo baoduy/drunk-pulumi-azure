@@ -149,7 +149,7 @@ const createAndStoreConnection = async ({
           resourceGroupName,
         }));
 
-    await addCustomSecret({
+    addCustomSecret({
       name: `${key}-primary`,
       value:
         (removeEntityPath
@@ -160,7 +160,7 @@ const createAndStoreConnection = async ({
       dependsOn: rule,
     });
 
-    await addCustomSecret({
+    addCustomSecret({
       name: `${key}-secondary`,
       value:
         (removeEntityPath

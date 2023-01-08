@@ -19,6 +19,8 @@ import { getAksName } from "../Common/Naming";
 import PrivateDns from "../VNet/PrivateDns";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
 import ManagedIdentity from "../AzAd/ManagedIdentity";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { getAksConfig } from "./Helper";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -125,7 +127,7 @@ interface Props extends BasicResourceArgs {
     sshKeys: Array<pulumi.Input<string>>;
   };
 
-  kubernetesVersion?: Input<string>;
+  //kubernetesVersion?: Input<string>;
   nodePools: Array<Omit<NodePoolProps, "subnetId" | "aksId">>;
   enableAutoScale?: boolean;
 
@@ -170,7 +172,7 @@ export default async ({
   nodeResourceGroup,
   name,
   linux,
-  kubernetesVersion,
+  //kubernetesVersion,
   nodePools,
   enableAutoScale,
   network,
@@ -336,7 +338,7 @@ export default async ({
         }),
 
         count: p.mode === "System" ? 1 : 0,
-        orchestratorVersion: kubernetesVersion,
+        //orchestratorVersion: kubernetesVersion,
         vnetSubnetID: network.subnetId,
 
         kubeletDiskType: "OS",
@@ -479,6 +481,23 @@ export default async ({
   if (lock) {
     Locker({ name: aksName, resourceId: aks.id, dependsOn: aks });
   }
+
+  // if (vaultInfo) {
+  //   aks.id.apply(async(id) => {
+  //     if (!id) return;
+  //     const config = await getAksConfig({
+  //       name: aksName,
+  //       groupName: group.resourceGroupName,
+  //       formattedName: true,
+  //     });
+  //     addCustomSecret({
+  //       name: `${aksName}-config`,
+  //       value: config,
+  //       dependsOn: aks,
+  //       vaultInfo,
+  //     });
+  //   });
+  // }
 
   if (featureFlags.enableDiagnosticSetting) {
     aks.id.apply(async (id) => {

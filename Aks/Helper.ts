@@ -1,26 +1,35 @@
-import * as containerservice from '@pulumi/azure-native/containerservice';
+import * as containerservice from "@pulumi/azure-native/containerservice";
 
-import { getIdentitySecrets } from '../AzAd/Helper';
-import { getAksName, getResourceGroupName } from '../Common/Naming';
-import { createProvider } from '../KubeX/Providers';
-import { KeyVaultInfo } from '../types';
+import { getIdentitySecrets } from "../AzAd/Helper";
+import { getAksName, getResourceGroupName } from "../Common/Naming";
+import { createProvider } from "../KubeX/Providers";
+import { KeyVaultInfo } from "../types";
 
 export const getAksConfig = async ({
   name,
   groupName,
+  formattedName,
+  localAccountDisabled
 }: {
   name: string;
-  groupName?: string;
-}) => {
-  const aksName = getAksName(name);
-  const group = groupName || getResourceGroupName(name);
+  groupName: string;
+  formattedName?: boolean;
+  localAccountDisabled?: boolean;
+}): Promise<string> => {
+  const aksName = formattedName ? name : getAksName(name);
+  const group = formattedName ? groupName : getResourceGroupName(groupName);
 
-  const aks = await containerservice.listManagedClusterAdminCredentials({
-    resourceName: aksName,
-    resourceGroupName: group,
-  });
+  const aks = localAccountDisabled
+    ? await containerservice.listManagedClusterUserCredentials({
+        resourceName: aksName,
+        resourceGroupName: group,
+      })
+    : await containerservice.listManagedClusterAdminCredentials({
+        resourceName: aksName,
+        resourceGroupName: group,
+      });
 
-  return Buffer.from(aks.kubeconfigs[0].value, 'base64').toString('utf8');
+  return Buffer.from(aks.kubeconfigs[0].value, "base64").toString("utf8");
 };
 
 export const getAksIdentitySecrets = async ({
@@ -39,7 +48,7 @@ interface AksProps {
   formatedName?: boolean;
   namespace?: string;
   groupName: string;
-
+  localAccountDisabled?: boolean;
 }
 
 export const createAksProvider = async ({
@@ -47,12 +56,15 @@ export const createAksProvider = async ({
   namespace,
   groupName,
   formatedName,
+  localAccountDisabled
 }: AksProps) =>
   createProvider({
     name: aksName,
     namespace,
     kubeconfig: await getAksConfig({
-      name: formatedName ? aksName : getAksName(aksName),
-      groupName: formatedName ? groupName : getResourceGroupName(groupName),
+      name:  aksName ,
+      groupName ,
+      formattedName:formatedName,
+      localAccountDisabled
     }),
   });

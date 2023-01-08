@@ -130,7 +130,7 @@ export default async ({
   });
 
   if (vaultInfo)
-    await addCustomSecret({
+    addCustomSecret({
       name: clientIdKeyName,
       value: app.applicationId,
       vaultInfo,
@@ -147,7 +147,7 @@ export default async ({
     }).value;
 
     if (vaultInfo)
-      await addCustomSecret({
+      addCustomSecret({
         name: clientSecretKeyName,
         value: clientSecret,
         vaultInfo,
@@ -187,14 +187,14 @@ export default async ({
     }
 
     if (vaultInfo) {
-      await addCustomSecret({
+      addCustomSecret({
         name: principalIdKeyName,
         value: principal.objectId,
         vaultInfo,
         contentType: 'Identity',
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: principalSecretKeyName,
         value: principalSecret,
         vaultInfo,

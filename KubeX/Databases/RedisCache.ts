@@ -29,7 +29,7 @@ export default async ({
   }).result;
 
   if (vaultInfo) {
-    await addCustomSecret({
+    addCustomSecret({
       name: getPasswordName(name, null),
       vaultInfo,
       value: password,

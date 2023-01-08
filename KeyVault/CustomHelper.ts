@@ -1,4 +1,4 @@
-import { Input, output, Resource,Config } from "@pulumi/pulumi";
+import { Input, output, Resource, Config } from "@pulumi/pulumi";
 import { getSecretName } from "../Common/Naming";
 import { VaultSecretResource } from "../CustomProviders/VaultSecret";
 import { KeyVaultInfo } from "../types";
@@ -11,15 +11,20 @@ interface Props {
 }
 
 /**Add key vault secret from a value or from pulumi configuration secret. */
-export const addVaultSecretFrom = async ({ name, value, config, vaultInfo }: Props) => {
+export const addVaultSecretFrom = async ({
+  name,
+  value,
+  config,
+  vaultInfo,
+}: Props) => {
   if (config && !value) value = config.getSecret(name);
   if (!value) throw new Error(`The value of "${name}" is not defined.`);
 
-  await addCustomSecret({
+  addCustomSecret({
     name,
     value,
     vaultInfo,
-    contentType: 'config variables',
+    contentType: "config variables",
   });
 };
 
@@ -58,7 +63,7 @@ type SecretProps = {
 // };
 
 /** Add variable to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
-export const addCustomSecret = async ({
+export const addCustomSecret = ({
   name,
   formattedName,
   vaultInfo,

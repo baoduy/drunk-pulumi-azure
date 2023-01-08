@@ -51,14 +51,14 @@ export default ({
         resourceGroupName: group.resourceGroupName,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: workspaceIdKeyName,
         value: id,
         contentType: 'Log Analytics',
         vaultInfo,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: primaryKeyName,
         formattedName: true,
         value: keys.primarySharedKey!,
@@ -66,7 +66,7 @@ export default ({
         vaultInfo,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: secondaryKeyName,
         formattedName: true,
         value: keys.secondarySharedKey!,

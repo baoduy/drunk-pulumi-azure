@@ -118,14 +118,14 @@ export const randomSsh = async ({
     { dependsOn: pass }
   );
 
-  await addCustomSecret({
+  addCustomSecret({
     name: userNameKey,
     value: userName,
     vaultInfo,
     contentType: 'Random Ssh',
   });
 
-  await addCustomSecret({
+  addCustomSecret({
     name: passwordKeyName,
     value: pass.result,
     vaultInfo,

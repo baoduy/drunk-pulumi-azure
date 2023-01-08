@@ -284,7 +284,7 @@ export default ({
 
     if (vaultInfo) {
       //Keys
-      await addCustomSecret({
+      addCustomSecret({
         name: primaryKeyName,
         value: keys[0].key,
         vaultInfo,
@@ -292,7 +292,7 @@ export default ({
         formattedName: true,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: secondaryKeyName,
         value: keys[0].connectionString,
         vaultInfo,
@@ -301,7 +301,7 @@ export default ({
       });
 
       //Connection String. The custom Secret will auto restore the deleted secret
-      await addCustomSecret({
+      addCustomSecret({
         name: primaryConnectionKeyName,
         value: keys[0].connectionString,
         vaultInfo,
@@ -309,7 +309,7 @@ export default ({
         formattedName: true,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: secondConnectionKeyName,
         value: keys[0].connectionString,
         vaultInfo,

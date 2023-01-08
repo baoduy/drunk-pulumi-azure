@@ -96,7 +96,7 @@ export default async ({
         resourceGroupName: global.groupInfo.resourceGroupName,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: urlKey,
         value: `https://${name}.azurecr.io`,
         vaultInfo,
@@ -104,7 +104,7 @@ export default async ({
         dependsOn: resource,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: userNameKey,
         value: keys.username!,
         vaultInfo,
@@ -112,7 +112,7 @@ export default async ({
         dependsOn: resource,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: primaryPasswordKey,
         formattedName: true,
         value: keys.passwords![0].value!,
@@ -121,7 +121,7 @@ export default async ({
         dependsOn: resource,
       });
 
-      await addCustomSecret({
+      addCustomSecret({
         name: secondaryPasswordKey,
         formattedName: true,
         value: keys.passwords![1].value!,

@@ -48,7 +48,7 @@ export default async ({ group, name, dailyCapGb = 0.023, vaultInfo }: Props) => 
   );
 
   if (vaultInfo) {
-    await addCustomSecret({
+    addCustomSecret({
       name,
       value: appInsight.instrumentationKey,
       vaultInfo,

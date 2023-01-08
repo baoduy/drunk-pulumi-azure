@@ -63,7 +63,7 @@ export const createProduct = async ({
       { dependsOn: product }
     );
 
-    await addCustomSecret({
+    addCustomSecret({
       name: primaryKey,
       formattedName: true,
       value: primaryPass,
@@ -72,7 +72,7 @@ export const createProduct = async ({
       tags: { name, subName },
     });
 
-    await addCustomSecret({
+    addCustomSecret({
       name: secondaryKey,
       formattedName: true,
       value: secondaryPass,

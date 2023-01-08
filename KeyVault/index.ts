@@ -184,7 +184,7 @@ export default async ({
   if (createDefaultValues) {
     const vaultInfo = toVaultInfo();
 
-    await addCustomSecret({
+    addCustomSecret({
       name: "tenant-id",
       value: tenantId,
       vaultInfo,
@@ -192,7 +192,7 @@ export default async ({
       dependsOn: resource,
     });
 
-    await addCustomSecret({
+    addCustomSecret({
       name: "subscription-id",
       value: subscriptionId,
       vaultInfo,

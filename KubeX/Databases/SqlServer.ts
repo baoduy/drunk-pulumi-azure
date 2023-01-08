@@ -24,7 +24,7 @@ export default async ({
 }: Props) => {
   const password = randomPassword({ name });
   if (vaultInfo) {
-    await addCustomSecret({
+    addCustomSecret({
       name: getPasswordName(name, null),
       vaultInfo,
       value: password.result,
@@ -96,7 +96,7 @@ export default async ({
 
         if (vaultInfo) {
           //Add Connection String to Key Vault
-          await addCustomSecret({
+          addCustomSecret({
             name: d,
             vaultInfo,
             value: interpolate`Data Source=${rs.host};Initial Catalog=${d};User Id=${rs.username};Password=${rs.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=120;`,
