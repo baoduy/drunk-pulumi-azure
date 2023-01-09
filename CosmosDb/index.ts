@@ -12,7 +12,7 @@ interface CosmosDbProps {
   name: string;
   group: ResourceGroupInfo;
   vaultInfo?: KeyVaultInfo;
-  //locations?: Input<string>[];
+  locations?: Input<string>[];
   enableMultipleWriteLocations?: boolean;
   capabilities?: Array<"EnableCassandra" | "EnableTable" | "EnableGremlin">;
 
@@ -42,12 +42,27 @@ export default async ({
   name,
   group,
   vaultInfo,
+  locations,
   capabilities = ["EnableTable"],
   enableMultipleWriteLocations,
   network,
   sqlDbs,
 }: CosmosDbProps) => {
   name = getCosmosDbName(name);
+
+  /**
+   * The failover priority of the region. A failover priority of 0 indicates a write region. The maximum value for a failover priority = (total number of regions - 1). Failover priority values must be unique for each of the regions in which the database account exists.
+   */
+  //failoverPriority?: pulumi.Input<number>;
+  /**
+   * Flag to indicate whether or not this region is an AvailabilityZone region
+   */
+  //isZoneRedundant?: pulumi.Input<boolean>;
+  /**
+   * The name of the region.
+   */
+  //locationName?: pulumi.Input<string>;
+  if (!locations) locations = [group.location];
 
   const { resource } = await ResourceCreator(documentdb.DatabaseAccount, {
     accountName: name,
@@ -59,7 +74,8 @@ export default async ({
     capabilities: capabilities
       ? capabilities.map((n) => ({ name: n }))
       : undefined,
-    //locations: locations?.map(s=>({})),
+
+    locations: locations?.map((n) => ({ locationName: n })),
 
     backupPolicy: isPrd
       ? {
