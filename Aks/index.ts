@@ -21,6 +21,7 @@ import { getVnetIdFromSubnetId } from "../VNet/Helper";
 import ManagedIdentity from "../AzAd/ManagedIdentity";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { getAksConfig } from "./Helper";
+import * as console from "console";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -216,6 +217,7 @@ export default async ({
         group,
         privateCluster: aksAccess.enablePrivateCluster,
         vaultInfo,
+        subnetId: network.subnetId,
       })
     : undefined;
 
@@ -498,6 +500,8 @@ export default async ({
   //     });
   //   });
   // }
+
+  aks.identity.apply((i) => console.log(i));
 
   if (featureFlags.enableDiagnosticSetting) {
     aks.id.apply(async (id) => {
