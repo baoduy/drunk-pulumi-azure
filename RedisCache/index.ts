@@ -1,12 +1,12 @@
-import * as native from '@pulumi/azure-native';
-import * as pulumi from '@pulumi/pulumi';
+import * as native from "@pulumi/azure-native";
+import * as pulumi from "@pulumi/pulumi";
 
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { BasicResourceArgs, KeyVaultInfo } from "../types";
 
-import { ToWords } from 'to-words';
-import { convertToIpRange } from '../VNet/Helper';
-import { getRedisCacheName } from '../Common/Naming';
-import { addLegacySecret } from '../KeyVault/LegacyHelper';
+import { ToWords } from "to-words";
+import { convertToIpRange } from "../VNet/Helper";
+import { getRedisCacheName } from "../Common/Naming";
+import { addLegacySecret } from "../KeyVault/LegacyHelper";
 
 const toWord = new ToWords();
 
@@ -16,18 +16,18 @@ interface Props extends BasicResourceArgs {
   sku?: native.types.input.cache.SkuArgs;
 }
 
-export default async ({
+export default ({
   name,
   group,
   allowsIpAddresses,
   vaultInfo,
-  sku = { name: 'Basic', family: 'C', capacity: 0 },
+  sku = { name: "Basic", family: "C", capacity: 0 },
 }: Props) => {
   name = getRedisCacheName(name);
   const redis = new native.cache.Redis(name, {
     name,
     ...group,
-    minimumTlsVersion: '1.2',
+    minimumTlsVersion: "1.2",
     sku,
   });
 
@@ -69,28 +69,28 @@ export default async ({
         name: `${name}-primary-key`,
         value: keys.primaryKey,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
 
       await addLegacySecret({
         name: `${name}-secondary-key`,
         value: keys.secondaryKey,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
 
       await addLegacySecret({
         name: `${name}-primary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
 
       await addLegacySecret({
         name: `${name}-secondary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
     });
   }

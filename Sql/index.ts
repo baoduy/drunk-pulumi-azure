@@ -144,7 +144,7 @@ export default async ({
     ? roleCreator({
         env: currentEnv,
         appName: name,
-        roleName: "Admin",
+        roleName: "Db-Admin",
       })
     : undefined;
 
