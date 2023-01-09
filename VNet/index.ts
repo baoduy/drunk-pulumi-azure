@@ -3,7 +3,7 @@ import { input as inputs } from '@pulumi/azure-native/types';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import * as pulumi from '@pulumi/pulumi';
 
-import { getResourceInfoFromId } from '../Common/ResourceEnv';
+import { getResourceInfoFromId } from '../Common/AzureEnv';
 import { NetworkRouteResource } from '../CustomProviders/NetworkRuote';
 import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs, ResourceGroupInfo } from '../types';
 import Firewall, { FirewallSkus, FwOutboundConfig } from './Firewall';
