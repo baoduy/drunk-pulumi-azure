@@ -43,7 +43,7 @@ export default async ({
   group,
   vaultInfo,
   locations,
-  capabilities = ["EnableTable"],
+  capabilities,
   enableMultipleWriteLocations,
   network,
   sqlDbs,
