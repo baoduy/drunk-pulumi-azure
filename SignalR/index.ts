@@ -7,12 +7,35 @@ import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { getPrivateEndpointName, getSignalRName } from "../Common/Naming";
 import { addLegacySecret } from "../KeyVault/LegacyHelper";
 
+interface ResourceSkuArgs {
+  /**
+   * Optional, integer. The unit count of SignalR resource. 1 by default.
+   *
+   * If present, following values are allowed:
+   *     Free: 1
+   *     Standard: 1,2,5,10,20,50,100
+   */
+  capacity?: pulumi.Input<number>;
+  /**
+   * The name of the SKU. Required.
+   *
+   * Allowed values: Standard_S1, Free_F1
+   */
+  name: pulumi.Input<string>;
+  /**
+   * Optional tier of this particular SKU. 'Standard' or 'Free'.
+   *
+   * `Basic` is deprecated, use `Standard` instead.
+   */
+  tier?: "Standard" | "Free";
+}
+
 interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
   allowedOrigins?: pulumi.Input<pulumi.Input<string>[]>;
   privateLink?: PrivateLinkProps;
   kind?: native.signalrservice.ServiceKind;
-  sku?: Promise<native.signalrservice.ResourceSkuArgs>;
+  sku?: pulumi.Input<ResourceSkuArgs>;
 }
 
 export default ({
