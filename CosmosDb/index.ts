@@ -62,7 +62,7 @@ export default async ({
    * The name of the region.
    */
   //locationName?: pulumi.Input<string>;
-  if (!locations) locations = [group.location];
+  if (!locations) locations = [group.location!];
 
   const { resource } = await ResourceCreator(documentdb.DatabaseAccount, {
     accountName: name,
