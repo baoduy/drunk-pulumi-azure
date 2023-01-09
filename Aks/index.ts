@@ -6,7 +6,10 @@ import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from "../types";
 import {
   currentEnv,
   defaultTags,
+  defaultScope,
   Environments,
+  getResourceIdFromInfo,
+  getResourceInfoFromId,
   isPrd,
   tenantId,
 } from "../Common/AzureEnv";
@@ -18,10 +21,8 @@ import { createDiagnostic } from "../Logs/Helpers";
 import { getAksName } from "../Common/Naming";
 import PrivateDns from "../VNet/PrivateDns";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
-import ManagedIdentity from "../AzAd/ManagedIdentity";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { getAksConfig } from "./Helper";
 import * as console from "console";
+import { roleAssignment } from "../AzAd/RoleAssignment";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -214,10 +215,7 @@ export default async ({
   const serviceIdentity = featureFlags.createServicePrincipal
     ? await aksIdentityCreator({
         name: aksName,
-        group,
-        privateCluster: aksAccess.enablePrivateCluster,
         vaultInfo,
-        subnetId: network.subnetId,
       })
     : undefined;
 
@@ -413,7 +411,8 @@ export default async ({
       autoUpgradeProfile: {
         upgradeChannel: native.containerservice.UpgradeChannel.Stable,
       },
-      disableLocalAccounts: Boolean(aksAccess.enableAzureRBAC),
+      //TODO: Needs to find a solution to allows ADO to deploy to AKS without this
+      disableLocalAccounts:false,// Boolean(aksAccess.enableAzureRBAC),
       aadProfile: {
         enableAzureRBAC: Boolean(aksAccess.enableAzureRBAC),
         managed: true,
@@ -501,14 +500,49 @@ export default async ({
   //   });
   // }
 
-  aks.identity.apply((i) => console.log(i));
+  //Grant Permission for Identity
+  if (network.subnetId) {
+    pulumi
+      .all([aks.identity, network.subnetId])
+      .apply(async ([identity, sId]) => {
+        if (!identity?.principalId) return;
+
+        await roleAssignment({
+          name: `${name}-system-net`,
+          principalId: identity.principalId,
+          roleName: "Contributor",
+          principalType: "ServicePrincipal",
+          scope: getResourceIdFromInfo({
+            group: getResourceInfoFromId(sId)!.group,
+          }),
+        });
+
+        await roleAssignment({
+          name: `${name}-system-acr-pull`,
+          principalId: identity.principalId,
+          principalType: "ServicePrincipal",
+          roleName: "AcrPull",
+          scope: defaultScope,
+        });
+
+        if (privateZone) {
+          await roleAssignment({
+            name: `${name}-private-dns`,
+            principalId: identity.principalId,
+            roleName: "Private DNS Zone Contributor",
+            principalType: "ServicePrincipal",
+            scope: privateZone.id,
+          });
+        }
+      });
+  }
 
   if (featureFlags.enableDiagnosticSetting) {
-    aks.id.apply(async (id) => {
+    aks.id.apply((id) => {
       if (!id) return;
 
       //Diagnostic
-      await createDiagnostic({
+      return createDiagnostic({
         name,
         targetResourceId: id,
         ...log,
