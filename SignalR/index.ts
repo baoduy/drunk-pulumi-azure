@@ -1,32 +1,15 @@
-import * as native from "@pulumi/azure-native";
-import * as pulumi from "@pulumi/pulumi";
+import * as native from '@pulumi/azure-native';
+import * as pulumi from '@pulumi/pulumi';
 
-import { BasicResourceArgs, KeyVaultInfo, PrivateLinkProps } from "../types";
-import { defaultTags, isDev } from "../Common/AzureEnv";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import { getPrivateEndpointName, getSignalRName } from "../Common/Naming";
-import { addLegacySecret } from "../KeyVault/LegacyHelper";
+import { defaultTags, isDev } from '../Common/AzureEnv';
+import { getPrivateEndpointName, getSignalRName } from '../Common/Naming';
+import { addLegacySecret } from '../KeyVault/LegacyHelper';
+import { BasicResourceArgs, KeyVaultInfo, PrivateLinkProps } from '../types';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
 interface ResourceSkuArgs {
-  /**
-   * Optional, integer. The unit count of SignalR resource. 1 by default.
-   *
-   * If present, following values are allowed:
-   *     Free: 1
-   *     Standard: 1,2,5,10,20,50,100
-   */
-  capacity?: pulumi.Input<number>;
-  /**
-   * The name of the SKU. Required.
-   *
-   * Allowed values: Standard_S1, Free_F1
-   */
-  name: pulumi.Input<string>;
-  /**
-   * Optional tier of this particular SKU. 'Standard' or 'Free'.
-   *
-   * `Basic` is deprecated, use `Standard` instead.
-   */
+  capacity?: 1|2|5|10|20|50|100;
+  name:'Standard_S1'| 'Free_F1';
   tier?: "Standard" | "Free";
 }
 
