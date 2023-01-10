@@ -15,6 +15,7 @@ interface CosmosDbProps {
   locations?: Input<string>[];
   enableMultipleWriteLocations?: boolean;
   capabilities?: Array<"EnableCassandra" | "EnableTable" | "EnableGremlin">;
+  kind?: documentdb.DatabaseAccountKind,
 
   network?: {
     publicNetworkAccess?: boolean;
@@ -47,6 +48,7 @@ export default async ({
   enableMultipleWriteLocations,
   network,
   sqlDbs,
+                        kind= documentdb.DatabaseAccountKind.GlobalDocumentDB,
 }: CosmosDbProps) => {
   name = getCosmosDbName(name);
 
@@ -68,7 +70,7 @@ export default async ({
     accountName: name,
     ...group,
     databaseAccountOfferType: documentdb.DatabaseAccountOfferType.Standard,
-    kind: documentdb.DatabaseAccountKind.MongoDB,
+    kind,
     identity: { type: "SystemAssigned" },
 
     capabilities: capabilities
