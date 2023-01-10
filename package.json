@@ -26,6 +26,8 @@
     "chai": "^4.3.7",
     "cross-env": "^7.0.3",
     "eslint": "^8.31.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.0",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "ts-node": "^10.9.1",
@@ -35,7 +37,7 @@
     "@azure/identity": "^3.1.2",
     "@azure/keyvault-keys": "^4.6.0",
     "@azure/keyvault-secrets": "^4.6.0",
-    "@chilkat/ck-node16-mac-m1": "^9.50.93",
+    "@chilkat/ck-node16-win64": "^9.50.93",
     "@pulumi/azure": "^5.28.0",
     "@pulumi/azure-native": "^1.90.0",
     "@pulumi/azuread": "5.32.0",
@@ -50,5 +52,17 @@
     "to-words": "^3.3.2",
     "url-join": "^5.0.0",
     "url-join-ts": "^1.0.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.ts": [
+      "eslint --fix",
+      "git add"
+    ]
   }
 }
+
