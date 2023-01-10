@@ -3,6 +3,7 @@
   "version": "1.0.2",
   "scripts": {
     "preinstall": "node install-chilkat.js",
+    "postinstall": "husky install",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",
     "up": "pulumi up --yes --skip-preview",
     "reup": "pulumi up --refresh --yes --skip-preview",
@@ -59,10 +60,8 @@
     }
   },
   "lint-staged": {
-    "**/*.ts": [
-      "eslint --fix",
-      "git add"
+    "**/*.{js,ts}": [
+      "eslint --fix"
     ]
   }
 }
-
