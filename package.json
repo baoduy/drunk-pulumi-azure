@@ -3,6 +3,7 @@
   "version": "1.0.2",
   "scripts": {
     "preinstall": "node install-chilkat.js",
+    "postinstall": "husky install",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",
     "up": "pulumi up --yes --skip-preview",
     "reup": "pulumi up --refresh --yes --skip-preview",
@@ -12,7 +13,9 @@
     "import": "pulumi stack import --file state.json",
     "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
     "test": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
-    "test-cover": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'"
+    "test-cover": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
+    "lint": "eslint **/*.{js,ts}",
+    "lint:fix": "eslint **/*.{js,ts} --fix"
   },
   "devDependencies": {
     "@types/chai": "^4.3.4",
@@ -26,6 +29,8 @@
     "chai": "^4.3.7",
     "cross-env": "^7.0.3",
     "eslint": "^8.31.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.0",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "ts-node": "^10.9.1",
@@ -35,7 +40,7 @@
     "@azure/identity": "^3.1.2",
     "@azure/keyvault-keys": "^4.6.0",
     "@azure/keyvault-secrets": "^4.6.0",
-    "@chilkat/ck-node16-mac-m1": "^9.50.93",
+    "@chilkat/ck-node16-win64": "^9.50.93",
     "@pulumi/azure": "^5.28.0",
     "@pulumi/azure-native": "^1.90.0",
     "@pulumi/azuread": "5.32.0",
@@ -50,5 +55,15 @@
     "to-words": "^3.3.2",
     "url-join": "^5.0.0",
     "url-join-ts": "^1.0.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.{js,ts}": [
+      "eslint --fix"
+    ]
   }
 }

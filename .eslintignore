@@ -2,3 +2,4 @@ z_tests/
 **/*.d.ts
 **/*.js
 **/*.eslintrc.cjs
+node_modules/**
