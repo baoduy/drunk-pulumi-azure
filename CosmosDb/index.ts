@@ -16,7 +16,7 @@ interface CosmosDbProps {
   enableMultipleWriteLocations?: boolean;
   capabilities?: Array<"EnableCassandra" | "EnableTable" | "EnableGremlin">;
   kind?: documentdb.DatabaseAccountKind,
-
+  enableThreatProtection?:boolean;
   network?: {
     publicNetworkAccess?: boolean;
     allowAzureServicesAccess?: boolean;
@@ -46,6 +46,7 @@ export default async ({
   locations,
   capabilities,
   enableMultipleWriteLocations,
+  enableThreatProtection,
   network,
   sqlDbs,
                         kind= documentdb.DatabaseAccountKind.GlobalDocumentDB,
@@ -141,7 +142,7 @@ export default async ({
     tags: defaultTags,
   } as unknown as documentdb.DatabaseAccountArgs & DefaultResourceArgs);
 
-  if(kind!== documentdb.DatabaseAccountKind.MongoDB) {
+  if(enableThreatProtection && kind!== documentdb.DatabaseAccountKind.MongoDB) {
     //Thread Protection
     createThreatProtection({
       name,
