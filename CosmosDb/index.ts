@@ -141,11 +141,13 @@ export default async ({
     tags: defaultTags,
   } as unknown as documentdb.DatabaseAccountArgs & DefaultResourceArgs);
 
-  //Thread Protection
-  createThreatProtection({
-    name,
-    targetResourceId: resource.id,
-  });
+  if(kind!== documentdb.DatabaseAccountKind.MongoDB) {
+    //Thread Protection
+    createThreatProtection({
+      name,
+      targetResourceId: resource.id,
+    });
+  }
 
   //Vault variables
   if (vaultInfo) {
