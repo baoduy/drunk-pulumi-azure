@@ -439,9 +439,9 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     "to-fast-properties" "^2.0.0"
 
-"@chilkat/ck-node16-win64@^9.50.93":
-  "integrity" "sha512-5ZQ991aTvZZNOYZu8XzXw5SwInf9P9Tt7R3TLc3Y/H6zskJmMhIMk/Vj/SSXp2EIu3v3fWAksBmCsCixby5BBw=="
-  "resolved" "https://registry.npmjs.org/@chilkat/ck-node16-win64/-/ck-node16-win64-9.50.93.tgz"
+"@chilkat/ck-node16-macosx@^9.50.93":
+  "integrity" "sha512-ZRCPKmn1Z4zH7EE5CJlBMW4igXddyf4NOE21O2j+vufnrtEyZpHjTu/9DZNMCQsX0jN1j5/nkBUPV+e6DR5xLA=="
+  "resolved" "https://registry.npmjs.org/@chilkat/ck-node16-macosx/-/ck-node16-macosx-9.50.93.tgz"
   "version" "9.50.93"
 
 "@cspotcode/source-map-support@^0.8.0":
@@ -694,12 +694,16 @@
   "version" "1.6.0"
 
 "@pulumi/azure-native@^1.90.0":
-  "version" "v1.91.0"
+  "integrity" "sha512-ym8tIA503aacZFGMo/h5NfvEIuAl1Ye1NkpxeiZTX/LtDHXOIB+83RMTUfGSdT7ejQds4Me2Vx5wFd5kChqkPA=="
+  "resolved" "https://registry.npmjs.org/@pulumi/azure-native/-/azure-native-1.91.0.tgz"
+  "version" "1.91.0"
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
 "@pulumi/azure@^5.28.0":
-  "version" "v5.29.0"
+  "integrity" "sha512-uGV9wm7NLdvORij+xgcM5ZDykW55oerafHZYKfKQOkY2837wqWyeAU7St90+7eWMeDNIIe5yHOh0ETWUKxLX9A=="
+  "resolved" "https://registry.npmjs.org/@pulumi/azure/-/azure-5.30.0.tgz"
+  "version" "5.30.0"
   dependencies:
     "@azure/eventgrid" "^4.6.0"
     "@azure/functions" "=1.2.2"
@@ -711,12 +715,16 @@
     "node-fetch" "^2.3.0"
 
 "@pulumi/azuread@5.32.0":
-  "version" "v5.32.0"
+  "integrity" "sha512-ZEXCVqGcpGus5haACCVQYC/ND4thWy3xZcUqnuqZXBLvwPAYaJMcujLSrumdHBe8P8EuWZYcePaI0OE2LqCYsw=="
+  "resolved" "https://registry.npmjs.org/@pulumi/azuread/-/azuread-5.32.0.tgz"
+  "version" "5.32.0"
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
 "@pulumi/kubernetes@^3.23.1":
-  "version" "v3.23.1"
+  "integrity" "sha512-tT7vqvefOGSTAold9n2ej5rJBsbn+RtwxoDHLG0f4lR/VP68Z3P48lI1ziPMMqWPIBYJrBDyS3V/Fv1QWbyNDg=="
+  "resolved" "https://registry.npmjs.org/@pulumi/kubernetes/-/kubernetes-3.23.1.tgz"
+  "version" "3.23.1"
   dependencies:
     "@pulumi/pulumi" "^3.25.0"
     "@types/glob" "^5.0.35"
@@ -757,10 +765,14 @@
     "upath" "^1.1.0"
 
 "@pulumi/query@^0.3.0":
-  "version" "v0.3.0"
+  "integrity" "sha512-xfo+yLRM2zVjVEA4p23IjQWzyWl1ZhWOGobsBqRpIarzLvwNH/RAGaoehdxlhx4X92302DrpdIFgTICMN4P38w=="
+  "resolved" "https://registry.npmjs.org/@pulumi/query/-/query-0.3.0.tgz"
+  "version" "0.3.0"
 
 "@pulumi/random@^4.8.2":
-  "version" "v4.8.2"
+  "integrity" "sha512-XDQ2OV+VW5Bpn9nxVqsEiKD3DAEeMd8ngZPLpioJWCiHzsBMSrYfP97MkdGDaBsDvS6/NL1Bvk0VQXXooFl3Yw=="
+  "resolved" "https://registry.npmjs.org/@pulumi/random/-/random-4.8.2.tgz"
+  "version" "4.8.2"
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -1425,12 +1437,7 @@
   dependencies:
     "delayed-stream" "~1.0.0"
 
-"commander@^9.4.0":
-  "integrity" "sha512-sRPT+umqkz90UA8M1yqYfnHlZA7fF6nSphDtxeywPZ49ysjxDQybzk13CL+mXekDRG92skbcqCLVovuCusNmFw=="
-  "resolved" "https://registry.npmjs.org/commander/-/commander-9.4.0.tgz"
-  "version" "9.4.0"
-
-"commander@^9.4.1":
+"commander@^9.4.0", "commander@^9.4.1":
   "integrity" "sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ=="
   "resolved" "https://registry.npmjs.org/commander/-/commander-9.5.0.tgz"
   "version" "9.5.0"
@@ -1794,7 +1801,12 @@
   "resolved" "https://registry.npmjs.org/estraverse/-/estraverse-4.3.0.tgz"
   "version" "4.3.0"
 
-"estraverse@^5.1.0", "estraverse@^5.2.0":
+"estraverse@^5.1.0":
+  "integrity" "sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA=="
+  "resolved" "https://registry.npmjs.org/estraverse/-/estraverse-5.3.0.tgz"
+  "version" "5.3.0"
+
+"estraverse@^5.2.0":
   "integrity" "sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA=="
   "resolved" "https://registry.npmjs.org/estraverse/-/estraverse-5.3.0.tgz"
   "version" "5.3.0"
@@ -1900,7 +1912,7 @@
     "make-dir" "^3.0.2"
     "pkg-dir" "^4.1.0"
 
-"find-up@^4.0.0", "find-up@^4.1.0":
+"find-up@^4.0.0":
   "integrity" "sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw=="
   "resolved" "https://registry.npmjs.org/find-up/-/find-up-4.1.0.tgz"
   "version" "4.1.0"
@@ -1908,15 +1920,15 @@
     "locate-path" "^5.0.0"
     "path-exists" "^4.0.0"
 
-"find-up@^5.0.0":
-  "integrity" "sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng=="
-  "resolved" "https://registry.npmjs.org/find-up/-/find-up-5.0.0.tgz"
-  "version" "5.0.0"
+"find-up@^4.1.0":
+  "integrity" "sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw=="
+  "resolved" "https://registry.npmjs.org/find-up/-/find-up-4.1.0.tgz"
+  "version" "4.1.0"
   dependencies:
-    "locate-path" "^6.0.0"
+    "locate-path" "^5.0.0"
     "path-exists" "^4.0.0"
 
-"find-up@5.0.0":
+"find-up@^5.0.0", "find-up@5.0.0":
   "integrity" "sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng=="
   "resolved" "https://registry.npmjs.org/find-up/-/find-up-5.0.0.tgz"
   "version" "5.0.0"
@@ -1992,6 +2004,11 @@
   "resolved" "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   "version" "1.0.0"
 
+"fsevents@~2.3.2":
+  "integrity" "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA=="
+  "resolved" "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz"
+  "version" "2.3.2"
+
 "function-bind@^1.1.1":
   "integrity" "sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A=="
   "resolved" "https://registry.npmjs.org/function-bind/-/function-bind-1.1.1.tgz"
@@ -2054,7 +2071,7 @@
     "call-bind" "^1.0.2"
     "get-intrinsic" "^1.1.1"
 
-"glob-parent@^5.1.2", "glob-parent@~5.1.2":
+"glob-parent@^5.1.2":
   "integrity" "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="
   "resolved" "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz"
   "version" "5.1.2"
@@ -2067,6 +2084,13 @@
   "version" "6.0.2"
   dependencies:
     "is-glob" "^4.0.3"
+
+"glob-parent@~5.1.2":
+  "integrity" "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="
+  "resolved" "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz"
+  "version" "5.1.2"
+  dependencies:
+    "is-glob" "^4.0.1"
 
 "glob@^7.1.1", "glob@^7.1.2", "glob@^7.1.3", "glob@^7.1.4", "glob@^7.1.6":
   "integrity" "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q=="
@@ -2544,7 +2568,7 @@
   "resolved" "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
   "version" "4.0.0"
 
-"js-yaml@^3.13.1":
+"js-yaml@^3.13.1", "js-yaml@^3.14.0":
   "integrity" "sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g=="
   "resolved" "https://registry.npmjs.org/js-yaml/-/js-yaml-3.14.1.tgz"
   "version" "3.14.1"
@@ -2552,15 +2576,14 @@
     "argparse" "^1.0.7"
     "esprima" "^4.0.0"
 
-"js-yaml@^3.14.0":
-  "integrity" "sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g=="
-  "resolved" "https://registry.npmjs.org/js-yaml/-/js-yaml-3.14.1.tgz"
-  "version" "3.14.1"
+"js-yaml@^4.1.0":
+  "integrity" "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA=="
+  "resolved" "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz"
+  "version" "4.1.0"
   dependencies:
-    "argparse" "^1.0.7"
-    "esprima" "^4.0.0"
+    "argparse" "^2.0.1"
 
-"js-yaml@^4.1.0", "js-yaml@4.1.0":
+"js-yaml@4.1.0":
   "integrity" "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA=="
   "resolved" "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz"
   "version" "4.1.0"
@@ -2625,7 +2648,7 @@
     "ecdsa-sig-formatter" "1.0.11"
     "safe-buffer" "^5.0.1"
 
-"jws@^3.2.2", "jws@3.x.x":
+"jws@^3.2.2":
   "integrity" "sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA=="
   "resolved" "https://registry.npmjs.org/jws/-/jws-3.2.2.tgz"
   "version" "3.2.2"
@@ -2639,6 +2662,14 @@
   "version" "4.0.0"
   dependencies:
     "jwa" "^2.0.0"
+    "safe-buffer" "^5.0.1"
+
+"jws@3.x.x":
+  "integrity" "sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA=="
+  "resolved" "https://registry.npmjs.org/jws/-/jws-3.2.2.tgz"
+  "version" "3.2.2"
+  dependencies:
+    "jwa" "^1.4.1"
     "safe-buffer" "^5.0.1"
 
 "levn@^0.4.1":
@@ -3835,12 +3866,7 @@
   "resolved" "https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz"
   "version" "1.14.1"
 
-"tslib@^2.1.0":
-  "integrity" "sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA=="
-  "resolved" "https://registry.npmjs.org/tslib/-/tslib-2.4.1.tgz"
-  "version" "2.4.1"
-
-"tslib@^2.2.0":
+"tslib@^2.1.0", "tslib@^2.2.0":
   "integrity" "sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ=="
   "resolved" "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz"
   "version" "2.4.0"
