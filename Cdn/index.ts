@@ -13,7 +13,7 @@ interface Props {
   name: string;
   group?: ResourceGroupInfo;
   vaultAccess?: {
-    enableRbacAcess?: boolean;
+    enableRbacAccess?: boolean;
     vaultInfo: KeyVaultInfo;
   };
 }
@@ -41,7 +41,7 @@ export default async ({
       applicationId: "205478c0-bd83-4e1b-a9d6-db63a3e1e1c8",
     });
 
-    if (vaultAccess.enableRbacAcess) {
+    if (vaultAccess.enableRbacAccess) {
       await grantVaultRbacPermission({
         name: n,
         objectId: sp.objectId,
