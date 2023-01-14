@@ -1,29 +1,18 @@
-import * as native from "@pulumi/azure-native";
-import { enums } from "@pulumi/azure-native/types";
-import * as azuread from "@pulumi/azuread";
-import { Input } from "@pulumi/pulumi";
+import * as native from '@pulumi/azure-native';
+import { enums } from '@pulumi/azure-native/types';
+import * as azuread from '@pulumi/azuread';
+import { Input } from '@pulumi/pulumi';
 
-import GroupRole from "../AzAd/Role";
-import {
-  currentEnv,
-  currentServicePrincipal,
-  defaultTags,
-  subscriptionId,
-  tenantId,
-} from "../Common/AzureEnv";
-import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
-import { createDiagnostic } from "../Logs/Helpers";
-import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from "../types";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import { BasicResourceArgs } from "./../types.d";
-import { addCustomSecret } from "./CustomHelper";
-import { addLegacyKey } from "./LegacyHelper";
-import {
-  grantVaultRbacPermission,
-  KeyVaultAdminPolicy,
-  KeyVaultReadOnlyPolicy,
-  PermissionProps,
-} from "./VaultPermissions";
+import GroupRole from '../AzAd/Role';
+import { currentEnv, currentServicePrincipal, defaultTags, subscriptionId, tenantId } from '../Common/AzureEnv';
+import { getKeyVaultName, getPrivateEndpointName } from '../Common/Naming';
+import { createDiagnostic } from '../Logs/Helpers';
+import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from '../types';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { BasicResourceArgs } from './../types.d';
+import { addCustomSecret } from './CustomHelper';
+import { addLegacyKey } from './LegacyHelper';
+import { grantVaultRbacPermission, KeyVaultAdminPolicy, KeyVaultReadOnlyPolicy, PermissionProps } from './VaultPermissions';
 
 interface Props extends BasicResourceArgs {
   nameConvention?: ConventionProps | false;
@@ -50,12 +39,12 @@ export default async ({
   const vaultName = getKeyVaultName(name, nameConvention);
 
   //Permission Groups
-  const readOnlyGroup = GroupRole({
+  const readOnlyGroup =await GroupRole({
     env: currentEnv,
     appName: `${name}-vault`,
     roleName: "ReadOnly",
   });
-  const adminGroup = GroupRole({
+  const adminGroup = await GroupRole({
     env: currentEnv,
     appName: `${name}-vault`,
     roleName: "Admin",

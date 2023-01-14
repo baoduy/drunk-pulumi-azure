@@ -25,11 +25,11 @@ export const envRoleNames = {
   admin: getRoleName(envRoleConfig.admin),
 };
 
-export default () => {
+export default async () => {
   //ReadOnly
-  Role(envRoleConfig.readOnly);
+  await Role(envRoleConfig.readOnly);
   //Contributor
-  Role(envRoleConfig.contributor);
+  await Role(envRoleConfig.contributor);
   //Admin
-  Role(envRoleConfig.admin);
+  await Role(envRoleConfig.admin);
 };
