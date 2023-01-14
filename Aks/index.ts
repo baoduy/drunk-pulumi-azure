@@ -221,7 +221,7 @@ export default async ({
 
   const adminGroup =
     typeof aksAccess.enableAzureRBAC === "object"
-      ? roleCreator({
+      ? await roleCreator({
           env: currentEnv,
           appName: name,
           roleName: "Aks-Admin",
@@ -412,7 +412,7 @@ export default async ({
         upgradeChannel: native.containerservice.UpgradeChannel.Stable,
       },
       //TODO: Needs to find a solution to allows ADO to deploy to AKS without this
-      disableLocalAccounts:false,// Boolean(aksAccess.enableAzureRBAC),
+      disableLocalAccounts: false, // Boolean(aksAccess.enableAzureRBAC),
       aadProfile: {
         enableAzureRBAC: Boolean(aksAccess.enableAzureRBAC),
         managed: true,

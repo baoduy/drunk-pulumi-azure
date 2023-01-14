@@ -141,7 +141,7 @@ export default async ({
   }
 
   const adminGroup = auth?.enableAdAdministrator
-    ? roleCreator({
+    ? await roleCreator({
         env: currentEnv,
         appName: name,
         roleName: "Db-Admin",
@@ -314,11 +314,7 @@ export default async ({
 
       if (vaultInfo) {
         const connectionString = auth?.adminLogin
-          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${
-              d.name
-            };User Id=${auth.adminLogin};Password=${
-              auth!.password
-            };MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
+          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
           : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
 
         addSecret({
