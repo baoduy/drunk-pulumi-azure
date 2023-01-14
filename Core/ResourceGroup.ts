@@ -1,28 +1,32 @@
-import * as native from '@pulumi/azure-native';
-
 import {
   DefaultResourceArgs,
   ResourceGroupInfo,
   ResourceResultProps,
-} from '../types';
+} from "../types";
 import {
   ResourceGroup,
   ResourceGroupArgs,
-} from '@pulumi/azure-native/resources';
-
-import { BasicResourceArgs } from './../types.d';
-import ResourceCreator from './ResourceCreator';
-import { getResourceGroupName } from '../Common/Naming';
+} from "@pulumi/azure-native/resources";
+import { BasicResourceArgs } from "./../types.d";
+import ResourceCreator from "./ResourceCreator";
+import { getResourceGroupName } from "../Common/Naming";
+import { envRoleNames } from "../AzAd/EnvRoles";
+import { assignRolesToGroup } from "../AzAd/Group";
+import { currentEnv, Environments } from "../Common/AzureEnv";
 
 interface Props
-  extends Omit<DefaultResourceArgs, 'monitoring'>,
-    Omit<BasicResourceArgs, 'group'> {
+  extends Omit<DefaultResourceArgs, "monitoring">,
+    Omit<BasicResourceArgs, "group"> {
   formattedName?: boolean;
+
+  /**Grant permission of this group into Environment Roles groups*/
+  enableEnvRbac?: boolean;
 }
 
 export default async ({
   name,
   formattedName,
+  enableEnvRbac = currentEnv !== Environments.Global,
   ...others
 }: Props): Promise<
   ResourceResultProps<ResourceGroup> & { toGroupInfo: () => ResourceGroupInfo }
@@ -38,6 +42,24 @@ export default async ({
   );
 
   const g = resource as ResourceGroup;
+
+  if (enableEnvRbac) {
+    await assignRolesToGroup({
+      groupName: envRoleNames.readOnly,
+      roles: ["Reader"],
+      scope: g.id,
+    });
+    await assignRolesToGroup({
+      groupName: envRoleNames.contributor,
+      roles: ["Contributor"],
+      scope: g.id,
+    });
+    await assignRolesToGroup({
+      groupName: envRoleNames.admin,
+      roles: ["Owner"],
+      scope: g.id,
+    });
+  }
 
   return {
     name,

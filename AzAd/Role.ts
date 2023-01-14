@@ -1,6 +1,6 @@
-import adGroupCreator, { GroupPermissionProps } from './Group';
-import { Environments } from '../Common/AzureEnv';
-import { Input } from '@pulumi/pulumi';
+import adGroupCreator, { GroupPermissionProps } from "./Group";
+import { Environments } from "../Common/AzureEnv";
+import { Input } from "@pulumi/pulumi";
 
 interface RoleProps {
   env: Environments;
@@ -14,20 +14,26 @@ interface RoleProps {
   permissions?: Array<GroupPermissionProps>;
 }
 
-export default ({
+export type RoleNameType = Pick<
+  RoleProps,
+  "env" | "location" | "appName" | "moduleName" | "roleName"
+>;
+
+export const getRoleName = ({
   env,
-  location = 'GLB',
+  location = "GLB",
   appName,
   moduleName,
   roleName,
-  members,
-  owners,
-  permissions,
-}: RoleProps) => {
-  const e = env === Environments.Prd ? 'prod' : 'non-prd';
-  const name = moduleName
+}: RoleNameType) => {
+  const e = env === Environments.Prd ? "prod" : "non-prd";
+  return moduleName
     ? `ROL ${e} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
     : `ROL ${e} ${location} ${appName} ${roleName}`.toUpperCase();
+};
+
+export default ({ members, owners, permissions, ...others }: RoleProps) => {
+  const name = getRoleName(others);
 
   return adGroupCreator({
     name,

@@ -1,7 +1,7 @@
 import * as azuread from '@pulumi/azuread';
 import { Input, Output } from '@pulumi/pulumi';
 
-import { subscriptionId } from '../Common/AzureEnv';
+import { defaultScope } from '../Common/AzureEnv';
 import { roleAssignment } from './RoleAssignment';
 
 export interface GroupPermissionProps {
@@ -19,7 +19,7 @@ interface AdGroupProps {
   permissions?: Array<GroupPermissionProps>;
 }
 
-export default ({ name, permissions, members, owners }: AdGroupProps) => {
+export default async({ name, permissions, members, owners }: AdGroupProps) => {
   const group = new azuread.Group(name, {
     displayName: name,
     externalSendersAllowed: false,
@@ -41,18 +41,17 @@ export default ({ name, permissions, members, owners }: AdGroupProps) => {
   }
 
   if (permissions) {
-    const defaultScope = subscriptionId.apply((s) => `/subscriptions/${s}`);
-    permissions.map((p, i) => {
-      if (!p.scope) p.scope = defaultScope;
-
-      return roleAssignment({
-        name,
-        principalId: group.objectId,
-        principalType: "Group",
-        roleName: p.roleName,
-        scope: p.scope,
-      });
-    });
+    await Promise.all(
+      permissions.map((p, i) =>
+        roleAssignment({
+          name,
+          principalId: group.objectId,
+          principalType: "Group",
+          roleName: p.roleName,
+          scope: p.scope || defaultScope,
+        })
+      )
+    );
   }
 
   return group;
@@ -71,29 +70,54 @@ export const addUserToGroup = async ({
 }) => {
   if (userName && !userName.includes("@"))
     throw new Error("UserName must include suffix @domain.name");
-  else if (!objectId) throw new Error("Either UserName or ObjectId must be defined.");
+  else if (!objectId)
+    throw new Error("Either UserName or ObjectId must be defined.");
 
   const user = userName
-    ? await azuread.getUser({ userPrincipalName: userName! })
-    : { objectId: objectId! };
+    ? await azuread.getUser({ userPrincipalName: userName })
+    : { objectId: objectId };
 
   return new azuread.GroupMember(name, {
     groupObjectId,
     memberObjectId: user.objectId,
-
   });
 };
 
 export const addGroupToGroup = async (
-  groupName: string,
+  groupMemberName: string,
   groupObjectId: Output<string>
 ) => {
-  const user = await azuread.getGroup({ displayName: groupName });
+  const group = await azuread.getGroup({ displayName: groupMemberName });
+
   return groupObjectId.apply(
     (g) =>
-      new azuread.GroupMember(`${g}-${groupName}`, {
+      new azuread.GroupMember(`${g}-${groupMemberName}`, {
         groupObjectId: g,
-        memberObjectId: user.objectId,
+        memberObjectId: group.objectId,
       })
+  );
+};
+
+export const assignRolesToGroup = async ({
+  roles,
+  groupName,
+  scope,
+}: {
+  groupName: string;
+  roles: Array<string>;
+  scope?: Input<string>;
+}) => {
+  const group = await azuread.getGroup({ displayName: groupName });
+
+  await Promise.all(
+    roles.map((p) =>
+      roleAssignment({
+        name: groupName,
+        principalId: group.objectId,
+        principalType: "Group",
+        roleName: p,
+        scope: scope ?? defaultScope,
+      })
+    )
   );
 };
