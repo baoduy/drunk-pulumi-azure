@@ -121,6 +121,7 @@ interface Props extends BasicResourceArgs {
     enableAzurePolicy?: boolean;
     enableKubeDashboard?: boolean;
     enableVirtualHost?: boolean;
+    disableLocalAccounts?: boolean;
     applicationGateway?: { gatewaySubnetId: pulumi.Input<string> };
   };
 
@@ -412,7 +413,8 @@ export default async ({
         upgradeChannel: native.containerservice.UpgradeChannel.Stable,
       },
       //TODO: Needs to find a solution to allows ADO to deploy to AKS without this
-      disableLocalAccounts: false, // Boolean(aksAccess.enableAzureRBAC),
+      disableLocalAccounts:
+        addon?.disableLocalAccounts && Boolean(aksAccess.enableAzureRBAC),
       aadProfile: {
         enableAzureRBAC: Boolean(aksAccess.enableAzureRBAC),
         managed: true,
