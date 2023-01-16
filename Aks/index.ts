@@ -502,6 +502,36 @@ export default async ({
   //   });
   // }
 
+  //Grant permission for Group
+  if (adminGroup) {
+    aks.id.apply((id) => {
+      if (!id) return;
+
+      await roleAssignment({
+        name: `${name}-aks-list-admin`,
+        principalId: adminGroup.objectId,
+        principalType: "Group",
+        roleName: "Azure Kubernetes Service Cluster Admin Role",
+        scope: id,
+      });
+
+      await roleAssignment({
+        name: `${name}-aks-list-user`,
+        principalId: adminGroup.objectId,
+        principalType: "Group",
+        roleName: "Azure Kubernetes Service Cluster User Role",
+        scope: id,
+      });
+
+      await roleAssignment({
+        name: `${name}-aks-list-contributor`,
+        principalId: adminGroup.objectId,
+        principalType: "Group",
+        roleName: "Azure Kubernetes Service Contributor Role",
+        scope: id,
+      });
+    });
+  }
   //Grant Permission for Identity
   if (network.subnetId) {
     pulumi
@@ -559,14 +589,6 @@ export default async ({
       });
     });
   }
-
-  // if (enableVMAutoScale) {
-  //   //Apply auto scale
-  //   await vmsAutoScale({
-  //     group: { resourceGroupName: nodeResourceGroup },
-  //     dependsOn: aks,
-  //   });
-  // }
 
   //Apply monitoring for VMScale Sets
   await vmsDiagnostic({
