@@ -31,7 +31,7 @@ export default async ({ name, vaultInfo }: Props) => {
 
   await roleAssignment({
     name: `${name}-aks-identity-acr-pull`,
-    principalId: serverIdentity.principalId,
+    principalId: serverIdentity.principalId!,
     principalType: "ServicePrincipal",
     roleName: "AcrPull",
     scope: defaultScope,
