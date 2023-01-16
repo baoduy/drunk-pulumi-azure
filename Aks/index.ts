@@ -532,13 +532,22 @@ export default async ({
       });
     });
   }
-  //Grant Permission for Identity
-  if (network.subnetId) {
-    pulumi
-      .all([aks.identity, network.subnetId])
-      .apply(async ([identity, sId]) => {
-        if (!identity?.principalId) return;
 
+  //Grant Permission for Identity
+  pulumi
+    .all([aks.identity, network.subnetId])
+    .apply(async ([identity, sId]) => {
+      if (!identity?.principalId) return;
+
+      await roleAssignment({
+        name: `${name}-system-acr-pull`,
+        principalId: identity.principalId,
+        principalType: "ServicePrincipal",
+        roleName: "AcrPull",
+        scope: defaultScope,
+      });
+
+      if (network.subnetId) {
         await roleAssignment({
           name: `${name}-system-net`,
           principalId: identity.principalId,
@@ -548,26 +557,18 @@ export default async ({
             group: getResourceInfoFromId(sId)!.group,
           }),
         });
+      }
 
+      if (privateZone) {
         await roleAssignment({
-          name: `${name}-system-acr-pull`,
+          name: `${name}-private-dns`,
           principalId: identity.principalId,
+          roleName: "Private DNS Zone Contributor",
           principalType: "ServicePrincipal",
-          roleName: "AcrPull",
-          scope: defaultScope,
+          scope: privateZone.id,
         });
-
-        if (privateZone) {
-          await roleAssignment({
-            name: `${name}-private-dns`,
-            principalId: identity.principalId,
-            roleName: "Private DNS Zone Contributor",
-            principalType: "ServicePrincipal",
-            scope: privateZone.id,
-          });
-        }
-      });
-  }
+      }
+    });
 
   if (featureFlags.enableDiagnosticSetting) {
     aks.id.apply((id) => {
