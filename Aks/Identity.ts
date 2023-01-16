@@ -1,6 +1,8 @@
 import { getGraphPermissions } from "../AzAd/GraphDefinition";
 import identityCreator from "../AzAd/Identity";
 import { KeyVaultInfo } from "../types";
+import { roleAssignment } from "../AzAd/RoleAssignment";
+import { defaultScope } from "../Common/AzureEnv";
 
 interface Props {
   name: string;
@@ -25,6 +27,14 @@ export default async ({ name, vaultInfo }: Props) => {
     publicClient: false,
     allowImplicit: false,
     vaultInfo,
+  });
+
+  await roleAssignment({
+    name: `${name}-aks-identity-acr-pull`,
+    principalId: serverIdentity.principalId,
+    principalType: "ServicePrincipal",
+    roleName: "AcrPull",
+    scope: defaultScope,
   });
 
   return serverIdentity;
