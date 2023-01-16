@@ -504,7 +504,7 @@ export default async ({
 
   //Grant permission for Group
   if (adminGroup) {
-    aks.id.apply((id) => {
+    aks.id.apply(async (id) => {
       if (!id) return;
 
       await roleAssignment({
