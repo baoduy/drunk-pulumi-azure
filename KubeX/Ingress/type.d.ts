@@ -1,7 +1,7 @@
-import { Input, Resource } from '@pulumi/pulumi';
-import * as kx from '../KubX';
-import * as k8s from '@pulumi/kubernetes';
-import { defaultResponseHeaders } from './Conts';
+import { Input, Resource } from "@pulumi/pulumi";
+import * as kx from "../KubX";
+import * as k8s from "@pulumi/kubernetes";
+import { defaultResponseHeaders } from "./Conts";
 
 export interface ServicePort {
   appProtocol?: Input<string>;
@@ -12,7 +12,7 @@ export interface ServicePort {
   targetPort?: Input<number | string>;
 }
 
-export type IngressClassName = 'public' | 'private' | 'nginx';
+export type IngressClassName = "public" | "private" | "nginx";
 
 export type IngressCanary = {
   headerKey?: Input<string>;
@@ -22,8 +22,23 @@ export type IngressCanary = {
 
 export type CertManagerIssuerTypes =
   | boolean
-  | 'letsencrypt-staging'
-  | 'letsencrypt-prod';
+  | "letsencrypt-staging"
+  | "letsencrypt-prod";
+
+type SimpleServiceType = {
+  metadata: {
+    name: Input<string>;
+    namespace: Input<string>;
+    labels?: Input<{ [key: string]: Input<string> }>;
+  };
+  spec: { ports: Array<ServicePort> };
+};
+
+type ServiceType = kx.Service | k8s.core.v1.Service | SimpleServiceType;
+
+interface ServicesType extends SimpleServiceType {
+  path: string;
+}
 
 export interface IngressProps {
   name: string;
@@ -46,7 +61,7 @@ export interface IngressProps {
   canary?: IngressCanary;
 
   proxy?: {
-    backendProtocol?: 'HTTP' | 'HTTPS' | 'GRPC' | 'GRPCS' | 'AJP' | 'FCGI';
+    backendProtocol?: "HTTP" | "HTTPS" | "GRPC" | "GRPCS" | "AJP" | "FCGI";
     backendUrl: string;
     sslVerify?: boolean;
     tlsSecretName?: Input<string>;
@@ -60,17 +75,15 @@ export interface IngressProps {
     errorPage?: string;
   };
 
-  service:
-    | kx.Service
-    | k8s.core.v1.Service
-    | {
-        metadata: {
-          name: Input<string>;
-          namespace: Input<string>;
-          labels?: Input<{ [key: string]: Input<string> }>;
-        };
-        spec: { ports: Array<ServicePort> };
-      };
+  service?: ServiceType;
+  services?: {
+    metadata: {
+      namespace: Input<string>;
+      labels?: Input<{ [key: string]: Input<string> }>;
+    };
+    paths: ServicesType[];
+  };
+
   provider: k8s.Provider;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
