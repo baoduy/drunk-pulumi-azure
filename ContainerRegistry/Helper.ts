@@ -1,6 +1,8 @@
 import * as native from "@pulumi/azure-native";
 import axios from "axios";
 import { ResourceGroupInfo } from "../types";
+import { getAcrName } from "../Common/Naming";
+import { global } from "../Common";
 
 export interface ImageInfo {
   registry: string;
@@ -19,6 +21,21 @@ interface LatestAcrImageProps {
   group: ResourceGroupInfo;
 }
 
+/**Get ACR credentials from Global Resource Group*/
+export const getAcrCredentials = async (name: string) => {
+  const n = getAcrName(name);
+  const credentials = await native.containerregistry.listRegistryCredentials({
+    registryName: n,
+    ...global.groupInfo,
+  });
+
+  return {
+    username: credentials.username!,
+    password: credentials.passwords![0].value!,
+    url: `https://${n}.azurecr.io`,
+  };
+};
+
 export const getLastAcrImage = async ({
   acrName,
   repository,
@@ -29,8 +46,10 @@ export const getLastAcrImage = async ({
     ...group,
   });
 
+  if (credentials == undefined) return;
+
   const token = Buffer.from(
-    `${credentials.username}:${credentials.passwords![0].value}`
+    `${credentials.username!}:${credentials.passwords![0].value!}`
   ).toString("base64");
 
   const url = `https://${acrName}.azurecr.io/acr/v1/${repository}/_tags?last=1&n=1&orderby=timedesc`;
