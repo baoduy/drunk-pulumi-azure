@@ -1,29 +1,18 @@
-import * as azuread from "@pulumi/azuread";
-import * as sql from "@pulumi/azure-native/sql";
-import {
-  BasicResourceArgs,
-  BasicResourceResultProps,
-  KeyVaultInfo,
-  PrivateLinkProps,
-} from "../types";
-import { Input, Output, interpolate, all } from "@pulumi/pulumi";
-import {
-  currentEnv,
-  defaultTags,
-  isPrd,
-  tenantId,
-  subscriptionId,
-} from "../Common/AzureEnv";
-import { randomLogin } from "../Core/Random";
-import { addSecret } from "../KeyVault/Helper";
-import sqlDbCreator, { SqlDbProps } from "./SqlDb";
+import * as sql from '@pulumi/azure-native/sql';
+import * as azuread from '@pulumi/azuread';
+import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 
-import privateEndpointCreator from "../VNet/PrivateEndpoint";
-import { roleAssignment } from "../AzAd/RoleAssignment";
-import roleCreator from "../AzAd/Role";
-import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
-import Locker from "../Core/Locker";
-import { convertToIpRange } from "../VNet/Helper";
+import roleCreator from '../AzAd/Role';
+import { roleAssignment } from '../AzAd/RoleAssignment';
+import { currentEnv, defaultTags, isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
+import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
+import Locker from '../Core/Locker';
+import { randomLogin } from '../Core/Random';
+import { addSecret } from '../KeyVault/Helper';
+import { BasicResourceArgs, BasicResourceResultProps, KeyVaultInfo, PrivateLinkProps } from '../types';
+import { convertToIpRange } from '../VNet/Helper';
+import privateEndpointCreator from '../VNet/PrivateEndpoint';
+import sqlDbCreator, { SqlDbProps } from './SqlDb';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -217,8 +206,8 @@ export default async ({
   }
 
   //Public IpAddresses
-  if (network.ipAddresses) {
-    all(network.ipAddresses).apply((ips) =>
+  if (network?.ipAddresses) {
+    all(network!.ipAddresses).apply((ips) =>
       convertToIpRange(ips).map((ip, i) => {
         const n = `${sqlName}-fwRule-${i}`;
 
