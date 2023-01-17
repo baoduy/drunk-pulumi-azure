@@ -213,24 +213,24 @@ export default async ({
         virtualNetworkSubnetId: network.subnetId,
         ignoreMissingVnetServiceEndpoint: false,
       });
-
-      //Public IpAddresses
-      if (network.ipAddresses) {
-        all(network.ipAddresses).apply((ips) =>
-          convertToIpRange(ips).map((ip, i) => {
-            const n = `${sqlName}-fwRule-${i}`;
-
-            return new sql.FirewallRule(n, {
-              firewallRuleName: n,
-              serverName: sqlServer.name,
-              ...group,
-              startIpAddress: ip.start,
-              endIpAddress: ip.end,
-            });
-          })
-        );
-      }
     }
+  }
+
+  //Public IpAddresses
+  if (network.ipAddresses) {
+    all(network.ipAddresses).apply((ips) =>
+      convertToIpRange(ips).map((ip, i) => {
+        const n = `${sqlName}-fwRule-${i}`;
+
+        return new sql.FirewallRule(n, {
+          firewallRuleName: n,
+          serverName: sqlServer.name,
+          ...group,
+          startIpAddress: ip.start,
+          endIpAddress: ip.end,
+        });
+      })
+    );
   }
 
   if (vulnerabilityAssessment) {
