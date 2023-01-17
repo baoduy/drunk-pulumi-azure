@@ -31,7 +31,7 @@ export default ({
 
   const annotations: { [key: string]: Input<string> } = {
     "pulumi.com/skipAwait": "true",
-    "nginx.ingress.kubernetes.io/rewrite-target": "/",
+    "nginx.ingress.kubernetes.io/rewrite-target": "/$1",
     "nginx.ingress.kubernetes.io/use-regex": "true",
     "nginx.ingress.kubernetes.io/body-size": "1024m",
     "nginx.ingress.kubernetes.io/client-body-buffer-size": "50m",
@@ -180,7 +180,7 @@ export default ({
             },
           },
         },
-        path: s.path,
+        path: `${s.path}/(.*)`,
         pathType: "Prefix",
       }))
     : [
