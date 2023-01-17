@@ -1,7 +1,7 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as k8s from '@pulumi/kubernetes';
-import * as path from 'path';
-import { Input, Resource } from '@pulumi/pulumi';
+import * as pulumi from "@pulumi/pulumi";
+import * as k8s from "@pulumi/kubernetes";
+import * as path from "path";
+import { Input, Resource } from "@pulumi/pulumi";
 //import * as global from '../../../Common/GlobalEnv';
 
 export interface CertManagerProps {
@@ -26,9 +26,9 @@ export interface CertManagerProps {
 }
 
 //run this `kubectl patch crd challenges.acme.cert-manager.io -p '{"metadata":{"finalizers": []}}' --type=merge` if stuck at removing challenges.acme.cert-manager.io
-export default async ({
+export default ({
   name,
-  namespace = 'cert-manager',
+  namespace = "cert-manager",
   version,
   provider,
   email,
@@ -40,16 +40,16 @@ export default async ({
     name,
     {
       namespace,
-      chart: 'cert-manager',
+      chart: "cert-manager",
       version,
-      fetchOpts: { repo: 'https://charts.jetstack.io' },
+      fetchOpts: { repo: "https://charts.jetstack.io" },
 
       values: {
         installCRDs: true,
         ingressShim: {
-          defaultIssuerName: 'letsencrypt-prod',
-          defaultIssuerKind: 'ClusterIssuer',
-          defaultIssuerGroup: 'cert-manager.io',
+          defaultIssuerName: "letsencrypt-prod",
+          defaultIssuerKind: "ClusterIssuer",
+          defaultIssuerGroup: "cert-manager.io",
         },
 
         // extraArgs: {
@@ -69,7 +69,7 @@ export default async ({
     new k8s.yaml.ConfigFile(
       `cluster-issuer`,
       {
-        file: path.resolve(__dirname, 'cluster-issuer.yaml'),
+        file: path.resolve(__dirname, "cluster-issuer.yaml"),
         transformations: [
           (obj) => {
             obj.metadata.namespace = namespace;
@@ -114,9 +114,9 @@ export default async ({
     );
 
     new k8s.yaml.ConfigFile(
-      'cluster-issuer-azdns',
+      "cluster-issuer-azdns",
       {
-        file: path.resolve(__dirname, 'cluster-issuer-azdns.yaml'),
+        file: path.resolve(__dirname, "cluster-issuer-azdns.yaml"),
         transformations: [
           (o) => {
             o.metadata.namespace = namespace;
