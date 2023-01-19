@@ -77,11 +77,21 @@ export default async ({
       },
       transformations: [
         (o) => {
-          if (o.kind === 'Secret' && o.metadata.name === 'argocd-secret') {
-            o.data['server.secretkey'] = randomPassword({
-              name: `${name}-secretkey`,
-              policy: false,
-            }).result.apply(toBase64);
+          if (o.kind === 'Secret') {
+            if (o.metadata.name === 'argocd-secret') {
+              o.data['server.secretkey'] = randomPassword({
+                name: `${name}-secretkey`,
+                policy: false,
+              }).result.apply(toBase64);
+            }
+
+            if (o.metadata.name === 'argo-cd-redis') {
+              o.data['redis-password'] = randomPassword({
+                name: `${name}-redis-password`,
+                policy: false,
+                options: { special: false },
+              }).result.apply(toBase64);
+            }
           }
         },
       ],
