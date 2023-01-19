@@ -4,7 +4,7 @@ import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { interpolate } from '@pulumi/pulumi';
+import { interpolate, Input } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
@@ -14,6 +14,7 @@ interface Props extends DefaultK8sArgs {
   useClusterIP?: boolean;
   vaultInfo?: KeyVaultInfo;
   storageClassName: StorageClassNameTypes;
+  auth?: { rootPass?: Input<string> };
 }
 
 export default async ({
@@ -24,13 +25,17 @@ export default async ({
   useClusterIP,
   vaultInfo,
   storageClassName,
+  auth,
   ...others
 }: Props) => {
-  const password = randomPassword({
-    name,
-    length: 25,
-    options: { special: false },
-  }).result;
+  const password =
+    auth?.rootPass ||
+    randomPassword({
+      name,
+      length: 25,
+      policy: false,
+      options: { special: false },
+    }).result;
 
   if (vaultInfo) {
     addCustomSecret({

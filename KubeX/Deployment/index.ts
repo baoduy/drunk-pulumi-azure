@@ -139,9 +139,10 @@ const buildPod = ({
 
         livenessProbe: podConfig.probes?.liveness
           ? {
-              initialDelaySeconds:podConfig.probes.liveness.initialDelaySeconds|| 30,
-              periodSeconds: podConfig.probes.liveness.periodSeconds|| 300,
-              timeoutSeconds:podConfig.probes.liveness.timeoutSeconds|| 5,
+              initialDelaySeconds:
+                podConfig.probes.liveness.initialDelaySeconds || 30,
+              periodSeconds: podConfig.probes.liveness.periodSeconds || 300,
+              timeoutSeconds: podConfig.probes.liveness.timeoutSeconds || 5,
 
               httpGet: podConfig.probes.liveness.httpGet
                 ? {
@@ -162,7 +163,7 @@ const buildPod = ({
 
 export type DeploymentIngress = Omit<
   IngressProps,
-  'name' | 'internalIngress' | 'service' | 'provider' | 'dependsOn'
+  'name' | 'internalIngress' | 'service' | 'services' | 'provider' | 'dependsOn'
 >;
 
 export type IngressTypes = 'nginx' | 'traefik';
