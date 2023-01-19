@@ -2,8 +2,9 @@ import { DefaultK8sArgs } from '../types';
 import { Input } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
+import { getRootDomainFromUrl } from '../../Common/Helpers';
 interface Props extends DefaultK8sArgs {
-  hostNames: Input<string>[];
+  hostNames: string[];
   volume?: {
     storageClass: string;
   };
@@ -35,6 +36,8 @@ export default ({
       })
     : undefined;
 
+  const domains = getRootDomainFromUrl(hostNames[0]);
+
   return Deployment({
     name,
     namespace,
@@ -63,12 +66,13 @@ export default ({
     },
     deploymentConfig: { replicas: 1 },
     ingressConfig: {
+      type: 'nginx',
       certManagerIssuer: true,
       hostNames: hostNames,
       responseHeaders: {
         'Content-Security-Policy': `default-src 'self' ${hostNames.concat(
           ' '
-        )} *.githubusercontent.com codesandbox.io *.gravatar.com *.wp.com *.w.org wp-themes.com *.rating-widget.com rating-widget.com *.googleapis.com *.googletagmanager.com *.gstatic.com *.google.com *.cloudflare.com data: 'unsafe-inline' 'unsafe-eval'; frame-src *.${envDomain} wp-themes.com codesandbox.io *.google.com;`,
+        )} *.githubusercontent.com codesandbox.io *.gravatar.com *.wp.com *.w.org wp-themes.com *.rating-widget.com rating-widget.com *.googleapis.com *.googletagmanager.com *.gstatic.com *.google.com *.cloudflare.com data: 'unsafe-inline' 'unsafe-eval'; frame-src *.${domains} wp-themes.com codesandbox.io *.google.com;`,
         'referrer-policy': 'no-referrer',
       },
     },
