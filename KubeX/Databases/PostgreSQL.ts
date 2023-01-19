@@ -40,7 +40,7 @@ export default async ({
       namespace,
       chart: 'postgresql-ha',
       fetchOpts: { repo: 'https://charts.bitnami.com/bitnami' },
-
+      skipAwait: true,
       values: {
         global: {
           storageClass: storageClassName,

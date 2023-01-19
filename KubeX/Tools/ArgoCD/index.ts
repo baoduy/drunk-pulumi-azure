@@ -8,6 +8,7 @@ import { getTlsName } from '../../CertHelper';
 import {
   getDomainFromUrl,
   getRootDomainFromUrl,
+  toBase64,
 } from '../../../Common/Helpers';
 import { IngressProps } from '../../Ingress/type';
 import * as console from 'console';
@@ -15,6 +16,7 @@ import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import identityCreator from '../../../AzAd/Identity';
 import { KeyVaultInfo } from '../../../types';
 import { tenantId } from '../../../Common/AzureEnv';
+import { randomPassword } from '../../../Core/Random';
 
 interface Props extends K8sArgs {
   name?: string;
@@ -23,7 +25,7 @@ interface Props extends K8sArgs {
   auth?: {
     enableAzureAD?: boolean;
   };
-  ingressConfig?: DeploymentIngress;
+  ingressConfig?: { hostName: string } & Omit<DeploymentIngress, 'hostNames'>;
   vaultInfo?: KeyVaultInfo;
 }
 
@@ -38,20 +40,6 @@ export default async ({
 }: Props) => {
   const ns = Namespace({ name, ...others });
 
-  const pluginsVolume = createPVCForStorageClass({
-    name: `${name}-plugins`,
-    namespace,
-    ...others,
-    storageClassName,
-  });
-
-  const tmpVolume = createPVCForStorageClass({
-    name: `${name}-tmp`,
-    namespace,
-    ...others,
-    storageClassName,
-  });
-
   const identity = auth?.enableAzureAD
     ? await identityCreator({
         name,
@@ -59,70 +47,42 @@ export default async ({
         createPrincipal: true,
         publicClient: false,
         allowImplicit: true,
-        replyUrls: [
-          `https://${ingressConfig?.hostNames[0]}/argo-cd/auth/callback`,
-        ],
+        replyUrls: [`https://${ingressConfig?.hostName}/argo-cd/auth/callback`],
         vaultInfo,
       })
     : undefined;
 
-  const argo = new k8s.yaml.ConfigFile(
+  const argoCD = new k8s.helm.v3.Chart(
     name,
     {
+      namespace,
+      chart: 'argo-cd',
+      fetchOpts: { repo: 'https://charts.bitnami.com/bitnami' },
       skipAwait: true,
-      file: 'https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml',
+
+      values: {
+        global: {
+          storageClass: storageClassName,
+        },
+        rbac: { create: true },
+        // redis: {
+        //   auth: {
+        //     existingSecret: randomPassword({
+        //       name: `${name}-redis-pass`,
+        //       policy: false,
+        //     }).result,
+        //   },
+        // },
+        server: {},
+      },
       transformations: [
-        (o, op) => {
-          if (o.metadata) o.metadata.namespace = namespace;
-
-          //Update deployment with Volume Claim
-          if (o.kind === 'Deployment' && o.metadata.name === 'argocd-server') {
-            o.spec.template.spec.volumes.forEach((v: any, i: number) => {
-              if (v.emptyDir && v.name === 'plugins-home') {
-                delete v.emptyDir;
-
-                if (v.name === 'plugins-home')
-                  v.persistentVolumeClaim = {
-                    claimName: pluginsVolume.metadata.name,
-                  };
-                else if (v.name === 'tmp')
-                  v.persistentVolumeClaim = {
-                    claimName: tmpVolume.metadata.name,
-                  };
-                else console.log(v);
-              }
-            });
-          } //end of deployment
-
-          //Map Azure AD Auth to argo server
-          if (identity && (o.kind === 'ConfigMap' || o.kind === 'Secret')) {
-            console.log(o);
-
-            //Update ConfigMap
-            if (o.metadata.name === 'argocd-cm') {
-              o.data = {
-                url: `https://${ingressConfig?.hostNames[0]}`,
-                'oidc.config': interpolate`name: Azure\\nissuer: https://login.microsoftonline.com/${tenantId}/v2.0\\nclientID: ${identity.clientId}\\nclientSecret:${identity.clientSecret}\\nrequestedIDTokenClaims:\\n   groups:\\n      essential: true\\nrequestedScopes:\\n   - openid\\n   - profile\\n   - email\\n`,
-              };
-            }
-
-            //Update Secret
-            // if (o.metadata.name === 'argocd-secret') {
-            //   o.stringData = {
-            //     'oidc.azure.clientSecret': identity.clientSecret,
-            //   };
-            // }
-
-            //Update Roles
-            if (o.metadata.name === 'argocd-rbac-cm') {
-              o.data = {
-                'policy.default': 'role:readonly',
-                scopes: '[groups, email]',
-                'policy.csv':
-                  'p, role:org-admin, applications, *, */*, allow\np, role:org-admin, clusters, get, *, allow\np, role:org-admin, repositories, get, *, allow\np, role:org-admin, repositories, create, *, allow\np, role:org-admin, repositories, update, *, allow\np, role:org-admin, repositories, delete, *, allow\ng, 84ce98d1-e359-4f3b-85af-985b458de3c6, role:org-admin\n',
-              };
-            }
-          } //end if identity
+        (o) => {
+          if (o.kind === 'Secret' && o.metadata.name === 'argocd-secret') {
+            o.data['server.secretkey'] = randomPassword({
+              name: `${name}-secretkey`,
+              policy: false,
+            }).result.apply(toBase64);
+          }
         },
       ],
     },
@@ -135,29 +95,25 @@ export default async ({
       className: ingressConfig.className || 'nginx',
 
       name: `${name}-ingress`.toLowerCase(),
-      hostNames: ingressConfig.hostNames.map((host) =>
-        output(host).apply((h) => h.toLowerCase().replace('https://', ''))
-      ),
+      hostNames: [ingressConfig.hostName],
 
-      tlsSecretName: ingressConfig.allowHttp
-        ? undefined
-        : ingressConfig.tlsSecretName ||
-          output(ingressConfig.hostNames).apply((h) =>
-            getTlsName(
-              ingressConfig.certManagerIssuer
-                ? getDomainFromUrl(h[0])
-                : getRootDomainFromUrl(h[0]),
-              Boolean(ingressConfig.certManagerIssuer)
-            )
-          ),
+      tlsSecretName:
+        ingressConfig.tlsSecretName ||
+        getTlsName(
+          ingressConfig.certManagerIssuer
+            ? getDomainFromUrl(ingressConfig.hostName)
+            : getRootDomainFromUrl(ingressConfig.hostName),
+          Boolean(ingressConfig.certManagerIssuer)
+        ),
 
       proxy: { backendProtocol: 'HTTPS' },
-      pathType: 'Prefix',
+      pathType: 'ImplementationSpecific',
       service: {
-        metadata: { name: 'argocd-server', namespace },
+        metadata: { name: 'argo-cd-server', namespace },
         spec: { ports: [{ name: 'https' }] },
       },
       ...others,
+      dependsOn: ns,
     };
 
     NginxIngress(ingressProps);
