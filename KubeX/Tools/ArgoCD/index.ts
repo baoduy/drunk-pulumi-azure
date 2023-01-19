@@ -75,6 +75,7 @@ export default async ({
         (o, op) => {
           if (o.metadata) o.metadata.namespace = namespace;
 
+          //Update deployment with Volume Claim
           if (o.kind === 'Deployment' && o.metadata.name === 'argocd-server') {
             o.spec.template.spec.volumes.forEach((v: any, i: number) => {
               if (v.emptyDir && v.name === 'plugins-home') {
@@ -90,39 +91,38 @@ export default async ({
                   };
                 else console.log(v);
               }
-
-              //Map Azure AD Auth to argo server
-              if (identity) {
-                //Update ConfigMap
-                if (o.kind === 'ConfigMap' && o.metadata.name === 'argocd-cm') {
-                  o.data = {
-                    url: `https://${ingressConfig?.hostNames[0]}`,
-                    'oidc.config': interpolate`name: Azure\\nissuer: https://login.microsoftonline.com/${tenantId}/v2.0\\nclientID: ${identity.clientId}\\nclientSecret:$oidc.azure.clientSecret\\nrequestedIDTokenClaims:\\n   groups:\\n      essential: true\\nrequestedScopes:\\n   - openid\\n   - profile\\n   - email\\n`,
-                  };
-                }
-                //Update Secret
-                if (
-                  o.kind === 'Secret' &&
-                  o.metadata.name === 'argocd-secret'
-                ) {
-                  o.stringData['oidc.azure.clientSecret'] =
-                    identity.clientSecret;
-                }
-                //Update Roles
-                if (
-                  o.kind === 'ConfigMap' &&
-                  o.metadata.name === 'argocd-rbac-cm'
-                ) {
-                  o.stringData = {
-                    'policy.default': 'role:readonly',
-                    scopes: '[groups, email]',
-                    'policy.csv':
-                      'p, role:org-admin, applications, *, */*, allow\np, role:org-admin, clusters, get, *, allow\np, role:org-admin, repositories, get, *, allow\np, role:org-admin, repositories, create, *, allow\np, role:org-admin, repositories, update, *, allow\np, role:org-admin, repositories, delete, *, allow\ng, 84ce98d1-e359-4f3b-85af-985b458de3c6, role:org-admin\n',
-                  };
-                }
-              }
             });
-          }
+          } //end of deployment
+
+          //Map Azure AD Auth to argo server
+          if (identity && (o.kind === 'ConfigMap' || o.kind === 'Secret')) {
+            console.log(o);
+
+            //Update ConfigMap
+            if (o.metadata.name === 'argocd-cm') {
+              o.data = {
+                url: `https://${ingressConfig?.hostNames[0]}`,
+                'oidc.config': interpolate`name: Azure\\nissuer: https://login.microsoftonline.com/${tenantId}/v2.0\\nclientID: ${identity.clientId}\\nclientSecret:${identity.clientSecret}\\nrequestedIDTokenClaims:\\n   groups:\\n      essential: true\\nrequestedScopes:\\n   - openid\\n   - profile\\n   - email\\n`,
+              };
+            }
+
+            //Update Secret
+            // if (o.metadata.name === 'argocd-secret') {
+            //   o.stringData = {
+            //     'oidc.azure.clientSecret': identity.clientSecret,
+            //   };
+            // }
+
+            //Update Roles
+            if (o.metadata.name === 'argocd-rbac-cm') {
+              o.data = {
+                'policy.default': 'role:readonly',
+                scopes: '[groups, email]',
+                'policy.csv':
+                  'p, role:org-admin, applications, *, */*, allow\np, role:org-admin, clusters, get, *, allow\np, role:org-admin, repositories, get, *, allow\np, role:org-admin, repositories, create, *, allow\np, role:org-admin, repositories, update, *, allow\np, role:org-admin, repositories, delete, *, allow\ng, 84ce98d1-e359-4f3b-85af-985b458de3c6, role:org-admin\n',
+              };
+            }
+          } //end if identity
         },
       ],
     },
@@ -158,10 +158,8 @@ export default async ({
         spec: { ports: [{ name: 'https' }] },
       },
       ...others,
-      dependsOn: argo,
     };
 
     NginxIngress(ingressProps);
   }
-  return argo;
 };
