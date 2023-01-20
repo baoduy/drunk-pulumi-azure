@@ -1,0 +1,18 @@
+import { K8sArgs } from '../../../types';
+import * as k8s from '@pulumi/kubernetes';
+
+export default (props: K8sArgs) => {
+  const controller = new k8s.helm.v3.Chart(
+    'rancher-k3s-upgrader',
+    {
+      chart: 'rancher-k3s-upgrader',
+      version: '0.3.3',
+      fetchOpts: {
+        repo: 'https://github.com/rancher/system-charts/tree/release-v2.7/charts/rancher-k3s-upgrader/0.3.3',
+      },
+      skipAwait: true,
+      values: {},
+    },
+    props
+  );
+};

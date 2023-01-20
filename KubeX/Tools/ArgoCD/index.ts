@@ -29,6 +29,9 @@ interface Props extends K8sArgs {
   vaultInfo?: KeyVaultInfo;
 }
 
+//**
+// https://artifacthub.io/packages/helm/bitnami/argo-cd
+// */
 export default async ({
   name = 'argo-cd',
   namespace = 'argo-cd',
@@ -39,7 +42,7 @@ export default async ({
   ...others
 }: Props) => {
   const ns = Namespace({ name, ...others });
-
+  const url = `https://${ingressConfig?.hostName}`;
   const identity = auth?.enableAzureAD
     ? await identityCreator({
         name,
@@ -47,7 +50,7 @@ export default async ({
         createPrincipal: true,
         publicClient: false,
         allowImplicit: true,
-        replyUrls: [`https://${ingressConfig?.hostName}/argo-cd/auth/callback`],
+        replyUrls: [`${url}/argo-cd/auth/callback`],
         vaultInfo,
       })
     : undefined;
@@ -64,7 +67,16 @@ export default async ({
         global: {
           storageClass: storageClassName,
         },
-        rbac: { create: true },
+        config: {
+          secret: {
+            argocdServerAdminPassword: randomPassword({
+              name: `${name}-admin-password`,
+              policy: false,
+              length: 25,
+            }).result,
+          },
+        },
+
         // redis: {
         //   auth: {
         //     existingSecret: randomPassword({
@@ -73,16 +85,50 @@ export default async ({
         //     }).result,
         //   },
         // },
-        server: {},
+        rbac: { create: true },
+        //SSO
+        dex: {
+          image: { tag: 'v2.30.2' },
+          enabled: auth?.enableAzureAD,
+          // extraEnvVars: [
+          //   { name: 'ARGOCD_DEX_SERVER_DISABLE_TLS', value: 'true' },
+          // ],
+        },
+        server: {
+          url,
+          //DEX config
+          config: identity
+            ? {
+                'dex.config': interpolate`connectors:\n- type: microsoft\n  id: microsoft\n  name:  Azure AD\n  config:\n    clientID: ${identity.clientId}\n    clientSecret: ${identity.clientSecret}\n    redirectURI: ${url}/api/dex/callback\n    tenant: ${tenantId}\n    groups:\n      - AKS-Cluster-Admin\n`,
+              }
+            : undefined,
+
+          //Ingress
+          // ingress: ingressConfig
+          //   ? {
+          //       enabled: true,
+          //       hostname: ingressConfig.hostName,
+          //       ingressClassName: ingressConfig.className || 'nginx',
+          //     }
+          //   : undefined,
+        },
       },
+
       transformations: [
-        (o) => {
+        (o, op) => {
           if (o.kind === 'Secret') {
             if (o.metadata.name === 'argocd-secret') {
               o.data['server.secretkey'] = randomPassword({
                 name: `${name}-secretkey`,
                 policy: false,
               }).result.apply(toBase64);
+
+              if (identity)
+                o.data['oidc.azure.clientSecret'] =
+                  identity.clientSecret?.apply(toBase64);
+
+              //Ignore fields
+              op.ignoreChanges = ['admin.password', 'admin.passwordMtime'];
             }
 
             if (o.metadata.name === 'argo-cd-redis') {
