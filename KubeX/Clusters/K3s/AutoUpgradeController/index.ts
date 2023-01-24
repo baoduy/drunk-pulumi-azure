@@ -19,7 +19,7 @@ const createPlan = ({
   isServerPlan,
   ...others
 }: PlanProps) => {
-  new k8s.apiextensions.CustomResource(
+  return new k8s.apiextensions.CustomResource(
     name,
     {
       kind: 'Plan',
@@ -63,6 +63,7 @@ export default ({ enableWorkerPlan, ...others }: Props) => {
     {
       skipAwait: true,
       file: 'https://github.com/rancher/system-upgrade-controller/releases/latest/download/system-upgrade-controller.yaml',
+      transformations: [(o) => {}],
     },
     others
   );
