@@ -49,9 +49,11 @@ interface PodConfigProps {
   probes?: {
     liveness?: {
       httpGet: string;
+      port?: number;
       initialDelaySeconds?: number;
       periodSeconds?: number;
       timeoutSeconds?: number;
+      failureThreshold?: number;
     };
   };
 }
@@ -143,11 +145,12 @@ const buildPod = ({
                 podConfig.probes.liveness.initialDelaySeconds || 30,
               periodSeconds: podConfig.probes.liveness.periodSeconds || 300,
               timeoutSeconds: podConfig.probes.liveness.timeoutSeconds || 5,
+              failureThreshold: podConfig.probes.liveness.failureThreshold || 2,
 
               httpGet: podConfig.probes.liveness.httpGet
                 ? {
                     path: podConfig.probes.liveness.httpGet,
-                    port: podConfig.port!,
+                    port: podConfig.probes.liveness.port || podConfig.port!,
                   }
                 : undefined,
             }
@@ -262,7 +265,11 @@ export default async ({
   const deployment = new kx.Deployment(
     name,
     {
-      metadata: { namespace, annotations: { 'pulumi.com/skipAwait': 'true' } },
+      metadata: {
+        namespace,
+        annotations: { 'pulumi.com/skipAwait': 'true' },
+        labels: { app: name },
+      },
       spec: buildPod({
         name,
         podConfig,
