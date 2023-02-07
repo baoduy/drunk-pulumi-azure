@@ -21,12 +21,8 @@ export const createAxios = () => {
     if (!config.url || !config.url.startsWith("http")) {
       config.url = config.url!.includes("subscriptions")
         ? urlJoin("https://management.azure.com", config.url!)
-        : urlJoin(baseUrl!, config.url!);
+        : urlJoin(baseUrl, config.url!);
     }
-
-    if (!config.headers)
-      config.headers = { Authorization: token ? `Bearer ${token}` : "" };
-    else
       (config.headers as AxiosRequestHeaders).set(
         "Authorization",
         token ? `Bearer ${token}` : ""
