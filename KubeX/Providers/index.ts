@@ -9,5 +9,7 @@ interface Props extends Omit<DefaultK8sArgs, 'provider' | 'namespace'> {
 
 export const createProvider = ({ name, ...others }: Props) => {
   name = getK8sProviderName(name);
-  return new k8s.Provider(name, others);
+  return new k8s.Provider(name, {...others,
+      suppressDeprecationWarnings:true,
+      suppressHelmHookWarnings:true});
 };
