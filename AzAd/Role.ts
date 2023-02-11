@@ -26,7 +26,7 @@ export const getRoleName = ({
   moduleName,
   roleName,
 }: RoleNameType) => {
-  const e = env === Environments.Prd ? "prod" : "non-prd";
+  const e = env === Environments.Prd ? "prod" : "staging";
   return moduleName
     ? `ROL ${e} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
     : `ROL ${e} ${location} ${appName} ${roleName}`.toUpperCase();
