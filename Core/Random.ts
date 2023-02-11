@@ -31,35 +31,35 @@ export const randomPassword = ({
   policy = "yearly",
   options,
 }: Props) => {
-  let keepKey: string | undefined = undefined;
-  if (policy === "monthly") {
-    keepKey = `${new Date().getMonth()}.${new Date().getFullYear()}`;
-  } else if (policy === "yearly") {
-    keepKey = `-.${new Date().getFullYear()}`;
-  }
+  const keepKey =
+    policy === "monthly"
+      ? `${new Date().getMonth()}.${new Date().getFullYear()}`
+      : policy === "yearly"
+      ? `${new Date().getFullYear()}`
+      : "";
 
   name = getPasswordName(name, null);
 
   return new random.RandomPassword(name, {
-    keepers: keepKey ? { keepKey } : undefined,
+    keepers: { keepKey },
     length,
     lower: true,
-    minLower: 4,
+    //minLower: 4,
     upper: true,
     minUpper: 4,
     number: true,
     minNumeric: 4,
     special: true,
-    minSpecial: 4,
+    //minSpecial: 4,
     ...options,
-    //Exclude some special characters that are not accept4d by XML and SQLServer.
+    //Exclude some special characters that are not accepted by XML and SQLServer.
     overrideSpecial: "#%&*+-/:<>?^_|~",
   });
 };
 
 export const randomUuId = (name: string) => new random.RandomUuid(name);
 
-const randomString = (name: string, length: number = 5) =>
+const randomString = (name: string, length = 5) =>
   new random.RandomString(name, {
     length,
     number: true,
@@ -90,7 +90,7 @@ interface LoginProps extends UserNameProps {
   vaultInfo?: KeyVaultInfo;
 }
 
-export const randomSsh = async ({
+export const randomSsh = ({
   name,
   loginPrefix,
   maxUserNameLength,
