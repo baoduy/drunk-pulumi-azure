@@ -1,80 +1,54 @@
-import * as native from '@pulumi/azure-native';
-import { enums } from '@pulumi/azure-native/types';
-import * as azuread from '@pulumi/azuread';
-import { Input } from '@pulumi/pulumi';
-
-import GroupRole from '../AzAd/Role';
-import { currentEnv, currentServicePrincipal, defaultTags, subscriptionId, tenantId } from '../Common/AzureEnv';
-import { getKeyVaultName, getPrivateEndpointName } from '../Common/Naming';
-import { createDiagnostic } from '../Logs/Helpers';
-import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from '../types';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { BasicResourceArgs } from './../types.d';
-import { addCustomSecret } from './CustomHelper';
-import { addLegacyKey } from './LegacyHelper';
-import { grantVaultRbacPermission, KeyVaultAdminPolicy, KeyVaultReadOnlyPolicy, PermissionProps } from './VaultPermissions';
+import * as native from "@pulumi/azure-native";
+import { enums } from "@pulumi/azure-native/types";
+import { Input } from "@pulumi/pulumi";
+import { defaultTags, subscriptionId, tenantId } from "../Common/AzureEnv";
+import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
+import { createDiagnostic } from "../Logs/Helpers";
+import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from "../types";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import { BasicResourceArgs } from "../types";
+import { addCustomSecret } from "./CustomHelper";
+import { addLegacyKey } from "./LegacyHelper";
+import {
+  grantVaultRbacPermission,
+  KeyVaultAdminPolicy,
+  KeyVaultReadOnlyPolicy,
+  PermissionProps,
+} from "./VaultPermissions";
+import VaultAccess, { VaultAccessType } from "./VaultAccess";
 
 interface Props extends BasicResourceArgs {
   nameConvention?: ConventionProps | false;
-  enableRbac?: boolean;
   /**The default-encryption-key, tenant-id va subscription-id will be added to the secrets and keys*/
   createDefaultValues?: boolean;
-  permissions?: Array<PermissionProps>;
+
   network?: {
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
   };
+
+  /** The permission and principals that allows to be access to this Key Vault */
+  auth?: VaultAccessType;
 }
 
 export default async ({
   name,
   nameConvention,
   group,
-  enableRbac = true,
+  auth = { enableRbac: true, permissions: new Array<PermissionProps>() },
   createDefaultValues,
-  permissions = new Array<PermissionProps>(),
   network,
   ...others
 }: Props) => {
   const vaultName = getKeyVaultName(name, nameConvention);
 
-  //Permission Groups
-  const readOnlyGroup =await GroupRole({
-    env: currentEnv,
-    appName: `${name}-vault`,
-    roleName: "ReadOnly",
-  });
-  const adminGroup = await GroupRole({
-    env: currentEnv,
-    appName: `${name}-vault`,
-    roleName: "Admin",
-  });
-
-  //Add current service principal in
-  if (permissions.length <= 0) {
-    permissions.push({
-      objectId: currentServicePrincipal,
-      permission: "ReadWrite",
-    });
-  }
-
-  //Add Permission to Groups
-  permissions.forEach(
-    ({ objectId, applicationId, permission }, index) =>
-      new azuread.GroupMember(`${name}-${permission}-${index}`, {
-        groupObjectId:
-          permission === "ReadOnly"
-            ? readOnlyGroup.objectId
-            : adminGroup.objectId,
-        memberObjectId: objectId ?? applicationId,
-      })
-  );
+  const { readOnlyGroup, adminGroup } = await VaultAccess({ name, auth });
 
   const accessPolicies =
     new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();
 
   //Grant Access permission
-  if (!enableRbac) {
+  if (!auth.enableRbac) {
     accessPolicies.push({
       objectId: readOnlyGroup.objectId,
       tenantId,
@@ -97,8 +71,8 @@ export default async ({
       sku: { name: "standard", family: "A" },
       createMode: "default",
 
-      enableRbacAuthorization: enableRbac,
-      accessPolicies: !enableRbac ? accessPolicies : undefined,
+      enableRbacAuthorization: auth.enableRbac,
+      accessPolicies: !auth.enableRbac ? accessPolicies : undefined,
 
       enablePurgeProtection: true,
       enableSoftDelete: true,
@@ -130,7 +104,7 @@ export default async ({
   });
 
   //Grant RBAC permission
-  if (enableRbac && permissions) {
+  if (auth.enableRbac && auth.permissions) {
     await grantVaultRbacPermission({
       name: `${name}-ReadOnlyGroup`,
       scope: resource.id,

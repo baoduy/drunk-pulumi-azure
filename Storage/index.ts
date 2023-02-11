@@ -109,9 +109,8 @@ export default ({
 
     kind: storage.Kind.StorageV2,
     sku: {
-      name:
-        !featureFlags.enableStaticWebsite && isPrd
-          ? storage.SkuName.Standard_ZRS
+      name: isPrd
+          ? storage.SkuName.Standard_ZRS  //Zone redundant in PRD
           : storage.SkuName.Standard_LRS,
     },
     accessTier: "Hot",

@@ -16,5 +16,8 @@ There are two ways to config your organization code.
 ## Private Link Dns Name
 https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-dns
 
+## Azure Resources Support Zone Redundant
+https://learn.microsoft.com/en-us/azure/reliability/availability-zones-service-support
+
 ## Upgrading Issues
 Azure AD Application: https://github.com/pulumi/pulumi-azuread/issues/185#issuecomment-982414862

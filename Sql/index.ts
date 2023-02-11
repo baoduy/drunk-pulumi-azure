@@ -1,18 +1,29 @@
-import * as sql from '@pulumi/azure-native/sql';
-import * as azuread from '@pulumi/azuread';
-import { all, Input, interpolate, Output } from '@pulumi/pulumi';
+import * as sql from "@pulumi/azure-native/sql";
+import * as azuread from "@pulumi/azuread";
+import { all, Input, interpolate, Output } from "@pulumi/pulumi";
 
-import roleCreator from '../AzAd/Role';
-import { roleAssignment } from '../AzAd/RoleAssignment';
-import { currentEnv, defaultTags, isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
-import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import { randomLogin } from '../Core/Random';
-import { addSecret } from '../KeyVault/Helper';
-import { BasicResourceArgs, BasicResourceResultProps, KeyVaultInfo, PrivateLinkProps } from '../types';
-import { convertToIpRange } from '../VNet/Helper';
-import privateEndpointCreator from '../VNet/PrivateEndpoint';
-import sqlDbCreator, { SqlDbProps } from './SqlDb';
+import { roleAssignment } from "../AzAd/RoleAssignment";
+import {
+  defaultTags,
+  isPrd,
+  subscriptionId,
+  tenantId,
+} from "../Common/AzureEnv";
+import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { randomLogin } from "../Core/Random";
+import { addSecret } from "../KeyVault/Helper";
+import {
+  BasicResourceArgs,
+  BasicResourceResultProps,
+  KeyVaultInfo,
+  PrivateLinkProps,
+} from "../types";
+import { convertToIpRange } from "../VNet/Helper";
+import privateEndpointCreator from "../VNet/PrivateEndpoint";
+import sqlDbCreator, { SqlDbProps } from "./SqlDb";
+import { getAdGroup } from "../AzAd/Group";
+import { envRoleNames } from "../AzAd/EnvRoles";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -68,7 +79,7 @@ interface Props extends BasicResourceArgs {
 
   /** if Auth is not provided it will be auto generated */
   auth?: {
-    /** create a Admin group on AzAD for SQL accessing.*/
+    /** create an Admin group on AzAD for SQL accessing.*/
     enableAdAdministrator: boolean;
     adminLogin: Input<string>;
     password: Input<string>;
@@ -111,13 +122,7 @@ export default async ({
   network,
   vulnerabilityAssessment,
   lock = true,
-}: Props): Promise<
-  BasicResourceResultProps<sql.Server> & {
-    elasticPool?: BasicResourceResultProps<sql.ElasticPool>;
-    databases?: Array<BasicResourceResultProps<sql.Database>>;
-    adminGroup?: azuread.Group;
-  }
-> => {
+}: Props) => {
   const sqlName = getSqlServerName(name);
 
   if (vaultInfo && !auth) {
@@ -130,11 +135,7 @@ export default async ({
   }
 
   const adminGroup = auth?.enableAdAdministrator
-    ? await roleCreator({
-        env: currentEnv,
-        appName: name,
-        roleName: "Db-Admin",
-      })
+    ? await getAdGroup(envRoleNames.admin)
     : undefined;
 
   const sqlServer = new sql.Server(sqlName, {

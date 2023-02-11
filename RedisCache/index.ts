@@ -7,6 +7,7 @@ import { ToWords } from "to-words";
 import { convertToIpRange } from "../VNet/Helper";
 import { getRedisCacheName } from "../Common/Naming";
 import { addLegacySecret } from "../KeyVault/LegacyHelper";
+import {isPrd} from "../Common/AzureEnv";
 
 const toWord = new ToWords();
 
@@ -29,6 +30,7 @@ export default ({
     ...group,
     minimumTlsVersion: "1.2",
     sku,
+    zones:isPrd && sku.name === 'Premium' ?['1','2','3'] : undefined
   });
 
   // new native.cache.PatchSchedule(

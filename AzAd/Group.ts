@@ -1,8 +1,8 @@
-import * as azuread from '@pulumi/azuread';
-import { Input, Output } from '@pulumi/pulumi';
+import * as azuread from "@pulumi/azuread";
+import { Input, Output } from "@pulumi/pulumi";
 
-import { defaultScope } from '../Common/AzureEnv';
-import { roleAssignment } from './RoleAssignment';
+import { defaultScope } from "../Common/AzureEnv";
+import { roleAssignment } from "./RoleAssignment";
 
 export interface GroupPermissionProps {
   /** The name of the roles would like to assign to this group*/
@@ -19,7 +19,7 @@ interface AdGroupProps {
   permissions?: Array<GroupPermissionProps>;
 }
 
-export default async({ name, permissions, members, owners }: AdGroupProps) => {
+export default async ({ name, permissions, members, owners }: AdGroupProps) => {
   const group = new azuread.Group(name, {
     displayName: name,
     externalSendersAllowed: false,
@@ -57,6 +57,9 @@ export default async({ name, permissions, members, owners }: AdGroupProps) => {
   return group;
 };
 
+export const getAdGroup = (displayName: string) =>
+  azuread.getGroup({ displayName });
+
 export const addUserToGroup = async ({
   name,
   userName,
@@ -87,7 +90,7 @@ export const addGroupToGroup = async (
   groupMemberName: string,
   groupObjectId: Output<string>
 ) => {
-  const group = await azuread.getGroup({ displayName: groupMemberName });
+  const group = await getAdGroup(groupMemberName);
 
   return groupObjectId.apply(
     (g) =>
@@ -107,7 +110,7 @@ export const assignRolesToGroup = async ({
   roles: Array<string>;
   scope?: Input<string>;
 }) => {
-  const group = await azuread.getGroup({ displayName: groupName });
+  const group = await getAdGroup(groupName);
 
   await Promise.all(
     roles.map((p) =>

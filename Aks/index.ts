@@ -15,14 +15,14 @@ import {
 } from "../Common/AzureEnv";
 import Locker from "../Core/Locker";
 import aksIdentityCreator from "./Identity";
-import roleCreator from "../AzAd/Role";
 import { stack } from "../Common/StackEnv";
 import { createDiagnostic } from "../Logs/Helpers";
 import { getAksName } from "../Common/Naming";
 import PrivateDns from "../VNet/PrivateDns";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
-import * as console from "console";
 import { roleAssignment } from "../AzAd/RoleAssignment";
+import { getAdGroup } from "../AzAd/Group";
+import { envRoleNames } from "../AzAd/EnvRoles";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -222,14 +222,7 @@ export default async ({
 
   const adminGroup =
     typeof aksAccess.enableAzureRBAC === "object"
-      ? await roleCreator({
-          env: currentEnv,
-          appName: name,
-          roleName: "Aks-Admin",
-          members: aksAccess.enableAzureRBAC.adminMembers.map(
-            (m) => m.objectId
-          ),
-        })
+      ? await getAdGroup(envRoleNames.contributor)
       : undefined;
 
   //=================Validate ===================================/

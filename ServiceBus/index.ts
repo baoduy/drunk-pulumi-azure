@@ -1,6 +1,6 @@
-import * as bus from '@pulumi/azure-native/servicebus';
-import * as pulumi from '@pulumi/pulumi';
-import { Input } from '@pulumi/pulumi';
+import * as bus from "@pulumi/azure-native/servicebus";
+import * as pulumi from "@pulumi/pulumi";
+import { Input } from "@pulumi/pulumi";
 
 import {
   BasicMonitorArgs,
@@ -11,7 +11,7 @@ import {
   PrivateLinkProps,
   ResourceGroupInfo,
   ResourceResultProps,
-} from '../types';
+} from "../types";
 import {
   BusConnectionTypes,
   getNamespaceVaultName,
@@ -19,25 +19,25 @@ import {
   getSubscriptionName,
   getTopicName,
   getTopicOrQueueVaultName,
-} from './ServiceBusHelper';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
-import creator from '../Core/ResourceCreator';
-import { getPrivateEndpointName, getServiceBusName } from '../Common/Naming';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import Locker from '../Core/Locker';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+} from "./ServiceBusHelper";
+import { defaultTags, isPrd } from "../Common/AzureEnv";
+import creator from "../Core/ResourceCreator";
+import { getPrivateEndpointName, getServiceBusName } from "../Common/Naming";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import Locker from "../Core/Locker";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
-type TransportTypes = 'AmqpWebSockets' | 'Amqp';
-const duplicateDetectedTime = isPrd ? 'P3D' : 'PT10M';
+type TransportTypes = "AmqpWebSockets" | "Amqp";
+const duplicateDetectedTime = isPrd ? "P3D" : "PT10M";
 
 const defaultValues = {
   maxDeliveryCount: 10,
   enableBatchedOperations: true,
-  defaultMessageTtl: isPrd ? 'P30D' : 'P1D',
+  defaultMessageTtl: isPrd ? "P30D" : "P1D",
   deadLetteringOnMessageExpiration: true,
   //Auto delete subscription after 30 idle.
-  autoDeleteOnIdle: 'P30D',
-  lockDuration: 'PT2M',
+  autoDeleteOnIdle: "P30D",
+  lockDuration: "PT2M",
   //enableExpress: true, this and requiresDuplicateDetection are not able to enabled together
 };
 
@@ -59,7 +59,7 @@ const createAndStoreConnection = async ({
   topicName,
   queueName,
   connectionType,
-  transportType = 'AmqpWebSockets',
+  transportType = "AmqpWebSockets",
   resourceGroupName,
   removeEntityPath,
   vaultInfo,
@@ -68,7 +68,7 @@ const createAndStoreConnection = async ({
   const name = topicName || queueName;
   const key = name
     ? getTopicOrQueueVaultName({
-        fullName: topicName || queueName || '',
+        fullName: topicName || queueName || "",
         namespaceFullName: namespaceName,
         connectionType,
       })
@@ -153,7 +153,7 @@ const createAndStoreConnection = async ({
       name: `${key}-primary`,
       value:
         (removeEntityPath
-          ? keys.primaryConnectionString.replace(`;EntityPath=${name}`, '')
+          ? keys.primaryConnectionString.replace(`;EntityPath=${name}`, "")
           : keys.primaryConnectionString) + `;TransportType=${transportType};`,
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${topicName || queueName}`,
@@ -164,7 +164,7 @@ const createAndStoreConnection = async ({
       name: `${key}-secondary`,
       value:
         (removeEntityPath
-          ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, '')
+          ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, "")
           : keys.primaryConnectionString) + `;TransportType=${transportType};`,
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${topicName || queueName}`,
@@ -176,7 +176,7 @@ const createAndStoreConnection = async ({
 };
 
 interface TopicProps
-  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'> {
+  extends Pick<ConnCreatorProps, "removeEntityPath" | "transportType"> {
   shortName: string;
   namespaceFullName: string;
   version: number;
@@ -334,7 +334,7 @@ const subscriptionCreator = ({
 };
 
 interface QueueProps
-  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'> {
+  extends Pick<ConnCreatorProps, "removeEntityPath" | "transportType"> {
   shortName: string;
   version: number;
   namespaceFullName: string;
@@ -420,13 +420,18 @@ const queueCreator = async ({
 
 interface Props
   extends BasicResourceArgs,
-    Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'> {
+    Pick<ConnCreatorProps, "removeEntityPath" | "transportType"> {
   topics?: Array<
-    Omit<TopicProps, 'group' | 'namespaceFullName' | 'vaultInfo' | 'dependsOn'>
+    Omit<TopicProps, "group" | "namespaceFullName" | "vaultInfo" | "dependsOn">
   >;
   queues?: Array<
-    Omit<QueueProps, 'group' | 'namespaceFullName' | 'vaultInfo' | 'dependsOn'>
+    Omit<QueueProps, "group" | "namespaceFullName" | "vaultInfo" | "dependsOn">
   >;
+  drConfig?: {
+    alias?: pulumi.Input<string>;
+    alternateName: pulumi.Input<string>;
+    partnerNamespace: pulumi.Input<string>;
+  };
   network?: {
     whitelistIps?: Array<Input<string>>;
     enablePrivateLink?: boolean;
@@ -444,6 +449,7 @@ export default async ({
   group,
   topics,
   queues,
+  drConfig,
   network = {},
   vaultInfo,
   createNamespaceConnections,
@@ -465,13 +471,22 @@ export default async ({
 
     tags: defaultTags,
     ...others,
+
     monitoring: {
       ...monitoring,
-      logsCategories: ['OperationalLogs'],
+      logsCategories: ["OperationalLogs"],
     },
   } as bus.NamespaceArgs & DefaultResourceArgs);
 
   const namespace = resource as bus.Namespace;
+
+  if (drConfig && sku === bus.SkuName.Premium) {
+    new bus.DisasterRecoveryConfig(name, {
+      namespaceName: namespace.name,
+      resourceGroupName: group.resourceGroupName,
+      ...drConfig,
+    });
+  }
 
   //Create Keys
   if (vaultInfo && createNamespaceConnections) {
@@ -547,7 +562,7 @@ export default async ({
       new bus.NamespaceNetworkRuleSet(name, {
         namespaceName: namespace.name,
         ...group,
-        defaultAction: 'Deny',
+        defaultAction: "Deny",
 
         ipRules: network.whitelistIps
           ? network.whitelistIps.map((i) => ({
@@ -572,8 +587,8 @@ export default async ({
         subnetId: network.subnetId!,
         useGlobalDnsZone: network.useGlobalDnsZone,
         resourceId: namespace.id,
-        linkServiceGroupIds: ['namespace'],
-        privateDnsZoneName: 'privatelink.servicebus.windows.net',
+        linkServiceGroupIds: ["namespace"],
+        privateDnsZoneName: "privatelink.servicebus.windows.net",
       });
     }
   }
