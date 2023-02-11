@@ -1,16 +1,16 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as random from '@pulumi/random';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { KeyVaultInfo } from '../types';
-import { SshKeyResource } from '../CustomProviders/SshKeyGenerator';
-import { addLegacySecret } from '../KeyVault/LegacyHelper';
-import { getSecret } from '../KeyVault/Helper';
-import { getPasswordName, getSshName } from '../Common/Naming';
-import { Output } from '@pulumi/pulumi';
+import * as pulumi from "@pulumi/pulumi";
+import * as random from "@pulumi/random";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { KeyVaultInfo } from "../types";
+import { SshKeyResource } from "../CustomProviders/SshKeyGenerator";
+import { addLegacySecret } from "../KeyVault/LegacyHelper";
+import { getSecret } from "../KeyVault/Helper";
+import { getPasswordName, getSshName } from "../Common/Naming";
+import { Output } from "@pulumi/pulumi";
 
 interface Props {
   name: string;
-  policy?: 'monthly' | 'yearly' | false;
+  policy?: "monthly" | "yearly" | false;
   length?: number;
   options?: {
     lower?: boolean;
@@ -28,20 +28,20 @@ interface Props {
 export const randomPassword = ({
   length = 50,
   name,
-  policy = 'yearly',
+  policy = "yearly",
   options,
 }: Props) => {
   let keepKey: string | undefined = undefined;
-  if (policy === 'monthly') {
+  if (policy === "monthly") {
     keepKey = `${new Date().getMonth()}.${new Date().getFullYear()}`;
-  } else if (policy === 'yearly') {
+  } else if (policy === "yearly") {
     keepKey = `-.${new Date().getFullYear()}`;
   }
 
   name = getPasswordName(name, null);
 
   return new random.RandomPassword(name, {
-    keepers: { keepKey },
+    keepers: keepKey ? { keepKey } : undefined,
     length,
     lower: true,
     minLower: 4,
@@ -53,7 +53,7 @@ export const randomPassword = ({
     minSpecial: 4,
     ...options,
     //Exclude some special characters that are not accept4d by XML and SQLServer.
-    overrideSpecial: '#%&*+-/:<>?^_|~',
+    overrideSpecial: "#%&*+-/:<>?^_|~",
   });
 };
 
@@ -76,7 +76,7 @@ interface UserNameProps {
 
 const randomUserName = ({
   name,
-  loginPrefix = 'admin',
+  loginPrefix = "admin",
   maxUserNameLength = 15,
 }: UserNameProps): Output<string> => {
   const rd = randomString(name, 5);
@@ -86,7 +86,7 @@ const randomUserName = ({
 };
 
 interface LoginProps extends UserNameProps {
-  passwordPolicy?: 'monthly' | 'yearly' | false;
+  passwordPolicy?: "monthly" | "yearly" | false;
   vaultInfo?: KeyVaultInfo;
 }
 
@@ -122,14 +122,14 @@ export const randomSsh = async ({
     name: userNameKey,
     value: userName,
     vaultInfo,
-    contentType: 'Random Ssh',
+    contentType: "Random Ssh",
   });
 
   addCustomSecret({
     name: passwordKeyName,
     value: pass.result,
     vaultInfo,
-    contentType: 'Random Ssh',
+    contentType: "Random Ssh",
     dependsOn: rs,
   });
 
@@ -151,7 +151,7 @@ export const randomLogin = async ({
   name,
   loginPrefix,
   maxUserNameLength,
-  passwordPolicy = 'yearly',
+  passwordPolicy = "yearly",
   vaultInfo,
 }: LoginProps) => {
   const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
@@ -165,14 +165,14 @@ export const randomLogin = async ({
       name: userNameKey,
       value: userName,
       vaultInfo,
-      contentType: 'Random Login',
+      contentType: "Random Login",
     });
 
     await addLegacySecret({
       name: passwordKey,
       value: password,
       vaultInfo,
-      contentType: 'Random Login',
+      contentType: "Random Login",
     });
   }
 
