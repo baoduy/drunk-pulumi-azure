@@ -1,7 +1,8 @@
 import * as sql from "@pulumi/azure-native/sql";
-import * as azuread from "@pulumi/azuread";
 import { all, Input, interpolate, Output } from "@pulumi/pulumi";
 
+import { envRoleNames } from "../AzAd/EnvRoles";
+import { getAdGroup } from "../AzAd/Group";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import {
   defaultTags,
@@ -22,8 +23,6 @@ import {
 import { convertToIpRange } from "../VNet/Helper";
 import privateEndpointCreator from "../VNet/PrivateEndpoint";
 import sqlDbCreator, { SqlDbProps } from "./SqlDb";
-import { getAdGroup } from "../AzAd/Group";
-import { envRoleNames } from "../AzAd/EnvRoles";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -138,36 +137,40 @@ export default async ({
     ? await getAdGroup(envRoleNames.admin)
     : undefined;
 
-  const sqlServer = new sql.Server(sqlName, {
-    serverName: sqlName,
-    ...group,
-    version: "12.0",
-    minimalTlsVersion: "1.2",
+  const sqlServer = new sql.Server(
+    sqlName,
+    {
+      serverName: sqlName,
+      ...group,
+      version: "12.0",
+      minimalTlsVersion: "1.2",
 
-    identity: { type: "SystemAssigned" },
+      identity: { type: "SystemAssigned" },
 
-    administratorLogin: auth?.adminLogin,
-    administratorLoginPassword: auth?.password,
+      administratorLogin: auth?.adminLogin,
+      administratorLoginPassword: auth?.password,
 
-    administrators:
-      auth?.enableAdAdministrator && adminGroup
-        ? {
-            administratorType: sql.AdministratorType.ActiveDirectory,
-            azureADOnlyAuthentication: !auth?.adminLogin,
+      administrators:
+        auth?.enableAdAdministrator && adminGroup
+          ? {
+              administratorType: sql.AdministratorType.ActiveDirectory,
+              azureADOnlyAuthentication: !auth?.adminLogin,
 
-            principalType: sql.PrincipalType.Group,
-            tenantId,
-            sid: adminGroup.id,
-            login: `${name}Admin`,
-          }
-        : undefined,
+              principalType: sql.PrincipalType.Group,
+              tenantId,
+              sid: adminGroup.id,
+              login: `${name}Admin`,
+            }
+          : undefined,
 
-    publicNetworkAccess: network?.privateLink
-      ? sql.ServerPublicNetworkAccess.Disabled
-      : sql.ServerPublicNetworkAccess.Enabled,
+      publicNetworkAccess: network?.privateLink
+        ? sql.ServerPublicNetworkAccess.Disabled
+        : sql.ServerPublicNetworkAccess.Enabled,
 
-    tags: defaultTags,
-  });
+      tags: defaultTags,
+    },
+    { ignoreChanges: ["administratorLogin"] }
+  );
 
   if (lock) {
     Locker({ name: sqlName, resourceId: sqlServer.id, dependsOn: sqlServer });

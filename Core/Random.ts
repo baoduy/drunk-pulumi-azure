@@ -81,7 +81,7 @@ const randomUserName = ({
   loginPrefix = "admin",
   maxUserNameLength = 15,
 }: UserNameProps): Output<string> => {
-  const rd = randomString(name, 5);
+  const rd = randomString(name);
   return rd.result.apply((r) =>
     `${loginPrefix}${name}${r}`.substring(0, maxUserNameLength)
   );
