@@ -1,12 +1,12 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as random from "@pulumi/random";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { KeyVaultInfo } from "../types";
-import { SshKeyResource } from "../CustomProviders/SshKeyGenerator";
-import { addLegacySecret } from "../KeyVault/LegacyHelper";
-import { getSecret } from "../KeyVault/Helper";
-import { getPasswordName, getSshName } from "../Common/Naming";
-import { Output } from "@pulumi/pulumi";
+import { Output } from '@pulumi/pulumi';
+import * as random from '@pulumi/random';
+
+import { getPasswordName, getSshName } from '../Common/Naming';
+import { SshKeyResource } from '../CustomProviders/SshKeyGenerator';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { getSecret } from '../KeyVault/Helper';
+import { addLegacySecret } from '../KeyVault/LegacyHelper';
+import { KeyVaultInfo } from '../types';
 
 interface Props {
   name: string;
@@ -31,6 +31,8 @@ export const randomPassword = ({
   policy = "yearly",
   options,
 }: Props) => {
+  if(length<10)length = 10;
+  
   const keepKey =
     policy === "monthly"
       ? `${new Date().getMonth()}.${new Date().getFullYear()}`
@@ -44,13 +46,13 @@ export const randomPassword = ({
     keepers: { keepKey },
     length,
     lower: true,
-    //minLower: 4,
+    minLower: 2,
     upper: true,
-    minUpper: 4,
+    minUpper: 2,
     number: true,
-    minNumeric: 4,
+    minNumeric: 2,
     special: true,
-    //minSpecial: 4,
+    minSpecial: 2,
     ...options,
     //Exclude some special characters that are not accepted by XML and SQLServer.
     overrideSpecial: "#%&*+-/:<>?^_|~",
