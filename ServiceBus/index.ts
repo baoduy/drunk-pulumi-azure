@@ -184,6 +184,7 @@ interface TopicProps
   group: ResourceGroupInfo;
   //The short name of subscription ex 'sub1' the full name is 'sub1-topic1' the name of topic will be added as suffix.
   subscriptions?: Array<{ shortName: string; enableSession?: boolean }>;
+  createConnections?: boolean;
   lock?: boolean;
   dependsOn?:
     | pulumi.Input<pulumi.Resource>
@@ -193,7 +194,6 @@ interface TopicProps
 interface TopicResultProps {
   name: string;
   topic: bus.Topic;
-  createConnections?:boolean;
   subs?: Array<BasicResourceResultProps<bus.Subscription>>;
 }
 
