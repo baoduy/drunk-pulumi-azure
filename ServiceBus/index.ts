@@ -193,6 +193,7 @@ interface TopicProps
 interface TopicResultProps {
   name: string;
   topic: bus.Topic;
+  createConnections?:boolean;
   subs?: Array<BasicResourceResultProps<bus.Subscription>>;
 }
 
@@ -204,6 +205,7 @@ const topicCreator = async ({
   shortName,
   vaultInfo,
   version,
+  createConnections,
   lock = true,
   dependsOn,
   ...others
@@ -231,7 +233,7 @@ const topicCreator = async ({
     Locker({ name: topicName, resourceId: topic.id, dependsOn: topic });
   }
 
-  if (vaultInfo) {
+  if (vaultInfo && createConnections) {
     //Send Key
     await createAndStoreConnection({
       topicName,
