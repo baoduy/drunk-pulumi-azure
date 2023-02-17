@@ -11,7 +11,7 @@ interface Props extends Omit<DefaultK8sArgs, "namespace"> {
   quota?: ResourceQuotaSpec;
 }
 
-export default ({ name, labels, quota, provider }: Props) => {
+export default ({ name, labels, quota, provider,dependsOn }: Props) => {
   labels = labels || {};
 
   const ns = new k8s.core.v1.Namespace(
@@ -26,7 +26,7 @@ export default ({ name, labels, quota, provider }: Props) => {
         },
       },
     },
-    { provider }
+    {provider, dependsOn}
   );
 
   if (quota) {
