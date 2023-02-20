@@ -1,77 +1,131 @@
-import * as k8s from "@pulumi/kubernetes";
-import { Input } from "@pulumi/pulumi";
-import { getKubeDomainCert } from "./Helpers";
-import { getTlsName } from "./CertHelper";
-import fs from "fs";
+import * as k8s from '@pulumi/kubernetes';
+import { Input } from '@pulumi/pulumi';
+import { getKubeDomainCert } from './Helpers';
+import { convertPfxToPem, getTlsName } from './CertHelper';
+import fs from 'fs';
+import { KeyVaultInfo } from '../types';
+import { getSecret } from '../KeyVault/Helper';
+import { K8sArgs } from './types';
 
-interface FromCertOrderProps {
+interface FromCertOrderProps extends K8sArgs {
   namespaces: Input<string>[];
-  domainName: string;
-  provider: k8s.Provider;
+  /** The cert name or domain name */
+  certName: string;
 }
 
 /** Import Cert to K8s from Azure Cert Order*/
 export const certImportFromCertOrder = async ({
   namespaces,
-  domainName,
-  provider,
+  certName,
+  ...others
 }: FromCertOrderProps) => {
-  const cert = await getKubeDomainCert(domainName);
+  const cert = await getKubeDomainCert(certName);
   if (!cert) return;
 
-  const name = getTlsName(domainName, false);
-  namespaces.map((n, i) => {
-    return new k8s.core.v1.Secret(
-      `${name}-${i}`,
-      {
-        metadata: {
-          name,
-          namespace: n,
+  const name = getTlsName(certName, false);
+  namespaces.map(
+    (n, i) =>
+      new k8s.core.v1.Secret(
+        `${name}-${i}`,
+        {
+          metadata: {
+            name,
+            namespace: n,
+          },
+          type: 'kubernetes.io/tls',
+          stringData: {
+            'tls.crt': cert.cert + cert.ca,
+            'tls.key': cert.key,
+          },
         },
-        type: "kubernetes.io/tls",
-        stringData: {
-          "tls.crt": cert.cert + cert.ca,
-          "tls.key": cert.key,
-        },
-      },
-      { provider }
-    );
-  });
+        others
+      )
+  );
 };
 
 const getCertFromFolder = (folder: string) => {
-  const cert = fs.readFileSync(`./${folder}/cert.cert`, { encoding: "utf8" });
-  const ca = fs.readFileSync(`./${folder}/ca.cert`, { encoding: "utf8" });
-  const key = fs.readFileSync(`./${folder}/key.cert`, { encoding: "utf8" });
+  const cert = fs.readFileSync(`./${folder}/cert.cert`, { encoding: 'utf8' });
+  const ca = fs.readFileSync(`./${folder}/ca.cert`, { encoding: 'utf8' });
+  const key = fs.readFileSync(`./${folder}/key.cert`, { encoding: 'utf8' });
 
   return { cert, ca, key };
 };
 
 export const certImportFromFolder = ({
-  domainName,
+  certName,
   namespaces,
   certFolder,
-  provider,
+  ...others
 }: FromCertOrderProps & { certFolder: string }) => {
   const cert = getCertFromFolder(certFolder);
   if (!cert) return;
 
-  const name = getTlsName(domainName, false);
-  namespaces.map((n, i) => {
-    return new k8s.core.v1.Secret(
-      `${name}-${i}`,
-      {
-        metadata: {
-          name,
-          namespace: n,
+  const name = getTlsName(certName, false);
+  namespaces.map(
+    (n, i) =>
+      new k8s.core.v1.Secret(
+        `${name}-${i}`,
+        {
+          metadata: {
+            name,
+            namespace: n,
+          },
+          type: 'kubernetes.io/tls',
+          stringData: {
+            'tls.crt': cert.cert + cert.ca,
+            'tls.key': cert.key,
+          },
         },
-        type: "kubernetes.io/tls",
-        stringData: {
-          "tls.crt": cert.cert + cert.ca,
-          "tls.key": cert.key,
-        },
-      },
-      { provider }
-    );
-  });
+        others
+      )
+  );
+};
+
+interface ImportCertFromVaultProps extends K8sArgs {
+  certNames: string[];
+  namespace: Input<string>;
+  vaultInfo: KeyVaultInfo;
+}
+
+export const certImportFromVault = async ({
+  certNames,
+  namespace,
+  vaultInfo,
+  ...others
+}: ImportCertFromVaultProps) => {
+  await Promise.all(
+    certNames.map(async (c, i) => {
+      const cert = await getSecret({
+        name: c,
+        nameFormatted: false,
+        vaultInfo,
+      });
+
+      const pems = cert?.value
+        ? convertPfxToPem({
+            pfxBase64: cert.value,
+            password: '',
+            includeAll: false,
+          })
+        : undefined;
+
+      if (pems) {
+        new k8s.core.v1.Secret(
+          `${c}-${i}`,
+          {
+            metadata: {
+              name: c,
+              namespace,
+            },
+            type: 'kubernetes.io/tls',
+            stringData: {
+              'tls.crt': pems.cert + pems.ca,
+              'tls.key': pems.key,
+            },
+          },
+          others
+        );
+      }
+    })
+  );
 };
