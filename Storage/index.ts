@@ -58,9 +58,11 @@ interface StorageProps extends BasicResourceArgs {
   };
 
   policies?: {
-    keyExpirationPeriodInDays?: Input<number>;
-    blobSoftDeleteDays?: Input<number>;
-    containerSoftDeleteDays?: Input<number>;
+    keyExpirationPeriodInDays?: number;
+    isBlobVersioningEnabled?: boolean;
+    blobSoftDeleteDays?: number;
+    containerSoftDeleteDays?: number;
+    fileShareSoftDeleteDays?: number;
   };
 
   firewall?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
@@ -178,7 +180,25 @@ export default ({
     tags: defaultTags,
   });
 
-  //Blob Policy
+  //Soft Delete
+  if(policies){
+    new storage.BlobServiceProperties(`${name}-Blob-Props`,{
+      accountName:stg.name,
+      ...group,
+
+      deleteRetentionPolicy:{enabled:policies.blobSoftDeleteDays>0,days:policies.blobSoftDeleteDays},
+      isVersioningEnabled: policies.isBlobVersioningEnabled,
+    });
+
+    new storage.FileServiceProperties(`${name}-File-Props`,{
+      accountName:stg.name,
+      ...group,
+
+      shareDeleteRetentionPolicy:{enabled:policies.fileShareSoftDeleteDays>0,days:policies.fileShareSoftDeleteDays},
+    });
+  }
+
+  //Life Cycle Management
   if (defaultManagementRules) {
     createManagementRules({
       name,

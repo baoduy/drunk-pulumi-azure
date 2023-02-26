@@ -1,35 +1,38 @@
-import { currentEnv } from "../Common/AzureEnv";
-import Role, { getRoleName, RoleNameType } from "./Role";
+import { currentEnv } from '../Common/AzureEnv';
+import Role, { getRoleName, RoleNameType } from './Role';
 
 const envRoleConfig = {
   readOnly: {
     env: currentEnv,
-    roleName: "Readonly",
-    appName: "Azure",
+    roleName: 'Readonly',
+    appName: 'Azure',
   } as RoleNameType,
   contributor: {
     env: currentEnv,
-    roleName: "Contributor",
-    appName: "Azure",
+    roleName: 'Contributor',
+    appName: 'Azure',
   } as RoleNameType,
   admin: {
     env: currentEnv,
-    roleName: "Admin",
-    appName: "Azure",
+    roleName: 'Admin',
+    appName: 'Azure',
   } as RoleNameType,
 };
 
-export const envRoleNames = {
-  readOnly: getRoleName(envRoleConfig.readOnly),
-  contributor: getRoleName(envRoleConfig.contributor),
-  admin: getRoleName(envRoleConfig.admin),
-};
+export const getEnvRoleNames = (includeOrganization = false) => ({
+  readOnly: getRoleName({ ...envRoleConfig.readOnly, includeOrganization }),
+  contributor: getRoleName({
+    ...envRoleConfig.contributor,
+    includeOrganization,
+  }),
+  admin: getRoleName({ ...envRoleConfig.admin, includeOrganization }),
+});
 
-export default async () => {
+export default async (includeOrganization = false) => {
   //ReadOnly
-  await Role(envRoleConfig.readOnly);
+  await Role({ ...envRoleConfig.readOnly, includeOrganization });
   //Contributor
-  await Role(envRoleConfig.contributor);
+  await Role({ ...envRoleConfig.contributor, includeOrganization });
   //Admin
-  await Role(envRoleConfig.admin);
+  await Role({ ...envRoleConfig.admin, includeOrganization });
 };

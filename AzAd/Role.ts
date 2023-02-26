@@ -1,6 +1,7 @@
-import adGroupCreator, { GroupPermissionProps } from "./Group";
-import { Environments } from "../Common/AzureEnv";
-import { Input } from "@pulumi/pulumi";
+import adGroupCreator, { GroupPermissionProps } from './Group';
+import { Environments } from '../Common/AzureEnv';
+import { Input } from '@pulumi/pulumi';
+import { organization } from '../Common/StackEnv';
 
 interface RoleProps {
   env: Environments;
@@ -12,24 +13,35 @@ interface RoleProps {
   members?: Input<string>[];
   owners?: Input<Input<string>[]>;
   permissions?: Array<GroupPermissionProps>;
+
+  includeOrganization?: boolean;
 }
 
 export type RoleNameType = Pick<
   RoleProps,
-  "env" | "location" | "appName" | "moduleName" | "roleName"
+  | 'env'
+  | 'location'
+  | 'appName'
+  | 'moduleName'
+  | 'roleName'
+  | 'includeOrganization'
 >;
 
 export const getRoleName = ({
   env,
-  location = "GLB",
+  location = 'GLB',
   appName,
   moduleName,
   roleName,
+  includeOrganization,
 }: RoleNameType) => {
-  const e = env === Environments.Prd ? "prod" : "staging";
+  const prefix = includeOrganization ? `${organization} ROL` : 'ROL';
+
+  const e = env === Environments.Prd ? 'prod' : 'staging';
+
   return moduleName
-    ? `ROL ${e} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
-    : `ROL ${e} ${location} ${appName} ${roleName}`.toUpperCase();
+    ? `${prefix} ${e} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
+    : `${prefix} ${e} ${location} ${appName} ${roleName}`.toUpperCase();
 };
 
 export default ({ members, owners, permissions, ...others }: RoleProps) => {
