@@ -21,3 +21,13 @@ https://learn.microsoft.com/en-us/azure/reliability/availability-zones-service-s
 
 ## Upgrading Issues
 Azure AD Application: https://github.com/pulumi/pulumi-azuread/issues/185#issuecomment-982414862
+
+
+## Config Azure Resources
+
+$ pulumi config set azure-native:clientId <clientID>
+$ pulumi config set azure-native:clientSecret <clientSecret> --secret
+$ pulumi config set azure-native:tenantId <tenantID>
+$ pulumi config set azure-native:subscriptionId <subscriptionId>
+# optional default location, otherwise set in code
+$ pulumi config set azure-native:location <locationName>
