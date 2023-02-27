@@ -9,8 +9,9 @@ import {
 import { cdnProfileInfo } from '../Common/GlobalEnv';
 import { replaceAll } from '../Common/Helpers';
 import { getCdnEndpointName } from '../Common/Naming';
+import { BasicArgs } from '../types';
 
-interface Props {
+interface Props extends BasicArgs {
   name: string;
   origin: Output<string>;
   domainName: string;
@@ -24,6 +25,7 @@ export default ({
   origin,
   httpsEnabled,
   includesDefaultResponseHeaders,
+  dependsOn,
 }: Props) => {
   name = getCdnEndpointName(name);
 
@@ -32,45 +34,53 @@ export default ({
     rules.push(getDefaultResponseHeadersRule(domainName));
   }
 
-  const endpoint = new native.cdn.Endpoint(name, {
-    endpointName: name,
-    ...cdnProfileInfo,
+  const endpoint = new native.cdn.Endpoint(
+    name,
+    {
+      endpointName: name,
+      ...cdnProfileInfo,
 
-    origins: [{ name, hostName: origin }],
-    originHostHeader: origin,
+      origins: [{ name, hostName: origin }],
+      originHostHeader: origin,
 
-    optimizationType: 'GeneralWebDelivery',
-    queryStringCachingBehavior: 'IgnoreQueryString',
+      optimizationType: 'GeneralWebDelivery',
+      queryStringCachingBehavior: 'IgnoreQueryString',
 
-    deliveryPolicy: {
-      rules,
-      description: 'Static Website Rules',
+      deliveryPolicy: {
+        rules,
+        description: 'Static Website Rules',
+      },
+
+      isCompressionEnabled: true,
+      contentTypesToCompress: [
+        'text/plain',
+        'text/html',
+        'text/xml',
+        'text/css',
+        'application/xml',
+        'application/xhtml+xml',
+        'application/rss+xml',
+        'application/javascript',
+        'application/x-javascript',
+      ],
+
+      isHttpAllowed: true,
+      isHttpsAllowed: true,
     },
-
-    isCompressionEnabled: true,
-    contentTypesToCompress: [
-      'text/plain',
-      'text/html',
-      'text/xml',
-      'text/css',
-      'application/xml',
-      'application/xhtml+xml',
-      'application/rss+xml',
-      'application/javascript',
-      'application/x-javascript',
-    ],
-
-    isHttpAllowed: true,
-    isHttpsAllowed: true,
-  });
+    { dependsOn }
+  );
 
   if (domainName) {
-    const customDomain = new native.cdn.CustomDomain(name, {
-      endpointName: endpoint.name,
-      ...cdnProfileInfo,
-      customDomainName: replaceAll(domainName, '.', '-'),
-      hostName: domainName,
-    });
+    const customDomain = new native.cdn.CustomDomain(
+      name,
+      {
+        endpointName: endpoint.name,
+        ...cdnProfileInfo,
+        customDomainName: replaceAll(domainName, '.', '-'),
+        hostName: domainName,
+      },
+      { dependsOn: endpoint }
+    );
 
     if (httpsEnabled) {
       new CdnHttpsEnable(

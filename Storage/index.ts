@@ -182,30 +182,38 @@ export default ({
 
   //Soft Delete
   if (policies) {
-    new storage.BlobServiceProperties(`${name}-Blob-Props`, {
-      accountName: stg.name,
-      ...group,
+    new storage.BlobServiceProperties(
+      `${name}-Blob-Props`,
+      {
+        accountName: stg.name,
+        ...group,
 
-      deleteRetentionPolicy: policies.blobSoftDeleteDays
-        ? {
-            enabled: policies.blobSoftDeleteDays > 0,
-            days: policies.blobSoftDeleteDays,
-          }
-        : undefined,
-      isVersioningEnabled: policies.isBlobVersioningEnabled,
-    });
+        deleteRetentionPolicy: policies.blobSoftDeleteDays
+          ? {
+              enabled: policies.blobSoftDeleteDays > 0,
+              days: policies.blobSoftDeleteDays,
+            }
+          : undefined,
+        isVersioningEnabled: policies.isBlobVersioningEnabled,
+      },
+      { dependsOn: stg }
+    );
 
-    new storage.FileServiceProperties(`${name}-File-Props`, {
-      accountName: stg.name,
-      ...group,
+    new storage.FileServiceProperties(
+      `${name}-File-Props`,
+      {
+        accountName: stg.name,
+        ...group,
 
-      shareDeleteRetentionPolicy: policies.fileShareSoftDeleteDays
-        ? {
-            enabled: policies.fileShareSoftDeleteDays > 0,
-            days: policies.fileShareSoftDeleteDays,
-          }
-        : undefined,
-    });
+        shareDeleteRetentionPolicy: policies.fileShareSoftDeleteDays
+          ? {
+              enabled: policies.fileShareSoftDeleteDays > 0,
+              days: policies.fileShareSoftDeleteDays,
+            }
+          : undefined,
+      },
+      { dependsOn: stg }
+    );
   }
 
   //Life Cycle Management
@@ -224,12 +232,16 @@ export default ({
 
   //Enable Static Website for SPA
   if (featureFlags.enableStaticWebsite) {
-    new storage.StorageAccountStaticWebsite(name, {
-      accountName: stg.name,
-      ...group,
-      indexDocument: 'index.html',
-      error404Document: 'index.html',
-    });
+    new storage.StorageAccountStaticWebsite(
+      name,
+      {
+        accountName: stg.name,
+        ...group,
+        indexDocument: 'index.html',
+        error404Document: 'index.html',
+      },
+      { dependsOn: stg }
+    );
 
     if (appInsight && customDomain) {
       addInsightMonitor({ name, appInsight, url: customDomain });

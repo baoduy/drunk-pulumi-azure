@@ -2,6 +2,10 @@ import { Input, Output, Resource } from '@pulumi/pulumi';
 import * as authorization from '@pulumi/azure-native/authorization';
 import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
 
+export interface BasicArgs {
+  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
+}
+
 export interface ResourceGroupInfo {
   resourceGroupName: string;
   location?: Input<string>;
@@ -25,10 +29,9 @@ export interface NetworkRulesProps {
   ipAddresses?: Input<string>[];
 }
 
-export interface BasicMonitorArgs {
+export interface BasicMonitorArgs extends BasicArgs {
   logWpId?: Input<string>;
   logStorageId?: Input<string>;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export interface DiagnosticProps extends BasicMonitorArgs {
@@ -37,7 +40,6 @@ export interface DiagnosticProps extends BasicMonitorArgs {
 
   metricsCategories?: string[];
   logsCategories?: string[];
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export interface ResourceInfo {
@@ -55,10 +57,9 @@ export interface BasicResourceArgs {
   group: ResourceGroupInfo;
 }
 
-export interface DefaultResourceArgs {
+export interface DefaultResourceArgs extends BasicArgs {
   lock?: boolean;
   monitoring?: Omit<DiagnosticProps, 'name' | 'targetResourceId'>;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
   importUri?: string;
   ignoreChanges?: string[];
 }
