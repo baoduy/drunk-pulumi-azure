@@ -9,6 +9,7 @@ export type VaultAccessType = {
   /** Grant permission of this group into Environment Roles groups*/
   envRoleNames?: EnvRoleNamesType;
   permissions?: Array<PermissionProps>;
+  includeOrganization?: boolean;
 };
 
 interface Props {
@@ -24,6 +25,7 @@ export default async ({ name, auth }: Props) => {
         env: currentEnv,
         appName: `${name}-vault`,
         roleName: 'ReadOnly',
+        includeOrganization: auth.includeOrganization,
       });
   const adminGroup = auth.envRoleNames
     ? await getAdGroup(auth.envRoleNames.contributor)
@@ -31,21 +33,18 @@ export default async ({ name, auth }: Props) => {
         env: currentEnv,
         appName: `${name}-vault`,
         roleName: 'Admin',
+        includeOrganization: auth.includeOrganization,
       });
 
   //Add current service principal in
-  if (auth.permissions == undefined) {
+  if (auth.permissions == undefined || auth.permissions.length <= 0) {
     auth.permissions = [
       {
         objectId: currentServicePrincipal,
         permission: 'ReadWrite',
       },
     ];
-  } else
-    auth.permissions.push({
-      objectId: currentServicePrincipal,
-      permission: 'ReadWrite',
-    });
+  }
 
   //Add Permission to Groups
   auth.permissions.forEach(

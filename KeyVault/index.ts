@@ -16,6 +16,7 @@ import {
   PermissionProps,
 } from './VaultPermissions';
 import VaultAccess, { VaultAccessType } from './VaultAccess';
+import { organization } from '../Common/StackEnv';
 
 interface Props extends BasicResourceArgs {
   nameConvention?: ConventionProps | false;
@@ -28,7 +29,7 @@ interface Props extends BasicResourceArgs {
   };
 
   /** The permission and principals that allows to be access to this Key Vault */
-  auth?: VaultAccessType;
+  auth?: VaultAccessType & { enableRbac?: boolean };
 }
 
 export default async ({
@@ -40,7 +41,10 @@ export default async ({
   network,
   ...others
 }: Props) => {
-  const vaultName = getKeyVaultName(name, nameConvention);
+  const vaultName = getKeyVaultName(
+    auth?.includeOrganization ? `${name}-${organization}` : name,
+    nameConvention
+  );
 
   const { readOnlyGroup, adminGroup } = await VaultAccess({ name, auth });
 
@@ -48,7 +52,7 @@ export default async ({
     new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();
 
   //Grant Access permission
-  if (!auth.envRoleNames) {
+  if (!auth?.enableRbac) {
     accessPolicies.push({
       objectId: readOnlyGroup.objectId,
       tenantId,
@@ -71,8 +75,8 @@ export default async ({
       sku: { name: 'standard', family: 'A' },
       createMode: 'default',
 
-      enableRbacAuthorization: Boolean(auth?.envRoleNames),
-      accessPolicies: !auth?.envRoleNames ? accessPolicies : undefined,
+      enableRbacAuthorization: auth?.enableRbac,
+      accessPolicies: !auth?.enableRbac ? accessPolicies : undefined,
 
       enablePurgeProtection: true,
       enableSoftDelete: true,
@@ -104,7 +108,7 @@ export default async ({
   });
 
   //Grant RBAC permission
-  if (auth?.envRoleNames) {
+  if (auth?.enableRbac) {
     await grantVaultRbacPermission({
       name: `${name}-ReadOnlyGroup`,
       scope: resource.id,
@@ -112,6 +116,7 @@ export default async ({
       permission: 'ReadOnly',
       principalType: 'Group',
     });
+
     await grantVaultRbacPermission({
       name: `${name}-AdminGroup`,
       scope: resource.id,

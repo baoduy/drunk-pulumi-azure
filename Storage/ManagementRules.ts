@@ -81,7 +81,7 @@ export const createManagementRules = ({
   rules: Array<ManagementRules | DefaultManagementRules>;
 }) => {
   name = `${name}-mnp`;
-  return new storage.ManagementPolicy(
+  return new storage.v20220501.ManagementPolicy(
     name,
     {
       managementPolicyName: name,

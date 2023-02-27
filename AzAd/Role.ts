@@ -33,7 +33,7 @@ export const getRoleName = ({
   appName,
   moduleName,
   roleName,
-  includeOrganization,
+  includeOrganization=true,
 }: RoleNameType) => {
   const prefix = includeOrganization ? `${organization} ROL` : 'ROL';
 

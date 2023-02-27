@@ -126,7 +126,7 @@ export default ({
 
     //1 Year Months
     keyPolicy: {
-      keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays!,
+      keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
     },
 
     encryption:
@@ -182,38 +182,38 @@ export default ({
 
   //Soft Delete
   if (policies) {
-    new storage.BlobServiceProperties(
-      `${name}-Blob-Props`,
-      {
-        accountName: stg.name,
-        ...group,
-
-        deleteRetentionPolicy: policies.blobSoftDeleteDays
-          ? {
-              enabled: policies.blobSoftDeleteDays > 0,
-              days: policies.blobSoftDeleteDays,
-            }
-          : undefined,
-        isVersioningEnabled: policies.isBlobVersioningEnabled,
-      },
-      { dependsOn: stg }
-    );
-
-    new storage.FileServiceProperties(
-      `${name}-File-Props`,
-      {
-        accountName: stg.name,
-        ...group,
-
-        shareDeleteRetentionPolicy: policies.fileShareSoftDeleteDays
-          ? {
-              enabled: policies.fileShareSoftDeleteDays > 0,
-              days: policies.fileShareSoftDeleteDays,
-            }
-          : undefined,
-      },
-      { dependsOn: stg }
-    );
+    // new storage.BlobServiceProperties(
+    //   `${name}-Blob-Props`,
+    //   {
+    //     accountName: stg.name,
+    //     ...group,
+    //
+    //     deleteRetentionPolicy: policies.blobSoftDeleteDays
+    //       ? {
+    //           enabled: policies.blobSoftDeleteDays > 0,
+    //           days: policies.blobSoftDeleteDays,
+    //         }
+    //       : undefined,
+    //     isVersioningEnabled: policies.isBlobVersioningEnabled,
+    //   },
+    //   { dependsOn: stg }
+    // );
+    //
+    // new storage.FileServiceProperties(
+    //   `${name}-File-Props`,
+    //   {
+    //     accountName: stg.name,
+    //     ...group,
+    //
+    //     shareDeleteRetentionPolicy: policies.fileShareSoftDeleteDays
+    //       ? {
+    //           enabled: policies.fileShareSoftDeleteDays > 0,
+    //           days: policies.fileShareSoftDeleteDays,
+    //         }
+    //       : undefined,
+    //   },
+    //   { dependsOn: stg }
+    // );
   }
 
   //Life Cycle Management
