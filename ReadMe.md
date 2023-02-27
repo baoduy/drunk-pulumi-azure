@@ -25,9 +25,12 @@ Azure AD Application: https://github.com/pulumi/pulumi-azuread/issues/185#issuec
 
 ## Config Azure Resources
 
+- Set Organization
+pulumi org set-default
+
 $ pulumi config set azure-native:clientId <clientID>
 $ pulumi config set azure-native:clientSecret <clientSecret> --secret
 $ pulumi config set azure-native:tenantId <tenantID>
 $ pulumi config set azure-native:subscriptionId <subscriptionId>
 # optional default location, otherwise set in code
-$ pulumi config set azure-native:location <locationName>
+$ pulumi config set azure-native:location SoutheastAsia

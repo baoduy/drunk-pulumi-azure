@@ -1,6 +1,6 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as storage from "@pulumi/azure-native/storage";
-import { ResourceGroupInfo } from "../types";
+import * as pulumi from '@pulumi/pulumi';
+import * as storage from '@pulumi/azure-native/storage';
+import { ResourceGroupInfo } from '../types';
 
 interface DateAfterModificationArgs {
   /**
@@ -45,10 +45,10 @@ type ManagementRuleActions = {
 };
 
 type ManagementRuleFilters = {
-  blobTypes: Array<"blockBlob" | "appendBlob">;
+  blobTypes: Array<'blockBlob' | 'appendBlob'>;
   tagFilters?: pulumi.Input<{
     name: pulumi.Input<string>;
-    op: "==";
+    op: '==';
     value: pulumi.Input<string>;
   }>[];
 };
@@ -69,41 +69,46 @@ export type ManagementRules = {
 
 export const createManagementRules = ({
   name,
-  storageAccountName,
+  storageAccount,
   group,
   rules,
   containerNames,
 }: {
   name: string;
   group: ResourceGroupInfo;
-  storageAccountName: pulumi.Input<string>;
+  storageAccount: storage.StorageAccount;
   containerNames?: pulumi.Input<string>[];
   rules: Array<ManagementRules | DefaultManagementRules>;
 }) => {
   name = `${name}-mnp`;
-  return new storage.ManagementPolicy(name, {
-    managementPolicyName: name,
-    accountName: storageAccountName,
-    ...group,
-    policy: {
-      rules: rules.map((m, i) => ({
-        enabled: true,
-        name: `${name}-${i}`,
-        type: "Lifecycle",
-        definition: {
-          actions: m.actions,
+  return new storage.ManagementPolicy(
+    name,
+    {
+      managementPolicyName: name,
+      accountName: storageAccount.name,
+      ...group,
 
-          filters: m.filters
-            ? {
-                blobTypes: m.filters.blobTypes,
-                prefixMatch:
-                  containerNames ??
-                  (m.filters as DefaultManagementRuleFilters).containerNames,
-                blobIndexMatch: m.filters.tagFilters,
-              }
-            : undefined,
-        },
-      })),
+      policy: {
+        rules: rules.map((m, i) => ({
+          enabled: true,
+          name: `${name}-${i}`,
+          type: 'Lifecycle',
+          definition: {
+            actions: m.actions,
+
+            filters: m.filters
+              ? {
+                  blobTypes: m.filters.blobTypes,
+                  prefixMatch:
+                    containerNames ??
+                    (m.filters as DefaultManagementRuleFilters).containerNames,
+                  blobIndexMatch: m.filters.tagFilters,
+                }
+              : undefined,
+          },
+        })),
+      },
     },
-  });
+    { dependsOn: storageAccount }
+  );
 };

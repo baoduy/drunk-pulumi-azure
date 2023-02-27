@@ -19,7 +19,11 @@ const envRoleConfig = {
   } as RoleNameType,
 };
 
-export const getEnvRoleNames = (includeOrganization = false) => ({
+export type EnvRoleNamesType = { [k in keyof typeof envRoleConfig]: string };
+
+export const getEnvRoleNames = (
+  includeOrganization = false
+): EnvRoleNamesType => ({
   readOnly: getRoleName({ ...envRoleConfig.readOnly, includeOrganization }),
   contributor: getRoleName({
     ...envRoleConfig.contributor,

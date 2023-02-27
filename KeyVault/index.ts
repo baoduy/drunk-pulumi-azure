@@ -1,21 +1,21 @@
-import * as native from "@pulumi/azure-native";
-import { enums } from "@pulumi/azure-native/types";
-import { Input } from "@pulumi/pulumi";
-import { defaultTags, subscriptionId, tenantId } from "../Common/AzureEnv";
-import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
-import { createDiagnostic } from "../Logs/Helpers";
-import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from "../types";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import { BasicResourceArgs } from "../types";
-import { addCustomSecret } from "./CustomHelper";
-import { addLegacyKey } from "./LegacyHelper";
+import * as native from '@pulumi/azure-native';
+import { enums } from '@pulumi/azure-native/types';
+import { Input } from '@pulumi/pulumi';
+import { defaultTags, subscriptionId, tenantId } from '../Common/AzureEnv';
+import { getKeyVaultName, getPrivateEndpointName } from '../Common/Naming';
+import { createDiagnostic } from '../Logs/Helpers';
+import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from '../types';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { BasicResourceArgs } from '../types';
+import { addCustomSecret } from './CustomHelper';
+import { addLegacyKey } from './LegacyHelper';
 import {
   grantVaultRbacPermission,
   KeyVaultAdminPolicy,
   KeyVaultReadOnlyPolicy,
   PermissionProps,
-} from "./VaultPermissions";
-import VaultAccess, { VaultAccessType } from "./VaultAccess";
+} from './VaultPermissions';
+import VaultAccess, { VaultAccessType } from './VaultAccess';
 
 interface Props extends BasicResourceArgs {
   nameConvention?: ConventionProps | false;
@@ -35,7 +35,7 @@ export default async ({
   name,
   nameConvention,
   group,
-  auth = { enableRbac: true, permissions: new Array<PermissionProps>() },
+  auth = { permissions: new Array<PermissionProps>() },
   createDefaultValues,
   network,
   ...others
@@ -48,7 +48,7 @@ export default async ({
     new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();
 
   //Grant Access permission
-  if (!auth.enableRbac) {
+  if (!auth.envRoleNames) {
     accessPolicies.push({
       objectId: readOnlyGroup.objectId,
       tenantId,
@@ -68,11 +68,11 @@ export default async ({
 
     properties: {
       tenantId,
-      sku: { name: "standard", family: "A" },
-      createMode: "default",
+      sku: { name: 'standard', family: 'A' },
+      createMode: 'default',
 
-      enableRbacAuthorization: auth.enableRbac,
-      accessPolicies: !auth.enableRbac ? accessPolicies : undefined,
+      enableRbacAuthorization: Boolean(auth?.envRoleNames),
+      accessPolicies: !auth?.envRoleNames ? accessPolicies : undefined,
 
       enablePurgeProtection: true,
       enableSoftDelete: true,
@@ -83,7 +83,7 @@ export default async ({
 
       networkAcls: network
         ? {
-            bypass: "AzureServices",
+            bypass: 'AzureServices',
             defaultAction: enums.keyvault.NetworkRuleAction.Deny,
 
             ipRules: network.ipAddresses
@@ -95,7 +95,7 @@ export default async ({
               : undefined,
           }
         : {
-            bypass: "AzureServices",
+            bypass: 'AzureServices',
             defaultAction: enums.keyvault.NetworkRuleAction.Allow,
           },
     },
@@ -104,20 +104,20 @@ export default async ({
   });
 
   //Grant RBAC permission
-  if (auth.enableRbac && auth.permissions) {
+  if (auth?.envRoleNames) {
     await grantVaultRbacPermission({
       name: `${name}-ReadOnlyGroup`,
       scope: resource.id,
       objectId: readOnlyGroup.objectId,
-      permission: "ReadOnly",
-      principalType: "Group",
+      permission: 'ReadOnly',
+      principalType: 'Group',
     });
     await grantVaultRbacPermission({
       name: `${name}-AdminGroup`,
       scope: resource.id,
       objectId: adminGroup.objectId,
-      permission: "ReadWrite",
-      principalType: "Group",
+      permission: 'ReadWrite',
+      principalType: 'Group',
     });
   }
 
@@ -130,7 +130,7 @@ export default async ({
       name,
       targetResourceId: resource.id,
       ...logInfo,
-      logsCategories: ["AuditEvent"],
+      logsCategories: ['AuditEvent'],
     });
 
   // Create Private Link
@@ -140,31 +140,31 @@ export default async ({
       group,
       ...props,
       resourceId: resource.id,
-      privateDnsZoneName: "privatelink.vaultcore.azure.net",
-      linkServiceGroupIds: ["keyVault"],
+      privateDnsZoneName: 'privatelink.vaultcore.azure.net',
+      linkServiceGroupIds: ['keyVault'],
     });
 
   if (createDefaultValues) {
     const vaultInfo = toVaultInfo();
 
     addCustomSecret({
-      name: "tenant-id",
+      name: 'tenant-id',
       value: tenantId,
       vaultInfo,
-      contentType: "KeyVault Default Values",
+      contentType: 'KeyVault Default Values',
       dependsOn: resource,
     });
 
     addCustomSecret({
-      name: "subscription-id",
+      name: 'subscription-id',
       value: subscriptionId,
       vaultInfo,
-      contentType: "KeyVault Default Values",
+      contentType: 'KeyVault Default Values',
       dependsOn: resource,
     });
 
-    await addLegacyKey({
-      name: "default-encryption-key",
+    addLegacyKey({
+      name: 'default-encryption-key',
       vaultInfo,
       dependsOn: resource,
     });
@@ -172,7 +172,7 @@ export default async ({
 
   return {
     name: vaultName,
-    vault: resource as native.keyvault.Vault,
+    vault: resource,
     readOnlyGroup,
     adminGroup,
     toVaultInfo,
