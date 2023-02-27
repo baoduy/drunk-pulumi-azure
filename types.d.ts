@@ -52,7 +52,7 @@ export interface ApimInfo extends Omit<ResourceInfo, 'resourceName' | 'id'> {
   serviceName: string;
 }
 
-export interface BasicResourceArgs {
+export interface BasicResourceArgs extends BasicArgs {
   name: string;
   group: ResourceGroupInfo;
 }
