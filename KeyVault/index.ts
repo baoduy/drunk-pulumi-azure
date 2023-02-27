@@ -4,7 +4,7 @@ import { Input } from '@pulumi/pulumi';
 import { defaultTags, subscriptionId, tenantId } from '../Common/AzureEnv';
 import { getKeyVaultName, getPrivateEndpointName } from '../Common/Naming';
 import { createDiagnostic } from '../Logs/Helpers';
-import { BasicMonitorArgs, ConventionProps, PrivateLinkProps } from '../types';
+import { BasicMonitorArgs, PrivateLinkProps } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { BasicResourceArgs } from '../types';
 import { addCustomSecret } from './CustomHelper';
@@ -16,10 +16,9 @@ import {
   PermissionProps,
 } from './VaultPermissions';
 import VaultAccess, { VaultAccessType } from './VaultAccess';
-import { organization } from '../Common/StackEnv';
 
 interface Props extends BasicResourceArgs {
-  nameConvention?: ConventionProps | false;
+  //nameConvention?: ConventionProps | false;
   /**The default-encryption-key, tenant-id va subscription-id will be added to the secrets and keys*/
   createDefaultValues?: boolean;
 
@@ -34,17 +33,17 @@ interface Props extends BasicResourceArgs {
 
 export default async ({
   name,
-  nameConvention,
+  //nameConvention,
   group,
-  auth = { permissions: new Array<PermissionProps>() },
+  auth = {
+    includeOrganization: true,
+    permissions: new Array<PermissionProps>(),
+  },
   createDefaultValues,
   network,
   ...others
 }: Props) => {
-  const vaultName = getKeyVaultName(
-    auth?.includeOrganization ? `${name}-${organization}` : name,
-    nameConvention
-  );
+  const vaultName = getKeyVaultName(name);
 
   const { readOnlyGroup, adminGroup } = await VaultAccess({ name, auth });
 

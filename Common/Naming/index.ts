@@ -161,6 +161,7 @@ export const getKeyVaultName = (
   name: string,
   convention: ConventionProps | false = {
     suffix: 'vlt',
+    includeOrgName: true,
   }
 ) =>
   getResourceName(

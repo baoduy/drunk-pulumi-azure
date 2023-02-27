@@ -1,8 +1,8 @@
-import { replaceAll } from "./Helpers";
-import { ConventionProps, ResourceGroupInfo } from "../types";
-import { Input } from "@pulumi/pulumi";
-import { BaseOptions } from "../CustomProviders/Base";
-import { stack } from "./StackEnv";
+import { replaceAll } from './Helpers';
+import { ConventionProps, ResourceGroupInfo } from '../types';
+import { Input } from '@pulumi/pulumi';
+import { BaseOptions } from '../CustomProviders/Base';
+import { organization, stack } from './StackEnv';
 
 export const resourceConvention = {
   prefix: stack,
@@ -13,15 +13,19 @@ export const resourceConvention = {
 
 const getName = (name: string, convention: ConventionProps): string => {
   if (!name) return name;
-  name = replaceAll(name, " ", "-");
+  name = replaceAll(name, ' ', '-');
 
   //Add prefix
   if (convention.prefix && !name.startsWith(convention.prefix))
-    name = convention.prefix + "-" + name;
+    name = convention.prefix + '-' + name;
+
+  //Organization
+  if (convention.includeOrgName && !name.includes(organization))
+    name = name + '-' + organization;
 
   //Add the suffix
   if (convention.suffix && !name.endsWith(convention.suffix))
-    name = name + "-" + convention.suffix;
+    name = name + '-' + convention.suffix;
 
   return name.toLowerCase();
 };
