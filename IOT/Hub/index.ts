@@ -9,6 +9,11 @@ interface Props extends BasicResourceArgs {
     name: string;
     capacity?: number;
   };
+
+  serviceBus?: {
+    queueConnectionString?: Input<string>;
+    topicConnectionString?: Input<string>;
+  };
   storage?: {
     connectionString: Input<string>;
     fileContainerName: Input<string>;
@@ -21,6 +26,7 @@ export default ({
   group,
   sku = { name: 'F1', capacity: 1 },
   storage,
+  serviceBus,
   dependsOn,
 }: Props) => {
   const hubName = getIotHubName(name);
@@ -64,8 +70,28 @@ export default ({
         routing: {
           endpoints: {
             //eventHubs: [],
-            //serviceBusQueues: [],
-            //serviceBusTopics: [],
+            serviceBusQueues: serviceBus?.queueConnectionString
+              ? [
+                  {
+                    name: 'busQueue',
+                    connectionString: serviceBus.queueConnectionString,
+                    resourceGroup: group.resourceGroupName,
+                    subscriptionId,
+                  },
+                ]
+              : undefined,
+
+            serviceBusTopics: serviceBus?.topicConnectionString
+              ? [
+                  {
+                    name: 'busTopic',
+                    connectionString: serviceBus.topicConnectionString,
+                    resourceGroup: group.resourceGroupName,
+                    subscriptionId,
+                  },
+                ]
+              : undefined,
+
             storageContainers: storage
               ? [
                   {
