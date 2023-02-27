@@ -11,7 +11,7 @@ export const getResourceGroupName = (name: string): string =>
 
 /** Get Azure Storage Account and CosmosDb Name*/
 export const getStorageName = (name: string): string => {
-  name = getResourceName(name, { suffix: 'stg' });
+  name = getResourceName(name, { includeOrgName: true, suffix: 'stg' });
   name = replaceAll(name, '-', '');
   name = replaceAll(name, '.', '');
   return name.toLowerCase().substring(0, 24);

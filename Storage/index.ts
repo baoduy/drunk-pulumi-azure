@@ -93,6 +93,7 @@ export default ({
   lock = true,
 }: StorageProps) => {
   name = getStorageName(name);
+
   const primaryKeyName = getKeyName(name, 'primary');
   const secondaryKeyName = getKeyName(name, 'secondary');
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
