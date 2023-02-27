@@ -184,7 +184,7 @@ interface TopicProps
   group: ResourceGroupInfo;
   //The short name of subscription ex 'sub1' the full name is 'sub1-topic1' the name of topic will be added as suffix.
   subscriptions?: Array<{ shortName: string; enableSession?: boolean }>;
-  createConnections?: boolean;
+  enableConnections?: boolean;
   lock?: boolean;
   dependsOn?:
     | pulumi.Input<pulumi.Resource>
@@ -205,7 +205,7 @@ const topicCreator = ({
   shortName,
   vaultInfo,
   version,
-  createConnections,
+  enableConnections,
   lock = true,
   dependsOn,
   ...others
@@ -233,7 +233,7 @@ const topicCreator = ({
     Locker({ name: topicName, resourceId: topic.id, dependsOn: topic });
   }
 
-  if (vaultInfo && createConnections) {
+  if (vaultInfo && enableConnections) {
     //Send Key
     createAndStoreConnection({
       topicName,
@@ -343,6 +343,7 @@ interface QueueProps
   vaultInfo?: KeyVaultInfo;
   group: ResourceGroupInfo;
   lock?: boolean;
+  enableConnections?: boolean;
   dependsOn?:
     | pulumi.Input<pulumi.Resource>
     | pulumi.Input<pulumi.Input<pulumi.Resource>[]>;
@@ -361,6 +362,7 @@ const queueCreator = ({
   vaultInfo,
   version,
   lock = true,
+  enableConnections,
   dependsOn,
   ...others
 }: QueueProps): Promise<QueueResultProps> => {
@@ -382,7 +384,7 @@ const queueCreator = ({
     Locker({ name, resourceId: queue.id, dependsOn: queue });
   }
 
-  if (vaultInfo) {
+  if (vaultInfo && enableConnections) {
     //Send Key
     createAndStoreConnection({
       queueName: name,
