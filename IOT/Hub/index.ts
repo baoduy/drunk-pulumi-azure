@@ -8,7 +8,6 @@ interface Props extends BasicResourceArgs {
   sku: {
     name: string;
     capacity?: number;
-    tier: 'Basic' | 'Free' | 'Standard';
   };
   storage?: {
     connectionString: Input<string>;
@@ -17,7 +16,13 @@ interface Props extends BasicResourceArgs {
   };
 }
 
-export default ({ name, group, sku, storage, dependsOn }: Props) => {
+export default ({
+  name,
+  group,
+  sku = { name: 'F1', capacity: 1 },
+  storage,
+  dependsOn,
+}: Props) => {
   const hubName = getIotHubName(name);
 
   const hub = new devices.IotHubResource(
