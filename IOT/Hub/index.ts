@@ -30,6 +30,17 @@ export default ({
   dependsOn,
 }: Props) => {
   const hubName = getIotHubName(name);
+  const busQueueEndpointName = 'busQueue';
+  const busTopicEndpointName = 'busTopic';
+  const storageEndpointName = 'hubStorage';
+  const routeEndpoints = new Array<string>();
+
+  if (serviceBus?.queueConnectionString)
+    routeEndpoints.push(busQueueEndpointName);
+  if (serviceBus?.topicConnectionString)
+    routeEndpoints.push(busTopicEndpointName);
+  if (storage?.connectionString && storage?.messageContainerName)
+    routeEndpoints.push(storageEndpointName);
 
   const hub = new devices.IotHubResource(
     hubName,
@@ -73,7 +84,7 @@ export default ({
             serviceBusQueues: serviceBus?.queueConnectionString
               ? [
                   {
-                    name: 'busQueue',
+                    name: busQueueEndpointName,
                     connectionString: serviceBus.queueConnectionString,
                     resourceGroup: group.resourceGroupName,
                     subscriptionId,
@@ -84,7 +95,7 @@ export default ({
             serviceBusTopics: serviceBus?.topicConnectionString
               ? [
                   {
-                    name: 'busTopic',
+                    name: busTopicEndpointName,
                     connectionString: serviceBus.topicConnectionString,
                     resourceGroup: group.resourceGroupName,
                     subscriptionId,
@@ -95,10 +106,7 @@ export default ({
             storageContainers: storage
               ? [
                   {
-                    /**
-                     * The name that identifies this endpoint. The name can only include alphanumeric characters, periods, underscores, hyphens and has a maximum length of 64 characters. The following names are reserved:  events, operationsMonitoringEvents, fileNotifications, $default. Endpoint names must be unique across endpoint types.
-                     */
-                    name: 'hubStorage',
+                    name: storageEndpointName,
                     resourceGroup: group.resourceGroupName,
                     subscriptionId,
 
@@ -109,7 +117,7 @@ export default ({
                     /**
                      * File name format for the blob. Default format is {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}. All parameters are mandatory but can be reordered.
                      */
-                    //fileNameFormat?: pulumi.Input<string>;
+                    //fileNameFormat: string,
                     /**
                      * Maximum number of bytes for each blob written to storage. Value should be between 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
                      */
@@ -118,14 +126,50 @@ export default ({
                 ]
               : undefined,
           },
-          // fallbackRoute: {
-          //   condition: 'true',
-          //   endpointNames: ['events'],
-          //   isEnabled: true,
-          //   name: `$fallback`,
-          //   source: 'DeviceMessages',
-          // },
-          //routes: [],
+          fallbackRoute: {
+            name: `$fallback`,
+            condition: 'true',
+            endpointNames: ['events'],
+            isEnabled: true,
+            source: devices.RoutingSource.DeviceMessages,
+          },
+          routes: [
+            {
+              name: 'hubRouteMessage',
+              source: devices.RoutingSource.DeviceMessages,
+              endpointNames: routeEndpoints,
+              isEnabled: true,
+              condition: 'true',
+            },
+            // {
+            //   name: 'hubRouteLifeCycleEvents',
+            //   source: devices.RoutingSource.DeviceJobLifecycleEvents,
+            //   endpointNames: routeEndpoints,
+            //   isEnabled: true,
+            //   condition: 'true',
+            // },
+            // {
+            //   name: 'hubRouteJobLifeCycleEvents',
+            //   source: devices.RoutingSource.DeviceJobLifecycleEvents,
+            //   endpointNames: routeEndpoints,
+            //   isEnabled: true,
+            //   condition: 'true',
+            // },
+            // {
+            //   name: 'hubRouteTwinChangeEvents',
+            //   source: devices.RoutingSource.TwinChangeEvents,
+            //   endpointNames: routeEndpoints,
+            //   isEnabled: true,
+            //   condition: 'true',
+            // },
+            // {
+            //   name: 'hubRouteInvalid',
+            //   source: devices.RoutingSource.Invalid,
+            //   endpointNames: routeEndpoints,
+            //   isEnabled: true,
+            //   condition: 'true',
+            // },
+          ],
         },
       },
     },
