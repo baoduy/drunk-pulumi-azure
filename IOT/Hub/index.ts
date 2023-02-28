@@ -111,20 +111,11 @@ export default ({
                     subscriptionId,
                     connectionString: storage.connectionString,
                     containerName: storage.messageContainerName,
-                    encoding: 'avro',
-
-                    /**
-                     * Time interval at which blobs are written to storage. Value should be between 60 and 720 seconds. Default value is 300 seconds.
-                     */
-                    batchFrequencyInSeconds: 60,
-                    /**
-                     * File name format for the blob. Default format is {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}. All parameters are mandatory but can be reordered.
-                     */
-                    //fileNameFormat: string,
-                    /**
-                     * Maximum number of bytes for each blob written to storage. Value should be between 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
-                     */
-                    //maxChunkSizeInBytes?: pulumi.Input<number>;
+                    encoding: 'avroDeflate', // 'avroDeflate' and 'avro'
+                    batchFrequencyInSeconds: 60, //60 to 720
+                    fileNameFormat:
+                      '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+                    maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
                   },
                 ]
               : undefined,
