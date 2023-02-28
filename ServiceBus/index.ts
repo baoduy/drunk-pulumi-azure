@@ -1,8 +1,8 @@
 import * as bus from '@pulumi/azure-native/servicebus';
 import * as pulumi from '@pulumi/pulumi';
-import { Input } from '@pulumi/pulumi';
 
 import {
+  BasicArgs,
   BasicMonitorArgs,
   BasicResourceArgs,
   BasicResourceResultProps,
@@ -10,7 +10,6 @@ import {
   KeyVaultInfo,
   PrivateLinkProps,
   ResourceGroupInfo,
-  ResourceResultProps,
 } from '../types';
 import {
   BusConnectionTypes,
@@ -43,9 +42,11 @@ const defaultValues = {
   //enableExpress: true, this and requiresDuplicateDetection are not able to enabled together
 };
 
-//type OptionsType = {};
+//type OptionsType = {
+//  autoDeleteOnIdle:pulumi.Input<string>;
+// };
 
-interface ConnCreatorProps {
+interface ConnCreatorProps extends BasicArgs {
   topicName?: string;
   queueName?: string;
   namespaceName: string;
@@ -54,9 +55,6 @@ interface ConnCreatorProps {
   transportType?: TransportTypes;
   removeEntityPath?: boolean;
   vaultInfo: KeyVaultInfo;
-  dependsOn?:
-    | pulumi.Input<pulumi.Resource>
-    | pulumi.Input<pulumi.Input<pulumi.Resource>[]>;
 }
 const createAndStoreConnection = ({
   namespaceName,
@@ -297,16 +295,13 @@ const topicCreator = ({
   return { name: topicName, topic, subs };
 };
 
-interface SubProps {
+interface SubProps extends BasicArgs {
   shortName: string;
-  namespaceFullName: Input<string>;
-  topicFullName: Input<string>;
+  namespaceFullName: pulumi.Input<string>;
+  topicFullName: pulumi.Input<string>;
   group: ResourceGroupInfo;
   enableSession?: boolean;
   lock?: boolean;
-  dependsOn?:
-    | pulumi.Input<pulumi.Resource>
-    | pulumi.Input<pulumi.Input<pulumi.Resource>[]>;
 }
 
 /** Subscription creator */
@@ -343,7 +338,8 @@ const subscriptionCreator = ({
 };
 
 interface QueueProps
-  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'> {
+  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'>,
+    BasicArgs {
   shortName: string;
   version: number;
   namespaceFullName: string;
@@ -351,9 +347,6 @@ interface QueueProps
   group: ResourceGroupInfo;
   lock?: boolean;
   enableConnections?: boolean;
-  dependsOn?:
-    | pulumi.Input<pulumi.Resource>
-    | pulumi.Input<pulumi.Input<pulumi.Resource>[]>;
 }
 
 interface TopicResultProps {
@@ -450,7 +443,7 @@ interface Props
     partnerNamespace: pulumi.Input<string>;
   };
   network?: {
-    whitelistIps?: Array<Input<string>>;
+    whitelistIps?: Array<pulumi.Input<string>>;
     enablePrivateLink?: boolean;
   } & Partial<PrivateLinkProps>;
   monitoring?: BasicMonitorArgs;
