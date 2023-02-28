@@ -27,20 +27,23 @@ import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import Locker from '../Core/Locker';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
-type TransportTypes = 'AmqpWebSockets' | 'Amqp';
+type TransportTypes = 'AmqpWebSockets' | 'Amqp' | null;
 const duplicateDetectedTime = isPrd ? 'P3D' : 'PT10M';
 
 const defaultValues = {
   maxDeliveryCount: 10,
   enableBatchedOperations: true,
   defaultMessageTtl: isPrd ? 'P30D' : 'P1D',
+  defaultMessageTimeToLive: isPrd ? 'P30D' : 'P1D',
   deadLetteringOnMessageExpiration: true,
+  lockDuration: 'PT1M',
+
   //Auto delete subscription after 30 idle.
   //autoDeleteOnIdle: 'P30D',
-
-  lockDuration: 'PT2M',
   //enableExpress: true, this and requiresDuplicateDetection are not able to enabled together
 };
+
+//type OptionsType = {};
 
 interface ConnCreatorProps {
   topicName?: string;
@@ -150,23 +153,31 @@ const createAndStoreConnection = ({
           resourceGroupName,
         }));
 
+    let primaryConn = removeEntityPath
+      ? keys.primaryConnectionString.replace(`;EntityPath=${name}`, '')
+      : keys.primaryConnectionString;
+
+    if (typeof transportType === 'string')
+      primaryConn += `;TransportType=${transportType};`;
+
     addCustomSecret({
       name: `${key}-primary`,
-      value:
-        (removeEntityPath
-          ? keys.primaryConnectionString.replace(`;EntityPath=${name}`, '')
-          : keys.primaryConnectionString) + `;TransportType=${transportType};`,
+      value: primaryConn,
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${name}`,
       dependsOn: rule,
     });
 
+    let secondConn = removeEntityPath
+      ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, '')
+      : keys.secondaryConnectionString;
+
+    if (typeof transportType === 'string')
+      secondConn += `;TransportType=${transportType};`;
+
     addCustomSecret({
       name: `${key}-secondary`,
-      value:
-        (removeEntityPath
-          ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, '')
-          : keys.primaryConnectionString) + `;TransportType=${transportType};`,
+      value: secondConn,
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${name}`,
       dependsOn: rule,
@@ -318,6 +329,7 @@ const subscriptionCreator = ({
       topicName: topicFullName,
       namespaceName: namespaceFullName,
       ...defaultValues,
+
       requiresSession: enableSession,
     },
     { dependsOn }
@@ -533,25 +545,27 @@ export default async ({
         group,
         namespaceFullName: name,
         vaultInfo,
-        ...t,
+
         dependsOn: resource,
         enableConnections: enableTopicConnections,
         ...others,
+        ...t,
       })
     );
   }
 
   let qes: Array<QueueResultProps> | undefined = undefined;
   if (queues) {
-    qes = queues.map((t) =>
+    qes = queues.map((q) =>
       queueCreator({
         group,
         namespaceFullName: name,
         vaultInfo,
-        ...t,
+
         dependsOn: resource,
         enableConnections: enableQueueConnections,
         ...others,
+        ...q,
       })
     );
   }

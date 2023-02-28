@@ -6,7 +6,7 @@ import { Input } from '@pulumi/pulumi';
 
 interface Props extends BasicResourceArgs {
   sku: {
-    name: string;
+    name: devices.IotHubSku;
     capacity?: number;
   };
 
@@ -15,9 +15,10 @@ interface Props extends BasicResourceArgs {
     topicConnectionString?: Input<string>;
   };
   storage?: {
+    enableRouteFallback?: boolean;
     connectionString: Input<string>;
-    fileContainerName: Input<string>;
-    messageContainerName: Input<string>;
+    fileContainerName?: Input<string>;
+    messageContainerName?: Input<string>;
   };
 }
 
@@ -33,14 +34,17 @@ export default ({
   const busQueueEndpointName = 'busQueue';
   const busTopicEndpointName = 'busTopic';
   const storageEndpointName = 'hubStorage';
-  const routeEndpoints = new Array<string>();
+  let routeEndpoints = ['events'];
 
+  if (storage?.connectionString && storage?.messageContainerName)
+    routeEndpoints.push(storageEndpointName);
   if (serviceBus?.queueConnectionString)
     routeEndpoints.push(busQueueEndpointName);
   if (serviceBus?.topicConnectionString)
     routeEndpoints.push(busTopicEndpointName);
-  if (storage?.connectionString && storage?.messageContainerName)
-    routeEndpoints.push(storageEndpointName);
+
+  //The Free and Basic tiers only supports 1 endpoint.
+  if (!sku.name.startsWith('S')) routeEndpoints = routeEndpoints.slice(-1);
 
   const hub = new devices.IotHubResource(
     hubName,
@@ -56,7 +60,7 @@ export default ({
         //cloudToDevice:{}
         //comments
         enableFileUploadNotifications: Boolean(storage?.fileContainerName),
-        storageEndpoints: storage
+        storageEndpoints: storage?.fileContainerName
           ? {
               $default: {
                 connectionString: storage.connectionString,
@@ -65,6 +69,7 @@ export default ({
               },
             }
           : undefined,
+
         //eventHubEndpoints: {},
         features: devices.v20160203.Capabilities.None,
         //ipFilterRules: {},
@@ -103,7 +108,7 @@ export default ({
                 ]
               : undefined,
 
-            storageContainers: storage
+            storageContainers: storage?.messageContainerName
               ? [
                   {
                     name: storageEndpointName,
@@ -111,7 +116,7 @@ export default ({
                     subscriptionId,
                     connectionString: storage.connectionString,
                     containerName: storage.messageContainerName,
-                    encoding: 'avroDeflate', // 'avroDeflate' and 'avro'
+                    encoding: 'avro', // 'avroDeflate' and 'avro'
                     batchFrequencyInSeconds: 60, //60 to 720
                     fileNameFormat:
                       '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
@@ -120,44 +125,52 @@ export default ({
                 ]
               : undefined,
           },
-          fallbackRoute: {
-            name: `$fallback`,
-            condition: 'true',
-            endpointNames: ['events'],
-            isEnabled: true,
-            source: devices.RoutingSource.DeviceMessages,
-          },
+          fallbackRoute: storage?.enableRouteFallback
+            ? {
+                name: `$fallback`,
+                condition: 'true',
+                endpointNames: [storageEndpointName],
+                isEnabled: true,
+                source: devices.RoutingSource.DeviceMessages,
+              }
+            : {
+                name: `$fallback`,
+                condition: 'true',
+                endpointNames: ['events'],
+                isEnabled: true,
+                source: devices.RoutingSource.DeviceMessages,
+              },
           routes: [
             {
-              name: 'hubRouteMessage',
+              name: 'routeMessageToCustomEndpoints',
               source: devices.RoutingSource.DeviceMessages,
               endpointNames: routeEndpoints,
               isEnabled: true,
               condition: 'true',
             },
+            {
+              name: 'routeLifecycleToCustomEndpoints',
+              source: devices.RoutingSource.DeviceLifecycleEvents,
+              endpointNames: routeEndpoints,
+              isEnabled: true,
+              condition: 'true',
+            },
             // {
-            //   name: 'hubRouteLifeCycleEvents',
+            //   name: 'routeJobLifecycleToCustomEndpoints',
             //   source: devices.RoutingSource.DeviceJobLifecycleEvents,
             //   endpointNames: routeEndpoints,
             //   isEnabled: true,
             //   condition: 'true',
             // },
             // {
-            //   name: 'hubRouteJobLifeCycleEvents',
-            //   source: devices.RoutingSource.DeviceJobLifecycleEvents,
-            //   endpointNames: routeEndpoints,
-            //   isEnabled: true,
-            //   condition: 'true',
-            // },
-            // {
-            //   name: 'hubRouteTwinChangeEvents',
+            //   name: 'routeTwinToCustomEndpoints',
             //   source: devices.RoutingSource.TwinChangeEvents,
             //   endpointNames: routeEndpoints,
             //   isEnabled: true,
             //   condition: 'true',
             // },
             // {
-            //   name: 'hubRouteInvalid',
+            //   name: 'routeInvalidToCustomEndpoints',
             //   source: devices.RoutingSource.Invalid,
             //   endpointNames: routeEndpoints,
             //   isEnabled: true,
