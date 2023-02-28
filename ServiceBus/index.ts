@@ -42,9 +42,13 @@ const defaultValues = {
   //enableExpress: true, this and requiresDuplicateDetection are not able to enabled together
 };
 
-//type OptionsType = {
-//  autoDeleteOnIdle:pulumi.Input<string>;
-// };
+type OptionsType = {
+  requiresDuplicateDetection?: pulumi.Input<boolean>;
+  duplicateDetectionHistoryTimeWindow?: pulumi.Input<string>;
+  requiresSession?: pulumi.Input<boolean>;
+  enablePartitioning?: pulumi.Input<boolean>;
+  autoDeleteOnIdle?: pulumi.Input<string>;
+};
 
 interface ConnCreatorProps extends BasicArgs {
   topicName?: string;
@@ -186,7 +190,8 @@ const createAndStoreConnection = ({
 };
 
 interface TopicProps
-  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'> {
+  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'>,
+    BasicArgs {
   shortName: string;
   namespaceFullName: string;
   version: number;
@@ -195,10 +200,9 @@ interface TopicProps
   //The short name of subscription ex 'sub1' the full name is 'sub1-topic1' the name of topic will be added as suffix.
   subscriptions?: Array<{ shortName: string; enableSession?: boolean }>;
   enableConnections?: boolean;
+
+  options?: OptionsType;
   lock?: boolean;
-  dependsOn?:
-    | pulumi.Input<pulumi.Resource>
-    | pulumi.Input<pulumi.Input<pulumi.Resource>[]>;
 }
 
 /** Topic creator */
@@ -212,6 +216,11 @@ const topicCreator = ({
   enableConnections,
   lock = true,
   dependsOn,
+  options = {
+    duplicateDetectionHistoryTimeWindow: duplicateDetectedTime,
+    requiresDuplicateDetection: true,
+    enablePartitioning: true,
+  },
   ...others
 }: TopicProps) => {
   const topicName = getTopicName(shortName, version);
@@ -222,13 +231,11 @@ const topicCreator = ({
       topicName,
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
-      enablePartitioning: true,
-      duplicateDetectionHistoryTimeWindow: duplicateDetectedTime,
-      requiresDuplicateDetection: true,
 
-      //enableExpress: true, this and requiresDuplicateDetection are not able to enabled together
       supportOrdering: true,
       maxSizeInMegabytes: isPrd ? 10240 : 1024,
+
+      ...options,
     },
     { dependsOn }
   );
@@ -347,6 +354,7 @@ interface QueueProps
   group: ResourceGroupInfo;
   lock?: boolean;
   enableConnections?: boolean;
+  options?: OptionsType;
 }
 
 interface TopicResultProps {
@@ -369,6 +377,10 @@ const queueCreator = ({
   version,
   lock = true,
   enableConnections,
+  options = {
+    requiresDuplicateDetection: false,
+    enablePartitioning: true,
+  },
   dependsOn,
   ...others
 }: QueueProps) => {
@@ -379,9 +391,11 @@ const queueCreator = ({
     {
       queueName: name,
       namespaceName: namespaceFullName,
-      ...defaultValues,
-      duplicateDetectionHistoryTimeWindow: duplicateDetectedTime,
       resourceGroupName: group.resourceGroupName,
+      maxSizeInMegabytes: isPrd ? 10240 : 1024,
+
+      ...defaultValues,
+      ...options,
     },
     { dependsOn }
   );
