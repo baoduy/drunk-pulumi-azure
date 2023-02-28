@@ -55,7 +55,7 @@ export default ({
         //authorizationPolicies: [{}],
         //cloudToDevice:{}
         //comments
-        enableFileUploadNotifications: false,
+        enableFileUploadNotifications: Boolean(storage?.fileContainerName),
         storageEndpoints: storage
           ? {
               $default: {
@@ -109,11 +109,14 @@ export default ({
                     name: storageEndpointName,
                     resourceGroup: group.resourceGroupName,
                     subscriptionId,
-
-                    batchFrequencyInSeconds: 300,
                     connectionString: storage.connectionString,
                     containerName: storage.messageContainerName,
                     encoding: 'avro',
+
+                    /**
+                     * Time interval at which blobs are written to storage. Value should be between 60 and 720 seconds. Default value is 300 seconds.
+                     */
+                    batchFrequencyInSeconds: 60,
                     /**
                      * File name format for the blob. Default format is {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}. All parameters are mandatory but can be reordered.
                      */
