@@ -35,6 +35,7 @@ const defaultValues = {
   defaultMessageTtl: isPrd ? 'P30D' : 'P1D',
   defaultMessageTimeToLive: isPrd ? 'P30D' : 'P1D',
   deadLetteringOnMessageExpiration: true,
+  maxSizeInMegabytes: 1024,
   lockDuration: 'PT1M',
 
   //Auto delete subscription after 30 idle.
@@ -201,7 +202,7 @@ interface TopicProps
   subscriptions?: Array<{ shortName: string; enableSession?: boolean }>;
   enableConnections?: boolean;
 
-  options?: OptionsType;
+  options?: OptionsType & { supportOrdering?: boolean };
   lock?: boolean;
 }
 
@@ -232,9 +233,7 @@ const topicCreator = ({
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
 
-      supportOrdering: true,
-      maxSizeInMegabytes: isPrd ? 10240 : 1024,
-
+      ...defaultValues,
       ...options,
     },
     { dependsOn }
@@ -330,9 +329,9 @@ const subscriptionCreator = ({
       resourceGroupName: group.resourceGroupName,
       topicName: topicFullName,
       namespaceName: namespaceFullName,
-      ...defaultValues,
-
       requiresSession: enableSession,
+
+      ...defaultValues,
     },
     { dependsOn }
   );
@@ -392,7 +391,6 @@ const queueCreator = ({
       queueName: name,
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
-      maxSizeInMegabytes: isPrd ? 10240 : 1024,
 
       ...defaultValues,
       ...options,
