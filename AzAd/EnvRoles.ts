@@ -39,4 +39,6 @@ export default async (includeOrganization = true) => {
   await Role({ ...envRoleConfig.contributor, includeOrganization });
   //Admin
   await Role({ ...envRoleConfig.admin, includeOrganization });
+
+  return getEnvRoleNames(includeOrganization);
 };
