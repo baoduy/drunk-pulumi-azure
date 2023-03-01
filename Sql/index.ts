@@ -77,10 +77,10 @@ interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
 
   /** if Auth is not provided it will be auto generated */
-  auth?: {
+  auth: {
     envRoleNames: EnvRoleNamesType;
     /** create an Admin group on AzAD for SQL accessing.*/
-    enableAdAdministrator: boolean;
+    enableAdAdministrator?: boolean;
     adminLogin: Input<string>;
     password: Input<string>;
   };
@@ -125,14 +125,14 @@ export default async ({
 }: Props) => {
   const sqlName = getSqlServerName(name);
 
-  if (vaultInfo && !auth) {
-    const login = await randomLogin({ name, loginPrefix: 'sql', vaultInfo });
-    auth = {
-      enableAdAdministrator: true,
-      adminLogin: login.userName,
-      password: login.password,
-    };
-  }
+  // if (vaultInfo && !auth) {
+  //   const login = await randomLogin({ name, loginPrefix: 'sql', vaultInfo });
+  //   auth = {
+  //     enableAdAdministrator: true,
+  //     adminLogin: login.userName,
+  //     password: login.password,
+  //   };
+  // }
 
   const adminGroup = auth?.enableAdAdministrator
     ? await getAdGroup(auth.envRoleNames.admin)
