@@ -74,6 +74,7 @@ export default ({
         features: devices.v20160203.Capabilities.None,
         //ipFilterRules: {},
         //networkRuleSets: {},
+        //privateEndpointConnections: {},
         messagingEndpoints: {
           fileNotifications: {
             lockDurationAsIso8601: 'PT1M',
@@ -82,7 +83,7 @@ export default ({
           },
         },
         minTlsVersion: '1.2',
-        //privateEndpointConnections: {},
+
         routing: {
           endpoints: {
             //eventHubs: [],
@@ -125,21 +126,17 @@ export default ({
                 ]
               : undefined,
           },
-          fallbackRoute: storage?.enableRouteFallback
-            ? {
-                name: `$fallback`,
-                condition: 'true',
-                endpointNames: [storageEndpointName],
-                isEnabled: true,
-                source: devices.RoutingSource.DeviceMessages,
-              }
-            : {
-                name: `$fallback`,
-                condition: 'true',
-                endpointNames: ['events'],
-                isEnabled: true,
-                source: devices.RoutingSource.DeviceMessages,
-              },
+          fallbackRoute: {
+            name: `$fallback`,
+            condition: 'true',
+            isEnabled: true,
+            source: devices.RoutingSource.DeviceMessages,
+
+            endpointNames: storage?.enableRouteFallback
+              ? [storageEndpointName]
+              : ['events'],
+          },
+
           routes: [
             {
               name: 'routeMessageToCustomEndpoints',
