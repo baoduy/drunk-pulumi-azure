@@ -119,7 +119,11 @@ class SshKeyResourceProvider
       olds.vaultName !== news.vaultName ||
       olds.publicKeyName !== news.publicKeyName
     ) {
-      await client.beginDeleteSecret(getSecretName(olds.publicKeyName));
+      await client
+        .beginDeleteSecret(getSecretName(olds.publicKeyName))
+        .catch((e) => {
+          //ignore if any error
+        });
     }
 
     if (
