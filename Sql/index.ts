@@ -1,28 +1,17 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 
+import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import { getAdGroup } from '../AzAd/Group';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import {
-  defaultTags,
-  isPrd,
-  subscriptionId,
-  tenantId,
-} from '../Common/AzureEnv';
+import { defaultTags, isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
 import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
 import Locker from '../Core/Locker';
-import { randomLogin } from '../Core/Random';
 import { addSecret } from '../KeyVault/Helper';
-import {
-  BasicResourceArgs,
-  BasicResourceResultProps,
-  KeyVaultInfo,
-  PrivateLinkProps,
-} from '../types';
+import { BasicResourceArgs, BasicResourceResultProps, KeyVaultInfo, PrivateLinkProps } from '../types';
 import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator, { SqlDbProps } from './SqlDb';
-import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -170,7 +159,7 @@ export default async ({
 
       tags: defaultTags,
     },
-    { ignoreChanges: ['administratorLogin'], protect: lock }
+    { ignoreChanges: ['administratorLogin','administrators.sid'], protect: lock }
   );
 
   if (lock) {
