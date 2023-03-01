@@ -47,6 +47,7 @@ export default async ({
         objectId: sp.objectId,
         permission: "ReadOnly",
         applicationId: sp.applicationId,
+        principalType: "ServicePrincipal",
         scope: vaultAccess.vaultInfo.id,
       });
     } else
@@ -55,6 +56,7 @@ export default async ({
         objectId: sp.objectId,
         permission: "ReadOnly",
         applicationId: sp.applicationId,
+        principalType: "ServicePrincipal",
         vaultInfo: vaultAccess.vaultInfo,
       });
   }
