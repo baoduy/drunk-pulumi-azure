@@ -166,7 +166,9 @@ export const getKeyVaultName = (
 ) =>
   getResourceName(
     name,
-    convention == false ? { prefix: '', suffix: '' } : convention
+    convention == false
+      ? { prefix: '', suffix: '', includeOrgName: true }
+      : convention
   ).substring(0, 24);
 
 export const getCdnEndpointName = (name: string) =>
