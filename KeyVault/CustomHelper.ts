@@ -1,8 +1,8 @@
-import { Input, output, Resource, Config } from "@pulumi/pulumi";
-import { getSecretName } from "../Common/Naming";
-import { VaultSecretResource } from "../CustomProviders/VaultSecret";
-import { KeyVaultInfo } from "../types";
-import {getSecret} from '../Common/ConfigHelper';
+import { Input, output, Resource, Config } from '@pulumi/pulumi';
+import { getSecretName } from '../Common/Naming';
+import { VaultSecretResource } from '../CustomProviders/VaultSecret';
+import { KeyVaultInfo } from '../types';
+import { getSecret } from '../Common/ConfigHelper';
 
 interface Props {
   name: string;
@@ -12,19 +12,15 @@ interface Props {
 }
 
 /**Add key vault secret from a value or from pulumi configuration secret. */
-export const addVaultSecretFrom = ({
-  name,
-  value,
-  vaultInfo,
-}: Props) => {
-  if (config && !value) value = getSecret(name);
+export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
+  if (!value) value = getSecret(name);
   if (!value) throw new Error(`The value of "${name}" is not defined.`);
 
   return addCustomSecret({
     name,
     value,
     vaultInfo,
-    contentType: "config variables",
+    contentType: 'config variables',
   });
 };
 
@@ -78,7 +74,7 @@ export const addCustomSecret = ({
     name,
     {
       name: n,
-      value: value ? output(value).apply((v) => v || "") : "",
+      value: value ? output(value).apply((v) => v || '') : '',
       vaultInfo,
       contentType: contentType || name,
       tags,
