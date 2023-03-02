@@ -3,6 +3,7 @@ import { getIotHubName } from '../../Common/Naming';
 import * as devices from '@pulumi/azure-native/devices';
 import { defaultTags, subscriptionId } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
+import Locker from '../../Core/Locker';
 
 interface Props extends BasicResourceArgs {
   sku: {
@@ -20,6 +21,8 @@ interface Props extends BasicResourceArgs {
     fileContainerName?: Input<string>;
     messageContainerName?: Input<string>;
   };
+
+  lock?: boolean;
 }
 
 export default ({
@@ -29,6 +32,7 @@ export default ({
   storage,
   serviceBus,
   dependsOn,
+  lock,
 }: Props) => {
   const hubName = getIotHubName(name);
   const busQueueEndpointName = 'busQueue';
@@ -73,7 +77,22 @@ export default ({
         //eventHubEndpoints: {},
         features: devices.v20160203.Capabilities.None,
         //ipFilterRules: {},
-        //networkRuleSets: {},
+        // networkRuleSets: {
+        //   applyToBuiltInEventHubEndpoint: true,
+        //   defaultAction: 'Deny',
+        //   ipRules: [
+        //     {
+        //       action: 'Allow',
+        //       filterName: 'rule1',
+        //       ipMask: '131.117.159.53',
+        //     },
+        //     {
+        //       action: 'Allow',
+        //       filterName: 'rule2',
+        //       ipMask: '157.55.59.128/25',
+        //     },
+        //   ],
+        // },
         //privateEndpointConnections: {},
         messagingEndpoints: {
           fileNotifications: {
@@ -179,6 +198,10 @@ export default ({
     },
     { dependsOn }
   );
+
+  if (lock) {
+    Locker({ name, resourceId: hub.id, dependsOn: hub });
+  }
 
   return hub;
 };
