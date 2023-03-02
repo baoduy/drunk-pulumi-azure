@@ -15,7 +15,6 @@ interface Props {
 export const addVaultSecretFrom = ({
   name,
   value,
-  config,
   vaultInfo,
 }: Props) => {
   if (config && !value) value = getSecret(name);
