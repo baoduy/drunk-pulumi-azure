@@ -2,25 +2,26 @@ import { Input, output, Resource, Config } from "@pulumi/pulumi";
 import { getSecretName } from "../Common/Naming";
 import { VaultSecretResource } from "../CustomProviders/VaultSecret";
 import { KeyVaultInfo } from "../types";
+import {getSecret} from '../Common/ConfigHelper';
 
 interface Props {
   name: string;
+  /** The value of the secret. If Value is not provided the secret will be get from config*/
   value?: Input<string>;
-  config?: Config;
   vaultInfo: KeyVaultInfo;
 }
 
 /**Add key vault secret from a value or from pulumi configuration secret. */
-export const addVaultSecretFrom = async ({
+export const addVaultSecretFrom = ({
   name,
   value,
   config,
   vaultInfo,
 }: Props) => {
-  if (config && !value) value = config.getSecret(name);
+  if (config && !value) value = getSecret(name);
   if (!value) throw new Error(`The value of "${name}" is not defined.`);
 
-  addCustomSecret({
+  return addCustomSecret({
     name,
     value,
     vaultInfo,
