@@ -1,4 +1,4 @@
-import { currentEnv } from '../Common/AzureEnv';
+import { currentEnv, defaultScope } from '../Common/AzureEnv';
 import Role, { getRoleName, RoleNameType } from './Role';
 
 const envRoleConfig = {
@@ -34,11 +34,23 @@ export const getEnvRoleNames = (
 
 export default async (includeOrganization = true) => {
   //ReadOnly
-  await Role({ ...envRoleConfig.readOnly, includeOrganization });
+  await Role({
+    ...envRoleConfig.readOnly,
+    includeOrganization,
+    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+  });
   //Contributor
-  await Role({ ...envRoleConfig.contributor, includeOrganization });
+  await Role({
+    ...envRoleConfig.contributor,
+    includeOrganization,
+    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+  });
   //Admin
-  await Role({ ...envRoleConfig.admin, includeOrganization });
+  await Role({
+    ...envRoleConfig.admin,
+    includeOrganization,
+    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+  });
 
   return getEnvRoleNames(includeOrganization);
 };
