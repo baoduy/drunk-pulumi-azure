@@ -182,8 +182,8 @@ export default async ({
     podConfig: {
       port,
       image,
-      securityContext: defaultSecurityContext,
-      podSecurityContext: defaultPodSecurityContext,
+      //securityContext: defaultSecurityContext,
+      //podSecurityContext: defaultPodSecurityContext,
       volumes: [volume],
     },
     deploymentConfig: { replicas: 1, useVirtualHost },
