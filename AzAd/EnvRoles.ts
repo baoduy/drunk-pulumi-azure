@@ -1,5 +1,7 @@
 import { currentEnv, defaultScope } from '../Common/AzureEnv';
 import Role, { getRoleName, RoleNameType } from './Role';
+import { getAdoIdentity } from './Identities/AzDevOps';
+import { addUserToGroup } from './Group';
 
 const envRoleConfig = {
   readOnly: {
@@ -46,10 +48,18 @@ export default async (includeOrganization = true) => {
     permissions: [{ roleName: 'Reader', scope: defaultScope }],
   });
   //Admin
-  await Role({
+  const adminGroup = await Role({
     ...envRoleConfig.admin,
     includeOrganization,
     permissions: [{ roleName: 'Reader', scope: defaultScope }],
+  });
+
+  //Add Global ADO Identity as Admin
+  const ado = await getAdoIdentity();
+  await addUserToGroup({
+    name: 'ado-admin-role',
+    groupObjectId: adminGroup.objectId,
+    objectId: ado.objectId,
   });
 
   return getEnvRoleNames(includeOrganization);

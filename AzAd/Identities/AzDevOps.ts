@@ -9,12 +9,14 @@ export const defaultName = 'azure-devops';
 interface Props {
   name?: string;
   enableOwner?: boolean;
-  vaultInfo: KeyVaultInfo;
-  allowAccessPolicy?: boolean
+  vaultInfo?: KeyVaultInfo;
+  allowAccessPolicy?: boolean;
 }
 
+/** Get Global  ADO Identity */
 export const getAdoIdentity = () => getIdentity(defaultName, true);
 
+/** Create Global ADO Identity */
 export default async ({
   name = defaultName,
   enableOwner,
@@ -27,21 +29,21 @@ export default async ({
   const principalRoles = enableOwner
     ? [{ roleName: 'Owner' }]
     : [
-      { roleName: 'Contributor' },
-      { roleName: 'Network Contributor' },
-      { roleName: 'Storage Account Contributor' },
-      { roleName: 'Storage Blob Data Contributor' },
-      { roleName: 'Storage File Data SMB Share Contributor' },
-      { roleName: 'Storage Queue Data Contributor' },
-      { roleName: 'Storage Table Data Contributor' },
-      { roleName: 'Log Analytics Contributor' },
-      { roleName: 'Key Vault Contributor' },
-      { roleName: 'Key Vault Administrator' },
-      { roleName: 'User Access Administrator' },
-      { roleName: 'AcrPush' },
-      { roleName: 'AcrPull' },
-      { roleName: 'Data Factory Contributor' },
-    ];
+        { roleName: 'Contributor' },
+        { roleName: 'Network Contributor' },
+        { roleName: 'Storage Account Contributor' },
+        { roleName: 'Storage Blob Data Contributor' },
+        { roleName: 'Storage File Data SMB Share Contributor' },
+        { roleName: 'Storage Queue Data Contributor' },
+        { roleName: 'Storage Table Data Contributor' },
+        { roleName: 'Log Analytics Contributor' },
+        { roleName: 'Key Vault Contributor' },
+        { roleName: 'Key Vault Administrator' },
+        { roleName: 'User Access Administrator' },
+        { roleName: 'AcrPush' },
+        { roleName: 'AcrPull' },
+        { roleName: 'Data Factory Contributor' },
+      ];
 
   const ado = await Identity({
     name,
@@ -55,7 +57,7 @@ export default async ({
   });
 
   //Grant key vault permission to ADO
-  if (allowAccessPolicy) {
+  if (allowAccessPolicy && vaultInfo) {
     grantVaultAccessPolicy({
       vaultInfo,
       name: 'azure-devops-vault-permission',
