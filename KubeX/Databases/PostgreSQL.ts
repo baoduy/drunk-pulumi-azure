@@ -1,11 +1,11 @@
 import { DefaultK8sArgs } from '../types';
 import { KeyVaultInfo } from '../../types';
-import { randomLogin, randomPassword } from '../../Core/Random';
+import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import * as k8s from '@pulumi/kubernetes';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { interpolate } from '@pulumi/pulumi';
+import { interpolate, Input } from '@pulumi/pulumi';
 
 interface Props extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
