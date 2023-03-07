@@ -9,6 +9,7 @@ import { interpolate } from '@pulumi/pulumi';
 
 interface Props extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
+  auth?: { rootPass?: Input<string> };
   storageClassName: StorageClassNameTypes;
 }
 
@@ -16,14 +17,17 @@ export default async ({
   name = 'postgre-sql',
   namespace,
   vaultInfo,
+  auth,
   storageClassName,
   provider,
 }: Props) => {
-  const password = randomPassword({
-    name,
-    length: 25,
-    options: { special: false },
-  }).result;
+  const password = auth?.rootPass
+    ? auth.rootPass
+    : randomPassword({
+        name,
+        length: 25,
+        options: { special: false },
+      }).result;
 
   if (vaultInfo) {
     addCustomSecret({
