@@ -7,6 +7,7 @@ export interface Props extends Omit<DefaultK8sArgs, 'name' | 'namespace'> {
   replicas?: number;
   enableLiveness?: boolean;
   enableMetrics?: boolean;
+  tcp?: Array<{ host: string; service: string; port: number }>;
 }
 
 export default async ({
@@ -14,13 +15,22 @@ export default async ({
   replicas = 2,
   enableLiveness,
   enableMetrics,
+  tcp = [],
   ...others
 }: Props) => {
   const name = 'cloudflare-tunnel';
   const ns = Namespace({ name: 'cloudflare', ...others });
 
+  const tcpArgs = tcp.flatMap((t) => [
+    '--hostname',
+    t.host,
+    '--url',
+    `tcp://${t.service}:${t.port}`,
+  ]);
+
   const args = [
     'tunnel',
+    ...tcpArgs,
     '--no-autoupdate',
     'run',
     '--token',
