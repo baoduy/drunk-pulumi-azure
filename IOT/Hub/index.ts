@@ -5,6 +5,18 @@ import { defaultTags, subscriptionId } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import Locker from '../../Core/Locker';
 
+type StorageEndpointPropertiesArgs = {
+  name: Input<string>;
+  resourceGroup: Input<string>;
+  subscriptionId: Input<string>;
+  connectionString: Input<string>;
+  containerName: Input<string>;
+  encoding: 'avro' | 'avroDeflate'; // 'avroDeflate' and 'avro'
+  batchFrequencyInSeconds: Input<number>;
+  fileNameFormat: Input<string>;
+  maxChunkSizeInBytes: Input<number>;
+};
+
 interface Props extends BasicResourceArgs {
   sku: {
     name: devices.IotHubSku;
@@ -12,14 +24,19 @@ interface Props extends BasicResourceArgs {
   };
 
   serviceBus?: {
-    queueConnectionString?: Input<string>;
-    topicConnectionString?: Input<string>;
+    /** provide the queue connection string to enable message to be pushing to service bus queue */
+    queueMessageConnectionString?: Input<string>;
+    /** provide the topic connection string to enable message to be pushing to service bus topic */
+    topicMessageConnectionString?: Input<string>;
   };
   storage?: {
-    enableRouteFallback?: boolean;
     connectionString: Input<string>;
+    /** provide the file container name to enable file to be upload in IOT hub*/
     fileContainerName?: Input<string>;
+    /** provide the message container name to enable message to be pushing to storage */
     messageContainerName?: Input<string>;
+    /** provide the event container name to enable events to be pushing to storage */
+    eventContainerName?: Input<string>;
   };
 
   lock?: boolean;
@@ -37,18 +54,62 @@ export default ({
   const hubName = getIotHubName(name);
   const busQueueEndpointName = 'busQueue';
   const busTopicEndpointName = 'busTopic';
-  const storageEndpointName = 'hubStorage';
-  let routeEndpoints = ['events'];
+  const storageMessageEndpointName = 'hubStorage';
+  const storageEventEndpointName = 'hubEventStorage';
 
-  if (storage?.connectionString && storage?.messageContainerName)
-    routeEndpoints.push(storageEndpointName);
-  if (serviceBus?.queueConnectionString)
+  const routeEndpoints = new Array<string>();
+  const storageEndpoints = new Array<StorageEndpointPropertiesArgs>();
+
+  if (storage?.connectionString && storage?.messageContainerName) {
+    routeEndpoints.push(storageMessageEndpointName);
+    storageEndpoints.push({
+      name: storageMessageEndpointName,
+      resourceGroup: group.resourceGroupName,
+      subscriptionId,
+      connectionString: storage.connectionString,
+      containerName: storage.messageContainerName,
+      encoding: 'avro', // 'avroDeflate' and 'avro'
+      batchFrequencyInSeconds: 60, //60 to 720
+      fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+      maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
+    });
+  }
+  if (storage?.connectionString && storage?.eventContainerName) {
+    storageEndpoints.push({
+      name: storageEventEndpointName,
+      resourceGroup: group.resourceGroupName,
+      subscriptionId,
+      connectionString: storage.connectionString,
+      containerName: storage.eventContainerName,
+      encoding: 'avro', // 'avroDeflate' and 'avro'
+      batchFrequencyInSeconds: 60, //60 to 720
+      fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+      maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
+    });
+  }
+
+  if (serviceBus?.queueMessageConnectionString)
     routeEndpoints.push(busQueueEndpointName);
-  if (serviceBus?.topicConnectionString)
+  if (serviceBus?.topicMessageConnectionString)
     routeEndpoints.push(busTopicEndpointName);
 
-  //The Free and Basic tiers only supports 1 endpoint.
-  if (!sku.name.startsWith('S')) routeEndpoints = routeEndpoints.slice(-1);
+  const routes: Array<any> = routeEndpoints.map((r) => ({
+    name: `routeMessageTo${r}`,
+    source: devices.RoutingSource.DeviceMessages,
+    endpointNames: [r],
+    isEnabled: true,
+    condition: 'true',
+  }));
+
+  if (storage?.eventContainerName) {
+    routes.push({
+      name: `routeMessageTo${storageEventEndpointName}`,
+      source: devices.RoutingSource.DeviceLifecycleEvents,
+      endpointNames: [storageEventEndpointName],
+      isEnabled: true,
+      condition: 'true',
+    });
+  }
 
   const hub = new devices.IotHubResource(
     hubName,
@@ -106,44 +167,29 @@ export default ({
         routing: {
           endpoints: {
             //eventHubs: [],
-            serviceBusQueues: serviceBus?.queueConnectionString
+            serviceBusQueues: serviceBus?.queueMessageConnectionString
               ? [
                   {
                     name: busQueueEndpointName,
-                    connectionString: serviceBus.queueConnectionString,
+                    connectionString: serviceBus.queueMessageConnectionString,
                     resourceGroup: group.resourceGroupName,
                     subscriptionId,
                   },
                 ]
               : undefined,
 
-            serviceBusTopics: serviceBus?.topicConnectionString
+            serviceBusTopics: serviceBus?.topicMessageConnectionString
               ? [
                   {
                     name: busTopicEndpointName,
-                    connectionString: serviceBus.topicConnectionString,
+                    connectionString: serviceBus.topicMessageConnectionString,
                     resourceGroup: group.resourceGroupName,
                     subscriptionId,
                   },
                 ]
               : undefined,
 
-            storageContainers: storage?.messageContainerName
-              ? [
-                  {
-                    name: storageEndpointName,
-                    resourceGroup: group.resourceGroupName,
-                    subscriptionId,
-                    connectionString: storage.connectionString,
-                    containerName: storage.messageContainerName,
-                    encoding: 'avro', // 'avroDeflate' and 'avro'
-                    batchFrequencyInSeconds: 60, //60 to 720
-                    fileNameFormat:
-                      '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
-                    maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
-                  },
-                ]
-              : undefined,
+            storageContainers: storageEndpoints,
           },
           fallbackRoute: {
             name: `$fallback`,
@@ -151,48 +197,12 @@ export default ({
             isEnabled: true,
             source: devices.RoutingSource.DeviceMessages,
 
-            endpointNames: storage?.enableRouteFallback
-              ? [storageEndpointName]
+            endpointNames: storage?.eventContainerName
+              ? [storageEventEndpointName]
               : ['events'],
           },
 
-          routes: [
-            {
-              name: 'routeMessageToCustomEndpoints',
-              source: devices.RoutingSource.DeviceMessages,
-              endpointNames: routeEndpoints,
-              isEnabled: true,
-              condition: 'true',
-            },
-            {
-              name: 'routeLifecycleToCustomEndpoints',
-              source: devices.RoutingSource.DeviceLifecycleEvents,
-              endpointNames: routeEndpoints,
-              isEnabled: true,
-              condition: 'true',
-            },
-            // {
-            //   name: 'routeJobLifecycleToCustomEndpoints',
-            //   source: devices.RoutingSource.DeviceJobLifecycleEvents,
-            //   endpointNames: routeEndpoints,
-            //   isEnabled: true,
-            //   condition: 'true',
-            // },
-            // {
-            //   name: 'routeTwinToCustomEndpoints',
-            //   source: devices.RoutingSource.TwinChangeEvents,
-            //   endpointNames: routeEndpoints,
-            //   isEnabled: true,
-            //   condition: 'true',
-            // },
-            // {
-            //   name: 'routeInvalidToCustomEndpoints',
-            //   source: devices.RoutingSource.Invalid,
-            //   endpointNames: routeEndpoints,
-            //   isEnabled: true,
-            //   condition: 'true',
-            // },
-          ],
+          routes: routes,
         },
       },
     },
