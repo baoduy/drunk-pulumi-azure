@@ -170,9 +170,9 @@ export interface SiteConfigArgs {
   /**
    * Resource tags
    */
-  tags?: pulumi.Input<{
-    [key: string]: pulumi.Input<string>;
-  }>;
+  // tags?: pulumi.Input<{
+  //   [key: string]: pulumi.Input<string>;
+  // }>;
   /**
    * Tracing options
    */
