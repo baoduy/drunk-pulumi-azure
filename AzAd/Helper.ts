@@ -36,7 +36,15 @@ export const getIdentitySecrets = async ({
   return { clientId, clientSecret, principalId, principalSecret };
 };
 
-export const getIdentity = (name: string, isGlobal = false) =>
-  azureAD.getApplication({
-    displayName: isGlobal ? `global-${name}` : getIdentityName(name),
+export const getIdentity = async (name: string, isGlobal = false) => {
+  const displayName = isGlobal ? `global-${name}` : getIdentityName(name);
+
+  const app = await azureAD.getApplication({
+    displayName,
   });
+  const principal = await azureAD.getServicePrincipal({
+    displayName,
+  });
+
+  return { app, principal };
+};
