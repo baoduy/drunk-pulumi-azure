@@ -197,4 +197,5 @@ export interface SiteConfigArgs {
    * Web socket enabled.
    */
   webSocketsEnabled?: pulumi.Input<boolean>;
+  linuxFxVersion?: pulumi.Input<string>;
 }

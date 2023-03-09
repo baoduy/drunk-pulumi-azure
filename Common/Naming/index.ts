@@ -85,7 +85,10 @@ export const getLogWpName = (name: string) =>
   getResourceName(name, { suffix: 'wp' });
 
 export const getWebAppName = (name: string) =>
-  getResourceName(name, { suffix: 'web-app' });
+  getResourceName(name, { suffix: 'web' });
+
+export const getFuncAppName = (name: string) =>
+  getResourceName(name, { suffix: 'func' });
 
 export const getWebTestName = (name: string) =>
   getResourceName(name, { suffix: 'hlz' });

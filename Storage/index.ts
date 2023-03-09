@@ -247,7 +247,7 @@ export default ({
     if (appInsight && customDomain) {
       addInsightMonitor({ name, appInsight, url: customDomain });
     }
-  } else createThreatProtection({ name, targetResourceId: stg.id });
+  } else if (isPrd) createThreatProtection({ name, targetResourceId: stg.id });
 
   //Create Azure CDN if customDomain provided
   if (

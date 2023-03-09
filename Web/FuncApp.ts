@@ -1,6 +1,6 @@
 import * as native from '@pulumi/azure-native';
 import { BasicResourceArgs } from '../types';
-import { getWebAppName } from '../Common/Naming';
+import { getFuncAppName } from '../Common/Naming';
 import Locker from '../Core/Locker';
 import * as pulumi from '@pulumi/pulumi';
 import { SiteConfigArgs } from './types';
@@ -23,19 +23,24 @@ export default ({
   enabled,
   lock,
 }: Props) => {
-  const finalName = getWebAppName(name);
+  const finalName = getFuncAppName(name);
 
-  const app = new native.web.WebApp(finalName, {
-    kind,
-    ...group,
+  const app = new native.web.WebApp(
+    finalName,
+    {
+      kind,
+      name: finalName,
+      ...group,
 
-    serverFarmId: appServicePlanId,
-    enabled,
-    httpsOnly: true,
+      serverFarmId: appServicePlanId,
+      enabled,
+      httpsOnly: true,
 
-    siteConfig,
-    tags: defaultTags,
-  });
+      siteConfig,
+      tags: defaultTags,
+    },
+    { deleteBeforeReplace: true }
+  );
 
   if (lock) {
     Locker({ name, resourceId: app.id, dependsOn: app });
