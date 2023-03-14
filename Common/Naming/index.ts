@@ -25,6 +25,9 @@ export const getSecretName = (name: string) => {
   return replaceAll(name, '_', '-').toLowerCase();
 };
 
+export const getAppPlanName = (name: string) =>
+  getResourceName(name, { includeOrgName: false, suffix: 'app-plan' });
+
 export const getCertName = (name: string) => {
   name = getSecretName(name);
   return `${name}-cert`;
@@ -80,6 +83,12 @@ export const getAppInsightName = (name: string) =>
 
 export const getLogWpName = (name: string) =>
   getResourceName(name, { suffix: 'wp' });
+
+export const getWebAppName = (name: string) =>
+  getResourceName(name, { suffix: 'web' });
+
+export const getFuncAppName = (name: string) =>
+  getResourceName(name, { suffix: 'func' });
 
 export const getWebTestName = (name: string) =>
   getResourceName(name, { suffix: 'hlz' });

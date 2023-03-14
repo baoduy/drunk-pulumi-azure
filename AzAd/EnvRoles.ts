@@ -59,7 +59,7 @@ export default async (includeOrganization = true) => {
   await addUserToGroup({
     name: 'ado-admin-role',
     groupObjectId: adminGroup.objectId,
-    objectId: ado.applicationId,
+    objectId: ado.principal.objectId,
   });
 
   return getEnvRoleNames(includeOrganization);
