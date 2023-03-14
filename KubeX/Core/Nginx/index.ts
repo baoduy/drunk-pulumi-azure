@@ -1,25 +1,26 @@
-import * as k8s from "@pulumi/kubernetes";
-import * as pulumi from "@pulumi/pulumi";
-import { DefaultK8sArgs } from "../../types";
-import { applyDeploymentRules } from "../SecurityRules";
+import * as k8s from '@pulumi/kubernetes';
+import * as pulumi from '@pulumi/pulumi';
+import { DefaultK8sArgs } from '../../types';
+import { applyDeploymentRules } from '../SecurityRules';
+import { Input } from '@pulumi/pulumi';
 
 const defaultConfigs = {
-  useForwardedHeaders: "true",
-  computeFullForwardedFor: "true",
-  useProxyProtocol: "true",
-  "use-forwarded-headers": "true",
-  "disable-access-log": "true",
-  "proxy-buffer-size": "800k",
-  "client-header-buffer-size": "800k",
-  client_max_body_size: "10m",
-  "enable-modsecurity": "true",
+  useForwardedHeaders: 'true',
+  computeFullForwardedFor: 'true',
+  useProxyProtocol: 'true',
+  'use-forwarded-headers': 'true',
+  'disable-access-log': 'true',
+  'proxy-buffer-size': '800k',
+  'client-header-buffer-size': '800k',
+  client_max_body_size: '10m',
+  'enable-modsecurity': 'true',
   //'modsecurity-snippet': ``,
-  "enable-owasp-modsecurity-crs": "true",
-  "worker-shutdown-timeout": "100s",
-  "worker-connections": "1024",
-  "worker-processes": "4", //or auto
-  "annotation-value-word-blocklist":
-    "load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},\\", //Remove single quote from annotation-value-word-blocklist to allows security content.
+  'enable-owasp-modsecurity-crs': 'true',
+  'worker-shutdown-timeout': '100s',
+  'worker-connections': '1024',
+  'worker-processes': '4', //or auto
+  'annotation-value-word-blocklist':
+    'load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},\\', //Remove single quote from annotation-value-word-blocklist to allows security content.
 };
 
 interface Props extends DefaultK8sArgs {
@@ -41,9 +42,9 @@ interface Props extends DefaultK8sArgs {
   /**The nginx config map */
   config?: { [key: string]: string } | typeof defaultConfigs;
   /**Expose TCP Ports {port: dnsName} */
-  tcp?: { [key: string]: string };
+  tcp?: { [key: number]: string };
   /**Expose UDP ports  {port: dnsName} */
-  udp?: { [key: string]: string };
+  udp?: { [key: number]: string };
 
   /** Set Proxy Headers. It will be applied to all requests*/
   addHeaders?: { [key: string]: string };
@@ -62,7 +63,7 @@ interface Props extends DefaultK8sArgs {
 
 export default ({
   name,
-  namespace = "nginx",
+  namespace = 'nginx',
   version,
 
   useIngressClassOnly = true,
@@ -80,32 +81,32 @@ export default ({
   dependsOn,
 }: Props) => {
   //Annotations
-  const annotations: any = {};
+  const annotations: { [key: string]: Input<string> } = {};
 
   if (network.internalIngress) {
-    annotations["service.beta.kubernetes.io/azure-load-balancer-internal"] =
-      "true";
+    annotations['service.beta.kubernetes.io/azure-load-balancer-internal'] =
+      'true';
   }
   if (network.vnetResourceGroup) {
     annotations[
-      "service.beta.kubernetes.io/azure-load-balancer-resource-group"
+      'service.beta.kubernetes.io/azure-load-balancer-resource-group'
     ] = network.vnetResourceGroup;
   }
   if (network.internalSubnetName) {
     annotations[
-      "service.beta.kubernetes.io/azure-load-balancer-internal-subnet"
+      'service.beta.kubernetes.io/azure-load-balancer-internal-subnet'
     ] = network.internalSubnetName;
   }
 
   // Create a NGINX Deployment
-  const nginx = new k8s.helm.v3.Chart(
+  return new k8s.helm.v3.Chart(
     name,
     {
       namespace,
-      chart: "ingress-nginx",
+      chart: 'ingress-nginx',
       version,
       fetchOpts: {
-        repo: "https://kubernetes.github.io/ingress-nginx",
+        repo: 'https://kubernetes.github.io/ingress-nginx',
       },
       skipAwait: true,
       values: {
@@ -122,13 +123,13 @@ export default ({
           config: {
             ...defaultConfigs,
             ...config,
-            "error-log-level": enableDebug ? "debug" : "notice", // notice or error
+            'error-log-level': enableDebug ? 'debug' : 'notice', // notice or error
           },
 
           useIngressClassOnly,
           watchIngressWithoutClass: defaultIngressClass,
 
-          ingressClass: useIngressClassOnly ? name : "nginx",
+          ingressClass: useIngressClassOnly ? name : 'nginx',
           ingressClassResource: useIngressClassOnly
             ? {
                 name,
@@ -139,23 +140,23 @@ export default ({
             : undefined,
 
           nodeSelector: {
-            "kubernetes.io/os": "linux",
+            'kubernetes.io/os': 'linux',
           },
 
           service: {
-            externalTrafficPolicy: "Local",
+            externalTrafficPolicy: 'Local',
             annotations,
             clusterIP: network.clusterIP,
             loadBalancerIP: network.loadBalancerIP,
           },
           resources: {
             limits: {
-              cpu: "1000m",
-              memory: "1Gi",
+              cpu: '1000m',
+              memory: '1Gi',
             },
             requests: {
-              cpu: "10m",
-              memory: "10Mi",
+              cpu: '10m',
+              memory: '10Mi',
             },
           },
           // metrics: {
@@ -165,7 +166,7 @@ export default ({
       },
 
       transformations: [
-        (obj: any) => {
+        (obj) => {
           applyDeploymentRules(obj, {
             //ignoredKinds: isPrd ? ['Job'] : undefined,
             ignoreSecurityContext: true,
@@ -175,6 +176,4 @@ export default ({
     },
     { provider, dependsOn }
   );
-
-  return nginx;
 };

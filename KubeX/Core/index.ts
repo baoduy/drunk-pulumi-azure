@@ -13,9 +13,9 @@ interface NginxItemProps {
   internalIpAddress?: string;
 
   /**Expose TCP Ports {port: dnsName} */
-  tcp?: { [key: string]: string };
+  tcp?: { [key: number]: string };
   /**Expose UDP ports  {port: dnsName} */
-  udp?: { [key: string]: string };
+  udp?: { [key: number]: string };
 }
 
 interface NginxProps {
@@ -45,7 +45,7 @@ interface Props {
   provider: k8s.Provider;
 }
 
-export default async ({
+export default ({
   namespaces,
   provider,
   nginx,
@@ -84,7 +84,7 @@ export default async ({
     });
 
     resources.push(
-      await CertManager({
+      CertManager({
         ...certManager,
         namespace: ns.metadata.name,
         provider,

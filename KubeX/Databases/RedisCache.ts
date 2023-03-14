@@ -4,35 +4,49 @@ import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
-import { interpolate } from '@pulumi/pulumi';
+import { Input, interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
 interface Props extends DefaultK8sArgs {
   version?: string;
   vaultInfo?: KeyVaultInfo;
+  auth?: { password?: Input<string> };
   storageClassName?: StorageClassNameTypes;
 }
 
-export default async ({
+export default ({
   name,
   namespace,
   version = 'latest',
   vaultInfo,
+  auth,
   storageClassName,
   ...others
 }: Props) => {
-  const password = randomPassword({
-    name,
-    length: 25,
-    options: { special: false },
-  }).result;
+  const port = 6379;
+
+  const password =
+    auth?.password ||
+    randomPassword({
+      name,
+      length: 25,
+      options: { special: false },
+    }).result;
 
   if (vaultInfo) {
     addCustomSecret({
       name: getPasswordName(name, null),
       vaultInfo,
       value: password,
+      contentType: name,
+    });
+
+    const conn = interpolate`${name}.${namespace}.svc.cluster.local:${port},password=${password},ssl=False,abortConnect=False`;
+    addCustomSecret({
+      name: `${name}-conn`,
+      vaultInfo,
+      value: conn,
       contentType: name,
     });
   }
@@ -46,7 +60,6 @@ export default async ({
       })
     : undefined;
 
-  const port = 6379;
   const redis = Deployment({
     name,
     namespace,
