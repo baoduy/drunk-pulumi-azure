@@ -1,7 +1,7 @@
-import { createAxios } from "../Tools/Axios";
-import { getSecret } from "../KeyVault/Helper";
-import { getCertOrderName } from "../Common/Naming";
-import * as global from "../Common/GlobalEnv";
+import { createAxios } from '../Tools/Axios';
+import { getSecret } from '../KeyVault/Helper';
+import { getCertOrderName } from '../Common/Naming';
+import * as global from '../Common/GlobalEnv';
 
 interface AzResult {
   value: Array<{
@@ -21,7 +21,7 @@ export const getCertificateForDomain = async (domain: string) => {
     .get<AzResult>(url)
     .then((rs) => rs.data)
     .catch((err) => {
-      console.error("getCertOrderInfo: Error ", err.message || err.data);
+      console.error('getCertOrderInfo: Error ', err);
       return undefined;
     });
 
@@ -38,6 +38,6 @@ export const getCertificateForDomain = async (domain: string) => {
   return {
     name: cert.name!,
     base64CertData: cert.value!,
-    thumbprint: cert.properties!.tags!["Thumbprint"],
+    thumbprint: cert.properties!.tags!['Thumbprint'],
   };
 };

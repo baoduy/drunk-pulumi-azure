@@ -1,6 +1,6 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
-import {createAxios} from '../Tools/Axios';
+import { createAxios } from '../Tools/Axios';
 import { Input, Resource } from '@pulumi/pulumi';
 import { defaultScope, subscriptionId } from '../Common/AzureEnv';
 
