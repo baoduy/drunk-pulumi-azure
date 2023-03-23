@@ -3,6 +3,7 @@ import * as pulumi from '@pulumi/pulumi';
 import { createAxios } from '../Tools/Axios';
 import { Input, Resource } from '@pulumi/pulumi';
 import { defaultScope, subscriptionId } from '../Common/AzureEnv';
+import { builtInRoles } from './builtInRoles';
 
 type GetRoleProps = {
   roleName: string;
@@ -25,8 +26,11 @@ type RoleDefinitionProps = {
 
 /** The result must be single item if not will return undefined. */
 export const getRoleDefinitionByName = async ({ roleName }: GetRoleProps) => {
+  const role = builtInRoles.find((r) => r.properties.roleName === roleName);
+  if (role) return role;
+
   const axios = createAxios();
-  const url = `/providers/Microsoft.Authorization/roleDefinitions?$filter=roleName eq '${roleName}'&api-version=2015-07-01`;
+  const url = `/providers/Microsoft.Authorization/roleDefinitions?$filter=roleName eq '${roleName}'&api-version=2018-01-01-preview`;
 
   const rs = await axios
     .get<AzureRestResult<RoleDefinitionProps>>(url)

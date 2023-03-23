@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { InternalCredentials } from '../CustomProviders/Base';
 import axios from 'axios';
 import { urlJoin } from 'url-join-ts';
@@ -35,9 +36,16 @@ export const createAxios = () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     (rs) => rs,
     (error) => {
-      // whatever you want to do with the error
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      throw error.response?.data || error;
+      let final = error;
+
+      if (error.response) {
+        final = error.response.data;
+      } else if (error.request) {
+        final = error.request;
+      } else {
+        final = error.message;
+      }
+      throw new Error(final);
     }
   );
   return axiosWrapper;
