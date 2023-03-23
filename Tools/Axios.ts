@@ -19,7 +19,7 @@ export const createAxios = () => {
     }
 
     if (!config.url || !config.url.startsWith('http')) {
-      config.url = config.url.includes('subscriptions')
+      config.url = config.url!.includes('subscriptions')
         ? urlJoin('https://management.azure.com', config.url)
         : urlJoin(baseUrl, config.url);
     }
