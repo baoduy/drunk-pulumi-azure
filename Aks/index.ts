@@ -121,7 +121,6 @@ interface Props extends BasicResourceArgs {
     enableAzurePolicy?: boolean;
     enableKubeDashboard?: boolean;
     enableVirtualHost?: boolean;
-    disableLocalAccounts?: boolean;
     applicationGateway?: { gatewaySubnetId: pulumi.Input<string> };
   };
 
@@ -141,6 +140,8 @@ interface Props extends BasicResourceArgs {
   };
 
   aksAccess?: {
+    //Only disable local accounts one downloaded and connected to ADO
+    disableLocalAccounts?: boolean;
     envRoleNames: EnvRoleNamesType;
     adminMembers?: Array<{ objectId: Input<string> }>;
 
@@ -152,9 +153,7 @@ interface Props extends BasicResourceArgs {
   network: {
     subnetId?: pulumi.Input<string>;
     virtualHostSubnetName?: pulumi.Input<string>;
-
     enableFirewall?: boolean;
-
     outboundIpAddress?: {
       ipAddressId: pulumi.Input<string>;
       ipAddressPrefixId?: pulumi.Input<string>;
@@ -407,9 +406,8 @@ export default async ({
         upgradeChannel: native.containerservice.UpgradeChannel.Stable,
       },
 
-      //TODO: Needs to find a solution to allows ADO to deploy to AKS without this
       disableLocalAccounts:
-        addon?.disableLocalAccounts && Boolean(aksAccess?.adminMembers),
+        aksAccess?.disableLocalAccounts && Boolean(aksAccess?.adminMembers),
 
       aadProfile: {
         enableAzureRBAC: Boolean(aksAccess?.adminMembers && adminGroup),
