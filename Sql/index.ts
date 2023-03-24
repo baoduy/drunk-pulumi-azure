@@ -94,6 +94,8 @@ interface Props extends BasicResourceArgs {
   >;
 
   network?: {
+    //Enable this will add 0.0.0.0 to 255.255.255.255 to the DB whitelist
+    acceptAllInternetConnect?: boolean;
     subnetId?: Input<string>;
     ipAddresses?: Input<string>[];
     /** To enable Private Link need to ensure the subnetId is provided. */
@@ -212,8 +214,16 @@ export default async ({
     }
   }
 
-  //Public IpAddresses
-  if (network?.ipAddresses) {
+  //Allow Public Ip Accessing
+  if (network?.acceptAllInternetConnect) {
+    new sql.FirewallRule('accept-all-connection', {
+      firewallRuleName: 'accept-all-connection',
+      serverName: sqlServer.name,
+      ...group,
+      startIpAddress: '0.0.0.0',
+      endIpAddress: '255.255.255.255',
+    });
+  } else if (network?.ipAddresses) {
     all(network.ipAddresses).apply((ips) =>
       convertToIpRange(ips).map((ip, i) => {
         const n = `${sqlName}-fwRule-${i}`;
