@@ -1,12 +1,10 @@
 import * as documentdb from "@pulumi/azure-native/documentdb";
-import * as pulumi from "@pulumi/pulumi";
 import { getCosmosDbName } from "../Common/Naming";
 import { DefaultResourceArgs, KeyVaultInfo, ResourceGroupInfo } from "../types";
 import ResourceCreator from "../Core/ResourceCreator";
 import { defaultTags, isPrd } from "../Common/AzureEnv";
 import { createThreatProtection } from "../Logs/Helpers";
 import { Input } from "@pulumi/pulumi";
-import { addLegacySecret } from "../KeyVault/LegacyHelper";
 
 interface CosmosDbProps {
   name: string;

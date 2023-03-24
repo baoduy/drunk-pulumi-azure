@@ -71,7 +71,7 @@ export const addCustomSecret = ({
   const n = formattedName ? name : getSecretName(name);
   //This KeyVault Secret is not auto recovery the deleted one.
   return new VaultSecretResource(
-    name,
+    name.replace('/./g', '_'),
     {
       name: n,
       value: value ? output(value).apply((v) => v || '') : '',

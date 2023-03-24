@@ -57,7 +57,7 @@ export const addKey = ({
   const n = getSecretName(name);
 
   return new keyvault.Key(
-    name,
+    name.replace('/./g', '_'),
     {
       keyName: n,
       vaultName: vaultInfo.name,

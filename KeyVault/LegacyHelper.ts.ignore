@@ -1,0 +1,182 @@
+import * as azure from '@pulumi/azure';
+import { Input, output, Resource } from '@pulumi/pulumi';
+import { getCertName, getSecretName } from '../Common/Naming';
+import { KeyVaultInfo } from '../types';
+import * as fs from 'fs';
+import { defaultTags } from '../Common/AzureEnv';
+
+type CertProps = {
+  name: string;
+  subjectName: string;
+  dnsNames: Input<string>[];
+  vaultInfo: KeyVaultInfo;
+  isServerAuth: boolean;
+  validityInMonths?: number;
+};
+
+// export const addLegacyCert = ({
+//   name,
+//   subjectName,
+//   dnsNames,
+//   vaultInfo,
+//   isServerAuth = false,
+//   validityInMonths = 12,
+// }: CertProps) => {
+//   name = getCertName(name);
+//   const cert = new azure.keyvault.Certificate(
+//     name,
+//     {
+//       name,
+//       certificatePolicy: {
+//         issuerParameters: {
+//           name: 'Self',
+//         },
+//         keyProperties: {
+//           exportable: true,
+//           keySize: 2048,
+//           keyType: 'RSA',
+//           reuseKey: true,
+//         },
+//         lifetimeActions: [
+//           {
+//             action: {
+//               actionType: 'AutoRenew',
+//             },
+//             trigger: {
+//               daysBeforeExpiry: 30,
+//             },
+//           },
+//         ],
+//         secretProperties: {
+//           contentType: 'application/x-pkcs12',
+//         },
+//         x509CertificateProperties: {
+//           // Server Authentication = 1.3.6.1.5.5.7.3.1
+//           // Client Authentication = 1.3.6.1.5.5.7.3.2
+//           extendedKeyUsages: isServerAuth
+//             ? ['1.3.6.1.5.5.7.3.1']
+//             : ['1.3.6.1.5.5.7.3.2'],
+//           keyUsages: [
+//             'cRLSign',
+//             'dataEncipherment',
+//             'digitalSignature',
+//             'keyAgreement',
+//             'keyCertSign',
+//             'keyEncipherment',
+//           ],
+//           subject: `CN=${subjectName}`,
+//           subjectAlternativeNames: {
+//             dnsNames,
+//           },
+//           validityInMonths,
+//         },
+//       },
+//       keyVaultId: vaultInfo.id,
+//       tags: defaultTags,
+//     },
+//     {
+//       customTimeouts: { create: '15m', delete: '15m', update: '15m' },
+//       ignoreChanges: [
+//         //This need to create a new cert with new name. validityInMonths can't be changed after cert is created.
+//         'certificatePolicy.x509CertificateProperties.validityInMonths',
+//       ],
+//     }
+//   );
+//
+//   return cert;
+// };
+
+interface ImportCertProps {
+  name: string;
+  vaultInfo: KeyVaultInfo;
+  filePath: string;
+  password?: Input<string>;
+}
+
+// export const importLegacyCert = ({
+//   name,
+//   password,
+//   filePath,
+//   vaultInfo,
+// }: ImportCertProps) => {
+//   name = getCertName(name);
+//
+//   const base64Data = fs.readFileSync(filePath).toString('base64');
+//   const cert = new azure.keyvault.Certificate(name, {
+//     name,
+//     certificatePolicy: {
+//       issuerParameters: {
+//         name: 'Unknown',
+//       },
+//       keyProperties: {
+//         exportable: true,
+//         keySize: 2048,
+//         keyType: 'RSA',
+//         reuseKey: true,
+//       },
+//       secretProperties: {
+//         contentType: 'application/x-pkcs12',
+//       },
+//     },
+//     certificate: { contents: base64Data, password },
+//     keyVaultId: vaultInfo.id,
+//     tags: defaultTags,
+//   });
+//
+//   return cert;
+// };
+
+type SecretProps = {
+  name: string;
+  value: Input<string>;
+  vaultInfo: KeyVaultInfo;
+  contentType?: Input<string>;
+  tags?: Input<{
+    [key: string]: string;
+  }>;
+  dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
+};
+
+// export const addLegacyKey = ({
+//   name,
+//   vaultInfo,
+//   tags,
+//   dependsOn,
+// }: Omit<SecretProps, "value" | "contentType">) => {
+//   const n = getSecretName(name);
+//   return new azure.keyvault.Key(
+//     name,
+//     {
+//       name: n,
+//       keyType: "RSA",
+//       keySize: 2048,
+//       keyVaultId: vaultInfo.id,
+//       keyOpts: ["decrypt", "encrypt", "sign", "verify", "wrapKey", "unwrapKey"],
+//       tags,
+//     },
+//     { dependsOn }
+//   );
+// };
+
+// export const addLegacySecret = ({
+//   name,
+//   vaultInfo,
+//   value,
+//   contentType,
+//   tags,
+//   dependsOn,
+// }: SecretProps) => {
+//   const n = getSecretName(name);
+//   //This KeyVault Secret is not auto recovery the deleted one.
+//   return new azure.keyvault.Secret(
+//     name,
+//     {
+//       name: n,
+//       value: value ? output(value).apply((v) => v || "") : "",
+//       keyVaultId: vaultInfo.id,
+//       contentType: contentType || name,
+//       tags,
+//     },
+//     { dependsOn }
+//   );
+// };

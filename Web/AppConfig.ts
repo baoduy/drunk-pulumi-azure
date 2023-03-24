@@ -3,8 +3,8 @@ import { defaultTags } from '../Common/AzureEnv';
 import { getAppConfigName, getPrivateEndpointName } from '../Common/Naming';
 import { KeyVaultInfo, PrivateLinkProps, ResourceGroupInfo } from '../types';
 import { AppConfigDisableAccessKeysResource } from '../CustomProviders/AppConfigDisableAccessKeys';
-import { addLegacySecret } from '../KeyVault/LegacyHelper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 interface Props {
   name: string;
@@ -15,7 +15,7 @@ interface Props {
   vaultInfo?: KeyVaultInfo;
 }
 
-export default async ({
+export default ({
   group,
   name,
   vaultInfo,
@@ -61,10 +61,10 @@ export default async ({
       });
 
       if (keys.value) {
-        keys.value.map(async (key) => {
+        keys.value.map((key) => {
           //Only Read Connection String here
           if (key.readOnly) {
-            await addLegacySecret({
+            addCustomSecret({
               name: key.name.includes('Primary')
                 ? readPrimaryConnectionStringKey
                 : readSecondaryConnectionStringKey,

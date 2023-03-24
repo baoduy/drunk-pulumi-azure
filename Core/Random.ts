@@ -5,7 +5,6 @@ import { getPasswordName, getSshName } from '../Common/Naming';
 import { SshKeyResource } from '../CustomProviders/SshKeyGenerator';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
-import { addLegacySecret } from '../KeyVault/LegacyHelper';
 import { KeyVaultInfo } from '../types';
 
 interface Props {
@@ -163,14 +162,14 @@ export const randomLogin = async ({
   const passwordKey = `${name}-password`;
 
   if (vaultInfo) {
-    await addLegacySecret({
+     addCustomSecret({
       name: userNameKey,
       value: userName,
       vaultInfo,
       contentType: "Random Login",
     });
 
-    await addLegacySecret({
+    addCustomSecret({
       name: passwordKey,
       value: password,
       vaultInfo,

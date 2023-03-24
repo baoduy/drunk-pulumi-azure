@@ -3,14 +3,14 @@ import * as pulumi from '@pulumi/pulumi';
 
 import { defaultTags, isDev } from '../Common/AzureEnv';
 import { getPrivateEndpointName, getSignalRName } from '../Common/Naming';
-import { addLegacySecret } from '../KeyVault/LegacyHelper';
 import { BasicResourceArgs, KeyVaultInfo, PrivateLinkProps } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 interface ResourceSkuArgs {
-  capacity?: 1|2|5|10|20|50|100;
-  name:'Standard_S1'| 'Free_F1';
-  tier?: "Standard" | "Free";
+  capacity?: 1 | 2 | 5 | 10 | 20 | 50 | 100;
+  name: 'Standard_S1' | 'Free_F1';
+  tier?: 'Standard' | 'Free';
 }
 
 interface Props extends BasicResourceArgs {
@@ -28,7 +28,7 @@ export default ({
   privateLink,
   kind = native.signalrservice.ServiceKind.SignalR,
   sku = {
-    name: "Standard_S1",
+    name: 'Standard_S1',
     tier: native.signalrservice.SignalRSkuTier.Standard,
     capacity: 1,
   },
@@ -44,7 +44,7 @@ export default ({
 
     cors: { allowedOrigins },
     features: [
-      { flag: "ServiceMode", value: "Default" },
+      { flag: 'ServiceMode', value: 'Default' },
       //{ flag: 'EnableConnectivityLogs', value: 'Default' },
     ],
     networkACLs: privateLink
@@ -91,9 +91,9 @@ export default ({
     privateEndpoint = PrivateEndpoint({
       name: privateEndpointName,
       group,
-      privateDnsZoneName: "privatelink.service.signalr.net",
+      privateDnsZoneName: 'privatelink.service.signalr.net',
       ...privateLink,
-      linkServiceGroupIds: ["signalr"],
+      linkServiceGroupIds: ['signalr'],
       resourceId: signalR.id,
     });
   }
@@ -107,39 +107,39 @@ export default ({
         resourceGroupName: group.resourceGroupName,
       });
 
-      await addLegacySecret({
+      addCustomSecret({
         name: `${name}-host`,
         value: h,
         vaultInfo,
-        contentType: "SignalR",
+        contentType: 'SignalR',
       });
 
-      await addLegacySecret({
+      addCustomSecret({
         name: `${name}-primaryKey`,
-        value: keys.primaryKey || "",
+        value: keys.primaryKey || '',
         vaultInfo,
-        contentType: "SignalR",
+        contentType: 'SignalR',
       });
 
-      await addLegacySecret({
+      addCustomSecret({
         name: `${name}-primaryConnection`,
-        value: keys.primaryConnectionString || "",
+        value: keys.primaryConnectionString || '',
         vaultInfo,
-        contentType: "SignalR",
+        contentType: 'SignalR',
       });
 
-      await addLegacySecret({
+      addCustomSecret({
         name: `${name}-secondaryKey`,
-        value: keys.secondaryKey || "",
+        value: keys.secondaryKey || '',
         vaultInfo,
-        contentType: "SignalR",
+        contentType: 'SignalR',
       });
 
-      await addLegacySecret({
+      addCustomSecret({
         name: `${name}-secondaryConnection`,
-        value: keys.secondaryConnectionString || "",
+        value: keys.secondaryConnectionString || '',
         vaultInfo,
-        contentType: "SignalR",
+        contentType: 'SignalR',
       });
     });
   }
