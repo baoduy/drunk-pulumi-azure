@@ -5,6 +5,7 @@ import { KeyClient, KeyVaultKey } from '@azure/keyvault-keys';
 import { KeyVaultInfo } from '../types';
 import { KeyVaultSecret, SecretClient } from '@azure/keyvault-secrets';
 import { getSecretName } from '../Common/Naming';
+import { replaceAll } from '../Common/Helpers';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -21,32 +22,32 @@ type SecretProps = {
   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 };
 
-export const addSecret = ({
-  name,
-  vaultInfo,
-  value,
-  contentType,
-  tags,
-  dependsOn,
-}: SecretProps) => {
-  const n = getSecretName(name);
-
-  return new keyvault.Secret(
-    name.replace(/./g, '_'),
-    {
-      secretName: n,
-      vaultName: vaultInfo.name,
-      ...vaultInfo.group,
-      properties: {
-        value: value ? output(value).apply((v) => v || '') : '',
-        contentType: contentType || name,
-        attributes: { enabled: true },
-      },
-      tags,
-    },
-    { dependsOn }
-  );
-};
+// export const addSecret = ({
+//   name,
+//   vaultInfo,
+//   value,
+//   contentType,
+//   tags,
+//   dependsOn,
+// }: SecretProps) => {
+//   const n = getSecretName(name);
+//
+//   return new keyvault.Secret(
+//     replaceAll(name, '.', '-'),
+//     {
+//       secretName: n,
+//       vaultName: vaultInfo.name,
+//       ...vaultInfo.group,
+//       properties: {
+//         value: value ? output(value).apply((v) => v || '') : '',
+//         contentType: contentType || name,
+//         attributes: { enabled: true },
+//       },
+//       tags,
+//     },
+//     { dependsOn }
+//   );
+// };
 
 export const addKey = ({
   name,
@@ -57,7 +58,7 @@ export const addKey = ({
   const n = getSecretName(name);
 
   return new keyvault.Key(
-    name.replace('/./g', '_'),
+    replaceAll(name, '.', '-'),
     {
       keyName: n,
       vaultName: vaultInfo.name,

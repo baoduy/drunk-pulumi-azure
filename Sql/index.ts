@@ -12,7 +12,6 @@ import {
 } from '../Common/AzureEnv';
 import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
 import Locker from '../Core/Locker';
-import { addSecret } from '../KeyVault/Helper';
 import {
   BasicResourceArgs,
   BasicResourceResultProps,
@@ -22,6 +21,7 @@ import {
 import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator, { SqlDbProps } from './SqlDb';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -214,7 +214,7 @@ export default async ({
 
   //Public IpAddresses
   if (network?.ipAddresses) {
-    all(network!.ipAddresses).apply((ips) =>
+    all(network.ipAddresses).apply((ips) =>
       convertToIpRange(ips).map((ip, i) => {
         const n = `${sqlName}-fwRule-${i}`;
 
@@ -313,7 +313,7 @@ export default async ({
           ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
           : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
 
-        addSecret({
+        addCustomSecret({
           name: d.name,
           value: connectionString,
           vaultInfo,

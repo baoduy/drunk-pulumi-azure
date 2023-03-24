@@ -3,6 +3,7 @@ import { getSecretName } from '../Common/Naming';
 import { VaultSecretResource } from '../CustomProviders/VaultSecret';
 import { KeyVaultInfo } from '../types';
 import { getSecret } from '../Common/ConfigHelper';
+import { replaceAll } from '../Common/Helpers';
 
 interface Props {
   name: string;
@@ -71,9 +72,9 @@ export const addCustomSecret = ({
   const n = formattedName ? name : getSecretName(name);
   //This KeyVault Secret is not auto recovery the deleted one.
   return new VaultSecretResource(
-    name.replace('/./g', '_'),
+    replaceAll(name, '.', '-'),
     {
-      name: n,
+      name: replaceAll(n, '.', '-'),
       value: value ? output(value).apply((v) => v || '') : '',
       vaultInfo,
       contentType: contentType || name,
