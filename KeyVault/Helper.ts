@@ -1,10 +1,10 @@
-import * as keyvault from "@pulumi/azure-native/keyvault";
-import { Input, output, Resource } from "@pulumi/pulumi";
-import { ClientCredential } from "../CustomProviders/Base";
-import { KeyClient, KeyVaultKey } from "@azure/keyvault-keys";
-import { KeyVaultInfo } from "../types";
-import { KeyVaultSecret, SecretClient } from "@azure/keyvault-secrets";
-import { getSecretName } from "../Common/Naming";
+import * as keyvault from '@pulumi/azure-native/keyvault';
+import { Input, output, Resource } from '@pulumi/pulumi';
+import { ClientCredential } from '../CustomProviders/Base';
+import { KeyClient, KeyVaultKey } from '@azure/keyvault-keys';
+import { KeyVaultInfo } from '../types';
+import { KeyVaultSecret, SecretClient } from '@azure/keyvault-secrets';
+import { getSecretName } from '../Common/Naming';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -32,13 +32,13 @@ export const addSecret = ({
   const n = getSecretName(name);
 
   return new keyvault.Secret(
-    name,
+    name.replace(/./g, '_'),
     {
       secretName: n,
       vaultName: vaultInfo.name,
       ...vaultInfo.group,
       properties: {
-        value: value ? output(value).apply((v) => v || "") : "",
+        value: value ? output(value).apply((v) => v || '') : '',
         contentType: contentType || name,
         attributes: { enabled: true },
       },
@@ -53,7 +53,7 @@ export const addKey = ({
   vaultInfo,
   tags,
   dependsOn,
-}: Omit<SecretProps, "value" | "contentType">) => {
+}: Omit<SecretProps, 'value' | 'contentType'>) => {
   const n = getSecretName(name);
 
   return new keyvault.Key(
@@ -65,14 +65,14 @@ export const addKey = ({
       //https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.keyvault.webkey?view=azure-dotnet-legacy
       properties: {
         keySize: 2048,
-        kty: "RSA",
+        kty: 'RSA',
         keyOps: [
-          "decrypt",
-          "encrypt",
-          "sign",
-          "verify",
-          "wrapKey",
-          "unwrapKey",
+          'decrypt',
+          'encrypt',
+          'sign',
+          'verify',
+          'wrapKey',
+          'unwrapKey',
         ],
         //curveName: 'P512',
         attributes: { enabled: true },
@@ -139,7 +139,7 @@ export const getSecret = async ({
 };
 
 export const parseVaultInfo = (vaultId: string): KeyVaultInfo => {
-  const splits = vaultId.split("/");
+  const splits = vaultId.split('/');
   return {
     name: splits[8],
     group: { resourceGroupName: splits[4] },
@@ -157,11 +157,11 @@ interface KeyResult {
 
 /** Convert VaultId to VaultInfo */
 export const parseKeyUrl = (keyUrl: string): KeyResult => {
-  const splits = keyUrl.split("/");
+  const splits = keyUrl.split('/');
   return {
     keyIdentityUrl: keyUrl,
     name: splits[4],
-    version: splits.length > 4 ? splits[5] : "",
+    version: splits.length > 4 ? splits[5] : '',
     vaultUrl: `https://${splits[2]}`,
   };
 };

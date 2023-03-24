@@ -4,11 +4,21 @@ import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import { getAdGroup } from '../AzAd/Group';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { defaultTags, isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
+import {
+  defaultTags,
+  isPrd,
+  subscriptionId,
+  tenantId,
+} from '../Common/AzureEnv';
 import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
 import Locker from '../Core/Locker';
 import { addSecret } from '../KeyVault/Helper';
-import { BasicResourceArgs, BasicResourceResultProps, KeyVaultInfo, PrivateLinkProps } from '../types';
+import {
+  BasicResourceArgs,
+  BasicResourceResultProps,
+  KeyVaultInfo,
+  PrivateLinkProps,
+} from '../types';
 import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator, { SqlDbProps } from './SqlDb';
@@ -159,7 +169,10 @@ export default async ({
 
       tags: defaultTags,
     },
-    { ignoreChanges: ['administratorLogin','administrators.sid'], protect: lock }
+    {
+      ignoreChanges: ['administratorLogin', 'administrators.sid'],
+      protect: lock,
+    }
   );
 
   if (lock) {
