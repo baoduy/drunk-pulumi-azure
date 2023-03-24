@@ -1,4 +1,4 @@
-import { getCertificateForDomain } from '../WebApp/Helpers';
+import { getCertificateForDomain } from '../Web/Helpers';
 import { convertPfxToPem } from '../KubeX/CertHelper';
 
 export const getKubeDomainCert = async (domain: string) => {
