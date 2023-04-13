@@ -121,7 +121,7 @@ export default ({
     ] = auth.upstreamHeaderKey ?? 'ssl-client-cert';
   }
 
-  const responseSecurity: { [key: string]: string } =
+  const responseSecurity: { [key: string]: string } | undefined =
     responseHeaders === true
       ? defaultResponseHeaders
       : responseHeaders === false
