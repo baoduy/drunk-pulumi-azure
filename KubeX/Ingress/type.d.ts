@@ -51,9 +51,9 @@ export interface IngressProps {
   tlsSecretName?: Input<string>;
   maxUploadSizeMb?: number;
 
-  responseHeaders?: Partial<
-    typeof defaultResponseHeaders & { [key: string]: string }
-  >;
+  responseHeaders?:
+    | Partial<typeof defaultResponseHeaders & { [key: string]: string }>
+    | boolean;
   whitelistIps?: Array<Input<string>>;
   enableModSecurity?: boolean;
   cors?: { origins: string[]; headers?: string[] };

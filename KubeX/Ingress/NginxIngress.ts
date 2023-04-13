@@ -121,16 +121,23 @@ export default ({
     ] = auth.upstreamHeaderKey ?? 'ssl-client-cert';
   }
 
-  const responseSecurity: { [key: string]: string } = {
-    ...defaultResponseHeaders,
-    ...responseHeaders,
-  };
+  const responseSecurity: { [key: string]: string } =
+    responseHeaders === true
+      ? defaultResponseHeaders
+      : responseHeaders === false
+      ? undefined
+      : {
+          ...defaultResponseHeaders,
+          ...responseHeaders,
+        };
 
-  annotations[
-    'nginx.ingress.kubernetes.io/configuration-snippet'
-  ] = `${Object.keys(responseSecurity)
-    .map((k) => `more_set_headers "${k}: ${responseSecurity[k]}";`)
-    .join('')}`;
+  if (responseSecurity) {
+    annotations[
+      'nginx.ingress.kubernetes.io/configuration-snippet'
+    ] = `${Object.keys(responseSecurity)
+      .map((k) => `more_set_headers "${k}: ${responseSecurity[k]}";`)
+      .join('')}`;
+  }
 
   //Force Https
   annotations['kubernetes.io/ingress.allow-http'] = allowHttp
