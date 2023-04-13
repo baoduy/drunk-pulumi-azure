@@ -35,10 +35,14 @@ interface PodConfigProps {
   volumes?: Array<{
     name: string;
     mountPath: string;
-    /** The secret name when mount to Azure Files*/
+    /** The secret name */
+
     secretName?: Input<string>;
+    configMapName?: Input<string>;
+
     /** The volume claims name */
     persistentVolumeClaim?: Input<string>;
+    type?: 'azureFile';
   }>;
   podSecurityContext?: Input<k8s.types.input.core.v1.SecurityContext>;
   securityContext?: Input<k8s.types.input.core.v1.PodSecurityContext>;
@@ -102,21 +106,28 @@ const buildPod = ({
       ? podConfig.volumes.map((v) => ({
           name: v.name.toLowerCase(),
 
-          csi: v.secretName
-            ? {
-                driver: 'file.csi.azure.com',
-                volumeAttributes: {
-                  secretName: v.secretName,
-                  shareName: v.name.toLowerCase(),
-                  // mountOptions:
-                  //   'dir_mode=0777,file_mode=0777,cache=strict,actimeo=30',
-                },
-              }
-            : undefined,
+          csi:
+            v.secretName && v.type === 'azureFile'
+              ? {
+                  driver: 'file.csi.azure.com',
+                  volumeAttributes: {
+                    secretName: v.secretName,
+                    shareName: v.name.toLowerCase(),
+                    // mountOptions:
+                    //   'dir_mode=0777,file_mode=0777,cache=strict,actimeo=30',
+                  },
+                }
+              : undefined,
 
           persistentVolumeClaim: v.persistentVolumeClaim
             ? { claimName: v.persistentVolumeClaim }
             : undefined,
+
+          configMap: v.configMapName ? { name: v.configMapName } : undefined,
+          secret:
+            v.secretName && v.type === undefined
+              ? { secretName: v.secretName }
+              : undefined,
         }))
       : undefined,
 
@@ -136,6 +147,7 @@ const buildPod = ({
           ? podConfig.volumes.map((v) => ({
               name: v.name,
               mountPath: v.mountPath,
+              readOnly: true,
             }))
           : undefined,
 
@@ -213,6 +225,8 @@ interface Props {
   secrets?: Input<{
     [key: string]: Input<string>;
   }>;
+  mapConfigToVolume?: { name: string; path: string };
+  mapSecretsToVolume?: { name: string; path: string };
 
   /**
    * Enable high availability for the deployment. Multi instance of the pod will be scale up and down based on the usage.
@@ -228,6 +242,8 @@ export default async ({
 
   configMap,
   secrets,
+  mapSecretsToVolume,
+  mapConfigToVolume,
 
   podConfig,
   deploymentConfig = { replicas: 1 },
@@ -239,6 +255,7 @@ export default async ({
   provider,
   dependsOn,
 }: Props) => {
+  if (!podConfig.volumes) podConfig.volumes = [];
   const configSecret = ConfigSecret({
     name,
     namespace,
@@ -258,6 +275,21 @@ export default async ({
   if (configSecret.secret) {
     //Create Secrets
     envFrom.push({ secretRef: { name: configSecret.secret.metadata.name } });
+  }
+
+  if (mapConfigToVolume && configSecret.config) {
+    podConfig.volumes.push({
+      name: mapConfigToVolume.name,
+      mountPath: mapConfigToVolume.path,
+      configMapName: configSecret.config.metadata.name,
+    });
+  }
+  if (mapSecretsToVolume && configSecret.secret) {
+    podConfig.volumes.push({
+      name: mapSecretsToVolume.name,
+      mountPath: mapSecretsToVolume.path,
+      secretName: configSecret.secret.metadata.name,
+    });
   }
 
   if (!podConfig.port) podConfig.port = 8080;
