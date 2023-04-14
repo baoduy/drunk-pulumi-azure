@@ -35,6 +35,7 @@ interface PodConfigProps {
   volumes?: Array<{
     name: string;
     mountPath: string;
+    subPath?:string;
     /** The secret name */
 
     secretName?: Input<string>;
@@ -147,6 +148,7 @@ const buildPod = ({
           ? podConfig.volumes.map((v) => ({
               name: v.name,
               mountPath: v.mountPath,
+              subPath:v.subPath,
               readOnly: true,
             }))
           : undefined,
@@ -225,8 +227,8 @@ interface Props {
   secrets?: Input<{
     [key: string]: Input<string>;
   }>;
-  mapConfigToVolume?: { name: string; path: string };
-  mapSecretsToVolume?: { name: string; path: string };
+  mapConfigToVolume?: { name: string; path: string,subPath?:string; };
+  mapSecretsToVolume?: { name: string; path: string,subPath?:string; };
 
   /**
    * Enable high availability for the deployment. Multi instance of the pod will be scale up and down based on the usage.
@@ -281,6 +283,7 @@ export default async ({
     podConfig.volumes.push({
       name: mapConfigToVolume.name,
       mountPath: mapConfigToVolume.path,
+      subPath:mapConfigToVolume.subPath,
       configMapName: configSecret.config.metadata.name,
     });
   }
@@ -288,6 +291,7 @@ export default async ({
     podConfig.volumes.push({
       name: mapSecretsToVolume.name,
       mountPath: mapSecretsToVolume.path,
+      subPath:mapSecretsToVolume.subPath,
       secretName: configSecret.secret.metadata.name,
     });
   }
