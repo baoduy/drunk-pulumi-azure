@@ -30,12 +30,13 @@ export const virtualHostConfig = {
 interface PodConfigProps {
   port?: number;
   image: Input<string>;
+  imagePullSecret?: string;
   imagePullPolicy?: 'Always' | 'Never' | 'IfNotPresent';
   resources?: Input<k8s.types.input.core.v1.ResourceRequirements> | false;
   volumes?: Array<{
     name: string;
     mountPath: string;
-    subPath?:string;
+    subPath?: string;
     /** The secret name */
 
     secretName?: Input<string>;
@@ -148,7 +149,7 @@ const buildPod = ({
           ? podConfig.volumes.map((v) => ({
               name: v.name,
               mountPath: v.mountPath,
-              subPath:v.subPath,
+              subPath: v.subPath,
               readOnly: true,
             }))
           : undefined,
@@ -171,6 +172,13 @@ const buildPod = ({
           : undefined,
       },
     ],
+    imagePullSecrets: podConfig.imagePullSecret
+      ? [
+          {
+            name: podConfig.imagePullSecret,
+          },
+        ]
+      : undefined,
     restartPolicy,
 
     tolerations: podConfig.tolerations,
@@ -227,8 +235,8 @@ interface Props {
   secrets?: Input<{
     [key: string]: Input<string>;
   }>;
-  mapConfigToVolume?: { name: string; path: string,subPath?:string; };
-  mapSecretsToVolume?: { name: string; path: string,subPath?:string; };
+  mapConfigToVolume?: { name: string; path: string; subPath?: string };
+  mapSecretsToVolume?: { name: string; path: string; subPath?: string };
 
   /**
    * Enable high availability for the deployment. Multi instance of the pod will be scale up and down based on the usage.
@@ -283,7 +291,7 @@ export default async ({
     podConfig.volumes.push({
       name: mapConfigToVolume.name,
       mountPath: mapConfigToVolume.path,
-      subPath:mapConfigToVolume.subPath,
+      subPath: mapConfigToVolume.subPath,
       configMapName: configSecret.config.metadata.name,
     });
   }
@@ -291,7 +299,7 @@ export default async ({
     podConfig.volumes.push({
       name: mapSecretsToVolume.name,
       mountPath: mapSecretsToVolume.path,
-      subPath:mapSecretsToVolume.subPath,
+      subPath: mapSecretsToVolume.subPath,
       secretName: configSecret.secret.metadata.name,
     });
   }
