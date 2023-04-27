@@ -67,8 +67,10 @@ export default async ({
           name: 'mysql-data',
           persistentVolumeClaim: persisVolume.metadata.name,
           mountPath: '/var/lib/mysql',
+          readOnly: false,
         },
       ],
+      //podSecurityContext:{readOnlyRootFilesystem:false}
     },
     deploymentConfig: {
       args: ['--default-authentication-plugin=mysql_native_password'],

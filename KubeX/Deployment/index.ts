@@ -37,6 +37,7 @@ interface PodConfigProps {
     name: string;
     mountPath: string;
     subPath?: string;
+    readOnly?: boolean;
     /** The secret name */
 
     secretName?: Input<string>;
@@ -150,7 +151,7 @@ const buildPod = ({
               name: v.name,
               mountPath: v.mountPath,
               subPath: v.subPath,
-              readOnly: true,
+              readOnly: v.readOnly ?? true,
             }))
           : undefined,
 
