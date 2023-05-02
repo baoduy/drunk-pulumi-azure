@@ -7,7 +7,7 @@ type WebResource = { headers: { set: (key: string, value: string) => void } };
 export class ClientCredential implements TokenCredential {
   public subscriptionID: string | undefined = undefined;
 
-  async getCredentials() {
+  private async getCredentials() {
     let clientID = native.config.clientId;
     let clientSecret = native.config.clientSecret;
     let tenantID = native.config.tenantId;
@@ -15,8 +15,6 @@ export class ClientCredential implements TokenCredential {
 
     // If at least one of them is empty, try looking at the env vars.
     if (!clientID || !clientSecret || !tenantID) {
-      //console.log('ClientCredential: getting auth info from ARM.');
-
       clientID = process.env['ARM_CLIENT_ID'];
       clientSecret = process.env['ARM_CLIENT_SECRET'];
       tenantID = process.env['ARM_TENANT_ID'];
@@ -33,7 +31,7 @@ export class ClientCredential implements TokenCredential {
     }
   }
 
-  async getToken(
+  public async getToken(
     scopes: string | string[] = 'https://management.azure.com',
     options?: import('@azure/core-auth').GetTokenOptions | undefined
   ): Promise<import('@azure/core-auth').AccessToken | null> {

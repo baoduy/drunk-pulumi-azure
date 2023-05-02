@@ -14,12 +14,9 @@ export const createAxios = () => {
 
   axiosWrapper.interceptors.request.use(async (config) => {
     if (!token) {
-      const tokenRequest = await credentials.getCredentials();
-      token = (await tokenRequest.getToken('https://management.azure.com'))
-        .token;
-
+      const tokenRequest = await credentials.getToken();
+      token = tokenRequest?.token;
       baseUrl = `https://management.azure.com/subscriptions/${credentials.subscriptionID!}`;
-      console.log('token', { token, subID: credentials.subscriptionID! });
     }
 
     if (!config.url || !config.url.startsWith('http')) {
@@ -29,7 +26,7 @@ export const createAxios = () => {
     }
 
     if (token) {
-      config.headers.set('Authorization', token);
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
 
     return config;
