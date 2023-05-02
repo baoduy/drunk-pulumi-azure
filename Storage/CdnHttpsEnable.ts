@@ -1,6 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-//import isEqual from 'lodash.isequal';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import {
   BaseOptions,
@@ -8,7 +7,7 @@ import {
   DefaultInputs,
   DefaultOutputs,
   BaseProvider,
-  InternalCredentials,
+  ClientCredential,
 } from '../CustomProviders/Base';
 
 interface CdnManagedHttpsParameters {
@@ -62,7 +61,7 @@ class CdnHttpsEnableProvider
   //   previousOutput: CdnHttpsEnableOutputs,
   //   news: CdnHttpsEnableInputs
   // ): Promise<pulumi.dynamic.DiffResult> {
-  //   const credentials = new InternalCredentials();
+  //   const credentials = new ClientCredential();
   //   const tokenRequest = await credentials.getCredentials();
   //   const token = await tokenRequest.getToken();
   //
@@ -86,9 +85,8 @@ class CdnHttpsEnableProvider
     props: CdnHttpsEnableInputs
   ): Promise<pulumi.dynamic.CreateResult> {
     //DONOT update this to Tools/Axios.
-    const credentials = new InternalCredentials();
-    const tokenRequest = await credentials.getCredentials();
-    const token = await tokenRequest.getToken();
+    const credentials = new ClientCredential();
+    const token = await credentials.getToken();
 
     const url = `https://management.azure.com/${props.customDomainId}/enableCustomHttps?api-version=2019-12-31`;
 
@@ -123,12 +121,12 @@ class CdnHttpsEnableProvider
 
     await axios
       .post(url, data, {
-        headers: { Authorization: 'Bearer ' + token.accessToken },
+        headers: { Authorization: 'Bearer ' + token!.token },
       })
-      .catch((error) => {
-        console.log(error.response.data);
+      .catch((error: AxiosError) => {
+        console.log(error.response?.data);
         //If already enabled then ignore
-        if (![409, 405].includes(error.response.status)) throw error;
+        if (![409, 405].includes(error.response!.status)) throw error;
       });
 
     return {

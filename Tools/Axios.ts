@@ -1,10 +1,10 @@
 /* eslint-disable */
-import { InternalCredentials } from '../CustomProviders/Base';
+import { ClientCredential } from '../CustomProviders/Base';
 import axios from 'axios';
 import { urlJoin } from 'url-join-ts';
 
 export const createAxios = () => {
-  const credentials = new InternalCredentials();
+  const credentials = new ClientCredential();
   let token: string | undefined;
   let baseUrl: string | undefined;
 
@@ -15,11 +15,10 @@ export const createAxios = () => {
   axiosWrapper.interceptors.request.use(async (config) => {
     if (!token) {
       const tokenRequest = await credentials.getCredentials();
-      token = (await tokenRequest.getToken()).accessToken
-      token =
-        typeof token === 'string' ? token : (token?.token as string) ?? token;
-      baseUrl = `https://management.azure.com/subscriptions/${credentials.subscriptionID!}`;
+      token = (await tokenRequest.getToken('https://management.azure.com'))
+        .token;
 
+      baseUrl = `https://management.azure.com/subscriptions/${credentials.subscriptionID!}`;
       console.log('token', { token, subID: credentials.subscriptionID! });
     }
 
