@@ -1,5 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import {createAxios} from '../Tools/Axios';
+import { createAxios } from '../Tools/Axios';
 
 import {
   BaseOptions,
@@ -8,6 +8,8 @@ import {
   DefaultInputs,
   DefaultOutputs,
 } from './Base';
+import * as console from 'console';
+import { AxiosError } from 'axios';
 
 interface AksTurnOffInputs extends DefaultInputs {
   resourceGroupName: string;
@@ -47,12 +49,21 @@ const aksTurnOff = async ({
   start,
 }: AksTurnOffInputs & { start?: boolean }) => {
   const axios = createAxios();
+  //POST https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/{resourceName}/start?api-version=2023-02-01
+  //POST https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/{resourceName}/stop?api-version=2023-02-01
+
   const url = `/resourceGroups/${resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/${resourceName}/${
     start ? 'start' : 'stop'
-  }?api-version=2021-05-01`;
+  }?api-version=2023-02-01`;
+  console.log('aksTurnOff', url);
 
-    return await axios.post(url).then((rs) => rs.data);
-  
+  return await axios
+    .post(url)
+    //.then((rs) => rs.data)
+    .catch((err: AxiosError) => {
+      console.log('aksTurnOff', err.response?.data || err);
+      throw err;
+    });
 };
 
 class AksTurnOffResourceProvider
@@ -90,12 +101,11 @@ class AksTurnOffResourceProvider
     //Ignored the error if cluster already stopped
 
     await this.create(news).catch(() => undefined);
-
     return { outs: news };
   }
 
   async delete(id: string, inputs: AksTurnOffInputs): Promise<void> {
-    await aksTurnOff({ ...inputs, start: true });
+    await aksTurnOff({ ...inputs, start: true }).catch(() => undefined);
   }
 }
 
