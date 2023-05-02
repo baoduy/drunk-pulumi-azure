@@ -114,7 +114,6 @@ export class InternalCredentials implements msRest.ServiceClientCredentials {
   public async getToken() {
     const c = await this.getCredentials();
     const token = await c.getToken();
-    console.log('getToken', token);
-    return token.accessToken;
+    return typeof token;
   }
 }

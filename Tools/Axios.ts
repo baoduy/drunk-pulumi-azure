@@ -15,7 +15,9 @@ export const createAxios = () => {
   axiosWrapper.interceptors.request.use(async (config) => {
     if (!token) {
       const tokenRequest = await credentials.getCredentials();
-      token = (await tokenRequest.getToken()).accessToken;
+      token = (await tokenRequest.getToken()).accessToken
+      token =
+        typeof token === 'string' ? token : (token?.token as string) ?? token;
       baseUrl = `https://management.azure.com/subscriptions/${credentials.subscriptionID!}`;
 
       console.log('token', { token, subID: credentials.subscriptionID! });
