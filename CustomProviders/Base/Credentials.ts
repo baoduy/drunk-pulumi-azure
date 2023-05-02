@@ -1,7 +1,7 @@
 import * as msRest from '@azure/ms-rest-js';
+import { WebResource } from '@azure/ms-rest-js';
 import * as msRestAzure from '@azure/ms-rest-nodeauth';
 import * as native from '@pulumi/azure-native';
-
 import { ClientSecretCredential, TokenCredential } from '@azure/identity';
 
 export class ClientCredential implements TokenCredential {
@@ -62,7 +62,7 @@ export class InternalCredentials implements msRest.ServiceClientCredentials {
   public tenantID!: string | undefined;
 
   constructor() {
-    this.getCredentials();
+    this.getCredentials().catch();
   }
 
   public async getCredentials(): Promise<
@@ -107,12 +107,14 @@ export class InternalCredentials implements msRest.ServiceClientCredentials {
   }
 
   /** Fixed some incompatible issue */
-  public async signRequest(webResource: any): Promise<any> {
-    return (await this.getCredentials()).signRequest(webResource);
+  public async signRequest(webResource: WebResource): Promise<WebResource> {
+    return await (await this.getCredentials()).signRequest(webResource);
   }
 
   public async getToken() {
     const c = await this.getCredentials();
-    return await c.getToken();
+    const token = await c.getToken();
+    console.log('getToken', token);
+    return token.accessToken;
   }
 }

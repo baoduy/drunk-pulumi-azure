@@ -17,6 +17,8 @@ export const createAxios = () => {
       const tokenRequest = await credentials.getCredentials();
       token = (await tokenRequest.getToken()).accessToken;
       baseUrl = `https://management.azure.com/subscriptions/${credentials.subscriptionID!}`;
+
+      console.log('token', { token, subID: credentials.subscriptionID! });
     }
 
     if (!config.url || !config.url.startsWith('http')) {
@@ -34,7 +36,7 @@ export const createAxios = () => {
 
   axiosWrapper.interceptors.response.use(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    (rs) => rs,
+    (rs) => rs
     // (error) => {
     //   let final = error;
 
