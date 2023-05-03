@@ -32,14 +32,15 @@ export class ClientCredential implements TokenCredential {
   }
 
   public async getToken(
-    scopes: string | string[] = 'https://management.azure.com',
+    scopes: string | string[] = [
+      'https://graph.microsoft.com/.default',
+      'https://management.azure.com/.default',
+    ],
     options?: import('@azure/core-auth').GetTokenOptions | undefined
   ): Promise<import('@azure/core-auth').AccessToken | null> {
     const cre = await this.getCredentials();
     if (cre instanceof ClientSecretCredential)
       return await cre.getToken(scopes, options);
-
-    //const resource = Array.isArray(scopes) ? scopes[0] : scopes;
     const token = await cre.getToken();
 
     return {
