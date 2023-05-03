@@ -1,60 +1,45 @@
-import * as msRestAzure from '@azure/ms-rest-nodeauth';
-import * as native from '@pulumi/azure-native';
-import { ClientSecretCredential, TokenCredential } from '@azure/identity';
+import {
+  ClientSecretCredential,
+  TokenCredential,
+  getDefaultAzureCredential,
+  GetTokenOptions,
+} from '@azure/identity';
+import { Config } from '@pulumi/pulumi';
 
 type WebResource = { headers: { set: (key: string, value: string) => void } };
 
 export class ClientCredential implements TokenCredential {
   public subscriptionID: string | undefined = undefined;
 
-  private async getCredentials() {
-    let clientID = native.config.clientId;
-    let clientSecret = native.config.clientSecret;
-    let tenantID = native.config.tenantId;
-    this.subscriptionID = native.config.subscriptionId;
+  private getCredentials() {
+    const config = new Config('azure-native');
 
-    // If at least one of them is empty, try looking at the env vars.
-    if (!clientID || !clientSecret || !tenantID) {
-      clientID = process.env['ARM_CLIENT_ID'];
-      clientSecret = process.env['ARM_CLIENT_SECRET'];
-      tenantID = process.env['ARM_TENANT_ID'];
-      this.subscriptionID = process.env['ARM_SUBSCRIPTION_ID'];
-    }
+    const clientID = process.env['ARM_CLIENT_ID'] || config.get('clientId');
+    const clientSecret =
+      process.env['ARM_CLIENT_SECRET'] || config.get('clientSecret');
+    const tenantID = process.env['ARM_TENANT_ID'] || config.get('clientId');
+    this.subscriptionID =
+      process.env['ARM_SUBSCRIPTION_ID'] || config.get('subscriptionId');
 
-    if (tenantID && clientID && clientSecret) {
-      return new ClientSecretCredential(tenantID, clientID, clientSecret);
-    } else {
-      const cli = await msRestAzure.AzureCliCredentials.create();
-      this.subscriptionID =
-        cli.tokenInfo.subscription ?? cli.subscriptionInfo.id;
-      return cli;
-    }
+    if (!this.subscriptionID) throw new Error('subscriptionId is not found.');
+
+    return tenantID && clientID && clientSecret
+      ? new ClientSecretCredential(tenantID, clientID, clientSecret)
+      : getDefaultAzureCredential();
   }
 
   public async getToken(
-    scopes: string | string[] = [
-      'https://graph.microsoft.com/.default',
-      'https://management.azure.com/.default',
-    ],
-    options?: import('@azure/core-auth').GetTokenOptions | undefined
-  ): Promise<import('@azure/core-auth').AccessToken | null> {
-    const cre = await this.getCredentials();
-    if (cre instanceof ClientSecretCredential)
-      return await cre.getToken(scopes, options);
-    const token = await cre.getToken();
-
-    return {
-      token: token.accessToken,
-      expiresOnTimestamp: 30,
-    };
+    scopes: string | string[] = 'https://management.azure.com/.default',
+    options?: GetTokenOptions | undefined
+  ) {
+    const credential = this.getCredentials();
+    return await credential.getToken(scopes, options);
   }
 
   public async signRequest(webResource: WebResource): Promise<WebResource> {
     const tokenResponse = await this.getToken();
-    webResource.headers.set(
-      'Authorization',
-      `Brear ${tokenResponse?.token || ''}`
-    );
+    if (tokenResponse)
+      webResource.headers.set('Authorization', `Brear ${tokenResponse.token}`);
     return webResource;
   }
 }
