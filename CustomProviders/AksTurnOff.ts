@@ -55,7 +55,7 @@ const aksTurnOff = async ({
   const url = `/resourceGroups/${resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/${resourceName}/${
     start ? 'start' : 'stop'
   }?api-version=2023-02-01`;
-  console.log('aksTurnOff', url);
+  //console.log('aksTurnOff', url);
 
   return await axios
     .post(url)
