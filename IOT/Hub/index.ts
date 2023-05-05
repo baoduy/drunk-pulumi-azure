@@ -4,6 +4,9 @@ import * as devices from '@pulumi/azure-native/devices';
 import { defaultTags, subscriptionId } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import Locker from '../../Core/Locker';
+import { EnvRoleNamesType } from '../../AzAd/EnvRoles';
+import { roleAssignment } from '../../AzAd/RoleAssignment';
+import { getAdGroup } from '../../AzAd/Group';
 
 type StorageEndpointPropertiesArgs = {
   name: Input<string>;
@@ -22,7 +25,7 @@ interface Props extends BasicResourceArgs {
     name: devices.IotHubSku;
     capacity?: number;
   };
-
+  auth?: { envRoleNames: EnvRoleNamesType };
   serviceBus?: {
     /** provide the queue connection string to enable message to be pushing to service bus queue */
     queueMessageConnectionString?: Input<string>;
@@ -45,6 +48,7 @@ interface Props extends BasicResourceArgs {
 export default ({
   name,
   group,
+  auth,
   sku = { name: 'F1', capacity: 1 },
   storage,
   serviceBus,
@@ -212,6 +216,38 @@ export default ({
   if (lock) {
     Locker({ name, resourceId: hub.id, dependsOn: hub });
   }
+  if (auth?.envRoleNames) {
+    await roleAssignment({
+      name: `${name}-iot-readonly`,
+      principalId: getAdGroup(auth.envRoleNames.readOnly),
+      principalType: 'Group',
+      roleName: 'IoT Hub Data Reader',
+      scope: hub.id,
+    });
 
+    await roleAssignment({
+      name: `${name}-iot-contributor`,
+      principalId: getAdGroup(auth.envRoleNames.contributor),
+      principalType: 'Group',
+      roleName: 'IoT Hub Data Contributor',
+      scope: hub.id,
+    });
+
+    await roleAssignment({
+      name: `${name}-iot-registry-admin`,
+      principalId: getAdGroup(auth.envRoleNames.contributor),
+      principalType: 'Group',
+      roleName: 'IoT Hub Registry Contributor',
+      scope: hub.id,
+    });
+
+    await roleAssignment({
+      name: `${name}-iot-twin-admin`,
+      principalId: getAdGroup(auth.envRoleNames.contributor),
+      principalType: 'Group',
+      roleName: 'IoT Hub Twin Contributor',
+      scope: hub.id,
+    });
+  }
   return hub;
 };
