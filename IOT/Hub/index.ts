@@ -45,7 +45,7 @@ interface Props extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export default ({
+export default async ({
   name,
   group,
   auth,
