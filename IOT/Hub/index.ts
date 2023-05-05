@@ -217,9 +217,12 @@ export default ({
     Locker({ name, resourceId: hub.id, dependsOn: hub });
   }
   if (auth?.envRoleNames) {
+    const readOnlyGroup = await getAdGroup(auth.envRoleNames.readOnly);
+    const contributorGroup = await getAdGroup(auth.envRoleNames.contributor);
+
     await roleAssignment({
       name: `${name}-iot-readonly`,
-      principalId: getAdGroup(auth.envRoleNames.readOnly),
+      principalId: readOnlyGroup.objectId,
       principalType: 'Group',
       roleName: 'IoT Hub Data Reader',
       scope: hub.id,
@@ -227,7 +230,7 @@ export default ({
 
     await roleAssignment({
       name: `${name}-iot-contributor`,
-      principalId: getAdGroup(auth.envRoleNames.contributor),
+      principalId: contributorGroup.objectId,
       principalType: 'Group',
       roleName: 'IoT Hub Data Contributor',
       scope: hub.id,
@@ -235,7 +238,7 @@ export default ({
 
     await roleAssignment({
       name: `${name}-iot-registry-admin`,
-      principalId: getAdGroup(auth.envRoleNames.contributor),
+      principalId: contributorGroup.objectId,
       principalType: 'Group',
       roleName: 'IoT Hub Registry Contributor',
       scope: hub.id,
@@ -243,7 +246,7 @@ export default ({
 
     await roleAssignment({
       name: `${name}-iot-twin-admin`,
-      principalId: getAdGroup(auth.envRoleNames.contributor),
+      principalId: contributorGroup.objectId,
       principalType: 'Group',
       roleName: 'IoT Hub Twin Contributor',
       scope: hub.id,
