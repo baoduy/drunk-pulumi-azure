@@ -1,8 +1,8 @@
-import * as native from "@pulumi/azure-native";
-import axios from "axios";
-import { ResourceGroupInfo } from "../types";
-import { getAcrName } from "../Common/Naming";
-import { global } from "../Common";
+import * as native from '@pulumi/azure-native';
+import axios, { AxiosError } from 'axios';
+import { ResourceGroupInfo } from '../types';
+import { getAcrName } from '../Common/Naming';
+import { global } from '../Common';
 
 export interface ImageInfo {
   registry: string;
@@ -50,13 +50,13 @@ export const getLastAcrImage = async ({
 
   const token = Buffer.from(
     `${credentials.username!}:${credentials.passwords![0].value!}`
-  ).toString("base64");
+  ).toString('base64');
 
   const url = `https://${acrName}.azurecr.io/acr/v1/${repository}/_tags?last=1&n=1&orderby=timedesc`;
   const rs = await axios
     .get<ImageInfo>(url, { headers: { Authorization: `Basic ${token}` } })
     .then((rs) => rs.data)
-    .catch((err) => {
+    .catch((err: AxiosError) => {
       console.log(`getLastAcrImage: "${url}" Error`, err.response.data);
       return undefined;
     });
