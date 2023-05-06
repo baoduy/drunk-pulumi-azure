@@ -8,9 +8,7 @@ export const createAxios = () => {
   let token: string | undefined;
   let baseUrl: string | undefined;
 
-  const axiosWrapper = axios.create({
-    baseURL: '',
-  });
+  const axiosWrapper = axios.create();
 
   axiosWrapper.interceptors.request.use(async (config) => {
     if (!token) {
