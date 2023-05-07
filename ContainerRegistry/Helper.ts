@@ -1,5 +1,5 @@
 import * as native from '@pulumi/azure-native';
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { ResourceGroupInfo } from '../types';
 import { getAcrName } from '../Common/Naming';
 import { global } from '../Common';
@@ -54,10 +54,12 @@ export const getLastAcrImage = async ({
 
   const url = `https://${acrName}.azurecr.io/acr/v1/${repository}/_tags?last=1&n=1&orderby=timedesc`;
   const rs = await axios
-    .get<ImageInfo>(url, { headers: { Authorization: `Basic ${token}` } })
+    .get<ImageInfo>(url, {
+      headers: { Authorization: `Basic ${token}` },
+    } satisfies AxiosRequestConfig)
     .then((rs) => rs.data)
     .catch((err: AxiosError) => {
-      console.log(`getLastAcrImage: "${url}" Error`, err.response.data);
+      console.log(`getLastAcrImage: "${url}" Error`, err.response?.data);
       return undefined;
     });
 

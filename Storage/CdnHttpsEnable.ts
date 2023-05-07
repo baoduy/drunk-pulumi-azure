@@ -1,5 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
 import {
   BaseOptions,
@@ -122,7 +122,7 @@ class CdnHttpsEnableProvider
     await axios
       .post(url, data, {
         headers: { Authorization: 'Bearer ' + token!.token },
-      })
+      } satisfies AxiosRequestConfig<CdnManagedHttpsParameters | UserManagedHttpsParameters>)
       .catch((error: AxiosError) => {
         console.log(error.response?.data);
         //If already enabled then ignore
