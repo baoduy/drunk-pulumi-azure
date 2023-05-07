@@ -122,7 +122,7 @@ class CdnHttpsEnableProvider
     await axios
       .post(url, data, {
         headers: { Authorization: 'Bearer ' + token!.token },
-      } satisfies AxiosRequestConfig<CdnManagedHttpsParameters | UserManagedHttpsParameters>)
+      } as AxiosRequestConfig<CdnManagedHttpsParameters | UserManagedHttpsParameters>)
       .catch((error: AxiosError) => {
         console.log(error.response?.data);
         //If already enabled then ignore

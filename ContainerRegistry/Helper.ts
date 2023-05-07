@@ -56,7 +56,7 @@ export const getLastAcrImage = async ({
   const rs = await axios
     .get<ImageInfo>(url, {
       headers: { Authorization: `Basic ${token}` },
-    } satisfies AxiosRequestConfig)
+    } as AxiosRequestConfig)
     .then((rs) => rs.data)
     .catch((err: AxiosError) => {
       console.log(`getLastAcrImage: "${url}" Error`, err.response?.data);

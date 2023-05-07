@@ -40,7 +40,7 @@
     "@azure/identity": "^3.1.4",
     "@azure/keyvault-keys": "^4.7.0",
     "@azure/keyvault-secrets": "^4.7.0",
-    "@chilkat/ck-node18-linux64": "^9.50.94",
+    "@chilkat/ck-node19-linux64": "^9.50.94",
     "@pulumi/azure": "^5.42.0",
     "@pulumi/azure-native": "^1.101.0",
     "@pulumi/azuread": "5.37.0",
