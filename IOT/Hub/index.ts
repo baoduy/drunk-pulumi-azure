@@ -1,4 +1,4 @@
-import { BasicResourceArgs } from '../../types';
+import { BasicResourceArgs, KeyVaultInfo } from '../../types';
 import { getIotHubName } from '../../Common/Naming';
 import * as devices from '@pulumi/azure-native/devices';
 import { defaultTags, subscriptionId } from '../../Common/AzureEnv';
@@ -7,6 +7,7 @@ import Locker from '../../Core/Locker';
 import { EnvRoleNamesType } from '../../AzAd/EnvRoles';
 import { roleAssignment } from '../../AzAd/RoleAssignment';
 import { getAdGroup } from '../../AzAd/Group';
+import { addCustomSecret } from '../../KeyVault/CustomHelper';
 
 type StorageEndpointPropertiesArgs = {
   name: Input<string>;
@@ -41,7 +42,7 @@ interface Props extends BasicResourceArgs {
     /** provide the event container name to enable events to be pushing to storage */
     eventContainerName?: Input<string>;
   };
-
+  vaultInfo?:KeyVaultInfo;
   lock?: boolean;
 }
 
@@ -53,6 +54,7 @@ export default async ({
   storage,
   serviceBus,
   dependsOn,
+                        vaultInfo,
   lock,
 }: Props) => {
   const hubName = getIotHubName(name);
@@ -216,6 +218,27 @@ export default async ({
   if (lock) {
     Locker({ name, resourceId: hub.id, dependsOn: hub });
   }
+  //Connection Strings
+  if(vaultInfo) {
+    hub.id.apply(async id => {
+      if (!id) return;
+
+      const keys = await devices.listIotHubResourceKeys({
+        resourceGroupName: group.resourceGroupName,
+        resourceName: hubName
+      });
+
+      keys.value?.forEach(k => addCustomSecret({
+          name: `${hubName}-${k.keyName}`,
+          value: k.primaryKey!,
+          vaultInfo,
+          contentType: 'Storage',
+          formattedName: true,
+        }));
+    });
+  }
+
+  //Roles
   if (auth?.envRoleNames) {
     const readOnlyGroup = await getAdGroup(auth.envRoleNames.readOnly);
     const contributorGroup = await getAdGroup(auth.envRoleNames.contributor);
