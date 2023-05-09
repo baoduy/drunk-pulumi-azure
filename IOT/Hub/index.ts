@@ -42,7 +42,7 @@ interface Props extends BasicResourceArgs {
     /** provide the event container name to enable events to be pushing to storage */
     eventContainerName?: Input<string>;
   };
-  vaultInfo?:KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
   lock?: boolean;
 }
 
@@ -54,7 +54,7 @@ export default async ({
   storage,
   serviceBus,
   dependsOn,
-                        vaultInfo,
+  vaultInfo,
   lock,
 }: Props) => {
   const hubName = getIotHubName(name);
@@ -219,22 +219,24 @@ export default async ({
     Locker({ name, resourceId: hub.id, dependsOn: hub });
   }
   //Connection Strings
-  if(vaultInfo) {
-    hub.id.apply(async id => {
+  if (vaultInfo) {
+    hub.id.apply(async (id) => {
       if (!id) return;
 
       const keys = await devices.listIotHubResourceKeys({
         resourceGroupName: group.resourceGroupName,
-        resourceName: hubName
+        resourceName: hubName,
       });
 
-      keys.value?.forEach(k => addCustomSecret({
+      keys.value?.forEach((k) =>
+        addCustomSecret({
           name: `${hubName}-${k.keyName}`,
           value: k.primaryKey!,
           vaultInfo,
-          contentType: 'Storage',
+          contentType: 'IOT Hub',
           formattedName: true,
-        }));
+        })
+      );
     });
   }
 
