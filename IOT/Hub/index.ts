@@ -228,14 +228,18 @@ export default async ({
         resourceName: hubName,
       });
 
-      keys.value?.forEach((k) =>
+      keys.value?.forEach((k) => {
+        const conn = `HostName=${hubName}.azure-devices.net;SharedAccessKeyName=${
+          k.keyName
+        };SharedAccessKey=${k.primaryKey!}`;
+
         addCustomSecret({
           name: `${hubName}-${k.keyName}`,
-          value: k.primaryKey!,
+          value: conn,
           vaultInfo,
           contentType: 'IOT Hub',
-        })
-      );
+        });
+      });
     });
   }
 
