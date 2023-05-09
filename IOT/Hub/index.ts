@@ -228,12 +228,12 @@ export default async ({
         resourceName: hubName,
       });
 
-      keys.value?.forEach((k) => {
+      return keys.value?.forEach((k) => {
         const conn = `HostName=${hubName}.azure-devices.net;SharedAccessKeyName=${
           k.keyName
         };SharedAccessKey=${k.primaryKey!}`;
 
-        addCustomSecret({
+        return addCustomSecret({
           name: `${hubName}-${k.keyName}`,
           value: conn,
           vaultInfo,
