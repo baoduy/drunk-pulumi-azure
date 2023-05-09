@@ -1,7 +1,7 @@
 import { BasicResourceArgs, KeyVaultInfo } from '../../types';
 import { getIotHubName } from '../../Common/Naming';
 import * as devices from '@pulumi/azure-native/devices';
-import { defaultTags, subscriptionId } from '../../Common/AzureEnv';
+import { currentEnv, defaultTags, subscriptionId } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import Locker from '../../Core/Locker';
 import { EnvRoleNamesType } from '../../AzAd/EnvRoles';
@@ -230,7 +230,7 @@ export default async ({
 
       keys.value?.forEach((k) =>
         addCustomSecret({
-          name: `${hubName}-${k.keyName}`,
+          name: `${hubName.replace(`${currentEnv}-`, '')}-${k.keyName}`,
           value: k.primaryKey!,
           vaultInfo,
           contentType: 'IOT Hub',
