@@ -41,7 +41,7 @@
     "@azure/keyvault-keys": "^4.7.1",
     "@azure/keyvault-secrets": "^4.7.0",
     "@chilkat/ck-node19-linux64": "^9.50.94",
-    "@pulumi/azure": "^5.44.0",
+    "@pulumi/azure": "file:npmjs/azure-5.44.0.tgz",
     "@pulumi/azure-native": "^1.103.0",
     "@pulumi/azuread": "5.38.0",
     "@pulumi/kubernetes": "^3.29.1",
