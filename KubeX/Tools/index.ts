@@ -4,6 +4,7 @@ import HelloWorldApp, { HelloAppProps } from './HelloWorldApp';
 import KubeCleanup from './KubeCleanup';
 import ToolPod, { ToolPodProps } from './ToolPod';
 import SqlPad, { SqlPadProps } from './SqlPad';
+import CloudFlareDDNS, { CloudFlareDynamicDns } from './CloudFlareDynamicDns';
 
 interface Props {
   namespace: Input<string>;
@@ -11,6 +12,7 @@ interface Props {
 
   helloWorld?: Omit<HelloAppProps, 'namespace' | 'provider' | 'dependsOn'>;
   sqlPad?: Omit<SqlPadProps, 'namespace' | 'provider' | 'dependsOn'>;
+  cloudFlareDDNS?: Omit<CloudFlareDynamicDns, 'namespace' | 'provider' | 'dependsOn'>;
 
   toolPod?: Omit<ToolPodProps, 'namespace' | 'provider' | 'dependsOn'>;
   enableKubeCleanup?: boolean;
@@ -22,10 +24,12 @@ export default async ({
   enableKubeCleanup,
   toolPod,
   sqlPad,
+  cloudFlareDDNS,
   ...others
 }: Props) => {
-  if (helloWorld) await HelloWorldApp({ ...others, ...helloWorld });
+  if (helloWorld) HelloWorldApp({ ...others, ...helloWorld });
   if (enableKubeCleanup) KubeCleanup(others);
   if (toolPod) ToolPod({ ...others, ...toolPod });
   if (sqlPad) await SqlPad({ ...others, ...sqlPad });
+  if (cloudFlareDDNS) CloudFlareDDNS({ ...others, ...cloudFlareDDNS });
 };

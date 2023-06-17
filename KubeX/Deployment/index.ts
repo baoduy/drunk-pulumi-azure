@@ -247,7 +247,7 @@ interface Props {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default async ({
+export default ({
   name,
   namespace,
 

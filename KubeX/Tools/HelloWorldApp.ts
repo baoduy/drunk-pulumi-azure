@@ -12,7 +12,7 @@ export interface HelloAppProps {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default async ({
+export default ({
   namespace,
   hostName,
   ingressType,
@@ -23,7 +23,7 @@ export default async ({
   const image = 'mcr.microsoft.com/azuredocs/aks-helloworld:v1';
   const port = 80;
 
-  await deployment({
+  deployment({
     name,
     namespace,
 

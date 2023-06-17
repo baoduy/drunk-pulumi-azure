@@ -1,7 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
 import { createPVCForStorageClass } from '../Storage';
-import Deployment, { IngressTypes } from '../Deployment';
-import { CertManagerIssuerTypes } from '../Ingress/type';
+import Deployment from '../Deployment';
 import roleCreator from '../../AzAd/Role';
 import IdentityCreator from '../../AzAd/Identity';
 import { Input, interpolate, Resource } from '@pulumi/pulumi';
@@ -9,11 +8,7 @@ import { currentEnv, tenantId } from '../../Common/AzureEnv';
 import { getGraphPermissions } from '../../AzAd/GraphDefinition';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
-import {
-  defaultSecurityContext,
-  defaultPodSecurityContext,
-} from '../Core/SecurityRules';
-import { DefaultK8sArgs, DefaultKsAppArgs } from '../types';
+import { DefaultKsAppArgs } from '../types';
 
 interface identityProps {
   name: string;
@@ -27,7 +22,7 @@ const createIdentity = async ({
   name,
   vaultInfo,
 }: identityProps) => {
-  roleCreator({
+  await roleCreator({
     env: currentEnv,
     appName: name,
     roleName: 'Admin',
@@ -174,7 +169,7 @@ export default async ({
     });
   }
 
-  await Deployment({
+  Deployment({
     name,
     namespace,
     secrets,

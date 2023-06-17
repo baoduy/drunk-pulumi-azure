@@ -13,7 +13,7 @@ export interface HelloAppProps {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default async ({
+export default ({
   namespace,
   username,
   password, domain,
@@ -23,7 +23,7 @@ export default async ({
   const name = 'no-ip';
   const image = 'aanousakis/no-ip:v1';
 
-  await deployment({
+  deployment({
     name,
     namespace,
 
