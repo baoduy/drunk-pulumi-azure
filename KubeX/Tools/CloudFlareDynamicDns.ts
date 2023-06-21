@@ -6,10 +6,10 @@ import deployment from '../Deployment';
 export interface CloudFlareDynamicDns {
   namespace: Input<string>;
   apiKey: Input<string>;
-  zones: [{
+  zones: Array<{
     id: Input<string>;
     aRecords: string[];
-  }];
+  }>;
 
   provider: k8s.Provider;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
