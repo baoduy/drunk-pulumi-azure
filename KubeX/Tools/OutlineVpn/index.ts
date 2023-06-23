@@ -60,7 +60,7 @@ export default async ({
   //Deployment
   const outlineDeployment = new kubernetes.apps.v1.Deployment("outlineShadowbox_Deployment", {
     metadata: {
-      name: "shadowbox-server",
+      name,
       namespace,
       annotations:{
         'pulumi.com/skipAwait': "true"
@@ -70,18 +70,20 @@ export default async ({
       replicas: 1,
       selector: {
         matchLabels: {
-          name: "shadowbox",
+          name,
+          app: name,
         },
       },
       template: {
         metadata: {
           labels: {
-            name: "shadowbox",
+            name,
+            app: name,
           },
         },
         spec: {
           containers:[{
-            name: 'shadowbox',
+            name,
             image,
             lifecycle:{
               postStart:{
@@ -146,7 +148,8 @@ export default async ({
         },
       },
     },
-  },{
+  },
+    {
     dependsOn: [ns,persisVolume],
     provider: others.provider,
   });
@@ -157,11 +160,11 @@ export default async ({
       name: "shadowbox-management",
       namespace,
 
-      annotations:{
-        'pulumi.com/skipAwait': "true"
-      },
+      // annotations:{
+      //   'pulumi.com/skipAwait': "true"
+      // },
       labels: {
-        app: "shadowbox",
+        app: name,
       },
     },
     spec: {
@@ -173,7 +176,7 @@ export default async ({
         protocol: 'TCP'
       }],
       selector: {
-        app: "shadowbox",
+        app: name,
       },
     },
   },{
