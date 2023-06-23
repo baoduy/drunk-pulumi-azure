@@ -6,6 +6,8 @@ import * as kubernetes from "@pulumi/kubernetes";
 import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import { randomUuId } from '../../../Core/Random';
 
+//https://medium.com/asl19-developers/hosting-outline-vpn-server-on-kubernetes-69a8765eed19
+
 export interface OutlineProps extends K8sArgs {
   vaultInfo?: KeyVaultInfo;
   certVaultName?: string;
@@ -160,15 +162,12 @@ export default async ({
       name: "shadowbox-management",
       namespace,
 
-      // annotations:{
-      //   'pulumi.com/skipAwait': "true"
-      // },
       labels: {
         app: name,
       },
     },
     spec: {
-      type: "LoadBalancer",
+      //type: "LoadBalancer",
       ports: [{
         name:'https',
         port: 8081,
@@ -190,15 +189,12 @@ export default async ({
       name,
       namespace,
 
-      // annotations:{
-      //   'pulumi.com/skipAwait': "true"
-      // },
       labels: {
         app: name,
       },
     },
     spec: {
-      type: "LoadBalancer",
+      //type: "LoadBalancer",
       ports: [{
         name:'tcp',
         port: 443,
