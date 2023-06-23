@@ -27,9 +27,9 @@ export default async ({
   const ns = Namespace({ name: namespace, ...others });
 
   const defaultProps = {
-  namespace,
-  dependsOn: ns,
-  provider: others.provider,
+    namespace,
+    dependsOn: ns,
+    provider: others.provider,
   }
 
   //Cert
@@ -52,8 +52,8 @@ export default async ({
   const persisVolume = createPVCForStorageClass({
     name,
     namespace,
-    ...others,
     storageClassName,
+    ...defaultProps
   });
 
   //Deployment
@@ -139,7 +139,7 @@ export default async ({
       },
     },
   },{
-    dependsOn: ns,
+    dependsOn: [ns,persisVolume],
     provider: others.provider,
   });
 
@@ -166,7 +166,7 @@ export default async ({
       },
     },
   },{
-    dependsOn: ns,
+    dependsOn: outlineDeployment,
     provider: others.provider,
   });
 
@@ -192,7 +192,7 @@ export default async ({
       },
     },
   },{
-    dependsOn: ns,
+    dependsOn: outlineDeployment,
     provider: others.provider,
   });
 };

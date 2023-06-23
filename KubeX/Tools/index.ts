@@ -4,6 +4,7 @@ import HelloWorldApp, { HelloAppProps } from './HelloWorldApp';
 import KubeCleanup from './KubeCleanup';
 import ToolPod, { ToolPodProps } from './ToolPod';
 import SqlPad, { SqlPadProps } from './SqlPad';
+import OutlineVpn, { OutlineProps } from './OutlineVpn';
 import CloudFlareDDNS, { CloudFlareDynamicDns } from './CloudFlareDynamicDns';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 
   helloWorld?: Omit<HelloAppProps, 'namespace' | 'provider' | 'dependsOn'>;
   sqlPad?: Omit<SqlPadProps, 'namespace' | 'provider' | 'dependsOn'>;
+  outlineVpn?: Omit<OutlineProps, 'namespace' | 'provider' | 'dependsOn'>;
   cloudFlareDDNS?: Omit<CloudFlareDynamicDns, 'namespace' | 'provider' | 'dependsOn'>;
 
   toolPod?: Omit<ToolPodProps, 'namespace' | 'provider' | 'dependsOn'>;
@@ -24,6 +26,7 @@ export default async ({
   enableKubeCleanup,
   toolPod,
   sqlPad,
+  outlineVpn,
   cloudFlareDDNS,
   ...others
 }: Props) => {
@@ -31,5 +34,6 @@ export default async ({
   if (enableKubeCleanup) KubeCleanup(others);
   if (toolPod) ToolPod({ ...others, ...toolPod });
   if (sqlPad) await SqlPad({ ...others, ...sqlPad });
+  if (outlineVpn) await OutlineVpn({ ...others, ...outlineVpn });
   if (cloudFlareDDNS) CloudFlareDDNS({ ...others, ...cloudFlareDDNS });
 };
