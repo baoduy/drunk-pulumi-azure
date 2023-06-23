@@ -3,11 +3,13 @@ import Namespace from '../../Core/Namespace';
 import { KeyVaultInfo } from '../../../types';
 import { certImportFromVault, certImportFromFolder } from '../../CertImports';
 import * as kubernetes from "@pulumi/kubernetes";
+import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 
-interface Props extends K8sArgs {
+export interface OutlineProps extends K8sArgs {
   vaultInfo?: KeyVaultInfo;
   certVaultName?: string;
   certFolderName?: string;
+  storageClassName: StorageClassNameTypes;
 }
 
 
@@ -15,17 +17,22 @@ export default async ({
   vaultInfo,
   certVaultName,
   certFolderName,
+  storageClassName,
   ...others
-}: Props) => {
+}: OutlineProps) => {
   const name = 'outline-vpn';
   const namespace = 'outline-system';
+  const image = 'quay.io/outline/shadowbox:stable';
 
   const ns = Namespace({ name: namespace, ...others });
-const defaultProps = {
+
+  const defaultProps = {
   namespace,
   dependsOn: ns,
-  provider: others.provider,}
+  provider: others.provider,
+  }
 
+  //Cert
   if (certVaultName && vaultInfo) {
     await certImportFromVault({
       certNames: [certVaultName],
@@ -41,86 +48,151 @@ const defaultProps = {
     });
   }
 
-  //Deploy nfs-server
-  const nfs_serverDeployment = new kubernetes.extensions.v1beta1.Deployment("nfs_serverDeployment", {
+  //Storage
+  const persisVolume = createPVCForStorageClass({
+    name,
+    namespace,
+    ...others,
+    storageClassName,
+  });
+
+  //Deployment
+  const outlineDeployment = new kubernetes.apps.v1.Deployment("outlineShadowbox_Deployment", {
     metadata: {
-      name: "nfs-server",
+      name: "shadowbox-server",
+      namespace
     },
     spec: {
       replicas: 1,
       selector: {
         matchLabels: {
-          role: "nfs-server",
+          name: "shadowbox",
         },
       },
       template: {
         metadata: {
           labels: {
-            role: "nfs-server",
+            name: "shadowbox",
           },
         },
         spec: {
-          containers: [{
-            name: "nfs-server",
-            image: "gcr.io/google_containers/volume-nfs:0.8",
-            ports: [
-              {
-                name: "nfs",
-                containerPort: 2049,
-              },
-              {
-                name: "mountd",
-                containerPort: 20048,
-              },
-              {
-                name: "rpcbind",
-                containerPort: 111,
-              },
-            ],
-            securityContext: {
-              privileged: true,
+          containers:[{
+            name: 'shadowbox',
+            image,
+            lifecycle:{
+              postStart:{
+                exec:{
+                  command:["/bin/sh", "-c", "echo '{\"rollouts\":[{\"id\":\"single-port\",\"enabled\":true}],\"portForNewAccessKeys\":443}' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var='kill -SIGHUP $(pgrep -f outline-ss-server)'; echo \"*/15 * * * * $var\" > mycron; crontab mycron; rm mycron;"],
+                }
+              }
             },
-            volumeMounts: [{
-              mountPath: "/exports",
-              name: "mypvc",
+            ports:[
+              {name:'http',containerPort: 80},
+              {name:'https',containerPort: 443}
+            ],
+            env:[
+              {
+                name:'SB_CERTIFICATE_FILE',
+                value:''
+              },
+              {
+                name:'SB_PRIVATE_KEY_FILE',
+                value:''
+              }
+            ],
+            volumeMounts:[{
+              name:'server-config-volume',
+              mountPath: '/cache'
+            },{
+              name:'shadowbox-config',
+              mountPath: '/opt/outline'
+            },{
+              name:'tls',
+              mountPath: '/tmp/shadowbox-selfsigned-dev.crt',
+              subPath: 'shadowbox-selfsigned-dev.crt'
+            },{
+              name:'tls',
+              mountPath: '/tmp/shadowbox-selfsigned-dev.key',
+              subPath: 'shadowbox-selfsigned-dev.key'
             }],
           }],
-          volumes: [{
-            name: "mypvc",
-            gcePersistentDisk: {
-              pdName: "gce-nfs-disk",
-              fsType: "ext4",
-            },
-          }],
+          volumes:[{
+            name:'server-config-volume',
+            emptyDir:{}
+          },{
+            name:'shadowbox-config',
+            persistentVolumeClaim:{claimName: persisVolume.metadata.name}
+          },{
+            name: 'tls',
+            secret:{
+              secretName:name,
+              items:[{
+                key:'tls.crt',
+                path:'shadowbox-selfsigned-dev.crt'
+              },{
+                key:'tls.key',
+                path:'shadowbox-selfsigned-dev.key'
+              }]
+            }
+          }]
         },
       },
     },
+  },{
+    dependsOn: ns,
+    provider: others.provider,
   });
 
-  const nfs_serverService = new kubernetes.core.v1.Service("nfs_serverService", {
+  //Services
+  const outlineShadowbox_lb_tcpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_tcpService", {
     metadata: {
-      name: "nfs-server",
+      labels: {
+        app: "shadowbox",
+      },
+      namespace,
+      name: "shadowbox-lb-tcp",
     },
     spec: {
-      ports: [
-        {
-          name: "nfs",
-          port: 2049,
-        },
-        {
-          name: "mountd",
-          port: 20048,
-        },
-        {
-          name: "rpcbind",
-          port: 111,
-        },
-      ],
+      //type: "LoadBalancer",
+      //loadBalancerIP: "xx.xx.xx.xx",
+      ports: [{
+        name: "out",
+        port: 443,
+        targetPort: 443,
+        protocol: "TCP",
+      }],
       selector: {
-        role: "nfs-server",
+        app: "shadowbox",
       },
     },
+  },{
+    dependsOn: ns,
+    provider: others.provider,
   });
 
-
+  const outlineShadowbox_lb_udpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_udpService", {
+    metadata: {
+      labels: {
+        app: "shadowbox",
+      },
+      namespace,
+      name: "shadowbox-lb-udp",
+    },
+    spec: {
+      //type: "LoadBalancer",
+      //loadBalancerIP: "zz.zz.zz.zz",
+      ports: [{
+        name: "out",
+        port: 443,
+        targetPort: 443,
+        protocol: "UDP",
+      }],
+      selector: {
+        app: "shadowbox",
+      },
+    },
+  },{
+    dependsOn: ns,
+    provider: others.provider,
+  });
 };
