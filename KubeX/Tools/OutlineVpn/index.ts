@@ -185,55 +185,38 @@ export default async ({
     deleteBeforeReplace: true,
   });
 
-  // const outlineShadowbox_lb_tcpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_tcpService", {
-  //   metadata: {
-  //     labels: {
-  //       app: "shadowbox",
-  //     },
-  //     namespace,
-  //     name: "shadowbox-lb-tcp",
-  //   },
-  //   spec: {
-  //     //type: "LoadBalancer",
-  //     //loadBalancerIP: "xx.xx.xx.xx",
-  //     ports: [{
-  //       name: "out",
-  //       port: 443,
-  //       targetPort: 443,
-  //       protocol: "TCP",
-  //     }],
-  //     selector: {
-  //       app: "shadowbox",
-  //     },
-  //   },
-  // },{
-  //   dependsOn: outlineDeployment,
-  //   provider: others.provider,
-  // });
-  //
-  // const outlineShadowbox_lb_udpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_udpService", {
-  //   metadata: {
-  //     labels: {
-  //       app: "shadowbox",
-  //     },
-  //     namespace,
-  //     name: "shadowbox-lb-udp",
-  //   },
-  //   spec: {
-  //     //type: "LoadBalancer",
-  //     //loadBalancerIP: "zz.zz.zz.zz",
-  //     ports: [{
-  //       name: "out",
-  //       port: 443,
-  //       targetPort: 443,
-  //       protocol: "UDP",
-  //     }],
-  //     selector: {
-  //       app: "shadowbox",
-  //     },
-  //   },
-  // },{
-  //   dependsOn: outlineDeployment,
-  //   provider: others.provider,
-  // });
+  const outlineShadowbox_vpn_tcpService = new kubernetes.core.v1.Service("outlineShadowbox_vpn_tcpService", {
+    metadata: {
+      name,
+      namespace,
+
+      // annotations:{
+      //   'pulumi.com/skipAwait': "true"
+      // },
+      labels: {
+        app: name,
+      },
+    },
+    spec: {
+      type: "LoadBalancer",
+      ports: [{
+        name:'tcp',
+        port: 443,
+        targetPort: 443,
+        protocol: 'TCP'
+      },{
+        name:'udp',
+        port: 443,
+        targetPort: 443,
+        protocol: 'UDP'
+      }],
+      selector: {
+        app: name,
+      },
+    },
+  },{
+    dependsOn: outlineDeployment,
+    provider: others.provider,
+    deleteBeforeReplace: true,
+  });
 };
