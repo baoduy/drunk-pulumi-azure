@@ -79,6 +79,8 @@ export const certImportFromFolder = ({
         others
       )
   );
+
+  return name;
 };
 
 interface ImportCertFromVaultProps extends K8sArgs {

@@ -4,6 +4,7 @@ import { KeyVaultInfo } from '../../../types';
 import { certImportFromVault, certImportFromFolder } from '../../CertImports';
 import * as kubernetes from "@pulumi/kubernetes";
 import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
+import { randomUuId } from '../../../Core/Random';
 
 export interface OutlineProps extends K8sArgs {
   vaultInfo?: KeyVaultInfo;
@@ -24,6 +25,7 @@ export default async ({
   const namespace = 'outline-system';
   const image = 'quay.io/outline/shadowbox:stable';
 
+  const id = randomUuId(name).result;
   const ns = Namespace({ name: namespace, ...others });
 
   const defaultProps = {
@@ -59,7 +61,10 @@ export default async ({
   const outlineDeployment = new kubernetes.apps.v1.Deployment("outlineShadowbox_Deployment", {
     metadata: {
       name: "shadowbox-server",
-      namespace
+      namespace,
+      annotations:{
+        'pulumi.com/skipAwait': "true"
+      }
     },
     spec: {
       replicas: 1,
@@ -86,10 +91,16 @@ export default async ({
               }
             },
             ports:[
-              {name:'http',containerPort: 80},
-              {name:'https',containerPort: 443}
+              {containerPort: 80},
+              {containerPort: 443},
+              { name: "https",
+                containerPort: 8081,
+                protocol: 'TCP'}
             ],
             env:[{
+              name:'SB_API_PREFIX',
+              value: id
+              },{
                 name:'SB_CERTIFICATE_FILE',
                 value:'/tmp/shadowbox-selfsigned-dev.crt'
               },
@@ -141,22 +152,25 @@ export default async ({
   });
 
   //Services
-  const outlineShadowbox_lb_tcpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_tcpService", {
+  const outlineShadowbox_management_tcpService = new kubernetes.core.v1.Service("outlineShadowbox_management_tcpService", {
     metadata: {
+      name: "shadowbox-management",
+      namespace,
+
+      annotations:{
+        'pulumi.com/skipAwait': "true"
+      },
       labels: {
         app: "shadowbox",
       },
-      namespace,
-      name: "shadowbox-lb-tcp",
     },
     spec: {
-      //type: "LoadBalancer",
-      //loadBalancerIP: "xx.xx.xx.xx",
+      type: "LoadBalancer",
       ports: [{
-        name: "out",
-        port: 443,
-        targetPort: 443,
-        protocol: "TCP",
+        name:'https',
+        port: 8081,
+        targetPort: 8081,
+        protocol: 'TCP'
       }],
       selector: {
         app: "shadowbox",
@@ -165,31 +179,58 @@ export default async ({
   },{
     dependsOn: outlineDeployment,
     provider: others.provider,
+    deleteBeforeReplace: true,
   });
 
-  const outlineShadowbox_lb_udpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_udpService", {
-    metadata: {
-      labels: {
-        app: "shadowbox",
-      },
-      namespace,
-      name: "shadowbox-lb-udp",
-    },
-    spec: {
-      //type: "LoadBalancer",
-      //loadBalancerIP: "zz.zz.zz.zz",
-      ports: [{
-        name: "out",
-        port: 443,
-        targetPort: 443,
-        protocol: "UDP",
-      }],
-      selector: {
-        app: "shadowbox",
-      },
-    },
-  },{
-    dependsOn: outlineDeployment,
-    provider: others.provider,
-  });
+  // const outlineShadowbox_lb_tcpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_tcpService", {
+  //   metadata: {
+  //     labels: {
+  //       app: "shadowbox",
+  //     },
+  //     namespace,
+  //     name: "shadowbox-lb-tcp",
+  //   },
+  //   spec: {
+  //     //type: "LoadBalancer",
+  //     //loadBalancerIP: "xx.xx.xx.xx",
+  //     ports: [{
+  //       name: "out",
+  //       port: 443,
+  //       targetPort: 443,
+  //       protocol: "TCP",
+  //     }],
+  //     selector: {
+  //       app: "shadowbox",
+  //     },
+  //   },
+  // },{
+  //   dependsOn: outlineDeployment,
+  //   provider: others.provider,
+  // });
+  //
+  // const outlineShadowbox_lb_udpService = new kubernetes.core.v1.Service("outlineShadowbox_lb_udpService", {
+  //   metadata: {
+  //     labels: {
+  //       app: "shadowbox",
+  //     },
+  //     namespace,
+  //     name: "shadowbox-lb-udp",
+  //   },
+  //   spec: {
+  //     //type: "LoadBalancer",
+  //     //loadBalancerIP: "zz.zz.zz.zz",
+  //     ports: [{
+  //       name: "out",
+  //       port: 443,
+  //       targetPort: 443,
+  //       protocol: "UDP",
+  //     }],
+  //     selector: {
+  //       app: "shadowbox",
+  //     },
+  //   },
+  // },{
+  //   dependsOn: outlineDeployment,
+  //   provider: others.provider,
+  // });
 };
