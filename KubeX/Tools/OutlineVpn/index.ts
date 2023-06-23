@@ -51,7 +51,6 @@ export default async ({
   //Storage
   const persisVolume = createPVCForStorageClass({
     name,
-    namespace,
     storageClassName,
     ...defaultProps
   });
@@ -90,16 +89,14 @@ export default async ({
               {name:'http',containerPort: 80},
               {name:'https',containerPort: 443}
             ],
-            env:[
-              {
+            env:[{
                 name:'SB_CERTIFICATE_FILE',
-                value:''
+                value:'/tmp/shadowbox-selfsigned-dev.crt'
               },
               {
                 name:'SB_PRIVATE_KEY_FILE',
-                value:''
-              }
-            ],
+                value:'/tmp/shadowbox-selfsigned-dev.key'
+              }],
             volumeMounts:[{
               name:'server-config-volume',
               mountPath: '/cache'
@@ -125,7 +122,7 @@ export default async ({
           },{
             name: 'tls',
             secret:{
-              secretName:name,
+              secretName: `tls-${name}-imported`,
               items:[{
                 key:'tls.crt',
                 path:'shadowbox-selfsigned-dev.crt'
