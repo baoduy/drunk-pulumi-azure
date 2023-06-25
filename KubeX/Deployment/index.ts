@@ -426,7 +426,7 @@ export default ({
 
       service,
       provider,
-      dependsOn,
+      dependsOn: [deployment, service],
     };
 
     if (ingressConfig.type === 'nginx') NginxIngress(ingressProps);

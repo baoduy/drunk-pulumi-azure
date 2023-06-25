@@ -7,6 +7,7 @@ export interface HelloAppProps {
   namespace: Input<string>;
   provider: k8s.Provider;
   hostName: Input<string>;
+  allowHttp?: boolean;
   ingressType: IngressTypes;
   useVirtualHost?: boolean;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
@@ -16,6 +17,7 @@ export default ({
   namespace,
   hostName,
   ingressType,
+  allowHttp,
   useVirtualHost,
   ...others
 }: HelloAppProps) => {
@@ -37,9 +39,9 @@ export default ({
     ingressConfig: {
       type: ingressType,
       hostNames: [hostName],
-      allowHttp: true,
-      certManagerIssuer: true,
-      tlsSecretName: `tls-${name}-lets`,
+      allowHttp,
+      certManagerIssuer: !allowHttp,
+      tlsSecretName: allowHttp ? undefined : `tls-${name}-lets`,
       className: 'nginx',
     },
 

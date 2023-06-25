@@ -77,18 +77,10 @@ export default ({
   }
 
   if (certManager) {
-    const ns = Namespace({
-      name: certManager.name,
-      labels: { 'cert-manager.io/disable-validation': 'true' },
-      provider,
-    });
-
     resources.push(
       CertManager({
         ...certManager,
-        namespace: ns.metadata.name,
         provider,
-        dependsOn: ns,
       })
     );
   }

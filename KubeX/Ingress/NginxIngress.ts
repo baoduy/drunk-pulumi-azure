@@ -70,8 +70,7 @@ export default ({
   }
 
   if (proxy?.backendProtocol) {
-    annotations['nginx.ingress.kubernetes.io/ssl-passthrough'] = 'true';
-
+    //annotations['nginx.ingress.kubernetes.io/ssl-passthrough'] = 'true';
     annotations['nginx.ingress.kubernetes.io/backend-protocol'] =
       proxy.backendProtocol;
   }

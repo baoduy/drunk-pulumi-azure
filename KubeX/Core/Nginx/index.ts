@@ -51,9 +51,6 @@ interface Props extends DefaultK8sArgs {
   proxySetHeaders?: { [key: string]: string };
 
   enableDebug?: boolean;
-  dependsOn?:
-    | pulumi.Input<pulumi.Input<pulumi.Resource>[]>
-    | pulumi.Input<pulumi.Resource>;
 }
 
 /**
