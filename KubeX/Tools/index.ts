@@ -6,6 +6,7 @@ import SqlPad, { SqlPadProps } from './SqlPad';
 import OutlineVpn, { OutlineProps } from './OutlineVpn';
 import CloudFlareDDNS, { CloudFlareDynamicDns } from './CloudFlareDynamicDns';
 import NoIp, { NoIpProps } from './NoIp';
+import AppHealthMonitor, { AppHealthMonitorProps } from './AppHealthzMonitor';
 
 interface Props {
   namespace: Input<string>;
@@ -15,6 +16,11 @@ interface Props {
   sqlPad?: Omit<SqlPadProps, 'namespace' | 'provider' | 'dependsOn'>;
   toolPod?: Omit<ToolPodProps, 'namespace' | 'provider' | 'dependsOn'>;
   outlineVpn?: Omit<OutlineProps, 'namespace' | 'provider' | 'dependsOn'>;
+  appHealthMonitor?: Omit<
+    AppHealthMonitorProps,
+    'namespace' | 'provider' | 'dependsOn'
+  >;
+
   cloudFlareDDNS?: Omit<
     CloudFlareDynamicDns,
     'namespace' | 'provider' | 'dependsOn'
@@ -31,6 +37,7 @@ export default async ({
   sqlPad,
   outlineVpn,
   cloudFlareDDNS,
+  appHealthMonitor,
   ...others
 }: Props) => {
   if (enableKubeCleanup) KubeCleanup(others);
@@ -39,4 +46,5 @@ export default async ({
   if (sqlPad) await SqlPad({ ...others, ...sqlPad });
   if (outlineVpn) await OutlineVpn({ ...others, ...outlineVpn });
   if (cloudFlareDDNS) CloudFlareDDNS({ ...others, ...cloudFlareDDNS });
+  if (appHealthMonitor) AppHealthMonitor({ ...others, ...appHealthMonitor });
 };
