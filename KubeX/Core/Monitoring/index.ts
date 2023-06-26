@@ -47,6 +47,7 @@ export default ({
   const name = 'prometheus';
   //TODO: Setup grafana with Azure AD authentication
 
+  //Sample https://github.com/fabianlee/k3s-cluster-kvm/blob/main/roles/kube-prometheus-stack/files/prom-sparse.expanded.yaml
   /** https://github.com/cablespaghetti/k3s-monitoring
    *
    * Monitor Rules Creating issue
@@ -109,6 +110,12 @@ export default ({
           enabled: enableGrafana,
           adminPassword: password,
           plugins: ['grafana-piechart-panel'],
+
+          env: {
+            GF_SERVER_ROOT_URL: `https://${enableGrafana?.hostName}`,
+            GF_SERVER_DOMAIN: enableGrafana?.hostName,
+            GF_SERVER_SERVE_FROM_SUB_PATH: 'true',
+          },
         },
 
         alertmanager: {
@@ -217,7 +224,7 @@ export default ({
           ) {
             //Azure AD
             if (enableGrafana.auth.azureAD) {
-              const current = obj.data['grafana.ini'];
+              let current: string = obj.data['grafana.ini'];
               obj.data['grafana.ini'] = pulumi.interpolate`
 ${current}
 
@@ -226,7 +233,7 @@ azure_auth_enabled = true
 disable_login_form = true
 
 [auth.anonymous]
-enabled = true
+enabled = false
 
 [auth.basic]
 enabled = false
@@ -249,9 +256,11 @@ allowed_domains =
 allowed_groups =
 allowed_organizations = ${enableGrafana.auth.azureAD.tenantId}
 role_attribute_strict = false
-allow_assign_grafana_admin = true
-skip_org_role_sync = false
-use_pkce = true
+allow_assign_grafana_admin = false
+skip_org_role_sync = true
+use_pkce = false
+force_use_graph_api = false
+
               `;
             }
           }
