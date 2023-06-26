@@ -6,7 +6,7 @@ import { IngressProps } from './type';
 
 export default ({
   name,
-  className,
+  className = 'nginx',
   hostNames,
   maxUploadSizeMb = 10,
   allowHttp,

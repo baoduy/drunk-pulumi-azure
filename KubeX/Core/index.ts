@@ -5,6 +5,7 @@ import Monitoring, { MonitoringProps } from './Monitoring';
 import CertManager, { CertManagerProps } from './CertManager';
 import { Input, Resource } from '@pulumi/pulumi';
 import StorageClass, { StorageClassProps } from './StorageClass';
+import { K8sArgs } from '../types';
 
 interface NginxItemProps {
   name: string;
@@ -28,7 +29,7 @@ interface NginxProps {
   private?: Omit<NginxItemProps, 'publicIpAddress'>;
 }
 
-interface Props {
+interface Props extends K8sArgs {
   namespaces: Array<{
     name: string;
     labels?: {
@@ -42,12 +43,12 @@ interface Props {
     [key: string]: Omit<StorageClassProps, 'provider' | 'name'>;
   };
   enableStaticIpEgress?: { publicIpAddress?: Input<string> };
-  provider: k8s.Provider;
 }
 
 export default ({
   namespaces,
   provider,
+  dependsOn,
   nginx,
   monitoring,
   certManager,
@@ -58,14 +59,9 @@ export default ({
   const resources = new Array<Resource>();
 
   if (nginx) {
-    const rs = nginxCreator({ ...nginx, provider });
+    const rs = nginxCreator({ ...nginx, provider, dependsOn });
     if (rs.publicIngress) resources.push(rs.publicIngress);
     if (rs.privateIngress) resources.push(rs.privateIngress);
-  }
-
-  if (monitoring) {
-    const ns = Namespace({ name: monitoring.namespace, provider });
-    resources.push(Monitoring({ ...monitoring, provider, dependsOn: ns }));
   }
 
   if (storageClasses) {
@@ -81,8 +77,13 @@ export default ({
       CertManager({
         ...certManager,
         provider,
+        dependsOn,
       })
     );
+  }
+
+  if (monitoring) {
+    resources.push(Monitoring({ ...monitoring, provider, dependsOn }));
   }
 
   return { namespacesList, resources };
@@ -93,12 +94,12 @@ const nginxCreator = ({
   version,
   replicaCount,
   vnetResourceGroup,
-  provider,
   internalIngress,
+
+  provider,
+
   ...info
-}: NginxProps & {
-  provider: k8s.Provider;
-}) => {
+}: NginxProps & K8sArgs) => {
   //Namespace
   const ns = Namespace({ name: namespace, provider });
   let privateIngress: Resource | undefined;

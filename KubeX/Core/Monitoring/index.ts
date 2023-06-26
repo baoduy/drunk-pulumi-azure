@@ -2,20 +2,19 @@ import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import NginxIngress from '../../../KubeX/Ingress/NginxIngress';
 import { applyDeploymentRules } from '../SecurityRules';
+import Namespace from '../Namespace';
+import { getTlsName } from '../../CertHelper';
+import { getRootDomainFromUrl } from '../../../Common/Helpers';
 
 export interface MonitoringProps {
-  namespace: string;
+  namespace?: string;
   provider: k8s.Provider;
   nodeSelector?: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
   }>;
 
   enablePrometheus?: boolean;
-  enableKubeEtcd?: boolean;
-  enableKubeControllerManager?: boolean;
-  enableKubeScheduler?: boolean;
-  enableKubeProxy?: boolean;
-  enableGrafana?: { hostName: string; tlsSecretName: string };
+  enableGrafana?: { hostName: string };
   enableAlertManager?: boolean;
 
   dependsOn?:
@@ -28,25 +27,12 @@ export default ({
   /**Select AKS node that is not Virtual Node*/
   nodeSelector = {},
 
-  enableKubeControllerManager,
-  enableKubeEtcd,
-  enableKubeProxy,
-  enableKubeScheduler,
+  enableAlertManager = false,
+  enablePrometheus = true,
   enableGrafana,
-  enableAlertManager,
-
   provider,
-  dependsOn,
 }: MonitoringProps) => {
   //TODO: Setup grafana with Azure AD authentication
-  // console.log(`Creating prometheus:`, {
-  //   enableKubeControllerManager,
-  //   enableKubeEtcd,
-  //   enableKubeProxy,
-  //   enableKubeScheduler,
-  //   enableGrafana: Boolean(enableGrafana),
-  //   enableAlertManager,
-  // });
 
   /** https://github.com/cablespaghetti/k3s-monitoring
    *
@@ -56,6 +42,9 @@ export default ({
    *
    * kube-proxy issue refer here: https://github.com/prometheus-community/helm-charts/blob/61e7d540b686fa0df428933a42136f7084223ee2/charts/kube-prometheus-stack/README.md
    */
+
+  const ns = Namespace({ name: namespace, provider });
+
   const prometheus = new k8s.helm.v3.Chart(
     'prometheus',
     {
@@ -63,22 +52,50 @@ export default ({
       namespace,
       fetchOpts: { repo: 'https://prometheus-community.github.io/helm-charts' },
       values: {
+        //Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
+        //because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
+        hostNetwork: false,
         nodeSelector,
 
+        coreDns: { enabled: false },
+        kubeDns: { enabled: false },
+        kubelet: { enabled: false },
         //Disable etcd monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/4
-        kubeEtcd: {
-          enabled: enableKubeEtcd,
-        },
+        kubeEtcd: { enabled: false },
         //Disable kube-controller-manager and kube-scheduler monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/2
-        kubeControllerManager: {
-          enabled: enableKubeControllerManager,
+        kubeControllerManager: { enabled: false },
+        kubeScheduler: { enabled: false },
+        kubeProxy: { enabled: false },
+        kubernetesServiceMonitors: { enabled: false },
+        kubeApiServer: { enabled: false },
+        kubeletService: { enabled: false },
+        kubeStateMetrics: { enabled: true },
+        nodeExporter: { enabled: true },
+        networkPolicy: { enabled: false },
+
+        prometheus: { enabled: enablePrometheus },
+        prometheusOperator: { enabled: true },
+        prometheusSpec: {
+          retention: '7d',
+          storageSpec: {
+            volumeClaimTemplate: {
+              spec: {
+                accessModes: ['ReadWriteOnce'],
+                resources: {
+                  requests: {
+                    storage: '5Gi',
+                  },
+                },
+              },
+            },
+          },
         },
-        kubeScheduler: {
-          enabled: enableKubeScheduler,
+
+        grafana: {
+          enabled: enableGrafana,
+          plugins: ['grafana-piechart-panel'],
         },
-        kubeProxy: {
-          enabled: enableKubeProxy,
-        },
+
         alertmanager: {
           enabled: enableAlertManager,
           // config: {
@@ -169,51 +186,32 @@ export default ({
           //   },
           // },
         },
-        prometheus: {
-          prometheusSpec: {
-            retention: '1d',
-            storageSpec: {
-              volumeClaimTemplate: {
-                spec: {
-                  accessModes: ['ReadWriteOnce'],
-                  resources: {
-                    requests: {
-                      storage: '5Gi',
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        grafana: {
-          plugins: ['grafana-piechart-panel'],
-          enabled: Boolean(enableGrafana),
-        },
-        // 'kube-state-metrics': {
-        //   image: {
-        //     repository: 'eddiezane/kube-state-metrics',
-        //     tag: 'v1.9.7',
-        //   },
-        // },
+
+        ingress: { enabled: false },
+        ingressPerReplica: { enabled: false },
       },
       transformations: [
         (obj) => applyDeploymentRules(obj, { ignoredKinds: ['Job'] }),
       ],
     },
-    { provider, dependsOn }
+    { provider, dependsOn: ns }
   );
 
   if (enableGrafana) {
     NginxIngress({
       name: 'prometheus-grafana',
-      ...enableGrafana,
       hostNames: [enableGrafana.hostName],
+      certManagerIssuer: true,
+      className: 'nginx',
+      tlsSecretName: getTlsName(
+        getRootDomainFromUrl(enableGrafana.hostName),
+        true
+      ),
 
       service: {
         metadata: {
           name: pulumi.interpolate`prometheus-grafana`,
-          namespace: pulumi.output(namespace),
+          namespace,
         },
         spec: { ports: [{ port: 80 }] },
       },
