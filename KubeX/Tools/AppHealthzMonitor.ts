@@ -8,7 +8,7 @@ import { getRootDomainFromUrl } from '../../Common/Helpers';
 export interface AppHealthMonitorProps {
   name?: string;
   namespace: Input<string>;
-  hostName: Input<string>;
+  hostName: string;
 
   auth: { tenantId: Input<string>; clientId: Input<string> };
   endpoints?: Array<{ name: Input<string>; uri: Input<string> }>;
@@ -45,6 +45,7 @@ export default ({
     configMap,
 
     ingressConfig: {
+      type: 'nginx',
       className: 'nginx',
       hostNames: [hostName],
       certManagerIssuer: true,
