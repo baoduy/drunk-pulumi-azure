@@ -5,6 +5,8 @@ import { applyDeploymentRules } from '../SecurityRules';
 import Namespace from '../Namespace';
 import { getTlsName } from '../../CertHelper';
 import { getRootDomainFromUrl } from '../../../Common/Helpers';
+import { randomPassword } from '../../../Core/Random';
+import * as console from 'console';
 
 export interface MonitoringProps {
   namespace?: string;
@@ -14,7 +16,17 @@ export interface MonitoringProps {
   }>;
 
   enablePrometheus?: boolean;
-  enableGrafana?: { hostName: string };
+  enableGrafana?: {
+    hostName: string;
+    auth?: {
+      azureAD?: {
+        tenantId: pulumi.Input<string>;
+        clientId: pulumi.Input<string>;
+        clientSecret?: pulumi.Input<string>;
+        //groups?: Array<string>;
+      };
+    };
+  };
   enableAlertManager?: boolean;
 
   dependsOn?:
@@ -32,6 +44,7 @@ export default ({
   enableGrafana,
   provider,
 }: MonitoringProps) => {
+  const name = 'prometheus';
   //TODO: Setup grafana with Azure AD authentication
 
   /** https://github.com/cablespaghetti/k3s-monitoring
@@ -44,9 +57,10 @@ export default ({
    */
 
   const ns = Namespace({ name: namespace, provider });
+  const password = randomPassword({ name, policy: 'yearly' }).result;
 
   const prometheus = new k8s.helm.v3.Chart(
-    'prometheus',
+    name,
     {
       chart: 'kube-prometheus-stack',
       namespace,
@@ -93,6 +107,7 @@ export default ({
 
         grafana: {
           enabled: enableGrafana,
+          adminPassword: password,
           plugins: ['grafana-piechart-panel'],
         },
 
@@ -191,7 +206,56 @@ export default ({
         ingressPerReplica: { enabled: false },
       },
       transformations: [
-        (obj) => applyDeploymentRules(obj, { ignoredKinds: ['Job'] }),
+        (obj) => {
+          applyDeploymentRules(obj, { ignoredKinds: ['Job'] });
+
+          //Enable OpenID auth for grafana
+          if (
+            enableGrafana?.auth &&
+            obj.kind === 'ConfigMap' &&
+            obj.metadata.name === 'prometheus-grafana'
+          ) {
+            //Azure AD
+            if (enableGrafana.auth.azureAD) {
+              const current = obj.data['grafana.ini'];
+              obj.data['grafana.ini'] = pulumi.interpolate`
+${current}
+
+[auth]
+azure_auth_enabled = true
+disable_login_form = true
+
+[auth.anonymous]
+enabled = true
+
+[auth.basic]
+enabled = false
+    
+[auth.azuread]
+name = Azure AD
+enabled = true
+allow_sign_up = true
+auto_login = true
+client_id = ${enableGrafana.auth.azureAD.clientId}
+client_secret = ${enableGrafana.auth.azureAD.clientSecret ?? ''}
+scopes = openid email profile
+auth_url = https://login.microsoftonline.com/${
+                enableGrafana.auth.azureAD.tenantId
+              }/oauth2/v2.0/authorize
+token_url = https://login.microsoftonline.com/${
+                enableGrafana.auth.azureAD.tenantId
+              }/oauth2/v2.0/token
+allowed_domains =
+allowed_groups =
+allowed_organizations = ${enableGrafana.auth.azureAD.tenantId}
+role_attribute_strict = false
+allow_assign_grafana_admin = true
+skip_org_role_sync = false
+use_pkce = true
+              `;
+            }
+          }
+        },
       ],
     },
     { provider, dependsOn: ns }
