@@ -3,12 +3,12 @@ import { Input, Resource } from '@pulumi/pulumi';
 
 import deployment, { IngressTypes } from '../Deployment';
 
-export interface HelloAppProps {
+export interface NoIpProps {
   namespace: Input<string>;
   username: Input<string>;
   password: Input<string>;
   domain: Input<string>;
-  interval?:number;
+  interval?: number;
   provider: k8s.Provider;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
@@ -16,10 +16,11 @@ export interface HelloAppProps {
 export default ({
   namespace,
   username,
-  password, domain,
+  password,
+  domain,
   interval = 5,
   ...others
-}: HelloAppProps) => {
+}: NoIpProps) => {
   const name = 'no-ip';
   const image = 'aanousakis/no-ip:v1';
 
@@ -27,11 +28,11 @@ export default ({
     name,
     namespace,
 
-    configMap:{
-      INTERVAL:interval.toString(),
-      DOMAINS:domain
+    configMap: {
+      INTERVAL: interval.toString(),
+      DOMAINS: domain,
     },
-    secrets:{USERNAME:username,PASSWORD:password},
+    secrets: { USERNAME: username, PASSWORD: password },
 
     podConfig: {
       image,
