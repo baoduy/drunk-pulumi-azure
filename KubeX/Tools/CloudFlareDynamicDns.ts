@@ -3,13 +3,16 @@ import { Input, Resource } from '@pulumi/pulumi';
 
 import deployment from '../Deployment';
 
-export interface CloudFlareDynamicDns {
-  namespace: Input<string>;
+type CloudFlareProps = {
   apiKey: Input<string>;
   zones: Array<{
     id: Input<string>;
     aRecords: string[];
   }>;
+};
+export interface CloudFlareDynamicDns {
+  namespace: Input<string>;
+  cloudFlare: Array<CloudFlareProps>;
 
   provider: k8s.Provider;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
@@ -17,26 +20,34 @@ export interface CloudFlareDynamicDns {
 
 export default ({
   namespace,
-  apiKey, zones,
+  cloudFlare = [],
 
   ...others
 }: CloudFlareDynamicDns) => {
   const name = 'cloudflare-ddns';
   const image = 'baoduy2412/cloudflare-ddns:latest';
 
-  const config:any = {};
+  const configMap: any = {};
+  const secrets: any = {};
 
-  zones.forEach(((z,index)=>{
-    config[`Cloudflare__Zones__${index}__Id`] = z.id;
-    z.aRecords.forEach((r,rI)=>config[`Cloudflare__Zones__${index}__ARecords__${rI}`] = r);
-  }));
+  cloudFlare.forEach((c, ci) => {
+    secrets[`Cloudflare__${ci}__ApiKey`] = c.apiKey;
+
+    c.zones.forEach((z, zi) => {
+      configMap[`Cloudflare__${ci}__Zones__${zi}__Id`] = z.id;
+      z.aRecords.forEach(
+        (r, rI) =>
+          (configMap[`Cloudflare__${ci}__Zones__${zi}__ARecords__${rI}`] = r)
+      );
+    });
+  });
 
   deployment({
     name,
     namespace,
 
-    configMap:config,
-    secrets:{Cloudflare__ApiKey:apiKey},
+    configMap,
+    secrets,
 
     podConfig: {
       image,
