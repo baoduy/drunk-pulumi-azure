@@ -4,6 +4,7 @@ import { Input, Resource } from '@pulumi/pulumi';
 import deployment, { IngressTypes } from '../Deployment';
 import { getTlsName } from '../CertHelper';
 import { getRootDomainFromUrl } from '../../Common/Helpers';
+import { defaultDotNetConfig } from '../../Common/AppConfigs/dotnetConfig';
 
 export interface AppHealthMonitorProps {
   name?: string;
@@ -29,10 +30,14 @@ export default ({
 }: AppHealthMonitorProps) => {
   const image = 'baoduy2412/healthz-ui:latest';
 
-  const configMap: any = {};
+  const configMap: any = { ...defaultDotNetConfig };
 
   configMap['AzureAd__TenantId'] = auth.tenantId;
   configMap['AzureAd__ClientId'] = auth.clientId;
+  configMap['AzureAd__RedirectUri'] = `https://${hostName}/signin-oidc`;
+  configMap[
+    'AzureAd__PostLogoutRedirectUri'
+  ] = `https://${hostName}/signout-callback-oidc`;
 
   endpoints.forEach((e, i) => {
     configMap[`HealthChecksUI__HealthChecks__${i}__Name`] = e.name;
