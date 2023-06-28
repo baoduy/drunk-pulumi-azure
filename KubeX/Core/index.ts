@@ -45,7 +45,7 @@ interface Props extends K8sArgs {
   enableStaticIpEgress?: { publicIpAddress?: Input<string> };
 }
 
-export default ({
+export default async ({
   namespaces,
   provider,
   dependsOn,
@@ -83,7 +83,7 @@ export default ({
   }
 
   if (monitoring) {
-    resources.push(Monitoring({ ...monitoring, provider, dependsOn }));
+    resources.push(await Monitoring({ ...monitoring, provider, dependsOn }));
   }
 
   return { namespacesList, resources };

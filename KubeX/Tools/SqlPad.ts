@@ -59,7 +59,6 @@ const createIdentity = async ({
     createClientSecret: true,
     createPrincipal: true,
 
-    allowImplicit: true,
     replyUrls: [callbackUrl],
     vaultInfo,
   });

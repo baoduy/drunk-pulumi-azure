@@ -13,6 +13,7 @@ interface PlanProps extends K8sArgs {
   namespace: Input<string>;
   isServerPlan?: boolean;
 }
+
 const createPlan = ({
   name,
   namespace,

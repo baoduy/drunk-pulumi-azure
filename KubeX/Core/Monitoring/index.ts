@@ -7,7 +7,6 @@ import { getTlsName } from '../../CertHelper';
 import { getRootDomainFromUrl } from '../../../Common/Helpers';
 import { randomPassword } from '../../../Core/Random';
 import IdentityCreator from '../../../AzAd/Identity';
-import { getGraphPermissions } from '../../../AzAd/GraphDefinition';
 import { KeyVaultInfo } from '../../../types';
 import { Input, Resource } from '@pulumi/pulumi';
 import { tenantId } from '../../../Common/AzureEnv';
@@ -318,9 +317,9 @@ token_url = https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token
 allowed_domains =
 allowed_groups =
 allowed_organizations = ${tenantId}
-role_attribute_strict = false
+role_attribute_strict = true
 allow_assign_grafana_admin = false
-skip_org_role_sync = true
+skip_org_role_sync = false
 use_pkce = false
 force_use_graph_api = false
 
