@@ -138,18 +138,18 @@ export default async ({
         hostNetwork: false,
         nodeSelector,
 
-        coreDns: { enabled: false },
+        coreDns: { enabled: true },
         kubeDns: { enabled: false },
-        kubelet: { enabled: false },
+        kubelet: { enabled: true },
         //Disable etcd monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/4
         kubeEtcd: { enabled: false },
         //Disable kube-controller-manager and kube-scheduler monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/2
         kubeControllerManager: { enabled: false },
-        kubeScheduler: { enabled: false },
-        kubeProxy: { enabled: false },
+        kubeScheduler: { enabled: true },
+        kubeProxy: { enabled: true },
         kubernetesServiceMonitors: { enabled: true },
         kubeApiServer: { enabled: true },
-        kubeletService: { enabled: false },
+        kubeletService: { enabled: true },
         kubeStateMetrics: { enabled: true },
         nodeExporter: { enabled: true },
         networkPolicy: { enabled: false },
@@ -173,7 +173,7 @@ export default async ({
         },
 
         grafana: {
-          enabled: enableGrafana,
+          enabled: Boolean( enableGrafana),
           adminPassword: password,
           plugins: ['grafana-piechart-panel'],
 
