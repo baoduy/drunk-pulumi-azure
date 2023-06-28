@@ -102,7 +102,7 @@ export default async ({
                       command: [
                         '/bin/sh',
                         '-c',
-                        'echo \'{"rollouts":[{"id":"single-port","enabled":true}],"portForNewAccessKeys":443}\' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var=\'kill -SIGHUP $(pgrep -f outline-ss-server)\'; echo "*/15 * * * * $var" > mycron; crontab mycron; rm mycron;',
+                        `echo \'{"rollouts":[{"id":"single-port","enabled":true}],"portForNewAccessKeys":${accessPort}}\' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var=\'kill -SIGHUP $(pgrep -f outline-ss-server)\'; echo "*/15 * * * * $var" > mycron; crontab mycron; rm mycron;`,
                       ],
                     },
                   },

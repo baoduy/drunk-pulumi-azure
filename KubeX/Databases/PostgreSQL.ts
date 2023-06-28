@@ -10,7 +10,9 @@ import { interpolate, Input } from '@pulumi/pulumi';
 interface Props extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
   auth?: { rootPass?: Input<string> };
+  enableHA?:boolean;
   storageClassName: StorageClassNameTypes;
+
 }
 
 export default async ({
@@ -18,6 +20,7 @@ export default async ({
   namespace,
   vaultInfo,
   auth,
+  enableHA,
   storageClassName,
   provider,
 }: Props) => {
@@ -42,12 +45,13 @@ export default async ({
     name,
     {
       namespace,
-      chart: 'postgresql-ha',
+      chart:enableHA?'postgresql-ha': 'postgresql',
       fetchOpts: { repo: 'https://charts.bitnami.com/bitnami' },
       skipAwait: true,
       values: {
         global: {
           storageClass: storageClassName,
+          //architecture: 'standalone'
           pgpool: {
             //adminUsername: login.userName,
             adminPassword: password,
