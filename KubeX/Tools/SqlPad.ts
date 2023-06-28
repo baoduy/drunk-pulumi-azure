@@ -10,10 +10,10 @@ import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { DefaultKsAppArgs } from '../types';
 
-interface identityProps {
+interface IdentityProps {
   name: string;
   callbackUrl: string;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
@@ -21,7 +21,7 @@ const createIdentity = async ({
   callbackUrl,
   name,
   vaultInfo,
-}: identityProps) => {
+}: IdentityProps) => {
   await roleCreator({
     env: currentEnv,
     appName: name,
@@ -29,7 +29,7 @@ const createIdentity = async ({
   });
 
   //Create Azure AD Identity for Authentication
-  const adIdentity = IdentityCreator({
+  return await IdentityCreator({
     name,
 
     appRoleAssignmentRequired: true,
@@ -63,8 +63,6 @@ const createIdentity = async ({
     replyUrls: [callbackUrl],
     vaultInfo,
   });
-
-  return adIdentity;
 };
 
 export interface SqlPadProps extends Omit<DefaultKsAppArgs, 'name'> {

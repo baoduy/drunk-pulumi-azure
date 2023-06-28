@@ -29,7 +29,7 @@ type IdentityProps = {
   publicClient?: boolean;
   createPrincipal?: boolean;
   replyUrls?: pulumi.Input<pulumi.Input<string>[]>;
-  allowImplicit?: boolean;
+  appType?: 'spa' | 'web' | 'api';
   allowMultiOrg?: boolean;
   appRoles?: pulumi.Input<pulumi.Input<ApplicationAppRole>[]>;
   oauth2Permissions?: pulumi.Input<
@@ -65,7 +65,7 @@ export default async ({
   createPrincipal = false,
   homepage,
   replyUrls,
-  allowImplicit = false,
+  appType = 'spa',
   allowMultiOrg = false,
   appRoles,
   appRoleAssignmentRequired,
@@ -98,6 +98,7 @@ export default async ({
 
   const app = new azureAD.Application(name, {
     displayName: name,
+    description: name,
 
     owners,
     appRoles,
@@ -107,23 +108,35 @@ export default async ({
 
     publicClient: publicClient ? { redirectUris: replyUrls } : undefined,
 
-    // singlePageApplication: allowImplicit
-    //   ? { redirectUris: replyUrls }
-    //   : undefined,
-    singlePageApplication: allowImplicit
-      ? {
-          //homepageUrl: homepage,
-          //implicitGrant: { accessTokenIssuanceEnabled: true },
-          redirectUris: replyUrls,
-        }
-      : undefined,
+    singlePageApplication:
+      appType === 'spa'
+        ? {
+            redirectUris: replyUrls,
+          }
+        : undefined,
 
-    //web: {},
+    web:
+      appType === 'web'
+        ? {
+            redirectUris: replyUrls,
+            implicitGrant: {
+              accessTokenIssuanceEnabled: true,
+              idTokenIssuanceEnabled: true,
+            },
+          }
+        : undefined,
 
-    api: !allowImplicit
-      ? { oauth2PermissionScopes: oauth2Permissions }
-      : undefined,
+    api:
+      appType === 'api'
+        ? {
+            oauth2PermissionScopes: oauth2Permissions,
+            mappedClaimsEnabled: true,
+            requestedAccessTokenVersion: 2,
+          }
+        : undefined,
 
+    fallbackPublicClientEnabled: false,
+    preventDuplicateNames: true,
     requiredResourceAccesses: requiredResourceAccesses
       ? pulumi.output(requiredResourceAccesses).apply((r) => [...r])
       : undefined,
