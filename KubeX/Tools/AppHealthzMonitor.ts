@@ -5,20 +5,22 @@ import deployment, { IngressTypes } from '../Deployment';
 import { getTlsName } from '../CertHelper';
 import { getRootDomainFromUrl } from '../../Common/Helpers';
 import { defaultDotNetConfig } from '../../Common/AppConfigs/dotnetConfig';
+import IdentityCreator from '../../AzAd/Identity';
+import { tenantId } from '../../Common/AzureEnv';
 
 export interface AppHealthMonitorProps {
   name?: string;
   namespace: Input<string>;
   hostName: string;
 
-  auth: { tenantId: Input<string>; clientId: Input<string> };
+  auth: { azureAD?: boolean };
   endpoints?: Array<{ name: Input<string>; uri: Input<string> }>;
 
   provider: k8s.Provider;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default ({
+export default async ({
   name = 'healthz-monitor',
   namespace,
   hostName,
@@ -29,15 +31,30 @@ export default ({
   ...others
 }: AppHealthMonitorProps) => {
   const image = 'baoduy2412/healthz-ui:latest';
+  const callbackUrl = `https://${hostName}/signin-oidc`;
+
+  const identity = auth?.azureAD
+    ? await IdentityCreator({
+        name,
+
+        createClientSecret: false,
+        createPrincipal: false,
+
+        appType: 'spa',
+        replyUrls: [callbackUrl],
+      })
+    : undefined;
 
   const configMap: any = { ...defaultDotNetConfig };
 
-  configMap['AzureAd__TenantId'] = auth.tenantId;
-  configMap['AzureAd__ClientId'] = auth.clientId;
-  configMap['AzureAd__RedirectUri'] = `https://${hostName}/signin-oidc`;
-  configMap[
-    'AzureAd__PostLogoutRedirectUri'
-  ] = `https://${hostName}/signout-callback-oidc`;
+  if (identity) {
+    configMap['AzureAd__TenantId'] = tenantId;
+    configMap['AzureAd__ClientId'] = identity?.clientId;
+    configMap['AzureAd__RedirectUri'] = callbackUrl;
+    configMap[
+      'AzureAd__PostLogoutRedirectUri'
+    ] = `https://${hostName}/signout-callback-oidc`;
+  }
 
   endpoints.forEach((e, i) => {
     configMap[`HealthChecksUI__HealthChecks__${i}__Name`] = e.name;

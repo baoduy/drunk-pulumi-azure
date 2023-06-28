@@ -46,5 +46,6 @@ export default async ({
   if (sqlPad) await SqlPad({ ...others, ...sqlPad });
   if (outlineVpn) await OutlineVpn({ ...others, ...outlineVpn });
   if (cloudFlareDDNS) CloudFlareDDNS({ ...others, ...cloudFlareDDNS });
-  if (appHealthMonitor) AppHealthMonitor({ ...others, ...appHealthMonitor });
+  if (appHealthMonitor)
+    await AppHealthMonitor({ ...others, ...appHealthMonitor });
 };
