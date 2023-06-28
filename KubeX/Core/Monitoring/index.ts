@@ -133,29 +133,62 @@ export default async ({
       namespace,
       fetchOpts: { repo: 'https://prometheus-community.github.io/helm-charts' },
       values: {
+        defaultRules: {
+          create: enablePrometheus,
+          rules: {
+            alertmanager: enableAlertManager,
+            etcd: false,
+            configReloaders: false,
+            general: true,
+            k8s: false,
+            kubeApiserverAvailability: false,
+            kubeApiserverBurnrate: false,
+            kubeApiserverHistogram: true,
+            kubeApiserverSlos: false,
+            kubeControllerManager: false,
+            kubelet: false,
+            kubeProxy: false,
+            kubePrometheusGeneral: enablePrometheus,
+            kubePrometheusNodeRecording: enablePrometheus,
+            kubernetesApps: enablePrometheus,
+            kubernetesResources: enablePrometheus,
+            kubernetesStorage: enablePrometheus,
+            kubernetesSystem: enablePrometheus,
+            kubeSchedulerAlerting: enableAlertManager,
+            kubeSchedulerRecording: enablePrometheus,
+            kubeStateMetrics: enablePrometheus,
+            network: enablePrometheus,
+            node: enablePrometheus,
+            nodeExporterAlerting: enableAlertManager,
+            nodeExporterRecording: enablePrometheus,
+            prometheus: enablePrometheus,
+            prometheusOperator: enablePrometheus,
+          },
+        },
+
         //Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
         //because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
         hostNetwork: false,
         nodeSelector,
 
-        coreDns: { enabled: true },
+        coreDns: { enabled: enablePrometheus },
         kubeDns: { enabled: false },
-        kubelet: { enabled: true },
+        kubelet: { enabled: false },
         //Disable etcd monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/4
         kubeEtcd: { enabled: false },
         //Disable kube-controller-manager and kube-scheduler monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/2
         kubeControllerManager: { enabled: false },
         kubeScheduler: { enabled: false },
         kubeProxy: { enabled: false },
-        kubernetesServiceMonitors: { enabled: true },
-        kubeApiServer: { enabled: true },
-        kubeletService: { enabled: true },
-        kubeStateMetrics: { enabled: true },
-        nodeExporter: { enabled: true },
+        kubernetesServiceMonitors: { enabled: enablePrometheus },
+        kubeApiServer: { enabled: enablePrometheus },
+        kubeletService: { enabled: enablePrometheus },
+        kubeStateMetrics: { enabled: enablePrometheus },
+        nodeExporter: { enabled: enablePrometheus },
         networkPolicy: { enabled: false },
 
         prometheus: { enabled: enablePrometheus },
-        prometheusOperator: { enabled: true },
+        prometheusOperator: { enabled: enablePrometheus },
         prometheusSpec: {
           retention: '7d',
           storageSpec: {
@@ -173,7 +206,7 @@ export default async ({
         },
 
         grafana: {
-          enabled: Boolean( enableGrafana),
+          enabled: Boolean(enableGrafana),
           adminPassword: password,
           plugins: ['grafana-piechart-panel'],
 

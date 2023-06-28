@@ -7,6 +7,7 @@ import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import { randomUuId } from '../../../Core/Random';
 import { NginxIngress } from '../../Ingress';
 import { getTlsName } from '../../CertHelper';
+import * as kx from '../../KubX';
 
 //https://medium.com/asl19-developers/hosting-outline-vpn-server-on-kubernetes-69a8765eed19
 
@@ -17,6 +18,8 @@ export interface OutlineProps extends K8sArgs {
   accessPort?: number;
   certVaultName?: string;
   certFolderName?: string;
+
+  replicas?: number;
   storageClassName: StorageClassNameTypes;
 }
 export default async ({
@@ -27,6 +30,7 @@ export default async ({
   certVaultName,
   certFolderName,
   storageClassName,
+  replicas = 1,
   ...others
 }: OutlineProps) => {
   const name = 'outline-vpn';
@@ -50,13 +54,23 @@ export default async ({
       ...defaultProps,
     });
   } else if (certFolderName) {
-    await certImportFromFolder({
+    certImportFromFolder({
       certName: name,
       certFolder: certFolderName,
       namespaces: [namespace],
       ...defaultProps,
     });
   }
+
+  //Config Map
+  // const configMap = new kx.ConfigMap(
+  //   name,
+  //   {
+  //     metadata: { namespace },
+  //     data: { 'config.yml': '' },
+  //   },
+  //   others
+  // );
 
   //Storage
   const persisVolume = createPVCForStorageClass({
@@ -77,7 +91,7 @@ export default async ({
         },
       },
       spec: {
-        replicas: 1,
+        replicas,
         selector: {
           matchLabels: {
             name,
@@ -102,7 +116,7 @@ export default async ({
                       command: [
                         '/bin/sh',
                         '-c',
-                        `echo \'{"rollouts":[{"id":"single-port","enabled":true}],"portForNewAccessKeys":${accessPort}}\' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var=\'kill -SIGHUP $(pgrep -f outline-ss-server)\'; echo "*/15 * * * * $var" > mycron; crontab mycron; rm mycron;`,
+                        `echo '{"rollouts":[{"id":"single-port","enabled":true}],"portForNewAccessKeys":${accessPort}}' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var='kill -SIGHUP $(pgrep -f outline-ss-server)'; echo "*/15 * * * * $var" > mycron; crontab mycron; rm mycron;`,
                       ],
                     },
                   },
@@ -138,15 +152,23 @@ export default async ({
                     name: 'shadowbox-config',
                     mountPath: '/opt/outline',
                   },
+                  // {
+                  //   name: 'config',
+                  //   mountPath:
+                  //     '/root/shadowbox/persisted-state/outline-ss-server/config.yml',
+                  //   subPath: 'config.yml',
+                  // },
                   {
                     name: 'tls',
                     mountPath: '/tmp/shadowbox-selfsigned-dev.crt',
                     subPath: 'shadowbox-selfsigned-dev.crt',
+                    readOnly: true,
                   },
                   {
                     name: 'tls',
                     mountPath: '/tmp/shadowbox-selfsigned-dev.key',
                     subPath: 'shadowbox-selfsigned-dev.key',
+                    readOnly: true,
                   },
                 ],
               },
@@ -162,6 +184,10 @@ export default async ({
                   claimName: persisVolume.metadata.name,
                 },
               },
+              // {
+              //   name: 'config',
+              //   configMap: { name: configMap.metadata.name },
+              // },
               {
                 name: 'tls',
                 secret: {
