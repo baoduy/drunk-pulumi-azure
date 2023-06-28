@@ -145,8 +145,8 @@ export default async ({
         kubeEtcd: { enabled: false },
         //Disable kube-controller-manager and kube-scheduler monitoring. See https://github.com/cablespaghetti/k3s-monitoring/issues/2
         kubeControllerManager: { enabled: false },
-        kubeScheduler: { enabled: true },
-        kubeProxy: { enabled: true },
+        kubeScheduler: { enabled: false },
+        kubeProxy: { enabled: false },
         kubernetesServiceMonitors: { enabled: true },
         kubeApiServer: { enabled: true },
         kubeletService: { enabled: true },
