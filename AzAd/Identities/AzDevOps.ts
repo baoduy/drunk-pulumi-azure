@@ -47,7 +47,7 @@ export default async ({
 
   const ado = await Identity({
     name,
-    allowImplicit: false,
+    appType: 'web',
     createClientSecret: true,
     createPrincipal: true,
     requiredResourceAccesses: [graphAccess],
