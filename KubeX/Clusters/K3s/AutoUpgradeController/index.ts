@@ -63,7 +63,7 @@ export default ({ enableWorkerPlan, ...others }: Props) => {
     name,
     {
       skipAwait: true,
-      file: 'https://github.com/rancher/system-upgrade-controller/releases/latest/download/system-upgrade-controller.yaml',
+      file: 'https://github.com/rancher/system-upgrade-controller/blob/master/manifests/system-upgrade-controller.yaml',
       transformations: [(o) => {}],
     },
     others

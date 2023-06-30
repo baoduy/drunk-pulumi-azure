@@ -13,7 +13,7 @@ import * as kx from '../../KubX';
 
 export interface OutlineProps extends K8sArgs {
   vaultInfo?: KeyVaultInfo;
-  domain: string;
+  hostname: string;
   apiPort?: number;
   accessPort?: number;
   certVaultName?: string;
@@ -24,7 +24,7 @@ export interface OutlineProps extends K8sArgs {
 }
 export default async ({
   vaultInfo,
-  domain,
+  hostname,
   apiPort = 65123,
   accessPort = 45123,
   certVaultName,
@@ -79,6 +79,12 @@ export default async ({
     ...defaultProps,
   });
 
+  const serverConfig = {
+    rollouts: [{ id: 'single-port', enabled: true }],
+    portForNewAccessKeys: accessPort,
+    hostname,
+  };
+
   //Deployment
   const outlineDeployment = new kubernetes.apps.v1.Deployment(
     'outlineShadowbox_Deployment',
@@ -110,13 +116,16 @@ export default async ({
               {
                 name,
                 image,
+                //`echo '{"rollouts":[{"id":"single-port","enabled":true}],"portForNewAccessKeys":${accessPort}}' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; [ ! -f /root/shadowbox/persisted-state/outline-ss-server/config.yml ] && cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var='kill -SIGHUP $(pgrep -f outline-ss-server)'; echo "*/15 * * * * $var" > mycron; crontab mycron; rm mycron;`,
                 lifecycle: {
                   postStart: {
                     exec: {
                       command: [
                         '/bin/sh',
                         '-c',
-                        `echo '{"rollouts":[{"id":"single-port","enabled":true}],"portForNewAccessKeys":${accessPort}}' > /root/shadowbox/persisted-state/shadowbox_server_config.json; cat /opt/outline/shadowbox_config.json > /root/shadowbox/persisted-state/shadowbox_config.json; cat /opt/outline/outline-ss-server/config.yml > /root/shadowbox/persisted-state/outline-ss-server/config.yml; sleep 10; ln -sf /opt/outline/shadowbox_config.json /root/shadowbox/persisted-state/shadowbox_config.json; ln -sf /opt/outline/outline-ss-server/config.yml /root/shadowbox/persisted-state/outline-ss-server/config.yml; var='kill -SIGHUP $(pgrep -f outline-ss-server)'; echo "*/15 * * * * $var" > mycron; crontab mycron; rm mycron;`,
+                        `echo '${JSON.stringify(
+                          serverConfig
+                        )}' > /root/shadowbox/persisted-state/shadowbox_server_config.json;`,
                       ],
                     },
                   },
@@ -152,12 +161,10 @@ export default async ({
                     name: 'shadowbox-config',
                     mountPath: '/opt/outline',
                   },
-                  // {
-                  //   name: 'config',
-                  //   mountPath:
-                  //     '/root/shadowbox/persisted-state/outline-ss-server/config.yml',
-                  //   subPath: 'config.yml',
-                  // },
+                  {
+                    name: 'shadowbox-config',
+                    mountPath: '/root/shadowbox',
+                  },
                   {
                     name: 'tls',
                     mountPath: '/tmp/shadowbox-selfsigned-dev.crt',
@@ -171,6 +178,11 @@ export default async ({
                     readOnly: true,
                   },
                 ],
+
+                resources: {
+                  requests: { memory: '100Mi', cpu: '0.1' },
+                  limits: { memory: '4Gi', cpu: '2' },
+                },
               },
             ],
             volumes: [
@@ -293,17 +305,4 @@ export default async ({
       deleteBeforeReplace: true,
     }
   );
-
-  // NginxIngress({
-  //   name: 'outline-management',
-  //   className: 'nginx',
-  //   dependsOn: outlineShadowbox_management_service,
-  //   provider: others.provider,
-  //   certManagerIssuer: true,
-  //   tlsSecretName: getTlsName(domain, true),
-  //   proxy: { backendProtocol: 'HTTPS' },
-  //
-  //   hostNames: [`outline-management.${domain}`],
-  //   service: outlineShadowbox_management_service,
-  // });
 };
