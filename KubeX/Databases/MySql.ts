@@ -1,24 +1,11 @@
-import { DefaultK8sArgs } from '../types';
-import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
-import { StorageClassNameTypes } from '../Storage';
-import { addCustomSecret } from '../../KeyVault/CustomHelper';
-import { getPasswordName } from '../../Common/Naming';
-import { interpolate, Input } from '@pulumi/pulumi';
+import { interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
-
-interface Props extends DefaultK8sArgs {
-  version?: string;
-  customPort?: number;
-  useClusterIP?: boolean;
-  vaultInfo?: KeyVaultInfo;
-  storageClassName: StorageClassNameTypes;
-  auth?: { rootPass?: Input<string> };
-}
+import { MySqlProps } from '../types';
 
 export default async ({
-  name,
+  name = 'mysql',
   namespace,
   version = 'latest',
   customPort,
@@ -27,7 +14,7 @@ export default async ({
   storageClassName,
   auth,
   ...others
-}: Props) => {
+}: MySqlProps) => {
   const password =
     auth?.rootPass ||
     randomPassword({
@@ -35,16 +22,8 @@ export default async ({
       length: 25,
       policy: false,
       options: { special: false },
-    }).result;
-
-  if (vaultInfo) {
-    addCustomSecret({
-      name: getPasswordName(name, null),
       vaultInfo,
-      value: password,
-      contentType: name,
-    });
-  }
+    }).result;
 
   const persisVolume = createPVCForStorageClass({
     name,

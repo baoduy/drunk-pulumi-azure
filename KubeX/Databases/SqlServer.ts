@@ -1,4 +1,4 @@
-import { DefaultK8sArgs } from '../types';
+import { DefaultK8sArgs, MySqlProps } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
@@ -7,30 +7,22 @@ import Deployment from '../Deployment';
 import { createPVCForStorageClass, StorageClassNameTypes } from '../Storage';
 import { interpolate } from '@pulumi/pulumi';
 
-interface Props extends DefaultK8sArgs {
-  /**The database name that will create the connection string and store in the key vault*/
+interface Props extends MySqlProps {
   databaseNames?: string[];
-  vaultInfo?: KeyVaultInfo;
-  storageClassName: StorageClassNameTypes;
 }
 
-export default async ({
-  name,
+export default ({
+  name = 'sql',
   namespace,
   databaseNames,
   vaultInfo,
+  auth,
   storageClassName,
   provider,
 }: Props) => {
-  const password = randomPassword({ name });
-  if (vaultInfo) {
-    addCustomSecret({
-      name: getPasswordName(name, null),
-      vaultInfo,
-      value: password.result,
-      contentType: name,
-    });
-  }
+  const password = auth?.rootPass
+    ? auth.rootPass
+    : randomPassword({ name, vaultInfo }).result;
 
   //Create Storage Container and add Secret to Namespace
   const claim = createPVCForStorageClass({
@@ -40,13 +32,13 @@ export default async ({
     storageClassName,
   });
 
-  const sql = await Deployment({
+  const sql = Deployment({
     name,
     namespace,
     provider,
 
     configMap: { MSSQL_PID: 'Developer', ACCEPT_EULA: 'Y' },
-    secrets: { SA_PASSWORD: password.result },
+    secrets: { SA_PASSWORD: password },
 
     podConfig: {
       port: 1433,
@@ -80,31 +72,29 @@ export default async ({
     sql,
     host: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: 'sa',
-    password: password.result,
+    password: password,
   };
 
   if (databaseNames) {
-    await Promise.all(
-      databaseNames.map(async (d) => {
-        //Create DataBase in the Server
-        // new MsSqlDatabaseResource(dbName, {
-        //   databaseName: dbName,
-        //   server: rs.host,
-        //   userName: rs.username,
-        //   password: rs.password,
-        // });
+    databaseNames.map((d) => {
+      //Create DataBase in the Server
+      // new MsSqlDatabaseResource(dbName, {
+      //   databaseName: dbName,
+      //   server: rs.host,
+      //   userName: rs.username,
+      //   password: rs.password,
+      // });
 
-        if (vaultInfo) {
-          //Add Connection String to Key Vault
-          addCustomSecret({
-            name: d,
-            vaultInfo,
-            value: interpolate`Data Source=${rs.host};Initial Catalog=${d};User Id=${rs.username};Password=${rs.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=120;`,
-            contentType: name,
-          });
-        }
-      })
-    );
+      if (vaultInfo) {
+        //Add Connection String to Key Vault
+        addCustomSecret({
+          name: d,
+          vaultInfo,
+          value: interpolate`Data Source=${rs.host};Initial Catalog=${d};User Id=${rs.username};Password=${rs.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=120;`,
+          contentType: name,
+        });
+      }
+    });
   }
   return rs;
 };

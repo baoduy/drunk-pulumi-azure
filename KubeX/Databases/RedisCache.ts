@@ -1,4 +1,4 @@
-import { DefaultK8sArgs } from '../types';
+import { DefaultK8sArgs, MySqlProps } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
@@ -8,11 +8,8 @@ import { Input, interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
-interface Props extends DefaultK8sArgs {
+interface Props extends MySqlProps {
   version?: string;
-  vaultInfo?: KeyVaultInfo;
-  auth?: { password?: Input<string> };
-  storageClassName?: StorageClassNameTypes;
 }
 
 export default ({
@@ -27,21 +24,15 @@ export default ({
   const port = 6379;
 
   const password =
-    auth?.password ||
+    auth?.rootPass ||
     randomPassword({
       name,
       length: 25,
       options: { special: false },
+      vaultInfo,
     }).result;
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: getPasswordName(name, null),
-      vaultInfo,
-      value: password,
-      contentType: name,
-    });
-
     const conn = interpolate`${name}.${namespace}.svc.cluster.local:${port},password=${password},ssl=False,abortConnect=False`;
     addCustomSecret({
       name: `${name}-conn`,

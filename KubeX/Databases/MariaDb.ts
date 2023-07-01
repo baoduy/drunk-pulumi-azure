@@ -1,4 +1,4 @@
-import { DefaultK8sArgs } from '../types';
+import { DefaultK8sArgs, MySqlProps } from '../types';
 import { KeyVaultInfo } from '../../types';
 import { randomPassword } from '../../Core/Random';
 import { StorageClassNameTypes } from '../Storage';
@@ -7,11 +7,8 @@ import { addCustomSecret } from '../../KeyVault/CustomHelper';
 import { getPasswordName } from '../../Common/Naming';
 import { interpolate } from '@pulumi/pulumi';
 
-interface Props extends DefaultK8sArgs {
-  version?: string;
+interface Props extends MySqlProps {
   type?: 'mysql' | 'mariadb';
-  vaultInfo?: KeyVaultInfo;
-  storageClassName: StorageClassNameTypes;
 }
 
 export default async ({
@@ -23,20 +20,14 @@ export default async ({
   storageClassName,
   provider,
 }: Props) => {
-  const password = randomPassword({
-    name,
-    length: 25,
-    options: { special: false },
-  }).result;
-
-  if (vaultInfo) {
-    addCustomSecret({
-      name: getPasswordName(name, null),
-      vaultInfo,
-      value: password,
-      contentType: name,
-    });
-  }
+  const password = auth?.rootPass
+    ? auth.rootPass
+    : randomPassword({
+        name,
+        length: 25,
+        options: { special: false },
+        vaultInfo,
+      }).result;
 
   const mysql = new k8s.helm.v3.Chart(
     name,

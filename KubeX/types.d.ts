@@ -2,6 +2,8 @@ import { Provider } from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
 import { IngressTypes } from './Deployment';
 import { CertManagerIssuerTypes } from './Ingress/type';
+import { StorageClassNameTypes } from './Storage';
+import { KeyVaultInfo } from '../types';
 
 export interface K8sArgs {
   provider: Provider;
@@ -19,4 +21,23 @@ export interface DefaultKsAppArgs extends DefaultK8sArgs {
     domain: string;
     certManagerIssuer?: CertManagerIssuerTypes;
   };
+}
+
+type AuthType = { rootPass?: Input<string> };
+
+export interface PostgreSqlProps extends Omit<DefaultK8sArgs, 'name'> {
+  name?: string;
+  vaultInfo?: KeyVaultInfo;
+  auth?: AuthType;
+  storageClassName: StorageClassNameTypes;
+}
+
+export interface MySqlProps extends Omit<DefaultK8sArgs, 'name'> {
+  name?: string;
+  version?: string;
+  customPort?: number;
+  useClusterIP?: boolean;
+  vaultInfo?: KeyVaultInfo;
+  storageClassName: StorageClassNameTypes;
+  auth?: AuthType;
 }

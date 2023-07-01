@@ -117,7 +117,7 @@ export default async ({
 
   const rootUrl = `https://${enableGrafana?.hostName}`;
   const ns = Namespace({ name: namespace, provider });
-  const password = randomPassword({ name, policy: 'yearly' }).result;
+  const password = randomPassword({ name, policy: 'yearly', vaultInfo }).result;
   const adIdentity = Boolean(enableGrafana?.auth?.azureAD)
     ? await createIdentity({
         name,

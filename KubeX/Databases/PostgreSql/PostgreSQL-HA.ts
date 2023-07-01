@@ -1,51 +1,30 @@
-import { DefaultK8sArgs } from '../types';
-import { KeyVaultInfo } from '../../types';
-import { randomPassword } from '../../Core/Random';
-import { StorageClassNameTypes } from '../Storage';
+import { randomPassword } from '../../../Core/Random';
 import * as k8s from '@pulumi/kubernetes';
-import { addCustomSecret } from '../../KeyVault/CustomHelper';
-import { getPasswordName } from '../../Common/Naming';
-import { interpolate, Input } from '@pulumi/pulumi';
-
-interface Props extends DefaultK8sArgs {
-  vaultInfo?: KeyVaultInfo;
-  auth?: { rootPass?: Input<string> };
-  enableHA?:boolean;
-  storageClassName: StorageClassNameTypes;
-
-}
+import { interpolate } from '@pulumi/pulumi';
+import { PostgreSqlProps } from '../../types';
 
 export default async ({
   name = 'postgre-sql',
   namespace,
   vaultInfo,
   auth,
-  enableHA,
   storageClassName,
   provider,
-}: Props) => {
+}: PostgreSqlProps) => {
   const password = auth?.rootPass
     ? auth.rootPass
     : randomPassword({
         name,
         length: 25,
         options: { special: false },
+        vaultInfo,
       }).result;
-
-  if (vaultInfo) {
-    addCustomSecret({
-      name: getPasswordName(name, null),
-      vaultInfo,
-      value: password,
-      contentType: name,
-    });
-  }
 
   const postgre = new k8s.helm.v3.Chart(
     name,
     {
       namespace,
-      chart:enableHA?'postgresql-ha': 'postgresql',
+      chart: 'postgresql-ha',
       fetchOpts: { repo: 'https://charts.bitnami.com/bitnami' },
       skipAwait: true,
       values: {

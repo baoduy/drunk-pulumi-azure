@@ -7,9 +7,9 @@ import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 import { KeyVaultInfo } from '../types';
 
-interface Props {
+interface RandomPassProps {
   name: string;
-  policy?: "monthly" | "yearly" | false;
+  policy?: 'monthly' | 'yearly' | false;
   length?: number;
   options?: {
     lower?: boolean;
@@ -17,6 +17,7 @@ interface Props {
     number?: boolean;
     special?: boolean;
   };
+  vaultInfo?: KeyVaultInfo;
 }
 
 /**
@@ -27,21 +28,22 @@ interface Props {
 export const randomPassword = ({
   length = 50,
   name,
-  policy = "yearly",
+  policy = 'yearly',
   options,
-}: Props) => {
-  if(length<10)length = 10;
-  
+  vaultInfo,
+}: RandomPassProps) => {
+  if (length < 10) length = 10;
+
   const keepKey =
-    policy === "monthly"
+    policy === 'monthly'
       ? `${new Date().getMonth()}.${new Date().getFullYear()}`
-      : policy === "yearly"
+      : policy === 'yearly'
       ? `${new Date().getFullYear()}`
-      : "";
+      : '';
 
   name = getPasswordName(name, null);
 
-  return new random.RandomPassword(name, {
+  const randomPass = new random.RandomPassword(name, {
     keepers: { keepKey },
     length,
     lower: true,
@@ -54,8 +56,19 @@ export const randomPassword = ({
     minSpecial: 2,
     ...options,
     //Exclude some special characters that are not accepted by XML and SQLServer.
-    overrideSpecial: "#%&*+-/:<>?^_|~",
+    overrideSpecial: '#%&*+-/:<>?^_|~',
   });
+
+  if (vaultInfo) {
+    addCustomSecret({
+      name: getPasswordName(name, null),
+      vaultInfo,
+      value: randomPass.result,
+      contentType: name,
+    });
+  }
+
+  return randomPass;
 };
 
 export const randomUuId = (name: string) => new random.RandomUuid(name);
@@ -77,7 +90,7 @@ interface UserNameProps {
 
 const randomUserName = ({
   name,
-  loginPrefix = "admin",
+  loginPrefix = 'admin',
   maxUserNameLength = 15,
 }: UserNameProps): Output<string> => {
   const rd = randomString(name);
@@ -87,7 +100,7 @@ const randomUserName = ({
 };
 
 interface LoginProps extends UserNameProps {
-  passwordPolicy?: "monthly" | "yearly" | false;
+  passwordPolicy?: 'monthly' | 'yearly' | false;
   vaultInfo?: KeyVaultInfo;
 }
 
@@ -123,14 +136,14 @@ export const randomSsh = ({
     name: userNameKey,
     value: userName,
     vaultInfo,
-    contentType: "Random Ssh",
+    contentType: 'Random Ssh',
   });
 
   addCustomSecret({
     name: passwordKeyName,
     value: pass.result,
     vaultInfo,
-    contentType: "Random Ssh",
+    contentType: 'Random Ssh',
     dependsOn: rs,
   });
 
@@ -152,7 +165,7 @@ export const randomLogin = async ({
   name,
   loginPrefix,
   maxUserNameLength,
-  passwordPolicy = "yearly",
+  passwordPolicy = 'yearly',
   vaultInfo,
 }: LoginProps) => {
   const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
@@ -162,18 +175,18 @@ export const randomLogin = async ({
   const passwordKey = `${name}-password`;
 
   if (vaultInfo) {
-     addCustomSecret({
+    addCustomSecret({
       name: userNameKey,
       value: userName,
       vaultInfo,
-      contentType: "Random Login",
+      contentType: 'Random Login',
     });
 
     addCustomSecret({
       name: passwordKey,
       value: password,
       vaultInfo,
-      contentType: "Random Login",
+      contentType: 'Random Login',
     });
   }
 

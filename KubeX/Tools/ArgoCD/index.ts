@@ -49,7 +49,7 @@ export default async ({
         createClientSecret: true,
         createPrincipal: true,
         publicClient: false,
-        allowImplicit: true,
+        appType: 'web',
         replyUrls: [`${url}/argo-cd/auth/callback`],
         vaultInfo,
       })
@@ -73,6 +73,7 @@ export default async ({
               name: `${name}-admin-password`,
               policy: false,
               length: 25,
+              vaultInfo,
             }).result,
           },
         },
@@ -121,6 +122,7 @@ export default async ({
               o.data['server.secretkey'] = randomPassword({
                 name: `${name}-secretkey`,
                 policy: false,
+                vaultInfo,
               }).result.apply(toBase64);
 
               if (identity)
