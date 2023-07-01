@@ -31,12 +31,21 @@ export default async ({
         global: {
           storageClass: storageClassName,
           //architecture: 'standalone'
-          postgresql: {
-            auth: {
-              password: password,
-              postgresPassword: password,
-            },
-          },
+          // postgresql: {
+          //   auth: {
+          //     username: 'postgres',
+          //     database: 'postgres',
+          //     password: password,
+          //     postgresPassword: password,
+          //   },
+          // },
+        },
+        auth: {
+          enablePostgresUser: true,
+          postgresPassword: password,
+          username: 'postgres',
+          password: password,
+          database: 'postgres',
         },
       },
     },

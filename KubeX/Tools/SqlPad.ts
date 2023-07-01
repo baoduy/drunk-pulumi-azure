@@ -75,6 +75,7 @@ export interface SqlPadProps extends Omit<DefaultKsAppArgs, 'name'> {
     azureAd?: { allowedDomain?: string; vaultInfo: KeyVaultInfo };
     admin?: { email: Input<string> };
   };
+  vaultInfo?: KeyVaultInfo;
 }
 
 export default async ({
@@ -83,6 +84,7 @@ export default async ({
   useVirtualHost,
   databases,
   auth,
+  vaultInfo,
   ...others
 }: SqlPadProps) => {
   const name = 'sql-pad';
@@ -168,7 +170,7 @@ export default async ({
     });
   }
 
-  Deployment({
+  return Deployment({
     name,
     namespace,
     secrets,
