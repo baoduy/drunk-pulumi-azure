@@ -11,7 +11,7 @@ export interface K8sArgs {
 }
 
 export interface DefaultK8sArgs extends K8sArgs {
-  name: string;
+  name?: string;
   namespace: Input<string>;
 }
 
@@ -32,12 +32,8 @@ export interface PostgreSqlProps extends Omit<DefaultK8sArgs, 'name'> {
   storageClassName: StorageClassNameTypes;
 }
 
-export interface MySqlProps extends Omit<DefaultK8sArgs, 'name'> {
-  name?: string;
+export interface MySqlProps extends PostgreSqlProps {
   version?: string;
   customPort?: number;
   useClusterIP?: boolean;
-  vaultInfo?: KeyVaultInfo;
-  storageClassName: StorageClassNameTypes;
-  auth?: AuthType;
 }

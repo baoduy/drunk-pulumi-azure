@@ -10,7 +10,7 @@ import { interpolate } from '@pulumi/pulumi';
 interface MariaDbProps extends MySqlProps {}
 
 export default async ({
-  name = 'mariadb',
+  name = 'mysql',
   namespace,
   version,
   vaultInfo,
@@ -26,11 +26,11 @@ export default async ({
         vaultInfo,
       }).result;
 
-  const mariadb = new k8s.helm.v3.Chart(
+  const mysql = new k8s.helm.v3.Chart(
     name,
     {
       namespace,
-      chart: 'mariadb',
+      chart: 'mysql',
       fetchOpts: { repo: 'https://charts.bitnami.com/bitnami' },
 
       values: {
@@ -50,7 +50,7 @@ export default async ({
   );
 
   return {
-    mariadb,
+    mysql,
     host: interpolate`${name}.${namespace}.svc.cluster.local`,
     username: name,
     password,

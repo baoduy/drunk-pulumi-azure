@@ -59,7 +59,7 @@ interface Props extends DefaultK8sArgs {
  */
 
 export default ({
-  name,
+  name = 'nginx',
   namespace = 'nginx',
   version,
 

@@ -50,7 +50,7 @@ export default async ({
       })
     : undefined;
 
-  const wiki = await Deployment({
+  const wiki = Deployment({
     name,
     namespace,
     provider,

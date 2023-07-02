@@ -7,12 +7,12 @@ export interface StorageClassProps extends Omit<DefaultK8sArgs, 'namespace'> {
 }
 
 export default ({
-  name,
+  name = 'storage-class',
   provisioner = 'disk.csi.azure.com',
   skuName = 'Premium_LRS',
   provider,
-}: StorageClassProps) => {
-  const sc = new k8s.storage.v1.StorageClass(
+}: StorageClassProps) =>
+  new k8s.storage.v1.StorageClass(
     name,
     {
       metadata: { name },
@@ -24,6 +24,3 @@ export default ({
     },
     { provider }
   );
-
-  return sc;
-};

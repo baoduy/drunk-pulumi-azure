@@ -1,13 +1,13 @@
-import * as k8s from "@pulumi/kubernetes";
-import { DefaultK8sArgs } from "../../types";
-import { IngressProps } from "../type";
+import * as k8s from '@pulumi/kubernetes';
+import { DefaultK8sArgs } from '../../types';
+import { IngressProps } from '../type';
 
 export interface TraefikTcpIngressProps extends DefaultK8sArgs {
   port: number;
 }
 
 export const TcpIngress = ({
-  name,
+  name = 'traefikTcp',
   namespace,
   port,
   ...others
@@ -15,17 +15,17 @@ export const TcpIngress = ({
   return new k8s.apiextensions.CustomResource(
     name,
     {
-      apiVersion: "traefik.containo.us/v1alpha1",
-      kind: "IngressRouteTCP",
+      apiVersion: 'traefik.containo.us/v1alpha1',
+      kind: 'IngressRouteTCP',
       metadata: {
         name,
         namespace,
-        annotations: { "pulumi.com/skipAwait": "true" },
+        annotations: { 'pulumi.com/skipAwait': 'true' },
       },
       spec: {
         entryPoints: [name],
         routes: [
-          { match: "HostSNI(`*`)", kind: "Rule", services: [{ name, port }] },
+          { match: 'HostSNI(`*`)', kind: 'Rule', services: [{ name, port }] },
         ],
       },
     },
@@ -36,7 +36,7 @@ export const TcpIngress = ({
 export interface TraefikIngressProps extends IngressProps {}
 
 export default ({
-  name,
+  name = 'traefik',
   hostNames,
   allowHttp,
   tlsSecretName,
@@ -47,26 +47,26 @@ export default ({
   ...others
 }: TraefikIngressProps) => {
   const annotations = {
-    "traefik.ingress.kubernetes.io/router.entrypoints": "websecure,web",
+    'traefik.ingress.kubernetes.io/router.entrypoints': 'websecure,web',
   } as any;
 
   if (!allowHttp) {
-    annotations["ttraefik.ingress.kubernetes.io/router.tls"] = "true";
+    annotations['ttraefik.ingress.kubernetes.io/router.tls'] = 'true';
   }
 
   if (certManagerIssuer) {
-    if (typeof certManagerIssuer === "string")
-      annotations["cert-manager.io/cluster-issuer"] = certManagerIssuer;
-    else annotations["kubernetes.io/tls-acme"] = "true";
+    if (typeof certManagerIssuer === 'string')
+      annotations['cert-manager.io/cluster-issuer'] = certManagerIssuer;
+    else annotations['kubernetes.io/tls-acme'] = 'true';
   }
   if (cors) {
-    const origin = cors.origins.join(",");
+    const origin = cors.origins.join(',');
     const header = cors.headers
-      ? cors.headers.join(",")
-      : "GET,POST,PUT,OPTIONS,DELETE";
+      ? cors.headers.join(',')
+      : 'GET,POST,PUT,OPTIONS,DELETE';
 
     annotations[
-      "traefik.ingress.kubernetes.io/custom-response-headers"
+      'traefik.ingress.kubernetes.io/custom-response-headers'
     ] = `Access-Control-Allow-Origin:${origin}||Access-Control-Allow-Methods:${header}||Access-Control-Allow-Headers:DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range||Access-Control-Expose-Headers:Content-Length,Content-Range`;
   }
 
@@ -81,7 +81,7 @@ export default ({
           },
         },
         path: `${s.path}/(.*)`,
-        pathType: "Prefix",
+        pathType: 'Prefix',
       }))
     : [
         {
@@ -93,8 +93,8 @@ export default ({
               },
             },
           },
-          path: "/",
-          pathType: "ImplementationSpecific",
+          path: '/',
+          pathType: 'ImplementationSpecific',
         },
       ];
 
