@@ -36,6 +36,7 @@ NobeliumProps) => {
     podConfig: {
       port: 3000,
       image: 'baoduy2412/nobelium:latest',
+      imagePullPolicy: 'Always',
       //podSecurityContext: { readOnlyRootFilesystem: false },
     },
 
@@ -47,10 +48,10 @@ NobeliumProps) => {
       ? {
           ...ingress,
           hostNames: [ingress.domain],
-          // responseHeaders: {
-          //   'Content-Security-Policy': `default-src 'self' *.diagrams.net *.msecnd.net *.services.visualstudio.com data: 'unsafe-inline' 'unsafe-eval'`,
-          //   'referrer-policy': 'no-referrer',
-          // },
+          responseHeaders: {
+            'Content-Security-Policy': `default-src 'self' https://*.notion.so https://*.googletagmanager.com https://cusdis.com data: 'unsafe-inline' 'unsafe-eval';`,
+            'referrer-policy': 'no-referrer',
+          },
         }
       : undefined,
   });
