@@ -21,16 +21,17 @@ export default ({
   googleSiteVerification,
 }: //notionToken,
 NobeliumProps) => {
+  const configMap: any = { NOTION_PAGE_ID: notionPageId };
+  if (googleAnalyticId) configMap['GG_ANALYTIC_ID'] = googleAnalyticId;
+  if (googleSiteVerification)
+    configMap['GG_SITE_VERIFICATION'] = googleSiteVerification;
+
   return Deployment({
     name,
     namespace,
     provider,
 
-    configMap: {
-      NOTION_PAGE_ID: notionPageId,
-      GG_SITE_VERIFICATION: googleSiteVerification,
-      GG_ANALYTIC_ID: googleAnalyticId,
-    },
+    configMap,
 
     podConfig: {
       port: 3000,
