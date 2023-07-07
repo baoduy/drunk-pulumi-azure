@@ -198,12 +198,14 @@ interface Props {
   namespace: Input<string>;
   podConfig: PodConfigProps;
 
-  deploymentConfig?: {
-    args?: Input<string>[];
-    replicas?: number;
-    /** Run App and Jobs using Virtual Node **/
-    useVirtualHost?: boolean;
-  };
+  deploymentConfig?:
+    | {
+        args?: Input<string>[];
+        replicas?: number;
+        /** Run App and Jobs using Virtual Node **/
+        useVirtualHost?: boolean;
+      }
+    | false;
 
   serviceConfig?: {
     usePodPort?: boolean;
@@ -257,7 +259,7 @@ export default ({
   mapConfigToVolume,
 
   podConfig,
-  deploymentConfig = { replicas: 1 },
+  deploymentConfig,
   serviceConfig,
   jobConfigs,
   ingressConfig,
@@ -307,36 +309,40 @@ export default ({
 
   if (!podConfig.port) podConfig.port = 8080;
 
-  const deployment = new kx.Deployment(
-    name,
-    {
-      metadata: {
-        namespace,
-        annotations: { 'pulumi.com/skipAwait': 'true' },
-        labels: { app: name },
-      },
-      spec: buildPod({
-        name,
-        podConfig,
-        envFrom,
-        args: deploymentConfig.args,
-        useVirtualHost: deploymentConfig.useVirtualHost,
-      }).asDeploymentSpec({
-        replicas: deploymentConfig.replicas,
-        revisionHistoryLimit: 1,
-      }),
-    },
-    {
-      provider,
-      dependsOn,
-      deleteBeforeReplace: true,
-      customTimeouts: { create: '10m', update: '10m' },
-    }
-  );
+  const deployment =
+    deploymentConfig == false
+      ? undefined
+      : new kx.Deployment(
+          name,
+          {
+            metadata: {
+              namespace,
+              annotations: { 'pulumi.com/skipAwait': 'true' },
+              labels: { app: name },
+            },
+            spec: buildPod({
+              name,
+              podConfig,
+              envFrom,
+              args: deploymentConfig?.args,
+              useVirtualHost: deploymentConfig?.useVirtualHost,
+            }).asDeploymentSpec({
+              replicas: deploymentConfig?.replicas ?? 1,
+              revisionHistoryLimit: 1,
+            }),
+          },
+          {
+            provider,
+            dependsOn,
+            deleteBeforeReplace: true,
+            customTimeouts: { create: '10m', update: '10m' },
+          }
+        );
 
+  let jobs: (kx.Job | k8s.batch.v1.CronJob)[] | undefined = undefined;
   //Jobs
-  if (jobConfigs) {
-    jobConfigs.map((job) => {
+  if (jobConfigs && deploymentConfig !== false) {
+    jobs = jobConfigs.map((job) => {
       if (job.cron)
         return new k8s.batch.v1.CronJob(
           job.name,
@@ -347,7 +353,7 @@ export default ({
               podConfig,
               envFrom,
               useVirtualHost:
-                job.useVirtualHost || deploymentConfig.useVirtualHost,
+                job.useVirtualHost || deploymentConfig?.useVirtualHost,
               args: job.args,
               restartPolicy: job.restartPolicy || 'Never',
             }).asCronJobSpec({
@@ -368,7 +374,7 @@ export default ({
             podConfig,
             envFrom,
             useVirtualHost:
-              job.useVirtualHost || deploymentConfig.useVirtualHost,
+              job.useVirtualHost || deploymentConfig?.useVirtualHost,
             args: job.args,
             restartPolicy: job.restartPolicy || 'Never',
           }).asJobSpec({
@@ -380,30 +386,33 @@ export default ({
     });
   }
 
-  const servicePort: any = {
-    name: 'http',
-    port: 80,
-    targetPort: podConfig.port,
-    protocol: 'TCP',
-  };
+  let service: kx.Service | undefined = undefined;
+  if (deployment) {
+    const servicePort: any = {
+      name: 'http',
+      port: 80,
+      targetPort: podConfig.port,
+      protocol: 'TCP',
+    };
 
-  if (serviceConfig?.usePodPort) {
-    servicePort.port = podConfig.port;
-    //servicePort.targetPort = podConfig.port;
-  } else if (serviceConfig?.port) {
-    servicePort.port = serviceConfig.port;
-    //servicePort.targetPort = podConfig.port;
+    if (serviceConfig?.usePodPort) {
+      servicePort.port = podConfig.port;
+      //servicePort.targetPort = podConfig.port;
+    } else if (serviceConfig?.port) {
+      servicePort.port = serviceConfig.port;
+      //servicePort.targetPort = podConfig.port;
+    }
+
+    //Service
+    service = deployment.createService({
+      name,
+      ports: [servicePort],
+      type: serviceConfig?.useClusterIP ? 'LoadBalancer' : undefined,
+    });
   }
 
-  //Service
-  const service = deployment.createService({
-    name,
-    ports: [servicePort],
-    type: serviceConfig?.useClusterIP ? 'LoadBalancer' : undefined,
-  });
-
   //Ingress
-  if (ingressConfig) {
+  if (ingressConfig && service) {
     const ingressProps = {
       ...ingressConfig,
       className: ingressConfig.className || 'nginx',
@@ -426,16 +435,16 @@ export default ({
 
       service,
       provider,
-      dependsOn: [deployment, service],
+      dependsOn: [service],
     };
 
     if (ingressConfig.type === 'nginx') NginxIngress(ingressProps);
     else TraefikIngress(ingressProps);
   }
 
-  if (enableHA) {
+  if (enableHA && deployment) {
     PodAutoScale({ ...enableHA, deployment, provider });
   }
 
-  return { deployment, service };
+  return { deployment, service, jobs };
 };
