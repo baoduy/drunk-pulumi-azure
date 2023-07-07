@@ -45,7 +45,8 @@ export default async ({
         allowMultiOrg: false,
         replyUrls: [`https://${hostName}/login/azure/callback`],
         homepage: `https://${hostName}`,
-        allowImplicit: true,
+        //allowImplicit: true,
+        appType: 'web',
         requiredResourceAccesses: [graphAccess],
       })
     : undefined;
