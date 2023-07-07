@@ -7,6 +7,7 @@ import OutlineVpn, { OutlineProps } from './OutlineVpn';
 import CloudFlareDDNS, { CloudFlareDynamicDns } from './CloudFlareDynamicDns';
 import NoIp, { NoIpProps } from './NoIp';
 import AppHealthMonitor, { AppHealthMonitorProps } from './AppHealthzMonitor';
+import UptimeKuma, { UptimeKumaProps } from './UptimeKuma';
 
 interface Props {
   namespace: Input<string>;
@@ -20,6 +21,7 @@ interface Props {
     AppHealthMonitorProps,
     'namespace' | 'provider' | 'dependsOn'
   >;
+  uptimeKuma?: Omit<UptimeKumaProps, 'namespace' | 'provider' | 'dependsOn'>;
 
   cloudFlareDDNS?: Omit<
     CloudFlareDynamicDns,
@@ -38,6 +40,7 @@ export default async ({
   outlineVpn,
   cloudFlareDDNS,
   appHealthMonitor,
+  uptimeKuma,
   ...others
 }: Props) => {
   if (enableKubeCleanup) KubeCleanup(others);
@@ -48,4 +51,5 @@ export default async ({
   if (cloudFlareDDNS) CloudFlareDDNS({ ...others, ...cloudFlareDDNS });
   if (appHealthMonitor)
     await AppHealthMonitor({ ...others, ...appHealthMonitor });
+  if (uptimeKuma) await UptimeKuma({ ...others, ...uptimeKuma });
 };
