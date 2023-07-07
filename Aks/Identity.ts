@@ -1,8 +1,8 @@
-import { getGraphPermissions } from "../AzAd/GraphDefinition";
-import identityCreator from "../AzAd/Identity";
-import { KeyVaultInfo } from "../types";
-import { roleAssignment } from "../AzAd/RoleAssignment";
-import { defaultScope } from "../Common/AzureEnv";
+import { getGraphPermissions } from '../AzAd/GraphDefinition';
+import identityCreator from '../AzAd/Identity';
+import { KeyVaultInfo } from '../types';
+import { roleAssignment } from '../AzAd/RoleAssignment';
+import { defaultScope } from '../Common/AzureEnv';
 
 interface Props {
   name: string;
@@ -13,10 +13,10 @@ interface Props {
 export default async ({ name, vaultInfo }: Props) => {
   //AKS need this permission for AAD integration
   const graphAccess = getGraphPermissions(
-    { name: "User.Read", type: "Scope" },
-    { name: "Group.Read.All", type: "Scope" },
+    { name: 'User.Read', type: 'Scope' },
+    { name: 'Group.Read.All', type: 'Scope' },
     //{ name: 'Directory.Read.All', type: 'Scope' },
-    { name: "Directory.Read.All", type: "Role" }
+    { name: 'Directory.Read.All', type: 'Role' }
   );
 
   const serverIdentity = await identityCreator({
@@ -25,15 +25,15 @@ export default async ({ name, vaultInfo }: Props) => {
     createPrincipal: true,
     requiredResourceAccesses: [graphAccess],
     publicClient: false,
-    allowImplicit: false,
+    appType: 'api',
     vaultInfo,
   });
 
   await roleAssignment({
     name: `${name}-aks-identity-acr-pull`,
     principalId: serverIdentity.principalId!,
-    principalType: "ServicePrincipal",
-    roleName: "AcrPull",
+    principalType: 'ServicePrincipal',
+    roleName: 'AcrPull',
     scope: defaultScope,
   });
 

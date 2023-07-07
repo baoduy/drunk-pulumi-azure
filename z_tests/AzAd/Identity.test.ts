@@ -7,7 +7,7 @@ describe('Identity Creator tests', () => {
   it('Identity Creator', async () => {
     const item = await creator({
       name: 'test',
-      allowImplicit: false,
+      appType: 'api',
       createPrincipal: true,
       createClientSecret: true,
 
