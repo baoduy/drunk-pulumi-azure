@@ -341,8 +341,11 @@ export default ({
 
   let jobs: (kx.Job | k8s.batch.v1.CronJob)[] | undefined = undefined;
   //Jobs
-  if (jobConfigs && deploymentConfig !== false) {
+  if (jobConfigs) {
     jobs = jobConfigs.map((job) => {
+      if (!job.useVirtualHost && deploymentConfig !== false)
+        job.useVirtualHost = Boolean(deploymentConfig?.useVirtualHost);
+
       if (job.cron)
         return new k8s.batch.v1.CronJob(
           job.name,
@@ -352,8 +355,7 @@ export default ({
               name,
               podConfig,
               envFrom,
-              useVirtualHost:
-                job.useVirtualHost || deploymentConfig?.useVirtualHost,
+              useVirtualHost: job.useVirtualHost,
               args: job.args,
               restartPolicy: job.restartPolicy || 'Never',
             }).asCronJobSpec({
@@ -373,8 +375,7 @@ export default ({
             name,
             podConfig,
             envFrom,
-            useVirtualHost:
-              job.useVirtualHost || deploymentConfig?.useVirtualHost,
+            useVirtualHost: job.useVirtualHost,
             args: job.args,
             restartPolicy: job.restartPolicy || 'Never',
           }).asJobSpec({
