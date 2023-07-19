@@ -51,5 +51,5 @@ export default async ({
   if (cloudFlareDDNS) CloudFlareDDNS({ ...others, ...cloudFlareDDNS });
   if (appHealthMonitor)
     await AppHealthMonitor({ ...others, ...appHealthMonitor });
-  if (uptimeKuma) await UptimeKuma({ ...others, ...uptimeKuma });
+  if (uptimeKuma) UptimeKuma({ ...others, ...uptimeKuma });
 };

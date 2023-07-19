@@ -1,10 +1,6 @@
-import { DefaultK8sArgs, MySqlProps } from '../types';
-import { KeyVaultInfo } from '../../types';
+import { MySqlProps } from '../types';
 import { randomPassword } from '../../Core/Random';
-import { StorageClassNameTypes } from '../Storage';
 import * as k8s from '@pulumi/kubernetes';
-import { addCustomSecret } from '../../KeyVault/CustomHelper';
-import { getPasswordName } from '../../Common/Naming';
 import { interpolate } from '@pulumi/pulumi';
 
 interface MariaDbProps extends MySqlProps {}
@@ -14,6 +10,7 @@ export default async ({
   namespace,
   version,
   vaultInfo,
+  auth,
   storageClassName,
   provider,
 }: MariaDbProps) => {

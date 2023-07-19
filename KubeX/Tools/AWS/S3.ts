@@ -10,11 +10,7 @@ export interface AwsS3Props {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default ({
-  namespace,
-                  domain,
-  ...others
-}: AwsS3Props) => {
+export default ({ namespace, domain, ...others }: AwsS3Props) => {
   const name = 'aws-s3';
   const image = 'scireum/s3-ninja:latest';
 
@@ -26,9 +22,10 @@ export default ({
       image,
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
     },
-    ingressConfig:{
-      certManagerIssuer:true,
-      hostNames:[`s3.${domain}`]
+    ingressConfig: {
+      type: 'nginx',
+      certManagerIssuer: true,
+      hostNames: [`s3.${domain}`],
     },
     deploymentConfig: { replicas: 1 },
 

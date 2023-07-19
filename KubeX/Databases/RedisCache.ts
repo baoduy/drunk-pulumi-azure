@@ -13,7 +13,7 @@ interface Props extends MySqlProps {
 }
 
 export default ({
-  name,
+  name = 'redis',
   namespace,
   version = 'latest',
   vaultInfo,
@@ -59,12 +59,15 @@ export default ({
     podConfig: {
       port,
       image: `redis:${version}`,
+      podSecurityContext: {},
+      securityContext: {},
       volumes: persisVolume
         ? [
             {
               name: 'redis-data',
               persistentVolumeClaim: persisVolume.metadata.name,
               mountPath: '/data',
+              readOnly: false,
             },
           ]
         : undefined,
