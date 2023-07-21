@@ -302,7 +302,10 @@ export class PodBuilder {
       suspend,
       successfulJobsHistoryLimit,
       jobTemplate: {
-        metadata: { labels: appLabels },
+        metadata: {
+          labels: appLabels,
+          annotations: { 'pulumi.com/skipAwait': 'true' },
+        },
         spec: this.asJobSpec(args),
       },
     };

@@ -370,7 +370,10 @@ export default ({
       return new kx.Job(
         job.name,
         {
-          metadata: { namespace },
+          metadata: {
+            namespace,
+            annotations: { 'pulumi.com/skipAwait': 'true' },
+          },
           spec: buildPod({
             name,
             podConfig,
