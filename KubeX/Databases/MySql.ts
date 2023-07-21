@@ -60,6 +60,7 @@ export default async ({
   return {
     mysql,
     host: interpolate`${name}.${namespace}.svc.cluster.local`,
+    port,
     username: 'root',
     password,
   };

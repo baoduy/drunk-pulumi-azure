@@ -55,6 +55,7 @@ export default async ({
   return {
     postgre,
     host: interpolate`${name}.${namespace}.svc.cluster.local`,
+    port: 5432,
     username: 'postgres',
     password,
   };
