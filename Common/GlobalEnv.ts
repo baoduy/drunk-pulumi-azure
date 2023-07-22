@@ -1,8 +1,9 @@
-import {BasicMonitorArgs, ConventionProps, KeyVaultInfo, ResourceGroupInfo} from '../types';
+import { ConventionProps, KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { subscriptionId } from './AzureEnv';
 import { getResourceName } from './ResourceEnv';
 import { interpolate } from '@pulumi/pulumi';
-import {organization} from "./StackEnv";
+import { organization } from './StackEnv';
+
 export const globalKeyName = 'global';
 
 /**The Global resource group name.*/
@@ -32,10 +33,10 @@ export const keyVaultInfo: KeyVaultInfo = {
 };
 
 /** Log will send to either storage or log workspace. Only a few important resources will use workspace like Firewall, Aks */
-export const logWpInfo: BasicMonitorArgs = {
-  logWpId: interpolate`/subscriptions/${subscriptionId}/resourcegroups/${logGroupInfo.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${globalKeyName}-${organization}-logs-log`,
-};
-
-export const logStorageInfo: BasicMonitorArgs = {
-  logStorageId: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${logGroupInfo.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${globalKeyName}${organization}logsstg`,
-};
+// export const logWpInfo: BasicMonitorArgs = {
+//   logWpId: interpolate`/subscriptions/${subscriptionId}/resourcegroups/${logGroupInfo.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${globalKeyName}-${organization}-logs-log`,
+// };
+//
+// export const logStorageInfo: BasicMonitorArgs = {
+//   logStorageId: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${logGroupInfo.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${globalKeyName}${organization}logsstg`,
+// };

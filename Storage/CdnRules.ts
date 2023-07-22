@@ -1,6 +1,6 @@
 import * as native from '@pulumi/azure-native';
 
-const getSecurities =(envDomain:string) => [
+const getSecurities = (envDomain: string) => [
   "default-src 'self' data: 'unsafe-inline' 'unsafe-eval'",
   `https://*.${envDomain}`,
   'https://*.services.visualstudio.com',
@@ -14,7 +14,7 @@ const getSecurities =(envDomain:string) => [
   `frame-ancestors 'self' https://login.microsoftonline.com https://*.${envDomain}`,
 ];
 
-export const getDefaultResponseHeaders =(envDomain:string)=> ({
+export const getDefaultResponseHeaders = (envDomain: string) => ({
   'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
   'X-XSS-Protection': '1; mode=block',
   'X-Content-Type-Options': 'nosniff',
@@ -31,7 +31,7 @@ export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
         matchValues: ['HTTP'],
         operator: 'Equal',
         negateCondition: false,
-        odataType:
+        typeName:
           '#Microsoft.Azure.Cdn.Models.DeliveryRuleRequestSchemeConditionParameters',
       },
     },
@@ -42,7 +42,7 @@ export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
       parameters: {
         redirectType: 'Found',
         destinationProtocol: 'Https',
-        odataType:
+        typeName:
           '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlRedirectActionParameters',
       },
     },
@@ -60,7 +60,7 @@ export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
         negateCondition: false,
         matchValues: ['index.html'],
         transforms: ['Lowercase'],
-        odataType:
+        typeName:
           '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlFilenameConditionParameters',
       },
     },
@@ -72,15 +72,18 @@ export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
         cacheBehavior: 'Override',
         cacheType: 'All',
         cacheDuration: '08:00:00',
-        odataType:
+        typeName:
           '#Microsoft.Azure.Cdn.Models.DeliveryRuleCacheExpirationActionParameters',
       },
     },
   ],
 };
 
-export const getDefaultResponseHeadersRule=(envDomain:string): native.types.input.cdn.DeliveryRuleArgs => {
-  const defaultResponseHeaders:any = getDefaultResponseHeaders(envDomain);
+export const getDefaultResponseHeadersRule = (
+  envDomain: string
+): native.types.input.cdn.DeliveryRuleArgs => {
+  const defaultResponseHeaders: any = getDefaultResponseHeaders(envDomain);
+
   return {
     name: 'defaultResponseHeaders',
     order: 3,
@@ -92,8 +95,8 @@ export const getDefaultResponseHeadersRule=(envDomain:string): native.types.inpu
           negateCondition: false,
           matchValues: [],
           transforms: [],
-          odataType:
-              '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlPathMatchConditionParameters',
+          typeName:
+            '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlPathMatchConditionParameters',
         },
       },
     ],
@@ -103,9 +106,9 @@ export const getDefaultResponseHeadersRule=(envDomain:string): native.types.inpu
         headerAction: 'Overwrite',
         headerName: k,
         value: defaultResponseHeaders[k],
-        odataType:
-            '#Microsoft.Azure.Cdn.Models.DeliveryRuleHeaderActionParameters',
+        typeName:
+          '#Microsoft.Azure.Cdn.Models.DeliveryRuleHeaderActionParameters',
       },
     })),
   };
-}
+};
