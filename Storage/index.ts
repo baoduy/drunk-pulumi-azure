@@ -160,7 +160,7 @@ export default ({
     //   publishMicrosoftEndpoints: false,
     // },
 
-    networkRuleSet: firewall
+    networkRuleSet: network
       ? {
           bypass: 'Logging, Metrics',
           defaultAction: 'Allow',

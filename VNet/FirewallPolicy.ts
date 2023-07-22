@@ -1,19 +1,12 @@
 import * as network from '@pulumi/azure-native/network';
 import { input as inputs, enums } from '@pulumi/azure-native/types';
 import { Input, Resource } from '@pulumi/pulumi';
-import ResourceCreator from '../Core/ResourceCreator';
+import { BasicResourceArgs, DefaultResourceArgs } from '../types';
+import { defaultTags } from '../Common/AzureEnv';
 import {
-  BasicResourceArgs,
-  DefaultResourceArgs,
-  BasicMonitorArgs,
-} from '../types';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
-import {
-  getFirewallName,
   getFirewallPolicyGroupName,
   getFirewallPolicyName,
 } from '../Common/Naming';
-import { deniedOthersRule } from './FirewallRules/DefaultRules';
 import { FirewallRuleProps } from './FirewallRules/types';
 
 export const denyOtherAppRule: inputs.network.ApplicationRuleArgs = {
@@ -130,7 +123,7 @@ interface Props
   dnsSettings?: Input<inputs.network.DnsSettingsArgs>;
   transportSecurityCA?: inputs.network.FirewallPolicyCertificateAuthorityArgs;
 
-  sku?: enums.network.v20220501.FirewallPolicySkuTier;
+  sku?: enums.network.FirewallPolicySkuTier;
   insights?: {
     defaultWorkspaceId?: Input<string>;
     workspaces: Array<{
@@ -149,7 +142,7 @@ export default ({
 
   transportSecurityCA,
   insights,
-  sku = enums.network.v20220501.FirewallPolicySkuTier.Basic,
+  sku = enums.network.FirewallPolicySkuTier.Basic,
   dependsOn,
 }: Props) => {
   name = getFirewallPolicyName(name);

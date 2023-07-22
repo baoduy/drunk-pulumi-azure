@@ -4,7 +4,11 @@ import * as pulumi from '@pulumi/pulumi';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 import { getFirewallName } from '../Common/Naming';
 import ResourceCreator from '../Core/ResourceCreator';
-import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs } from '../types';
+import {
+  BasicMonitorArgs,
+  BasicResourceArgs,
+  DefaultResourceArgs,
+} from '../types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './FirewallRules/types';
 
@@ -15,13 +19,13 @@ export interface FwOutboundConfig {
 }
 
 export type FirewallSkus = {
-  name: network.v20220501.AzureFirewallSkuName;
-  tier: network.v20220501.AzureFirewallSkuTier;
+  name: network.AzureFirewallSkuName;
+  tier: network.AzureFirewallSkuTier;
 };
 
 interface Props
   extends BasicResourceArgs,
-  Omit<DefaultResourceArgs, "monitoring"> {
+    Omit<DefaultResourceArgs, 'monitoring'> {
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
   management?: FwOutboundConfig;
@@ -44,16 +48,13 @@ export default async ({
   enableDnsProxy,
   sku = {
     name: network.AzureFirewallSkuName.AZFW_VNet,
-    tier: network.v20220501.AzureFirewallSkuTier.Basic,
+    tier: network.AzureFirewallSkuTier.Basic,
   },
   ...others
 }: Props) => {
-  if (
-    sku.tier === network.v20220501.AzureFirewallSkuTier.Basic &&
-    !management
-  ) {
+  if (sku.tier === network.AzureFirewallSkuTier.Basic && !management) {
     throw new Error(
-      "Management Public Ip Address is required for Firewall Basic tier."
+      'Management Public Ip Address is required for Firewall Basic tier.'
     );
   }
 
@@ -66,34 +67,34 @@ export default async ({
 
   const fwPolicy = policy.enabled
     ? FirewallPolicy({
-      name,
-      group,
-      basePolicyId: policy.parentPolicyId,
-      sku: sku.tier,
-      dnsSettings: { enableProxy: true },
-    })
+        name,
+        group,
+        basePolicyId: policy.parentPolicyId,
+        sku: sku.tier,
+        dnsSettings: { enableProxy: true },
+      })
     : undefined;
 
   const dependsOn = new Array<pulumi.Resource>();
   outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
   if (management) dependsOn.push(management.publicIpAddress);
 
-  const { resource } = await ResourceCreator(network.v20220501.AzureFirewall, {
+  const { resource } = await ResourceCreator(network.AzureFirewall, {
     azureFirewallName: fwName,
     ...group,
     //...rules,
     firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
 
-    zones: isPrd ? ["1", "2", "3"] : undefined,
+    zones: isPrd ? ['1', '2', '3'] : undefined,
     threatIntelMode: network.AzureFirewallThreatIntelMode.Deny,
     sku,
 
     managementIpConfiguration: management
       ? {
-        name: management.name,
-        publicIPAddress: { id: management.publicIpAddress.id },
-        subnet: { id: management.subnetId },
-      }
+          name: management.name,
+          publicIPAddress: { id: management.publicIpAddress.id },
+          subnet: { id: management.subnetId },
+        }
       : undefined,
 
     ipConfigurations: outbound.map((o, i) => ({
@@ -104,25 +105,26 @@ export default async ({
       subnet: { id: o.subnetId },
     })),
 
-    additionalProperties: enableDnsProxy && sku.tier !== network.v20220501.AzureFirewallSkuTier.Basic
-      ? {
-        "Network.DNS.EnableProxy": "true",
-      }
-      : undefined,
+    additionalProperties:
+      enableDnsProxy && sku.tier !== network.AzureFirewallSkuTier.Basic
+        ? {
+            'Network.DNS.EnableProxy': 'true',
+          }
+        : undefined,
 
     monitoring: {
       ...monitorConfig,
       logsCategories: [
-        "AzureFirewallApplicationRule",
-        "AzureFirewallNetworkRule",
-        "AzureFirewallDnsProxy",
+        'AzureFirewallApplicationRule',
+        'AzureFirewallNetworkRule',
+        'AzureFirewallDnsProxy',
       ],
     },
 
     tags: defaultTags,
     ...others,
     dependsOn,
-  } as network.v20220501.AzureFirewallArgs & DefaultResourceArgs);
+  } as network.AzureFirewallArgs & DefaultResourceArgs);
 
   //Link Rule to Policy
   if (fwPolicy && policy?.rules) {
