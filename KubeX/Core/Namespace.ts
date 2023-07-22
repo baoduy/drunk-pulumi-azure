@@ -36,6 +36,7 @@ export default ({
     { provider, dependsOn }
   );
 
+  //Quota
   if (quota) {
     ResourceQuota({
       name,
@@ -45,6 +46,19 @@ export default ({
       dependsOn: ns,
     });
   }
+
+  //Network
+  // new k8s.networking.v1.NetworkPolicy(`nw_allow_all_${name}`, {
+  //   metadata: {
+  //     name: `nw-allow-all-${name}`,
+  //   },
+  //   spec: {
+  //     policyTypes: ['Ingress', 'Egress'],
+  //     podSelector: {},
+  //     ingress: [{}],
+  //     egress: [{}],
+  //   },
+  // });
 
   return ns;
 };

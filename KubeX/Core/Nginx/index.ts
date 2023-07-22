@@ -113,6 +113,7 @@ export default ({
         addHeaders,
 
         controller: {
+          hostNetwork: false,
           replicaCount,
 
           proxySetHeaders,

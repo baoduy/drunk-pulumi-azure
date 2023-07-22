@@ -6,6 +6,7 @@ import CertManager, { CertManagerProps } from './CertManager';
 import { Input, Resource } from '@pulumi/pulumi';
 import StorageClass, { StorageClassProps } from './StorageClass';
 import { K8sArgs } from '../types';
+import MetalLB, { MetalLBProps } from './LoadBalancer/MetalLB';
 
 interface NginxItemProps {
   name: string;
@@ -36,6 +37,7 @@ interface Props extends K8sArgs {
       [key: string]: string;
     };
   }>;
+  metalLb?: Omit<MetalLBProps, 'provider' | 'dependsOn'>;
   nginx?: NginxProps;
   monitoring?: Omit<MonitoringProps, 'provider' | 'dependsOn'>;
   certManager?: Omit<CertManagerProps, 'namespace' | 'provider' | 'dependsOn'>;
@@ -49,6 +51,7 @@ export default async ({
   namespaces,
   provider,
   dependsOn,
+  metalLb,
   nginx,
   monitoring,
   certManager,
@@ -58,8 +61,13 @@ export default async ({
   const namespacesList = namespaces.map((n) => Namespace({ ...n, provider }));
   const resources = new Array<Resource>();
 
+  if (metalLb) {
+    const lb = MetalLB({ ...metalLb, provider, dependsOn });
+    resources.push(lb);
+  }
+
   if (nginx) {
-    const rs = nginxCreator({ ...nginx, provider, dependsOn });
+    const rs = nginxCreator({ ...nginx, provider, dependsOn: resources });
     if (rs.publicIngress) resources.push(rs.publicIngress);
     if (rs.privateIngress) resources.push(rs.privateIngress);
   }
@@ -77,7 +85,7 @@ export default async ({
       CertManager({
         ...certManager,
         provider,
-        dependsOn,
+        dependsOn: resources,
       })
     );
   }

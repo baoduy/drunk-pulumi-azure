@@ -1,8 +1,6 @@
 import * as k8s from '@pulumi/kubernetes';
-import * as pulumi from '@pulumi/pulumi';
-import { DefaultK8sArgs, K8sArgs } from '../types';
-import { Input } from '@pulumi/pulumi';
-import Namespace from '../Core/Namespace';
+import { K8sArgs } from '../../types';
+import Namespace from '../Namespace';
 
 export interface MetalLBProps extends K8sArgs {
   version?: string;
