@@ -65,7 +65,7 @@ interface StorageProps extends BasicResourceArgs {
     fileShareSoftDeleteDays?: number;
   };
 
-  firewall?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
+  network?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
 
   onKeysLoaded?: (
     keys: Array<{ name: string; key: string; connectionString: string }>,
@@ -86,7 +86,7 @@ export default ({
   queues = [],
   fileShares = [],
   appInsight,
-  firewall,
+  network,
   featureFlags = {},
   policies = { keyExpirationPeriodInDays: 365 },
   onKeysLoaded,
@@ -165,12 +165,12 @@ export default ({
           bypass: 'Logging, Metrics',
           defaultAction: 'Allow',
 
-          virtualNetworkRules: firewall.subnetId
-            ? [{ virtualNetworkResourceId: firewall.subnetId }]
+          virtualNetworkRules: network.subnetId
+            ? [{ virtualNetworkResourceId: network.subnetId }]
             : undefined,
 
-          ipRules: firewall.ipAddresses
-            ? firewall.ipAddresses.map((i) => ({
+          ipRules: network.ipAddresses
+            ? network.ipAddresses.map((i) => ({
                 iPAddressOrRange: i,
                 action: 'Allow',
               }))

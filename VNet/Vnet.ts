@@ -1,22 +1,22 @@
-import * as network from "@pulumi/azure-native/network";
-import * as pulumi from "@pulumi/pulumi";
-import { input as inputs } from "@pulumi/azure-native/types";
-import { BasicResourceArgs } from "../types";
-import { defaultTags } from "../Common/AzureEnv";
+import * as network from '@pulumi/azure-native/network';
+import * as pulumi from '@pulumi/pulumi';
+import { input as inputs } from '@pulumi/azure-native/types';
+import { BasicResourceArgs } from '../types';
+import { defaultTags } from '../Common/AzureEnv';
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
   azFirewallManagementSubnet,
   azFirewallSubnet,
   gatewaySubnetName,
-} from "./Helper";
-import { getVnetName } from "../Common/Naming";
-import Bastion from "./Bastion";
-import CreateSubnet, { SubnetProps } from "./Subnet";
+} from './Helper';
+import { getVnetName } from '../Common/Naming';
+import Bastion from './Bastion';
+import CreateSubnet, { SubnetProps } from './Subnet';
 
 export type DelegateServices =
-  | "Microsoft.ContainerInstance/containerGroups"
-  | "Microsoft.Web/serverFarms";
+  | 'Microsoft.ContainerInstance/containerGroups'
+  | 'Microsoft.Web/serverFarms';
 
 interface VnetProps extends BasicResourceArgs {
   ddosId?: pulumi.Input<string>;
@@ -39,7 +39,7 @@ interface VnetProps extends BasicResourceArgs {
 
     appGatewaySubnet?: {
       addressPrefix: string;
-      version: "v1" | "v2";
+      version: 'v1' | 'v2';
     };
 
     firewall?: {
@@ -91,14 +91,14 @@ export default ({
 
     //Only Allows Https with port 443 from public IP address to Bastion Host Ips
     securityRules.push({
-      name: "allow-internet-bastion",
-      sourceAddressPrefix: "*",
-      sourcePortRange: "*",
+      name: 'allow-internet-bastion',
+      sourceAddressPrefix: '*',
+      sourcePortRange: '*',
       destinationAddressPrefix: features.bastion.addressPrefix,
-      destinationPortRange: "443",
-      protocol: "TCP",
-      access: "Allow",
-      direction: "Inbound",
+      destinationPortRange: '443',
+      protocol: 'TCP',
+      access: 'Allow',
+      direction: 'Inbound',
       priority: 200 + securityRules.length + 1,
     });
   }
@@ -124,14 +124,14 @@ export default ({
   if (features.securityGroup) {
     if (!features.securityGroup.allowInternetAccess) {
       securityRules.push({
-        name: "deny-internet",
-        sourceAddressPrefix: "*",
-        sourcePortRange: "*",
-        destinationAddressPrefix: "Internet",
-        destinationPortRange: "*",
-        protocol: "*",
-        access: "Deny",
-        direction: "Outbound",
+        name: 'deny-internet',
+        sourceAddressPrefix: '*',
+        sourcePortRange: '*',
+        destinationAddressPrefix: 'Internet',
+        destinationPortRange: '*',
+        protocol: '*',
+        access: 'Deny',
+        direction: 'Outbound',
         priority: 4096, //The last rule in the list});
       });
     }
@@ -194,6 +194,7 @@ export default ({
     vnet.subnets.apply((ss) => ss!.find((s) => s.name === name));
 
   const bastionSubnet = findSubnet(azBastionSubnetName);
+
   //Create Bastion
   if (features.bastion && !features.bastion.disableBastionHostCreation) {
     Bastion({
@@ -224,53 +225,53 @@ const getAppGatewayRules = ({
   version,
 }: {
   addressPrefix: string;
-  version: "v1" | "v2";
+  version: 'v1' | 'v2';
 }): pulumi.Input<inputs.network.SecurityRuleArgs>[] => {
   let start = 100;
 
   return [
     //Add inbound rule for app gateway subnet
     {
-      name: "allow_internet_in_gateway_health",
-      description: "Allow Health check access from internet to Gateway",
+      name: 'allow_internet_in_gateway_health',
+      description: 'Allow Health check access from internet to Gateway',
       priority: 200 + start++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Inbound",
+      protocol: 'Tcp',
+      access: 'Allow',
+      direction: 'Inbound',
 
-      sourceAddressPrefix: "Internet",
-      sourcePortRange: "*",
+      sourceAddressPrefix: 'Internet',
+      sourcePortRange: '*',
       destinationAddressPrefix: addressPrefix,
       destinationPortRanges:
-        version === "v1" ? ["65503-65534"] : ["65200-65535"],
+        version === 'v1' ? ['65503-65534'] : ['65200-65535'],
     },
 
     {
-      name: "allow_https_internet_in_gateway",
-      description: "Allow HTTPS access from internet to Gateway",
+      name: 'allow_https_internet_in_gateway',
+      description: 'Allow HTTPS access from internet to Gateway',
       priority: 200 + start++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Inbound",
+      protocol: 'Tcp',
+      access: 'Allow',
+      direction: 'Inbound',
 
-      sourceAddressPrefix: "Internet",
-      sourcePortRange: "*",
+      sourceAddressPrefix: 'Internet',
+      sourcePortRange: '*',
       destinationAddressPrefix: addressPrefix,
-      destinationPortRange: "443",
+      destinationPortRange: '443',
     },
 
     {
-      name: "allow_loadbalancer_in_gateway",
-      description: "Allow Load balancer to Gateway",
+      name: 'allow_loadbalancer_in_gateway',
+      description: 'Allow Load balancer to Gateway',
       priority: 200 + start++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Inbound",
+      protocol: 'Tcp',
+      access: 'Allow',
+      direction: 'Inbound',
 
-      sourceAddressPrefix: "AzureLoadBalancer",
-      sourcePortRange: "*",
+      sourceAddressPrefix: 'AzureLoadBalancer',
+      sourcePortRange: '*',
       destinationAddressPrefix: addressPrefix,
-      destinationPortRange: "*",
+      destinationPortRange: '*',
     },
 
     //Denied others
