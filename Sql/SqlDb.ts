@@ -7,6 +7,7 @@ import { defaultTags, isPrd } from '../Common/AzureEnv';
 import { getSqlDbName } from '../Common/Naming';
 
 export type SqlDbSku =
+  | 'B5'
   | 'S0'
   | 'S1'
   | 'S2'
@@ -47,7 +48,13 @@ export default ({
       serverName: sqlServerName,
       elasticPoolId,
 
-      sku: elasticPoolId ? undefined : { name: sku },
+      sku: elasticPoolId
+        ? undefined
+        : {
+            name: sku,
+            // tier: 'Basic',
+            // capacity: 5,
+          },
       //zoneRedundant: isPrd,
       requestedBackupStorageRedundancy: isPrd ? 'Zone' : 'Local',
 

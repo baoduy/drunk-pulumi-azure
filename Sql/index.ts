@@ -160,14 +160,14 @@ export default async ({
 
               principalType: sql.PrincipalType.Group,
               tenantId,
-              sid: adminGroup.id,
-              login: `${name}Admin`,
+              sid: adminGroup.objectId,
+              login: `${name}-Admin`,
             }
           : undefined,
 
       publicNetworkAccess: network?.privateLink
-        ? sql.ServerPublicNetworkAccess.Disabled
-        : sql.ServerPublicNetworkAccess.Enabled,
+        ? sql.ServerNetworkAccessFlag.Disabled
+        : sql.ServerNetworkAccessFlag.Enabled,
 
       tags: defaultTags,
     },
