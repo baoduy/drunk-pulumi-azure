@@ -54,7 +54,7 @@ interface Props {
     }>;
 
     securityGroup?: {
-      allowInternetAccess: boolean;
+      allowInternetAccess?: boolean;
       rules?: Input<inputs.network.SecurityRuleArgs>[];
     };
   };

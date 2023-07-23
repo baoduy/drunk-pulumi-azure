@@ -1,15 +1,16 @@
-import * as containerservice from "@pulumi/azure-native/containerservice";
+import * as containerservice from '@pulumi/azure-native/containerservice';
+import { getAksName, getResourceGroupName } from '../Common/Naming';
+import { createProvider } from '../KubeX/Providers';
+import { KeyVaultInfo } from '../types';
+import { getSecret } from '../KeyVault/Helper';
+import { getIdentitySecrets } from '../AzAd/Helper';
 
-import { getIdentitySecrets } from "../AzAd/Helper";
-import { getAksName, getResourceGroupName } from "../Common/Naming";
-import { createProvider } from "../KubeX/Providers";
-import { KeyVaultInfo } from "../types";
-
+/** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
   name,
   groupName,
   formattedName,
-  localAccountDisabled
+  localAccountDisabled,
 }: {
   name: string;
   groupName: string;
@@ -29,7 +30,26 @@ export const getAksConfig = async ({
         resourceGroupName: group,
       });
 
-  return Buffer.from(aks.kubeconfigs[0].value, "base64").toString("utf8");
+  return Buffer.from(aks.kubeconfigs[0].value, 'base64').toString('utf8');
+};
+
+/** Get AKS Config from Key Vault*/
+export const getAksVaultConfig = async ({
+  name,
+  vaultInfo,
+  formattedName,
+}: {
+  name: string;
+  vaultInfo: KeyVaultInfo;
+  formattedName?: boolean;
+}): Promise<string> => {
+  const aksName = formattedName ? name : getAksName(name);
+  const rs = await getSecret({
+    name: `${aksName}-config`,
+    vaultInfo,
+    nameFormatted: false,
+  });
+  return rs?.value||'';
 };
 
 export const getAksIdentitySecrets = async ({
@@ -51,20 +71,40 @@ interface AksProps {
   localAccountDisabled?: boolean;
 }
 
+/** Get AKS Provider from Managed Cluster*/
 export const createAksProvider = async ({
   aksName,
   namespace,
   groupName,
   formatedName,
-  localAccountDisabled
+  localAccountDisabled,
 }: AksProps) =>
   createProvider({
     name: aksName,
     namespace,
     kubeconfig: await getAksConfig({
-      name:  aksName ,
-      groupName ,
-      formattedName:formatedName,
-      localAccountDisabled
+      name: aksName,
+      groupName,
+      formattedName: formatedName,
+      localAccountDisabled,
+    }),
+  });
+
+/** Get AKS Provider from Key Vault*/
+export const createAksVaultProvider = async ({
+  aksName,
+  namespace,
+  vaultInfo,
+}: {
+  aksName: string;
+  vaultInfo: KeyVaultInfo;
+  namespace?: string;
+}) =>
+  createProvider({
+    name: aksName,
+    namespace,
+    kubeconfig: await getAksVaultConfig({
+      name: aksName,
+      vaultInfo,
     }),
   });
