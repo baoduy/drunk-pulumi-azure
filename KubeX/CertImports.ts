@@ -44,9 +44,9 @@ export const certImportFromCertOrder = async ({
 };
 
 const getCertFromFolder = (folder: string) => {
-  const cert = fs.readFileSync(`./${folder}/cert.cert`, { encoding: 'utf8' });
-  const ca = fs.readFileSync(`./${folder}/ca.cert`, { encoding: 'utf8' });
-  const key = fs.readFileSync(`./${folder}/key.cert`, { encoding: 'utf8' });
+  const cert = fs.readFileSync(`./${folder}/cert.crt`, { encoding: 'utf8' });
+  const ca = fs.readFileSync(`./${folder}/ca.crt`, { encoding: 'utf8' });
+  const key = fs.readFileSync(`./${folder}/private.key`, { encoding: 'utf8' });
 
   return { cert, ca, key };
 };
