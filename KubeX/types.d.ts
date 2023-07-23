@@ -19,7 +19,7 @@ export interface DefaultKsAppArgs extends DefaultK8sArgs {
   ingress?: {
     type: IngressTypes;
     hostNames: Input<string>[];
-    allowHttp: boolean;
+    allowHttp?: boolean;
     certManagerIssuer?: CertManagerIssuerTypes;
   };
 }

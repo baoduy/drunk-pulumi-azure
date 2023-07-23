@@ -5,8 +5,8 @@ export interface HelloWorldProps extends DefaultKsAppArgs {}
 
 export default ({ namespace, ingress, ...others }: HelloWorldProps) => {
   const name = 'hello-world';
-  const image = 'hello-world:latest';
-  const port = 3000;
+  const image = 'strm/helloworld-http';
+  const port = 80;
 
   deployment({
     name,
