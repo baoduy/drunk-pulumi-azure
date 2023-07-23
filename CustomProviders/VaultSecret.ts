@@ -1,6 +1,6 @@
-import { SecretClient } from "@azure/keyvault-secrets";
-import * as pulumi from "@pulumi/pulumi";
-import { KeyVaultInfo } from "../types";
+import { SecretClient } from '@azure/keyvault-secrets';
+import * as pulumi from '@pulumi/pulumi';
+import { KeyVaultInfo } from '../types';
 
 import {
   BaseOptions,
@@ -9,13 +9,14 @@ import {
   ClientCredential,
   DefaultInputs,
   DefaultOutputs,
-} from "./Base";
+} from './Base';
 
 interface VaultSecretInputs extends DefaultInputs {
   name: string;
   value: string;
   vaultInfo: KeyVaultInfo;
   contentType?: string;
+  ignoreChange?: boolean;
   tags?: {
     [key: string]: string;
   };
@@ -70,6 +71,9 @@ class VaultSecretResourceProvider
     olds: VaultSecretOutputs,
     news: VaultSecretInputs
   ): Promise<pulumi.dynamic.UpdateResult> {
+    if (olds.ignoreChange || news.ignoreChange)
+      return { outs: { id, ...olds, ...news } };
+
     const rs = await this.create(news);
 
     //Delete the old Secret
@@ -95,7 +99,7 @@ class VaultSecretResourceProvider
     previousOutput: VaultSecretOutputs,
     news: VaultSecretInputs
   ): Promise<pulumi.dynamic.DiffResult> {
-    //check if secret is delete then commit changes to recover it.
+    //check if secret is deleted then commit changes to recover it.
     const deleted = await this.tryGetDeletedSecret(news);
 
     return {

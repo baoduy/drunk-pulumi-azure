@@ -32,6 +32,7 @@ type SecretProps = {
   value: Input<string>;
   vaultInfo: KeyVaultInfo;
   contentType?: Input<string>;
+  ignoreChange?: boolean;
   tags?: Input<{
     [key: string]: string;
   }>;
@@ -66,6 +67,7 @@ export const addCustomSecret = ({
   vaultInfo,
   value,
   contentType,
+  ignoreChange,
   tags,
   dependsOn,
 }: SecretProps) => {
@@ -78,6 +80,7 @@ export const addCustomSecret = ({
       value: value ? output(value).apply((v) => v || '') : '',
       vaultInfo,
       contentType: contentType || name,
+      ignoreChange,
       tags,
     },
     { dependsOn }

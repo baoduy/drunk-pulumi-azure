@@ -23,6 +23,8 @@ import { getVnetIdFromSubnetId } from '../VNet/Helper';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { getAdGroup } from '../AzAd/Group';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
+import { getAksConfig } from './Helper';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -478,22 +480,26 @@ export default async ({
     Locker({ name: aksName, resourceId: aks.id, dependsOn: aks });
   }
 
-  // if (vaultInfo) {
-  //   aks.id.apply(async(id) => {
-  //     if (!id) return;
-  //     const config = await getAksConfig({
-  //       name: aksName,
-  //       groupName: group.resourceGroupName,
-  //       formattedName: true,
-  //     });
-  //     addCustomSecret({
-  //       name: `${aksName}-config`,
-  //       value: config,
-  //       dependsOn: aks,
-  //       vaultInfo,
-  //     });
-  //   });
-  // }
+  if (vaultInfo) {
+    aks.id.apply(async (id) => {
+      if (!id) return;
+
+      const config = await getAksConfig({
+        name: aksName,
+        groupName: group.resourceGroupName,
+        formattedName: true,
+        localAccountDisabled: aksAccess?.disableLocalAccounts,
+      });
+
+      addCustomSecret({
+        name: `${aksName}-config`,
+        value: config,
+        dependsOn: aks,
+        ignoreChange: true,
+        vaultInfo,
+      });
+    });
+  }
 
   //Grant permission for Group
   if (adminGroup) {
