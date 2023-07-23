@@ -115,6 +115,7 @@ interface NodePoolProps {
 
 interface Props extends BasicResourceArgs {
   nodeResourceGroup?: string;
+  tier?: native.containerservice.ManagedClusterSKUTier;
 
   addon?: {
     enableAzureKeyVault?: boolean;
@@ -187,6 +188,7 @@ export default async ({
     enableAzureKeyVault: true,
     enableKubeDashboard: false,
   },
+  tier = native.containerservice.ManagedClusterSKUTier.Free,
   lock = true,
   dependsOn = [],
   importFrom,
@@ -314,11 +316,8 @@ export default async ({
       },
 
       sku: {
-        name: native.containerservice.ManagedClusterSKUName.Basic,
-        tier: native.containerservice.ManagedClusterSKUTier.Free,
-        // tier: isPrd
-        //   ? native.containerservice.ManagedClusterSKUTier.Paid
-        //   : native.containerservice.ManagedClusterSKUTier.Free,
+        name: native.containerservice.ManagedClusterSKUName.Base,
+        tier,
       },
 
       agentPoolProfiles: nodePools.map((p) => ({
@@ -421,9 +420,9 @@ export default async ({
         networkPolicy: native.containerservice.NetworkPolicy.Azure,
         networkPlugin: native.containerservice.NetworkPlugin.Azure,
 
-        dnsServiceIP: '10.0.0.10',
-        dockerBridgeCidr: '172.17.0.1/16',
-        serviceCidr: '10.0.0.0/16',
+        //dnsServiceIP: '10.0.0.10',
+        //dockerBridgeCidr: '172.17.0.1/16',
+        //serviceCidr: '10.0.0.0/16',
 
         outboundType:
           network.enableFirewall || aksAccess?.enablePrivateCluster
