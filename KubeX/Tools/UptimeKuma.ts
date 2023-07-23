@@ -1,21 +1,12 @@
-import * as k8s from '@pulumi/kubernetes';
-import { Input, Resource } from '@pulumi/pulumi';
-
 import deployment from '../Deployment';
-import { K8sArgs } from '../types';
+import { DefaultKsAppArgs } from '../types';
 
-export interface UptimeKumaProps extends K8sArgs {
-  namespace: Input<string>;
-  hostName: string;
-}
+export interface UptimeKumaProps extends DefaultKsAppArgs {}
 
-export default ({ namespace, hostName, ...others }: UptimeKumaProps) => {
+export default ({ namespace, ingress, ...others }: UptimeKumaProps) => {
   const name = 'uptime-kuma';
   const image = 'louislam/uptime-kuma:latest';
   const port = 3001;
-
-  const configMap: any = {};
-  const secrets: any = {};
   //
   // cloudFlare.forEach((c, ci) => {
   //   secrets[`Cloudflare__${ci}__ApiKey`] = c.apiKey;
@@ -33,20 +24,13 @@ export default ({ namespace, hostName, ...others }: UptimeKumaProps) => {
     name,
     namespace,
 
-    configMap,
-    secrets,
-
     podConfig: {
       image,
       port,
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
     },
     deploymentConfig: { replicas: 1 },
-    ingressConfig: {
-      type: 'nginx',
-      certManagerIssuer: true,
-      hostNames: [hostName],
-    },
+    ingressConfig: ingress,
 
     ...others,
   });
