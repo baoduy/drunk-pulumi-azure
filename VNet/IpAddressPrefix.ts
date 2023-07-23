@@ -1,72 +1,72 @@
-import * as network from "@pulumi/azure-native/network";
-import { Input } from "@pulumi/pulumi";
+import * as network from '@pulumi/azure-native/network';
+import { Input } from '@pulumi/pulumi';
+import { getIpAddressPrefixName } from '../Common/Naming';
+import Locker from '../Core/Locker';
+import { BasicResourceArgs } from '../types';
+import IpAddress from './IpAddress';
+import { PublicIPAddress } from '@pulumi/azure-native/network';
 
-import { RangeOf } from "../Common/Helpers";
-import { getIpAddressPrefixName } from "../Common/Naming";
-import Locker from "../Core/Locker";
-import { Dictionary } from "../Tools/Dictionary";
-import { BasicResourceArgs } from "../types";
-import IpAddress from "./IpAddress";
+type AddressNameType = Array<{
+  name: string;
+}>;
 
 interface Props extends BasicResourceArgs {
   prefixLength: number;
-  ipAddressConfig?: {
-    /** By default, the Ip address name will be formatted by: `${name}-${i}`.
-     * Use this method if you would like to provide meaning full name for each Ip address by it index */
-    nameFormatter?: (index: number) => string;
-    /** How many Ip address would like to be created. This must be <= prefixLength */
-    numberOfIps: number;
+  config?: {
     version?: network.IPVersion;
     enableDdos?: boolean;
     ddosCustomPolicyId?: Input<string>;
     allocationMethod?: network.IPAllocationMethod;
   };
+  ipAddresses: AddressNameType;
   lock?: boolean;
 }
 export default ({
   name,
   group,
   prefixLength,
-  ipAddressConfig,
+  ipAddresses,
+  config = {
+    version: network.IPVersion.IPv4,
+    allocationMethod: network.IPAllocationMethod.Static,
+  },
   lock,
 }: Props) => {
   const n = getIpAddressPrefixName(name);
 
-  const ipAddressPrefix = new network.PublicIPPrefix(n, {
+  const addressPrefix = new network.PublicIPPrefix(n, {
     publicIpPrefixName: n,
     ...group,
     prefixLength: prefixLength,
-    sku: { name: "Standard", tier: "Regional" },
+    sku: { name: 'Standard', tier: 'Regional' },
   });
 
   if (lock) {
     Locker({
       name,
-      resourceId: ipAddressPrefix.id,
-      dependsOn: ipAddressPrefix,
+      resourceId: addressPrefix.id,
+      dependsOn: addressPrefix,
     });
   }
 
-  const ipAddresses = new Dictionary<network.PublicIPAddress>();
+  const addresses: Record<string, PublicIPAddress> = {};
 
-  if (ipAddressConfig) {
-    RangeOf(ipAddressConfig.numberOfIps).forEach((i) => {
-      const n = ipAddressConfig.nameFormatter
-        ? ipAddressConfig.nameFormatter(i)
-        : `${name}-${i}`;
+  if (ipAddresses) {
+    ipAddresses.forEach((ip, i) => {
+      const n = ip.name ?? `${name}-${i}`;
 
-      const ip = IpAddress({
-        ...ipAddressConfig,
+      const item = IpAddress({
+        ...config,
         name: n,
         group,
-        publicIPPrefix: ipAddressPrefix,
-        sku: { name: "Standard", tier: "Regional" },
+        publicIPPrefix: addressPrefix,
+        sku: { name: 'Standard', tier: 'Regional' },
         lock,
       });
 
-      ipAddresses.add(n, ip);
+      addresses[n] = item;
     });
   }
 
-  return { ipAddressPrefix, ipAddresses };
+  return { addressPrefix, addresses };
 };

@@ -1,6 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/azure-native/types';
+import { output as outputs } from '@pulumi/azure-native/types';
 import { BasicResourceArgs } from '../types';
 import { defaultTags } from '../Common/AzureEnv';
 import {
@@ -13,6 +14,8 @@ import {
 import { getVnetName } from '../Common/Naming';
 import Bastion from './Bastion';
 import CreateSubnet, { SubnetProps } from './Subnet';
+import { Lifted, OutputInstance } from '@pulumi/pulumi';
+import { PublicIPAddress } from '@pulumi/azure-native/network';
 
 export type DelegateServices =
   | 'Microsoft.ContainerInstance/containerGroups'
@@ -190,17 +193,27 @@ export default ({
     tags: defaultTags,
   });
 
+  const subnetResults: Record<
+    string,
+    OutputInstance<outputs.network.SubnetResponse> &
+      Lifted<outputs.network.SubnetResponse>
+  > = {};
+
   const findSubnet = (name: string) =>
     vnet.subnets.apply((ss) => ss!.find((s) => s.name === name));
 
-  const bastionSubnet = findSubnet(azBastionSubnetName);
+  subnets?.forEach((s) => {
+    subnetResults[s.name] = findSubnet(s.name).apply((s) => s!);
+  });
+
+  const bastionSubnet = subnetResults[azBastionSubnetName];
 
   //Create Bastion
   if (features.bastion && !features.bastion.disableBastionHostCreation) {
     Bastion({
       name,
       group,
-      subnetId: bastionSubnet!.apply((s) => s!.id!),
+      subnetId: bastionSubnet.apply((s) => s.id!),
       dependsOn: [vnet],
     });
   }
@@ -209,12 +222,13 @@ export default ({
   return {
     vnet,
 
-    firewallSubnet: findSubnet(azFirewallSubnet),
-    firewallManageSubnet: findSubnet(azFirewallManagementSubnet),
-    appGatewaySubnet: findSubnet(appGatewaySubnetName),
-    bastionSubnet,
+    firewallSubnet: subnetResults[azFirewallSubnet],
+    firewallManageSubnet: subnetResults[azFirewallManagementSubnet],
+    appGatewaySubnet: subnetResults[appGatewaySubnetName],
 
-    findSubnet,
+    bastionSubnet,
+    subnets: subnetResults,
+
     securityGroup,
     routeTable,
   };

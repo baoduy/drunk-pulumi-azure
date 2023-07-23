@@ -5,7 +5,12 @@ import * as pulumi from '@pulumi/pulumi';
 
 import { getResourceInfoFromId } from '../Common/AzureEnv';
 import { NetworkRouteResource } from '../CustomProviders/NetworkRuote';
-import { BasicMonitorArgs, BasicResourceArgs, DefaultResourceArgs, ResourceGroupInfo } from '../types';
+import {
+  BasicMonitorArgs,
+  BasicResourceArgs,
+  DefaultResourceArgs,
+  ResourceGroupInfo,
+} from '../types';
 import Firewall, { FirewallSkus, FwOutboundConfig } from './Firewall';
 import { FirewallPolicyProps } from './FirewallRules/types';
 import VnetPeering from './NetworkPeering';
@@ -21,7 +26,7 @@ interface Props {
   publicIpAddress?: network.PublicIPAddress;
   dnsServers?: pulumi.Input<pulumi.Input<string>[]>;
 
-  features: {
+  features?: {
     enableBastion?: {
       subnetPrefix: string;
       disableBastionHostCreation?: boolean;
@@ -36,7 +41,7 @@ interface Props {
       sku?: FirewallSkus;
       publicManageIpAddress?: network.PublicIPAddress;
 
-      policy: Omit<FirewallPolicyProps, "enabled">;
+      policy: Omit<FirewallPolicyProps, 'enabled'>;
 
       /** set this is TRUE if want to create firewall subnet but not create firewall component */
       disabledFirewallCreation?: boolean;
@@ -84,16 +89,16 @@ export default async ({
     } //Allow Internet to public IpAddress security group
     else
       securities.push({
-        name: "allow-internet-publicIpAddress",
-        sourceAddressPrefix: "*",
-        sourcePortRange: "*",
+        name: 'allow-internet-publicIpAddress',
+        sourceAddressPrefix: '*',
+        sourcePortRange: '*',
         destinationAddressPrefix: publicIpAddress.ipAddress.apply(
           (i) => `${i}/32`
         ),
-        destinationPortRanges: ["443", "80"],
-        protocol: "TCP",
-        access: "Allow",
-        direction: "Inbound",
+        destinationPortRanges: ['443', '80'],
+        protocol: 'TCP',
+        access: 'Allow',
+        direction: 'Inbound',
         priority: 200 + securities.length + 1,
       });
   }
@@ -106,7 +111,7 @@ export default async ({
         //Update route to firewall IpAddress
         routes.push({
           name: `vnet-to-firewall`,
-          addressPrefix: "0.0.0.0/0",
+          addressPrefix: '0.0.0.0/0',
           nextHopType: network.RouteNextHopType.VirtualAppliance,
           nextHopIpAddress: pp.firewallPrivateIpAddress,
         });
@@ -114,26 +119,26 @@ export default async ({
         //Allow Vnet to Firewall
         securities.push({
           name: `allow-vnet-to-firewall`,
-          sourceAddressPrefix: "*",
-          sourcePortRange: "*",
+          sourceAddressPrefix: '*',
+          sourcePortRange: '*',
           destinationAddressPrefix: pp.firewallPrivateIpAddress,
-          destinationPortRange: "*",
-          protocol: "*",
-          access: "Allow",
-          direction: "Outbound",
+          destinationPortRange: '*',
+          protocol: '*',
+          access: 'Allow',
+          direction: 'Outbound',
           priority: 100,
         });
       }
 
       securities.push({
         name: `allow-vnet-to-vnet-${index}`,
-        sourceAddressPrefix: "VirtualNetwork",
-        sourcePortRange: "*",
-        destinationAddressPrefix: "VirtualNetwork",
-        destinationPortRange: "*",
-        protocol: "*",
-        access: "Allow",
-        direction: "Outbound",
+        sourceAddressPrefix: 'VirtualNetwork',
+        sourcePortRange: '*',
+        destinationAddressPrefix: 'VirtualNetwork',
+        destinationPortRange: '*',
+        protocol: '*',
+        access: 'Allow',
+        direction: 'Outbound',
         priority: 101,
       });
     });
@@ -150,33 +155,33 @@ export default async ({
     features: {
       securityGroup: features.securityGroup
         ? {
-          allowInternetAccess: features.securityGroup.allowInternetAccess,
-          rules: securities,
-        }
+            allowInternetAccess: features.securityGroup.allowInternetAccess,
+            rules: securities,
+          }
         : undefined,
       routeTable: { rules: routes },
 
       appGatewaySubnet: features.enableAppGateway
         ? {
-          addressPrefix: features.enableAppGateway.subnetPrefix,
-          version: "v1",
-        }
+            addressPrefix: features.enableAppGateway.subnetPrefix,
+            version: 'v1',
+          }
         : undefined,
 
       firewall: features.enableFirewall
         ? {
-          addressPrefix: features.enableFirewall.subnetPrefix,
-          managementAddressPrefix:
-            features.enableFirewall.managementSubnetPrefix,
-        }
+            addressPrefix: features.enableFirewall.subnetPrefix,
+            managementAddressPrefix:
+              features.enableFirewall.managementSubnetPrefix,
+          }
         : undefined,
 
       bastion: features.enableBastion
         ? {
-          addressPrefix: features.enableBastion.subnetPrefix,
-          disableBastionHostCreation:
-            features.enableBastion.disableBastionHostCreation,
-        }
+            addressPrefix: features.enableBastion.subnetPrefix,
+            disableBastionHostCreation:
+              features.enableBastion.disableBastionHostCreation,
+          }
         : undefined,
     },
     ...others,
@@ -185,12 +190,15 @@ export default async ({
   //Firewall
   let firewall:
     | {
-      firewall: network.AzureFirewall;
-      policy: network.FirewallPolicy | undefined;
-    }
+        firewall: network.AzureFirewall;
+        policy: network.FirewallPolicy | undefined;
+      }
     | undefined;
 
-  if (features.enableFirewall && !features.enableFirewall.disabledFirewallCreation) {
+  if (
+    features.enableFirewall &&
+    !features.enableFirewall.disabledFirewallCreation
+  ) {
     firewall = await createFirewall({
       name,
       group,
@@ -209,10 +217,10 @@ export default async ({
       ],
       management: features.enableFirewall.publicManageIpAddress
         ? {
-          name: `${name}-management`,
-          publicIpAddress: features.enableFirewall.publicManageIpAddress,
-          subnetId: vnet.firewallManageSubnet!.apply((c) => c!.id!),
-        }
+            name: `${name}-management`,
+            publicIpAddress: features.enableFirewall.publicManageIpAddress,
+            subnetId: vnet.firewallManageSubnet!.apply((c) => c!.id!),
+          }
         : undefined,
       sku: features.enableFirewall.sku,
 
@@ -246,10 +254,10 @@ export default async ({
         new NetworkRouteResource(
           `${name}-vnet-to-firewall`,
           {
-            routeName: "vnet-to-firewall",
+            routeName: 'vnet-to-firewall',
             ...group,
             routeTableName: vnet.routeTable.name,
-            addressPrefix: "0.0.0.0/0",
+            addressPrefix: '0.0.0.0/0',
             nextHopType: network.RouteNextHopType.VirtualAppliance,
             nextHopIpAddress: pp.firewallPrivateIpAddress,
           },
@@ -267,7 +275,7 @@ export default async ({
 
 interface FirewallProps
   extends BasicResourceArgs,
-  Omit<DefaultResourceArgs, "monitoring"> {
+    Omit<DefaultResourceArgs, 'monitoring'> {
   sku?: FirewallSkus;
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
@@ -300,10 +308,10 @@ const createFirewall = async ({
         routeName: `vnet-to-firewall`,
         ...group,
         routeTableName: routeTableName,
-        addressPrefix: "0.0.0.0/0",
+        addressPrefix: '0.0.0.0/0',
         nextHopType: network.RouteNextHopType.VirtualAppliance,
         nextHopIpAddress: rs.firewall.ipConfigurations.apply((c) =>
-          c ? c[0].privateIPAddress : ""
+          c ? c[0].privateIPAddress : ''
         ),
       },
       {
