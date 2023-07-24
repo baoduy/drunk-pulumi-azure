@@ -5,6 +5,7 @@ import { Input, Output, Resource } from '@pulumi/pulumi';
 
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 import { getSqlDbName } from '../Common/Naming';
+import Locker from '../Core/Locker';
 
 export type SqlDbSku =
   | 'Basic'
@@ -34,7 +35,7 @@ export default ({
   sqlServerName,
   elasticPoolId,
   sku = 'S0',
-  //lock = true,
+  lock,
   dependsOn,
 }: SqlDbProps): BasicResourceResultProps<sql.Database> => {
   name = getSqlDbName(name);
@@ -62,6 +63,10 @@ export default ({
     },
     { dependsOn }
   );
+
+  if (lock) {
+    Locker({ name, resourceId: sqlDb.id, dependsOn: sqlDb });
+  }
 
   //By Default is 7 Day
   if (isPrd) {

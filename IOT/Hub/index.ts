@@ -142,7 +142,7 @@ export default async ({
           : undefined,
 
         //eventHubEndpoints: {},
-        features: devices.v20160203.Capabilities.None,
+        features: devices.Capabilities.None,
         //ipFilterRules: {},
         // networkRuleSets: {
         //   applyToBuiltInEventHubEndpoint: true,

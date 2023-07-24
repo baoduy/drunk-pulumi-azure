@@ -37,8 +37,14 @@ export default async ({
         { roleName: 'Storage Queue Data Contributor' },
         { roleName: 'Storage Table Data Contributor' },
         { roleName: 'Log Analytics Contributor' },
-        { roleName: 'Key Vault Contributor' },
         { roleName: 'Key Vault Administrator' },
+        { roleName: 'Key Vault Certificates Officer' },
+        { roleName: 'Key Vault Contributor' },
+        { roleName: 'Key Vault Crypto Officer' },
+        { roleName: 'Key Vault Crypto Service Encryption User' },
+        { roleName: 'Key Vault Crypto User' },
+        { roleName: 'Key Vault Secrets Officer' },
+        { roleName: 'Key Vault Secrets User' },
         { roleName: 'User Access Administrator' },
         { roleName: 'AcrPush' },
         { roleName: 'AcrPull' },
@@ -67,7 +73,7 @@ export default async ({
   }
 
   console.log(
-    `Add this principal ${name} to [User administrator, Application administrator, Cloud application administrator] of Azure AD to allow to Add/Update and Delete Groups, Users`
+    `Add this principal ${name} to [User administrator, Application administrator, Cloud application administrator and Global Reader] of Azure AD to allow to Add/Update and Delete Groups, Users`
   );
 
   return ado;

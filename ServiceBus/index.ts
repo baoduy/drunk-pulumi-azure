@@ -493,10 +493,12 @@ export default async ({
     tags: defaultTags,
     ...others,
 
-    monitoring: {
-      ...monitoring,
-      logsCategories: ['OperationalLogs'],
-    },
+    monitoring: monitoring
+      ? {
+          ...monitoring,
+          logsCategories: ['OperationalLogs'],
+        }
+      : undefined,
   } as bus.NamespaceArgs & DefaultResourceArgs);
 
   const namespace = resource as bus.Namespace;

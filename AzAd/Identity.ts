@@ -63,7 +63,6 @@ export default async ({
   owners,
   createClientSecret = false,
   createPrincipal = false,
-  homepage,
   replyUrls,
   appType = 'spa',
   allowMultiOrg = false,
