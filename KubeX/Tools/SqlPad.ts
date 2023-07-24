@@ -88,16 +88,16 @@ export default async ({
   ...others
 }: SqlPadProps) => {
   const name = 'sql-pad';
-  const hostName = `${name}.${ingress?.domain}`;
+  const hostName = ingress?.hostNames ? ingress.hostNames[0] : '';
   const port = 3000;
   const image = 'sqlpad/sqlpad:latest';
   const callbackUrl = `https://${hostName}/auth/oidc/callback`.toLowerCase();
 
-  const adIdentity = Boolean(auth?.azureAd)
+  const adIdentity = auth?.azureAd
     ? await createIdentity({
         name,
         callbackUrl,
-        vaultInfo: auth!.azureAd!.vaultInfo,
+        vaultInfo: auth.azureAd.vaultInfo,
       })
     : undefined;
 
@@ -131,7 +131,7 @@ export default async ({
   };
 
   // ======== Authentication =========================
-  if (Boolean(auth.azureAd)) {
+  if (auth.azureAd) {
     //Disable UserName and Password login
     secrets['SQLPAD_USERPASS_AUTH_DISABLED'] = 'true';
     secrets['SQLPAD_OIDC_LINK_HTML'] = 'Sign in with Azure AD';
@@ -153,7 +153,7 @@ export default async ({
     ] = interpolate`https://graph.microsoft.com/oidc/userinfo`;
 
     secrets['SQLPAD_OIDC_SCOPE'] = 'openid profile email';
-    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth!.azureAd?.allowedDomain;
+    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth.azureAd?.allowedDomain;
   } else {
     secrets['SQLPAD_ADMIN'] = auth.admin?.email;
     secrets['SQLPAD_ADMIN_PASSWORD'] = randomPassword({
