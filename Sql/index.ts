@@ -80,6 +80,7 @@ interface Props extends BasicResourceArgs {
     envRoleNames: EnvRoleNamesType;
     /** create an Admin group on AzAD for SQL accessing.*/
     enableAdAdministrator?: boolean;
+    azureAdOnlyAuthentication?: boolean;
     adminLogin: Input<string>;
     password: Input<string>;
   };
@@ -156,12 +157,12 @@ export default async ({
         auth?.enableAdAdministrator && adminGroup
           ? {
               administratorType: sql.AdministratorType.ActiveDirectory,
-              azureADOnlyAuthentication: !auth?.adminLogin,
+              azureADOnlyAuthentication: auth.azureAdOnlyAuthentication,
 
               principalType: sql.PrincipalType.Group,
               tenantId,
               sid: adminGroup.objectId,
-              login: `${name}-Admin`,
+              login: adminGroup.displayName,
             }
           : undefined,
 
@@ -172,7 +173,7 @@ export default async ({
       tags: defaultTags,
     },
     {
-      ignoreChanges: ['administratorLogin', 'administrators.sid'],
+      ignoreChanges: ['administratorLogin', 'administrators'],
       protect: lock,
     }
   );

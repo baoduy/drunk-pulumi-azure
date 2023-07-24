@@ -7,7 +7,7 @@ import { defaultTags, isPrd } from '../Common/AzureEnv';
 import { getSqlDbName } from '../Common/Naming';
 
 export type SqlDbSku =
-  | 'B5'
+  | 'Basic'
   | 'S0'
   | 'S1'
   | 'S2'
