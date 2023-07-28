@@ -47,7 +47,6 @@ NobeliumProps) => {
     ingressConfig: ingress
       ? {
           ...ingress,
-          hostNames: [ingress.domain],
           responseHeaders: {
             'Content-Security-Policy': `default-src 'self' https://*.notion.so https://*.googletagmanager.com https://cusdis.com data: 'unsafe-inline' 'unsafe-eval';`,
             'referrer-policy': 'no-referrer',
