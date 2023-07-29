@@ -1,8 +1,9 @@
-import { DefaultK8sArgs } from '../../types';
-import Deployment from '../../Deployment';
+import { DefaultK8sArgs } from '../types';
+import Deployment from '../Deployment';
 import { Input } from '@pulumi/pulumi';
-import Namespace from '../../Core/Namespace';
-export interface Props extends Omit<DefaultK8sArgs, 'name' | 'namespace'> {
+
+export interface TunnelProps extends Omit<DefaultK8sArgs, 'name'> {
+  name?: string;
   token: Input<string>;
   replicas?: number;
   enableLiveness?: boolean;
@@ -10,17 +11,16 @@ export interface Props extends Omit<DefaultK8sArgs, 'name' | 'namespace'> {
   tcp?: Array<{ host: string; service: string; port: number }>;
 }
 
-export default async ({
+export default ({
+  name = 'tunnel',
+  namespace,
   token,
   replicas = 2,
   enableLiveness,
   enableMetrics,
   tcp = [],
   ...others
-}: Props) => {
-  const name = 'cloudflare-tunnel';
-  const ns = Namespace({ name: 'cloudflare', ...others });
-
+}: TunnelProps) => {
   const tcpArgs = tcp.flatMap((t) => [
     '--hostname',
     t.host,
@@ -43,9 +43,9 @@ export default async ({
     args.push('--metrics', '0.0.0.0:8081');
   }
 
-  const tunnel = await Deployment({
+  const tunnel = Deployment({
     name,
-    namespace: ns.metadata.name,
+    namespace,
 
     secrets: { token },
 

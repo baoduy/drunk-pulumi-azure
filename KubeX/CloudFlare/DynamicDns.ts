@@ -10,7 +10,7 @@ type CloudFlareProps = {
     aRecords: string[];
   }>;
 };
-export interface CloudFlareDynamicDns {
+export interface DynamicDnsProps {
   namespace: Input<string>;
   cloudFlare: Array<CloudFlareProps>;
 
@@ -23,7 +23,7 @@ export default ({
   cloudFlare = [],
 
   ...others
-}: CloudFlareDynamicDns) => {
+}: DynamicDnsProps) => {
   const name = 'cloudflare-ddns';
   const image = 'baoduy2412/cloudflare-ddns:latest';
 
