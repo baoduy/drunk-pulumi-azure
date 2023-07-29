@@ -8,13 +8,15 @@ export interface CloudFlareCertCreatorProps {
   lock?: boolean;
 }
 
-export default ({
+export default async ({
   domainName,
   provider,
   lock = true,
 }: CloudFlareCertCreatorProps) => {
+  const algorithm = 'RSA';
+
   const privateKey = new tls.PrivateKey(`${domainName}_private_key`, {
-    algorithm: 'RSA',
+    algorithm,
   });
 
   const csr = new tls.CertRequest(`${domainName}_csr`, {
@@ -37,5 +39,16 @@ export default ({
     { provider, protect: lock }
   );
 
-  return { privateKey: privateKey.privateKeyPem, cert: cert.certificate };
+  const ca = await cf.getOriginCaRootCertificate(
+    {
+      algorithm,
+    },
+    { provider }
+  );
+
+  return {
+    privateKey: privateKey.privateKeyPem,
+    cert: cert.certificate,
+    ca: ca.certPem,
+  };
 };

@@ -15,7 +15,7 @@ interface Props extends K8sArgs {
   tunnel?: Omit<TunnelProps, 'namespace' | 'provider' | 'dependsOn'>;
 }
 
-export default ({
+export default async ({
   namespace = 'cloudflare',
   dynamicDns,
   tunnel,
@@ -27,7 +27,7 @@ export default ({
     ...others,
   });
 
-  if (certImports) CertImports({ ...others, ...certImports });
+  if (certImports) await CertImports({ ...others, ...certImports });
   if (dynamicDns)
     DynamicDns({ ...others, ...dynamicDns, namespace: ns.metadata.name });
   if (tunnel) Tunnel({ ...others, ...tunnel, namespace: ns.metadata.name });

@@ -14,38 +14,41 @@ export interface CloudFlareCertImportProps extends K8sArgs {
   }>;
 }
 
-export default ({
+export default async ({
   namespaces,
   cloudflare,
   ...others
 }: CloudFlareCertImportProps) =>
-  cloudflare.map((c, i) => {
-    if (!c.apiKey && !c.provider)
-      throw new Error(
-        'Either CloudFlare API Key or Provider must be provided.'
-      );
-
-    const cfProvider =
-      c.provider ??
-      new cf.Provider(`cloudflare_${i}`, {
-        apiToken: c.apiKey,
-      });
-
-    return c.zones.map((z) => {
-      const cert = certCreator({ domainName: z, provider: cfProvider });
-
-      return pulumi
-        .all([namespaces, cert.cert, cert.privateKey])
-        .apply(([ns, cert, privateKey]) =>
-          ns.map((n) =>
-            KsCertSecret({
-              name: getTlsName(z, false),
-              namespace: n,
-              cert: cert,
-              privateKey: cert,
-              ...others,
-            })
-          )
+  await Promise.all(
+    cloudflare.map((c, i) => {
+      if (!c.apiKey && !c.provider)
+        throw new Error(
+          'Either CloudFlare API Key or Provider must be provided.'
         );
-    });
-  });
+
+      const cfProvider =
+        c.provider ??
+        new cf.Provider(`cloudflare_${i}`, {
+          apiToken: c.apiKey,
+        });
+
+      return c.zones.map(async (z) => {
+        const cert = await certCreator({ domainName: z, provider: cfProvider });
+
+        return pulumi
+          .all([namespaces, cert.cert, cert.privateKey, cert.ca])
+          .apply(([ns, cert, privateKey, ca]) =>
+            ns.map((n) =>
+              KsCertSecret({
+                name: getTlsName(z, false),
+                namespace: n,
+                cert,
+                ca,
+                privateKey,
+                ...others,
+              })
+            )
+          );
+      });
+    })
+  );
