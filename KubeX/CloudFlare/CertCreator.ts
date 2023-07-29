@@ -5,9 +5,14 @@ import * as cf from '@pulumi/cloudflare';
 export interface CloudFlareCertCreatorProps {
   domainName: string;
   provider: cf.Provider;
+  lock?: boolean;
 }
 
-export default ({ domainName, provider }: CloudFlareCertCreatorProps) => {
+export default ({
+  domainName,
+  provider,
+  lock = true,
+}: CloudFlareCertCreatorProps) => {
   const privateKey = new tls.PrivateKey(`${domainName}_private_key`, {
     algorithm: 'RSA',
   });
@@ -29,7 +34,7 @@ export default ({ domainName, provider }: CloudFlareCertCreatorProps) => {
       requestType: 'origin-rsa',
       requestedValidity: 5475,
     },
-    { provider }
+    { provider, protect: lock }
   );
 
   return { privateKey: privateKey.privateKeyPem, cert: cert.certificate };

@@ -6,6 +6,7 @@ type CloudFlareProps = {
   apiKey: Input<string>;
   zones: Array<{
     id: Input<string>;
+    proxied?: boolean;
     aRecords: string[];
   }>;
 };
@@ -33,7 +34,11 @@ export default ({
     secrets[`Cloudflare__${ci}__ApiKey`] = c.apiKey;
 
     c.zones.forEach((z, zi) => {
-      configMap[`Cloudflare__${ci}__Zones__${zi}__Id`] = z.id;
+      configMap[`Cloudflare__${ci}__Zones__${zi}__Id`] = z.id; //Proxied
+      configMap[`Cloudflare__${ci}__Zones__${zi}__Proxied`] = z.proxied
+        ? 'true'
+        : 'false';
+
       z.aRecords.forEach(
         (r, rI) =>
           (configMap[`Cloudflare__${ci}__Zones__${zi}__ARecords__${rI}`] = r)
