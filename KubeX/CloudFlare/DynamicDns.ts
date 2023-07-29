@@ -1,6 +1,5 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
-
 import deployment from '../Deployment';
 
 type CloudFlareProps = {

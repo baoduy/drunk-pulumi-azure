@@ -1,15 +1,17 @@
 import { K8sArgs } from '../types';
-import { Input } from '@pulumi/pulumi';
+import * as pulumi from '@pulumi/pulumi';
 import * as cf from '@pulumi/cloudflare';
-import * as tls from '@pulumi/tls';
-import { organization } from '../../Common/StackEnv';
-import * as console from 'console';
+import certCreator from './CertCreator';
+import KsCertSecret from '../Core/KsCertSecret';
+import { getTlsName } from '../CertHelper';
 
 export interface CloudFlareCertImportProps extends K8sArgs {
-  namespaces: Input<string>[];
-  cloudflare: [
-    { apiKey?: Input<string>; provider?: cf.Provider; zones: string[] }
-  ];
+  namespaces: pulumi.Input<string>[];
+  cloudflare: Array<{
+    apiKey?: pulumi.Input<string>;
+    provider?: cf.Provider;
+    zones: string[];
+  }>;
 }
 
 export default ({
@@ -30,28 +32,20 @@ export default ({
       });
 
     return c.zones.map((z) => {
-      const privateKey = new tls.PrivateKey(`${z}_private_key`, {
-        algorithm: 'RSA',
-      });
+      const cert = certCreator({ domainName: z, provider: cfProvider });
 
-      const csr = new tls.CertRequest(`${z}_csr`, {
-        privateKeyPem: privateKey.privateKeyPem,
-        subject: {
-          commonName: z,
-          organization,
-        },
-        dnsNames: [z],
-      });
-
-      const cert = new cf.OriginCaCertificate(
-        z,
-        {
-          csr: csr.certRequestPem,
-          hostnames: [z, `*.${z}`, `www.${z}`],
-          requestType: 'origin-rsa',
-          requestedValidity: 5475,
-        },
-        { provider: cfProvider }
-      );
+      return pulumi
+        .all([namespaces, cert.cert, cert.privateKey])
+        .apply(([ns, cert, privateKey]) =>
+          ns.map((n) =>
+            KsCertSecret({
+              name: getTlsName(z, false),
+              namespace: n,
+              cert: cert,
+              privateKey: cert,
+              ...others,
+            })
+          )
+        );
     });
   });
