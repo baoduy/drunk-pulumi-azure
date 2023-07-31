@@ -1,4 +1,4 @@
-import { PermissionProps } from './VaultPermissions';
+import { grantVaultRbacPermission, PermissionProps } from './VaultPermissions';
 import GroupRole from '../AzAd/Role';
 import { currentEnv, currentServicePrincipal } from '../Common/AzureEnv';
 import { getAdGroup } from '../AzAd/Group';
@@ -27,6 +27,7 @@ export default async ({ name, auth }: Props) => {
         roleName: 'ReadOnly',
         includeOrganization: auth.includeOrganization,
       });
+
   const adminGroup = auth.envRoleNames
     ? await getAdGroup(auth.envRoleNames.contributor)
     : await GroupRole({
