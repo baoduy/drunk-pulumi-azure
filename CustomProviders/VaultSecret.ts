@@ -10,6 +10,7 @@ import {
   DefaultInputs,
   DefaultOutputs,
 } from './Base';
+import * as console from 'console';
 
 interface VaultSecretInputs extends DefaultInputs {
   name: string;
@@ -71,8 +72,10 @@ class VaultSecretResourceProvider
     olds: VaultSecretOutputs,
     news: VaultSecretInputs
   ): Promise<pulumi.dynamic.UpdateResult> {
-    if (olds.ignoreChange || news.ignoreChange)
+    if (olds.ignoreChange || news.ignoreChange) {
+      console.log(`${news.name} will be ignored the update.`);
       return { outs: { id, ...olds, ...news } };
+    }
 
     const rs = await this.create(news);
 
