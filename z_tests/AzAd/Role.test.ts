@@ -5,7 +5,7 @@ import { Environments } from '../../Common/AzureEnv';
 
 describe('Role Creator tests', () => {
   it('Role Creator', async () => {
-    const group = roleCreator({
+    const group = await roleCreator({
       env: Environments.Dev,
       appName: 'HBD',
       roleName: 'Contributor',
@@ -14,6 +14,8 @@ describe('Role Creator tests', () => {
       permissions: [{ roleName: 'Contributor' }],
     });
 
-    group.displayName.apply(n => expect(n).to.equal('ROL NON-PRD GLB HBD CONTRIBUTOR'));
+    group.displayName.apply((n) =>
+      expect(n).to.equal('ROL NON-PRD GLB HBD CONTRIBUTOR')
+    );
   });
 });

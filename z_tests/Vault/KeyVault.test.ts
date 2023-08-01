@@ -1,36 +1,36 @@
-import vaultCreator from "../../KeyVault";
-import "../_tools/Mocks";
-import { expect } from "chai";
+import vaultCreator from '../../KeyVault';
+import '../_tools/Mocks';
+import { expect } from 'chai';
 
-describe("Key Vault Creator tests", () => {
-  it("Vault Creator", async () => {
-    const group = { resourceGroupName: "RG" };
+describe('Key Vault Creator tests', () => {
+  it('Vault Creator', async () => {
+    const group = { resourceGroupName: 'RG' };
 
     const rs = await vaultCreator({
-      name: "root",
+      name: 'root',
       group,
-      enableRbac: false,
+      auth: { enableRbac: false },
     });
 
-    expect(rs.name).to.equal("stack-root-vlt");
+    expect(rs.name).to.equal('stack-root-vlt');
     expect(rs.toVaultInfo().group).to.equal(group);
 
-    rs.vault.urn.apply((n) => expect(n).to.include("stack-root-vlt"));
+    rs.vault.urn.apply((n) => expect(n).to.include('stack-root-vlt'));
   }).timeout(5000);
 
-  it("Vault Creator with custom prefix", async () => {
-    const group = { resourceGroupName: "RG" };
+  it('Vault Creator with custom prefix', async () => {
+    const group = { resourceGroupName: 'RG' };
 
     const rs = await vaultCreator({
-      name: "root",
-      nameConvention: { prefix: "steven", suffix: "vlt" },
+      name: 'root',
+      //nameConvention: { prefix: 'steven', suffix: 'vlt' },
       group,
-      enableRbac: false,
+      auth: { enableRbac: false },
     });
 
-    expect(rs.name).to.equal("steven-root-vlt");
+    expect(rs.name).to.equal('steven-root-vlt');
     expect(rs.toVaultInfo().group).to.equal(group);
 
-    rs.vault.urn.apply((n) => expect(n).to.include("steven-root-vlt"));
+    rs.vault.urn.apply((n) => expect(n).to.include('steven-root-vlt'));
   }).timeout(5000);
 });

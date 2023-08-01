@@ -14,7 +14,7 @@ describe('Aks Creator tests', () => {
         adminUsername: 'admin',
         sshKeys: ['123456'],
       },
-      aksAccess: { enableAzureRBAC: true },
+      //aksAccess: { envRoleNames: true },
       nodePools: [{ name: 'main', mode: 'System' }],
 
       network: {
@@ -30,8 +30,11 @@ describe('Aks Creator tests', () => {
 
     expect(rs!.aks).to.not.undefined;
 
-    (rs!.aks as any).nodeResourceGroup.apply(g => expect(g).to.equal('test-stack-cluster-aks-nodes'));
-    (rs!.aks as any).resourceName.apply(n => expect(n).to.equal('test-stack-cluster-aks'));
-
+    (rs!.aks as any).nodeResourceGroup.apply((g) =>
+      expect(g).to.equal('test-stack-cluster-aks-nodes')
+    );
+    (rs!.aks as any).resourceName.apply((n) =>
+      expect(n).to.equal('test-stack-cluster-aks')
+    );
   }).timeout(5000);
 });

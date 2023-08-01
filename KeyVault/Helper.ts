@@ -1,5 +1,5 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
-import { Input, output, Resource } from '@pulumi/pulumi';
+import { Input, Resource } from '@pulumi/pulumi';
 import { ClientCredential } from '../CustomProviders/Base';
 import { KeyClient, KeyVaultKey } from '@azure/keyvault-keys';
 import { KeyVaultInfo } from '../types';
@@ -22,6 +22,39 @@ type SecretProps = {
   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 };
 
+/** Check Secret */
+export const checkSecretExist = async ({
+  name,
+  vaultInfo,
+  nameFormatted,
+}: GetVaultItemProps) => {
+  const n = nameFormatted ? name : getSecretName(name);
+
+  const url = `https://${vaultInfo.name}.vault.azure.net?api-version=7.0`;
+  const client = new SecretClient(url, new ClientCredential());
+  const rs = client
+    .listPropertiesOfSecretVersions(n)
+    .byPage({ maxPageSize: 1 });
+
+  for await (const s of rs) return true;
+  return false;
+};
+
+/** Check Secret */
+export const checkKeyExist = async ({
+  name,
+  vaultInfo,
+  nameFormatted,
+}: GetVaultItemProps) => {
+  const n = nameFormatted ? name : getSecretName(name);
+
+  const url = `https://${vaultInfo.name}.vault.azure.net?api-version=7.0`;
+  const client = new KeyClient(url, new ClientCredential());
+  const rs = client.listPropertiesOfKeyVersions(n).byPage({ maxPageSize: 1 });
+
+  for await (const s of rs) return true;
+  return false;
+};
 // export const addSecret = ({
 //   name,
 //   vaultInfo,
@@ -89,7 +122,7 @@ type GetVaultItemProps = {
   vaultInfo: KeyVaultInfo;
   nameFormatted?: boolean;
 };
-const _keysCache: any = {};
+const _keysCache: Record<string, KeyVaultKey | undefined> = {};
 /** Get Key */
 export const getKey = async ({
   name,
@@ -114,7 +147,7 @@ export const getKey = async ({
   return rs;
 };
 
-const _secretsCache: any = {};
+const _secretsCache: Record<string, KeyVaultSecret | undefined> = {};
 /** Get Secret */
 export const getSecret = async ({
   name,
