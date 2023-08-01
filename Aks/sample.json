@@ -1,0 +1,270 @@
+{"aadProfile": {
+    "adminGroupObjectIDs": [
+      "2ebff682-27d1-48c6-bcf3-83b674675815"
+    ],
+    "adminUsers": null,
+    "clientAppId": null,
+    "enableAzureRbac": true,
+    "managed": true,
+    "serverAppId": null,
+    "serverAppSecret": null,
+    "tenantId": "d3dea098-4cc5-49aa-a231-463e338bffec"
+  },
+  "addonProfiles": {
+    "aciConnectorLinux": {
+      "config": {},
+      "enabled": false,
+      "identity": null
+    },
+    "azureKeyvaultSecretsProvider": {
+      "config": null,
+      "enabled": false,
+      "identity": null
+    },
+    "azurePolicy": {
+      "config": null,
+      "enabled": true,
+      "identity": {
+        "clientId": "0e8b30ec-b132-456e-b68a-1f66c5882ae9",
+        "objectId": "61828439-8c26-4e44-b7fc-619f31bcc9bd",
+        "resourceId": "/subscriptions/c893dbca-4bd6-4c22-ba8e-a0ecaa6b2f13/resourcegroups/dev-aks-nodes-grp/providers/Microsoft.ManagedIdentity/userAssignedIdentities/azurepolicy-dev-wixo-dev-aks"
+      }
+    },
+    "httpApplicationRouting": {
+      "config": null,
+      "enabled": false,
+      "identity": null
+    },
+    "ingressApplicationGateway": {
+      "config": null,
+      "enabled": false,
+      "identity": null
+    },
+    "kubeDashboard": {
+      "config": null,
+      "enabled": false,
+      "identity": null
+    },
+    "omsAgent": {
+      "config": null,
+      "enabled": false,
+      "identity": null
+    }
+  },
+  "agentPoolProfiles": [
+    {
+      "availabilityZones": null,
+      "count": 1,
+      "creationData": null,
+      "currentOrchestratorVersion": "1.25.6",
+      "enableAutoScaling": false,
+      "enableEncryptionAtHost": null,
+      "enableFips": false,
+      "enableNodePublicIp": false,
+      "enableUltraSsd": null,
+      "gpuInstanceProfile": null,
+      "hostGroupId": null,
+      "kubeletConfig": null,
+      "kubeletDiskType": "OS",
+      "linuxOsConfig": null,
+      "maxCount": null,
+      "maxPods": 80,
+      "minCount": null,
+      "mode": "System",
+      "name": "defaultnodes",
+      "nodeImageVersion": "AKSUbuntu-2204gen2containerd-202307.04.0",
+      "nodeLabels": {
+        "environment": "dev",
+        "stack": "dev"
+      },
+      "nodePublicIpPrefixId": null,
+      "nodeTaints": null,
+      "orchestratorVersion": "1.25.6",
+      "osDiskSizeGb": 256,
+      "osDiskType": "Managed",
+      "osSku": "Ubuntu",
+      "osType": "Linux",
+      "podSubnetId": null,
+      "powerState": {
+        "code": "Running"
+      },
+      "provisioningState": "Succeeded",
+      "proximityPlacementGroupId": null,
+      "scaleDownMode": null,
+      "scaleSetEvictionPolicy": null,
+      "scaleSetPriority": null,
+      "spotMaxPrice": null,
+      "tags": {
+        "environment": "dev",
+        "mode": "System"
+      },
+      "type": "VirtualMachineScaleSets",
+      "upgradeSettings": null,
+      "vmSize": "Standard_B2ms",
+      "vnetSubnetId": "/subscriptions/c893dbca-4bd6-4c22-ba8e-a0ecaa6b2f13/resourceGroups/dev-aks-grp-wixo-dev/providers/Microsoft.Network/virtualNetworks/dev-aks-vnt/subnets/Aks",
+      "workloadRuntime": null
+    }
+  ],
+  "apiServerAccessProfile": null,
+  "autoScalerProfile": {
+    "balanceSimilarNodeGroups": "true",
+    "expander": "random",
+    "maxEmptyBulkDelete": "10",
+    "maxGracefulTerminationSec": "600",
+    "maxNodeProvisionTime": "15m",
+    "maxTotalUnreadyPercentage": "45",
+    "newPodScaleUpDelay": "0s",
+    "okTotalUnreadyCount": "3",
+    "scaleDownDelayAfterAdd": "30m",
+    "scaleDownDelayAfterDelete": "60s",
+    "scaleDownDelayAfterFailure": "10m",
+    "scaleDownUnneededTime": "10m",
+    "scaleDownUnreadyTime": "20m",
+    "scaleDownUtilizationThreshold": "0.5",
+    "scanInterval": "60s",
+    "skipNodesWithLocalStorage": "false",
+    "skipNodesWithSystemPods": "true"
+  },
+  "autoUpgradeProfile": {
+    "upgradeChannel": "stable"
+  },
+  "azureMonitorProfile": null,
+  "azurePortalFqdn": "dev-wixo-dev-aks-idj7dnnh.portal.hcp.southeastasia.azmk8s.io",
+  "currentKubernetesVersion": "1.25.6",
+  "disableLocalAccounts": true,
+  "diskEncryptionSetId": null,
+  "dnsPrefix": "dev-wixo-dev-aks",
+  "enablePodSecurityPolicy": false,
+  "enableRbac": true,
+  "extendedLocation": null,
+  "fqdn": "dev-wixo-dev-aks-idj7dnnh.hcp.southeastasia.azmk8s.io",
+  "fqdnSubdomain": null,
+  "httpProxyConfig": null,
+  "id": "/subscriptions/c893dbca-4bd6-4c22-ba8e-a0ecaa6b2f13/resourcegroups/dev-aks-grp-wixo-dev/providers/Microsoft.ContainerService/managedClusters/dev-wixo-dev-aks",
+  "identity": {
+    "principalId": "c4ae3c87-54bd-4ffe-bae0-6ccd12d94082",
+    "tenantId": "d3dea098-4cc5-49aa-a231-463e338bffec",
+    "type": "SystemAssigned",
+    "userAssignedIdentities": null
+  },
+  "identityProfile": {
+    "kubeletidentity": {
+      "clientId": "7c8966df-d9f8-473c-8516-10f6402389e0",
+      "objectId": "0351bf79-ed24-437e-94b1-0ef118634b6c",
+      "resourceId": "/subscriptions/c893dbca-4bd6-4c22-ba8e-a0ecaa6b2f13/resourcegroups/dev-aks-nodes-grp/providers/Microsoft.ManagedIdentity/userAssignedIdentities/dev-wixo-dev-aks-agentpool"
+    }
+  },
+  "kubernetesVersion": "1.25.6",
+  "linuxProfile": {
+    "adminUsername": "admindev-wixo-d",
+    "ssh": {
+      "publicKeys": [
+        {
+          "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCV7TYHt0gs2+3yomzBoju2NUL0HltBEBf7rpBE9HRaEBzzMd35oRshYhxf3RGHid98SKfV1jLcMmxOJTpikLZn+imYE2u8Ggho/bV8xex8VDiy21OMYYmiVqm8OVcx0XJiY/zpMAbZbk+gGPVUDDdAol0ONCTxmekcyxvT3sO0WPHZ/iOVe9gqZghFOTaQR38jHEo5uB24Xx0T4slLc5f61ZHGMCutp8sSDPpwSM0mxSDXUJS3PO3FvjH1mCpwJC09CjMUF9k2PLMKtgAU9SaOjWGYBo46X2EftrK3ZSqPGnrbuZcXWOF+DCLOIkEbTnYAvRYHGs/yC534UOQr37dnv1sL4iXed33ERlRpZ/HeKLCFyK8zT/0LcVmWzQKCJmIMiXeg46QMyjVlTN93n/ZW2WyGoC9d1K6JHpS1eH9rBQabuQ6aMkTg0s1I70E5uzbXoFhQpVdsmkro79X2uaOb8Ef7f92PgjFI7+Ue4d0W3vN7ocHrFooBTm/rCCAgEPl6Jp0ajOlhDWoKtjQkRkR0ZJptuW/pySUJAO3zbj5TwlMWd0jzedXJwW0bZSQ3JW5OoPlyxwWmEFKS8f06vujZ3lZQER9mMYN/WC2z1BG6HbNS7OHDQGO1Ww5vOCnTFiNPorA1F17c+zdeU9eA9vkVlhbgAmK7xwfcwXLSVaXz7Q== "
+        }
+      ]
+    }
+  },
+  "location": "southeastasia",
+  "maxAgentPools": 100,
+  "name": "dev-wixo-dev-aks",
+  "networkProfile": {
+    "dnsServiceIp": "10.0.0.10",
+    "ipFamilies": [
+      "IPv4"
+    ],
+    "loadBalancerProfile": {
+      "allocatedOutboundPorts": 0,
+      "effectiveOutboundIPs": [
+        {
+          "id": "/subscriptions/c893dbca-4bd6-4c22-ba8e-a0ecaa6b2f13/resourceGroups/dev-aks-grp-wixo-dev/providers/Microsoft.Network/publicIPAddresses/dev-publicoutboundip-ip",
+          "resourceGroup": "dev-aks-grp-wixo-dev"
+        }
+      ],
+      "enableMultipleStandardLoadBalancers": null,
+      "idleTimeoutInMinutes": 30,
+      "managedOutboundIPs": null,
+      "outboundIPs": {
+        "publicIPs": [
+          {
+            "id": "/subscriptions/c893dbca-4bd6-4c22-ba8e-a0ecaa6b2f13/resourceGroups/dev-aks-grp-wixo-dev/providers/Microsoft.Network/publicIPAddresses/dev-publicoutboundip-ip",
+            "resourceGroup": "dev-aks-grp-wixo-dev"
+          }
+        ]
+      },
+      "outboundIpPrefixes": null
+    },
+    "loadBalancerSku": "Standard",
+    "natGatewayProfile": null,
+    "networkDataplane": "azure",
+    "networkMode": "transparent",
+    "networkPlugin": "azure",
+    "networkPluginMode": null,
+    "networkPolicy": "azure",
+    "outboundType": "loadBalancer",
+    "podCidr": null,
+    "podCidrs": null,
+    "serviceCidr": "10.0.0.0/16",
+    "serviceCidrs": [
+      "10.0.0.0/16"
+    ]
+  },
+  "nodeResourceGroup": "dev-aks-nodes-grp",
+  "oidcIssuerProfile": {
+    "enabled": false,
+    "issuerUrl": null
+  },
+  "podIdentityProfile": null,
+  "powerState": {
+    "code": "Running"
+  },
+  "privateFqdn": null,
+  "privateLinkResources": null,
+  "provisioningState": "Succeeded",
+  "publicNetworkAccess": null,
+  "resourceGroup": "dev-aks-grp-wixo-dev",
+  "securityProfile": {
+    "azureKeyVaultKms": null,
+    "defender": null,
+    "imageCleaner": null,
+    "workloadIdentity": null
+  },
+  "servicePrincipalProfile": {
+    "clientId": "msi",
+    "secret": null
+  },
+  "sku": {
+    "name": "Base",
+    "tier": "Free"
+  },
+  "storageProfile": {
+    "blobCsiDriver": null,
+    "diskCsiDriver": {
+      "enabled": true
+    },
+    "fileCsiDriver": {
+      "enabled": true
+    },
+    "snapshotController": {
+      "enabled": true
+    }
+  },
+  "supportPlan": "KubernetesOfficial",
+  "systemData": null,
+  "tags": {
+    "environment": "dev",
+    "organization": "wixo-dev",
+    "pulumi-project": "az-aks"
+  },
+  "type": "Microsoft.ContainerService/ManagedClusters",
+  "windowsProfile": {
+    "adminPassword": null,
+    "adminUsername": "azureuser",
+    "enableCsiProxy": true,
+    "gmsaProfile": null,
+    "licenseType": null
+  },
+  "workloadAutoScalerProfile": {
+    "keda": null
+  }
+}

@@ -116,7 +116,7 @@ interface NodePoolProps {
   enableEncryptionAtHost?: boolean;
 }
 
-interface Props extends BasicResourceArgs {
+interface AksProps extends BasicResourceArgs {
   nodeResourceGroup?: string;
   tier?: native.containerservice.ManagedClusterSKUTier;
 
@@ -143,6 +143,8 @@ interface Props extends BasicResourceArgs {
     enableDiagnosticSetting?: boolean;
   };
 
+  //Azure Registry Container
+  acr?: { enable: boolean; id?: Input<string> };
   aksAccess?: {
     //Only disable local accounts one downloaded and connected to ADO
     //disableLocalAccounts?: boolean;
@@ -183,6 +185,7 @@ export default async ({
   enableAutoScale,
   network,
   log,
+  acr,
   aksAccess,
   vaultInfo,
   featureFlags = { enableDiagnosticSetting: true },
@@ -195,15 +198,17 @@ export default async ({
   lock = true,
   dependsOn = [],
   importFrom,
-}: Props) => {
+}: AksProps) => {
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
+  const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const disableLocalAccounts = vaultInfo
     ? await checkSecretExist({
         name: secretName,
         vaultInfo,
-      }):false;
-  console.log(name,{disableLocalAccounts});
+      })
+    : false;
+  console.log(name, { disableLocalAccounts });
   nodeResourceGroup = nodeResourceGroup || `${aksName}-nodes`;
 
   // const appGateway =
@@ -269,8 +274,6 @@ export default async ({
       nodeResourceGroup,
       dnsPrefix: aksName,
       //kubernetesVersion,
-
-      enableRBAC: Boolean(aksAccess?.adminMembers),
 
       apiServerAccessProfile: {
         authorizedIPRanges: aksAccess?.enablePrivateCluster
@@ -421,6 +424,7 @@ export default async ({
       },
 
       disableLocalAccounts,
+      enableRBAC: true,
       aadProfile: {
         enableAzureRBAC: true,
         managed: true,
@@ -516,6 +520,7 @@ export default async ({
 
   aks.id.apply(async (id) => {
     if (!id) return;
+
     //Admin
     if (adminGroup) {
       await Promise.all(
@@ -583,51 +588,10 @@ export default async ({
         )
       );
     }
-  });
 
-  //Grant Permission for Identity
-  pulumi
-    .all([aks.identity, network.subnetId])
-    .apply(async ([identity, sId]) => {
-      if (!identity?.principalId) return;
-
-      await roleAssignment({
-        name: `${name}-system-acr-pull`,
-        principalId: identity.principalId,
-        principalType: 'ServicePrincipal',
-        roleName: 'AcrPull',
-        scope: defaultScope,
-      });
-
-      if (network.subnetId) {
-        await roleAssignment({
-          name: `${name}-system-net`,
-          principalId: identity.principalId,
-          roleName: 'Contributor',
-          principalType: 'ServicePrincipal',
-          scope: getResourceIdFromInfo({
-            group: getResourceInfoFromId(sId)!.group,
-          }),
-        });
-      }
-
-      if (privateZone) {
-        await roleAssignment({
-          name: `${name}-private-dns`,
-          principalId: identity.principalId,
-          roleName: 'Private DNS Zone Contributor',
-          principalType: 'ServicePrincipal',
-          scope: privateZone.id,
-        });
-      }
-    });
-
-  if (featureFlags.enableDiagnosticSetting) {
-    aks.id.apply((id) => {
-      if (!id) return;
-
-      //Diagnostic
-      return createDiagnostic({
+    //Diagnostic
+    if (featureFlags.enableDiagnosticSetting) {
+      createDiagnostic({
         name,
         targetResourceId: id,
         ...log,
@@ -640,8 +604,73 @@ export default async ({
           'cluster-autoscaler',
         ],
       });
+    }
+  });
+
+  //Grant Permission for Identity
+  pulumi
+    .all([aks.identity, aks.identityProfile, network.subnetId])
+    .apply(async ([identity, identityProfile, sId]) => {
+      console.log('Grant RBAC for cluster:', name);
+
+      //Already assigned when creating the service
+      // if (serviceIdentity?.principalId) {
+      //   await roleAssignment({
+      //     name: `${name}-aks-identity-acr-pull`,
+      //     principalId: serviceIdentity?.principalId,
+      //     principalType: 'ServicePrincipal',
+      //     roleName: 'AcrPull',
+      //     scope: defaultScope,
+      //   });
+      // }
+
+      if (
+        acrScope &&
+        identityProfile &&
+        identityProfile['kubeletidentity'] &&
+        identityProfile['kubeletidentity'].objectId
+      ) {
+        await roleAssignment({
+          name: `${name}-aks-identity-profile-pull`,
+          principalId: identityProfile['kubeletidentity'].objectId,
+          principalType: 'ServicePrincipal',
+          roleName: 'AcrPull',
+          scope: acrScope,
+        });
+      }
+
+      // if (identity?.principalId) {
+      //   await roleAssignment({
+      //     name: `${name}-system-acr-pull`,
+      //     principalId: identity.principalId,
+      //     principalType: 'ServicePrincipal',
+      //     roleName: 'AcrPull',
+      //     scope: defaultScope,
+      //   });
+      // }
+
+      if (network.subnetId && identity) {
+        await roleAssignment({
+          name: `${name}-system-net`,
+          principalId: identity.principalId,
+          roleName: 'Contributor',
+          principalType: 'ServicePrincipal',
+          scope: getResourceIdFromInfo({
+            group: getResourceInfoFromId(sId)!.group,
+          }),
+        });
+      }
+
+      if (privateZone && identity) {
+        await roleAssignment({
+          name: `${name}-private-dns`,
+          principalId: identity.principalId,
+          roleName: 'Private DNS Zone Contributor',
+          principalType: 'ServicePrincipal',
+          scope: privateZone.id,
+        });
+      }
     });
-  }
 
   //Apply monitoring for VMScale Sets
   await vmsDiagnostic({
