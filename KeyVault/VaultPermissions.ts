@@ -56,6 +56,12 @@ export const grantVaultRbacPermission = async ({
   } else {
     await roleAssignment({
       ...defaultProps,
+      name: `${vn}-contributor`,
+      roleName: "Key Vault Contributor",
+      principalType,
+    });
+    await roleAssignment({
+      ...defaultProps,
       name: `${vn}-cert`,
       roleName: "Key Vault Certificates Officer",
       principalType,
