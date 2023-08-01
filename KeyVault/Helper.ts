@@ -6,6 +6,7 @@ import { KeyVaultInfo } from '../types';
 import { KeyVaultSecret, SecretClient } from '@azure/keyvault-secrets';
 import { getSecretName } from '../Common/Naming';
 import { replaceAll } from '../Common/Helpers';
+import * as console from 'console';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -36,7 +37,13 @@ export const checkSecretExist = async ({
     .listPropertiesOfSecretVersions(n)
     .byPage({ maxPageSize: 1 });
 
-  for await (const s of rs) return true;
+  for await (const s of rs) {
+    if (s.length > 0) {
+      console.log(`The secret '${name}' is existed.`);
+      return true;
+    } else break;
+  }
+  console.log(`The secret '${name}' is NOT existed.`);
   return false;
 };
 
@@ -52,7 +59,14 @@ export const checkKeyExist = async ({
   const client = new KeyClient(url, new ClientCredential());
   const rs = client.listPropertiesOfKeyVersions(n).byPage({ maxPageSize: 1 });
 
-  for await (const s of rs) return true;
+  for await (const s of rs) {
+    if (s.length > 0) {
+      console.log(`The key '${name}' is existed.`);
+      return true;
+    } else break;
+  }
+
+  console.log(`The key '${name}' is NOT existed.`);
   return false;
 };
 // export const addSecret = ({

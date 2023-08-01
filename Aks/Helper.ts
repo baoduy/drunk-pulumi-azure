@@ -49,7 +49,7 @@ export const getAksVaultConfig = async ({
     vaultInfo,
     nameFormatted: false,
   });
-  return rs?.value||'';
+  return rs?.value || '';
 };
 
 export const getAksIdentitySecrets = async ({
@@ -93,18 +93,22 @@ export const createAksProvider = async ({
 /** Get AKS Provider from Key Vault*/
 export const createAksVaultProvider = async ({
   aksName,
+  secretName,
   namespace,
   vaultInfo,
 }: {
   aksName: string;
+  secretName?: string;
   vaultInfo: KeyVaultInfo;
   namespace?: string;
 }) =>
   createProvider({
     name: aksName,
     namespace,
+    ignoreChanges: true,
     kubeconfig: await getAksVaultConfig({
-      name: aksName,
+      name: secretName ?? aksName,
+      formattedName: Boolean(secretName),
       vaultInfo,
     }),
   });

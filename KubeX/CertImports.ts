@@ -7,7 +7,7 @@ import { KeyVaultInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { K8sArgs } from './types';
 
-interface FromCertOrderProps extends K8sArgs {
+export interface FromCertOrderProps extends K8sArgs {
   namespaces: Input<string>[];
   /** The cert name or domain name */
   certName: string;
