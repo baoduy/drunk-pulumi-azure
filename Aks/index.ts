@@ -25,6 +25,7 @@ import { getAdGroup } from '../AzAd/Group';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import { getAksConfig } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { checkSecretExist } from '../KeyVault/Helper';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -144,7 +145,7 @@ interface Props extends BasicResourceArgs {
 
   aksAccess?: {
     //Only disable local accounts one downloaded and connected to ADO
-    disableLocalAccounts?: boolean;
+    //disableLocalAccounts?: boolean;
     envRoleNames: EnvRoleNamesType;
     adminMembers?: Array<{ objectId: Input<string> }>;
 
@@ -196,6 +197,13 @@ export default async ({
   importFrom,
 }: Props) => {
   const aksName = getAksName(name);
+  const secretName = `${aksName}-config`;
+  const disableLocalAccounts = vaultInfo
+    ? await checkSecretExist({
+        name: secretName,
+        vaultInfo,
+      }):false;
+  console.log(name,{disableLocalAccounts});
   nodeResourceGroup = nodeResourceGroup || `${aksName}-nodes`;
 
   // const appGateway =
@@ -223,11 +231,15 @@ export default async ({
       })
     : undefined;
 
-  const adminGroup =
-    aksAccess?.envRoleNames && aksAccess?.adminMembers
-      ? await getAdGroup(aksAccess.envRoleNames.contributor)
-      : undefined;
-  const enableAzureRBAC = Boolean(aksAccess?.adminMembers && adminGroup);
+  const adminGroup = aksAccess?.envRoleNames
+    ? await getAdGroup(aksAccess.envRoleNames.admin)
+    : undefined;
+
+  const contributeGroup = aksAccess?.envRoleNames
+    ? await getAdGroup(aksAccess.envRoleNames.contributor)
+    : undefined;
+
+  //const enableAzureRBAC = Boolean(aksAccess?.adminMembers && adminGroup);
 
   //=================Validate ===================================/
   if (!network?.subnetId) {
@@ -283,7 +295,7 @@ export default async ({
         azurePolicy: { enabled: Boolean(addon.enableAzurePolicy) },
         kubeDashboard: { enabled: Boolean(addon.enableKubeDashboard) },
         //If there is no public P address provided the public app can access via HTTP app routing only and feature only support HTTP.
-        //TO enable HTTPS support need to create cluster with an public IP address.
+        //TO enable HTTPS support need to create cluster with a public IP address.
         httpApplicationRouting: {
           enabled:
             !network.outboundIpAddress?.ipAddressId &&
@@ -408,11 +420,9 @@ export default async ({
         upgradeChannel: native.containerservice.UpgradeChannel.Stable,
       },
 
-      disableLocalAccounts:
-        aksAccess?.disableLocalAccounts && Boolean(aksAccess?.adminMembers),
-
+      disableLocalAccounts,
       aadProfile: {
-        enableAzureRBAC,
+        enableAzureRBAC: true,
         managed: true,
         adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
         tenantID: tenantId,
@@ -489,11 +499,11 @@ export default async ({
         name: aksName,
         groupName: group.resourceGroupName,
         formattedName: true,
-        localAccountDisabled: aksAccess?.disableLocalAccounts,
+        localAccountDisabled: disableLocalAccounts,
       });
 
       addCustomSecret({
-        name: `${aksName}-config`,
+        name: secretName,
         value: config,
         dependsOn: aks,
         ignoreChange: true,
@@ -503,35 +513,77 @@ export default async ({
   }
 
   //Grant permission for Group
-  if (adminGroup) {
-    aks.id.apply(async (id) => {
-      if (!id) return;
 
-      await roleAssignment({
-        name: `${name}-aks-list-admin`,
-        principalId: adminGroup.objectId,
-        principalType: 'Group',
-        roleName: 'Azure Kubernetes Service Cluster Admin Role',
-        scope: id,
-      });
+  aks.id.apply(async (id) => {
+    if (!id) return;
+    //Admin
+    if (adminGroup) {
+      await Promise.all(
+        [
+          {
+            shortName: 'Admin-Contributor-Role',
+            name: 'Azure Kubernetes Service Contributor Role',
+          },
+          {
+            shortName: 'Admin-RBAC-Cluster-Admin',
+            name: 'Azure Kubernetes Service RBAC Cluster Admin',
+          },
+          {
+            shortName: 'Admin-Cluster-Admin-Role',
+            name: 'Azure Kubernetes Service Cluster Admin Role',
+          },
+          {
+            shortName: 'Admin-Cluster-Monitoring-User',
+            name: 'Azure Kubernetes Service Cluster Monitoring User',
+          },
+          {
+            shortName: 'Admin-Cluster-User-Role',
+            name: 'Azure Kubernetes Service Cluster User Role',
+          },
+        ].map((r) =>
+          roleAssignment({
+            name: `${name}-${r.shortName}`,
+            principalId: adminGroup.objectId,
+            principalType: 'Group',
+            roleName: r.name,
+            scope: id,
+          })
+        )
+      );
+    }
 
-      await roleAssignment({
-        name: `${name}-aks-list-user`,
-        principalId: adminGroup.objectId,
-        principalType: 'Group',
-        roleName: 'Azure Kubernetes Service Cluster User Role',
-        scope: id,
-      });
-
-      await roleAssignment({
-        name: `${name}-aks-list-contributor`,
-        principalId: adminGroup.objectId,
-        principalType: 'Group',
-        roleName: 'Azure Kubernetes Service Contributor Role',
-        scope: id,
-      });
-    });
-  }
+    //Contributor
+    if (contributeGroup) {
+      await Promise.all(
+        [
+          {
+            shortName: 'Contributor-Contributor-Role',
+            name: 'Azure Kubernetes Service Contributor Role',
+          },
+          {
+            shortName: 'Contributor-RBAC-Admin',
+            name: 'Azure Kubernetes Service RBAC Admin',
+          },
+          {
+            shortName: 'Contributor-RBAC-Reader',
+            name: 'Azure Kubernetes Service RBAC Reader',
+          },
+          {
+            shortName: 'Contributor-RBAC-Writer',
+            name: 'Azure Kubernetes Service RBAC Writer',
+          },
+        ].map((r) =>
+          roleAssignment({
+            name: `${name}-${r.shortName}`,
+            principalId: contributeGroup.objectId,
+            principalType: 'Group',
+            roleName: r.name,
+            scope: id,
+          })
+        )
+      );
+    }
+  });
 
   //Grant Permission for Identity
   pulumi
