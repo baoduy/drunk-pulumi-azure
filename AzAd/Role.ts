@@ -1,5 +1,5 @@
 import adGroupCreator, { GroupPermissionProps } from './Group';
-import { Environments } from '../Common/AzureEnv';
+import { currentEnv, Environments } from '../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import { organization } from '../Common/StackEnv';
 
@@ -33,7 +33,7 @@ export const getRoleName = ({
   appName,
   moduleName,
   roleName,
-  includeOrganization=true,
+  includeOrganization = true,
 }: RoleNameType) => {
   const prefix = includeOrganization ? `${organization} ROL` : 'ROL';
 

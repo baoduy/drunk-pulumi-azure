@@ -5,6 +5,7 @@ import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import { getAdGroup } from '../AzAd/Group';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import {
+  currentEnv,
   defaultTags,
   isPrd,
   subscriptionId,
@@ -22,6 +23,7 @@ import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator, { SqlDbProps } from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import Role from '../AzAd/Role';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -77,7 +79,7 @@ interface Props extends BasicResourceArgs {
 
   /** if Auth is not provided it will be auto generated */
   auth: {
-    envRoleNames: EnvRoleNamesType;
+    envRoleNames?: EnvRoleNamesType;
     /** create an Admin group on AzAD for SQL accessing.*/
     enableAdAdministrator?: boolean;
     azureAdOnlyAuthentication?: boolean;
@@ -137,7 +139,9 @@ export default async ({
   // }
 
   const adminGroup = auth?.enableAdAdministrator
-    ? await getAdGroup(auth.envRoleNames.admin)
+    ? auth.envRoleNames
+      ? await getAdGroup(auth.envRoleNames.admin)
+      : await Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
     : undefined;
 
   const sqlServer = new sql.Server(
@@ -149,7 +153,6 @@ export default async ({
       minimalTlsVersion: '1.2',
 
       identity: { type: 'SystemAssigned' },
-
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
 

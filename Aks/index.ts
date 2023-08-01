@@ -511,6 +511,7 @@ export default async ({
         value: config,
         dependsOn: aks,
         ignoreChange: true,
+        contentType: name,
         vaultInfo,
       });
     });
@@ -624,19 +625,24 @@ export default async ({
       //   });
       // }
 
-      if (
-        acrScope &&
-        identityProfile &&
-        identityProfile['kubeletidentity'] &&
-        identityProfile['kubeletidentity'].objectId
-      ) {
+      if (acrScope && identityProfile && identityProfile['kubeletidentity']) {
         await roleAssignment({
           name: `${name}-aks-identity-profile-pull`,
-          principalId: identityProfile['kubeletidentity'].objectId,
+          principalId: identityProfile['kubeletidentity'].objectId!,
           principalType: 'ServicePrincipal',
           roleName: 'AcrPull',
           scope: acrScope,
         });
+
+        if (vaultInfo) {
+          addCustomSecret({
+            name: `${name}-identity-clientId`,
+            value: identityProfile['kubeletidentity'].clientId!,
+            dependsOn: aks,
+            contentType: name,
+            vaultInfo,
+          });
+        }
       }
 
       // if (identity?.principalId) {
