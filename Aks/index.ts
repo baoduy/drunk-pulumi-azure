@@ -227,6 +227,7 @@ export default async ({
     aksAccess?.envRoleNames && aksAccess?.adminMembers
       ? await getAdGroup(aksAccess.envRoleNames.contributor)
       : undefined;
+  const enableAzureRBAC = Boolean(aksAccess?.adminMembers && adminGroup);
 
   //=================Validate ===================================/
   if (!network?.subnetId) {
@@ -411,7 +412,7 @@ export default async ({
         aksAccess?.disableLocalAccounts && Boolean(aksAccess?.adminMembers),
 
       aadProfile: {
-        enableAzureRBAC: Boolean(aksAccess?.adminMembers && adminGroup),
+        enableAzureRBAC,
         managed: true,
         adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
         tenantID: tenantId,
