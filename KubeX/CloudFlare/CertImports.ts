@@ -11,6 +11,7 @@ export interface CloudFlareCertImportProps extends K8sArgs {
     apiKey?: pulumi.Input<string>;
     provider?: cf.Provider;
     zones: string[];
+    //namespaces?: pulumi.Input<string>[];
   }>;
 }
 
@@ -34,6 +35,9 @@ export default async ({
 
       return c.zones.map(async (z) => {
         const cert = await certCreator({ domainName: z, provider: cfProvider });
+        // const ns = c.namespaces ?? namespaces;
+        // if (!ns || !Array.isArray(ns))
+        //   throw new Error(`The namespaces of ${z} is invalid.`);
 
         return pulumi
           .all([namespaces, cert.cert, cert.privateKey, cert.ca])
