@@ -31,8 +31,7 @@ export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
         matchValues: ['HTTP'],
         operator: 'Equal',
         negateCondition: false,
-        typeName:
-          '#Microsoft.Azure.Cdn.Models.DeliveryRuleRequestSchemeConditionParameters',
+        typeName: 'DeliveryRuleRequestSchemeConditionParameters',
       },
     },
   ],
@@ -42,8 +41,7 @@ export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
       parameters: {
         redirectType: 'Found',
         destinationProtocol: 'Https',
-        typeName:
-          '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlRedirectActionParameters',
+        typeName: 'DeliveryRuleUrlRedirectActionParameters',
       },
     },
   ],
@@ -60,8 +58,7 @@ export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
         negateCondition: false,
         matchValues: ['index.html'],
         transforms: ['Lowercase'],
-        typeName:
-          '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlFilenameConditionParameters',
+        typeName: 'DeliveryRuleUrlFilenameConditionParameters',
       },
     },
   ],
@@ -72,8 +69,7 @@ export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
         cacheBehavior: 'Override',
         cacheType: 'All',
         cacheDuration: '08:00:00',
-        typeName:
-          '#Microsoft.Azure.Cdn.Models.DeliveryRuleCacheExpirationActionParameters',
+        typeName: 'DeliveryRuleCacheExpirationActionParameters',
       },
     },
   ],
@@ -95,8 +91,7 @@ export const getDefaultResponseHeadersRule = (
           negateCondition: false,
           matchValues: [],
           transforms: [],
-          typeName:
-            '#Microsoft.Azure.Cdn.Models.DeliveryRuleUrlPathMatchConditionParameters',
+          typeName: 'DeliveryRuleUrlPathMatchConditionParameters',
         },
       },
     ],
@@ -106,8 +101,7 @@ export const getDefaultResponseHeadersRule = (
         headerAction: 'Overwrite',
         headerName: k,
         value: defaultResponseHeaders[k],
-        typeName:
-          '#Microsoft.Azure.Cdn.Models.DeliveryRuleHeaderActionParameters',
+        typeName: 'DeliveryRuleHeaderActionParameters',
       },
     })),
   };

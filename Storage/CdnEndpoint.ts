@@ -34,6 +34,8 @@ export default ({
     rules.push(getDefaultResponseHeadersRule(domainName));
   }
 
+  console.log('CDN Endpoint: Link to', cdnProfileInfo);
+
   const endpoint = new native.cdn.Endpoint(
     name,
     {
