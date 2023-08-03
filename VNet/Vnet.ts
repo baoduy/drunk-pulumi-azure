@@ -33,8 +33,10 @@ interface VnetProps extends BasicResourceArgs {
 
   features?: {
     securityGroup?: {
-      /**Add Security rule to block internet if it is TRUE*/
-      allowInternetAccess?: boolean;
+      /**Add Security rule to block/allow inbound internet if it is TRUE*/
+      //allowInboundInternetAccess?: boolean;
+      /**Add Security rule to block/allow internet if it is TRUE*/
+      allowOutboundInternetAccess?: boolean;
       rules?: pulumi.Input<inputs.network.SecurityRuleArgs>[];
     };
 
@@ -92,7 +94,6 @@ export default ({
       allowedServiceEndpoints: false,
     });
 
-    //Only Allows Https with port 443 from public IP address to Bastion Host Ips
     securityRules.push({
       name: 'allow-internet-bastion',
       sourceAddressPrefix: '*',
@@ -102,7 +103,7 @@ export default ({
       protocol: 'TCP',
       access: 'Allow',
       direction: 'Inbound',
-      priority: 200 + securityRules.length + 1,
+      priority: 3000,
     });
   }
 
@@ -125,7 +126,8 @@ export default ({
   //NetworkSecurityGroup
   let securityGroup: network.NetworkSecurityGroup | undefined = undefined;
   if (features.securityGroup) {
-    if (!features.securityGroup.allowInternetAccess) {
+    //Allow outbound internet
+    if (!features.securityGroup.allowOutboundInternetAccess) {
       securityRules.push({
         name: 'deny-internet',
         sourceAddressPrefix: '*',
@@ -135,7 +137,7 @@ export default ({
         protocol: '*',
         access: 'Deny',
         direction: 'Outbound',
-        priority: 4096, //The last rule in the list});
+        priority: 4096, //The last rule in the list;
       });
     }
 

@@ -54,7 +54,10 @@ interface Props {
     }>;
 
     securityGroup?: {
-      allowInternetAccess?: boolean;
+      /**Add Security rule to block/allow inbound internet if it is TRUE*/
+      allowInboundInternetAccess?: boolean;
+      /**Add Security rule to block/allow internet if it is TRUE*/
+      allowOutboundInternetAccess?: boolean;
       rules?: Input<inputs.network.SecurityRuleArgs>[];
     };
   };
@@ -87,9 +90,9 @@ export default async ({
         nextHopType: network.RouteNextHopType.Internet,
       });
     } //Allow Internet to public IpAddress security group
-    else
+    else if (features.securityGroup?.allowInboundInternetAccess)
       securities.push({
-        name: 'allow-internet-publicIpAddress',
+        name: 'allow-inbound-internet-publicIpAddress',
         sourceAddressPrefix: '*',
         sourcePortRange: '*',
         destinationAddressPrefix: publicIpAddress.ipAddress.apply(
@@ -155,7 +158,7 @@ export default async ({
     features: {
       securityGroup: features.securityGroup
         ? {
-            allowInternetAccess: features.securityGroup.allowInternetAccess,
+            ...features.securityGroup,
             rules: securities,
           }
         : undefined,

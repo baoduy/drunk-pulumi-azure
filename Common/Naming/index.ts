@@ -22,6 +22,7 @@ export const getSecretName = (name: string) => {
   name = name.replace(`${stack}-`, '');
   name = name.replace(stack, '');
   name = replaceAll(name, ' ', '-');
+  name = replaceAll(name, '.', '-');
   return replaceAll(name, '_', '-').toLowerCase();
 };
 

@@ -1,9 +1,10 @@
 import { K8sArgs } from '../types';
 import * as pulumi from '@pulumi/pulumi';
 import * as cf from '@pulumi/cloudflare';
-import certCreator from './CertCreator';
+import certCreator, { getCloudflareOriginCert } from './CertCreator';
 import KsCertSecret from '../Core/KsCertSecret';
 import { getTlsName } from '../CertHelper';
+import { KeyVaultInfo } from '../../types';
 
 export interface CloudFlareCertImportProps extends K8sArgs {
   namespaces: pulumi.Input<string>[];
@@ -13,11 +14,16 @@ export interface CloudFlareCertImportProps extends K8sArgs {
     zones: string[];
     //namespaces?: pulumi.Input<string>[];
   }>;
+  /**Load existing cert from Key Vault*/
+  certExisted?: boolean;
+  vaultInfo?: KeyVaultInfo;
 }
 
 export default async ({
   namespaces,
   cloudflare,
+  certExisted,
+  vaultInfo,
   ...others
 }: CloudFlareCertImportProps) =>
   await Promise.all(
@@ -34,7 +40,14 @@ export default async ({
         });
 
       return c.zones.map(async (z) => {
-        const cert = await certCreator({ domainName: z, provider: cfProvider });
+        const cert = certExisted && vaultInfo
+          ? await getCloudflareOriginCert({ domainName: z, vaultInfo })
+          : await certCreator({
+              domainName: z,
+              vaultInfo,
+              provider: cfProvider,
+            });
+
         // const ns = c.namespaces ?? namespaces;
         // if (!ns || !Array.isArray(ns))
         //   throw new Error(`The namespaces of ${z} is invalid.`);
