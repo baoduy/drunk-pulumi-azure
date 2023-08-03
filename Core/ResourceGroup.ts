@@ -22,6 +22,10 @@ interface Props
   envRoleNames?: EnvRoleNamesType;
 }
 
+// export const getResourceGroupInfo = (name: string, globalGroup?: boolean) => ({
+//   resourceGroupName: getResourceGroupName(name),
+// });
+
 export default async ({
   name,
   formattedName,

@@ -9,14 +9,25 @@ import {
 import { getSecret } from '../KeyVault/Helper';
 import { getAppInsightName } from '../Common/Naming';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { isPrd } from '../Common/AzureEnv';
+import { Input } from '@pulumi/pulumi';
 
 interface Props extends BasicResourceArgs {
   dailyCapGb?: number;
   vaultInfo?: KeyVaultInfo;
+  immediatePurgeDataOn30Days?: boolean;
+  ingestionMode?: native.insights.IngestionMode;
+  workspaceResourceId?: Input<string>;
 }
 
-export default async ({ group, name, dailyCapGb = 0.023, vaultInfo }: Props) => {
+export default ({
+  group,
+  name,
+  dailyCapGb = 0.023,
+  immediatePurgeDataOn30Days = true,
+  ingestionMode = native.insights.IngestionMode.ApplicationInsights,
+  workspaceResourceId,
+  vaultInfo,
+}: Props) => {
   name = getAppInsightName(name);
 
   const appInsight = new native.insights.Component(name, {
@@ -26,12 +37,16 @@ export default async ({ group, name, dailyCapGb = 0.023, vaultInfo }: Props) => 
     kind: 'web',
     disableIpMasking: true,
     applicationType: 'web',
+    flowType: 'Bluefield',
 
-    samplingPercentage: isPrd ? 100 : 50,
+    //samplingPercentage: isPrd ? 100 : 50,
     retentionInDays: 30,
 
-    immediatePurgeDataOn30Days: true,
-    ingestionMode: native.insights.IngestionMode.ApplicationInsights,
+    immediatePurgeDataOn30Days,
+    ingestionMode,
+
+    disableLocalAuth: true,
+    workspaceResourceId,
   });
 
   new native.insights.ComponentCurrentBillingFeature(

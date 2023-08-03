@@ -10,7 +10,6 @@ const config = output(native.authorization.getClientConfig());
 export const tenantId = config.tenantId;
 export const subscriptionId = config.subscriptionId;
 export const currentServicePrincipal = config.objectId;
-export const defaultLocation = 'SoutheastAsia';
 export const defaultScope = subscriptionId.apply((s) => `/subscriptions/${s}`);
 
 //Print and Check

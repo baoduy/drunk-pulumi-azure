@@ -1,6 +1,5 @@
 import { createAxios } from '../Tools/Axios';
 import { replaceAll } from '../Common/Helpers';
-import { defaultLocation } from './AzureEnv';
 import { Input, output, Output } from '@pulumi/pulumi';
 
 interface LocationResult {
@@ -30,7 +29,7 @@ const getLocationString = async (possibleName: string) => {
   const location = locations.find(
     (l) => l.name === replaceAll(possibleName, ' ', '').toLowerCase()
   );
-  return location?.displayName || defaultLocation;
+  return location?.displayName;
 };
 
 export const getLocation = (possibleName: Input<string>): Output<string> =>

@@ -115,8 +115,8 @@ export const createPVCForStorageClass = ({
   storageGb = '5Gi',
   accessMode = 'ReadWriteOnce',
   provider,
-}: StorageClassProps) => {
-  return new k8s.core.v1.PersistentVolumeClaim(
+}: StorageClassProps) =>
+  new k8s.core.v1.PersistentVolumeClaim(
     `${name}-claim`,
     {
       metadata: {
@@ -138,4 +138,3 @@ export const createPVCForStorageClass = ({
     },
     { provider }
   );
-};
