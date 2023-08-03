@@ -2,8 +2,9 @@ import * as containerservice from '@pulumi/azure-native/containerservice';
 import { getAksName, getResourceGroupName } from '../Common/Naming';
 import { createProvider } from '../KubeX/Providers';
 import { KeyVaultInfo } from '../types';
-import { getSecret } from '../KeyVault/Helper';
+import { getSecret, getSecretVersions } from '../KeyVault/Helper';
 import { getIdentitySecrets } from '../AzAd/Helper';
+import * as console from 'console';
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
@@ -36,16 +37,19 @@ export const getAksConfig = async ({
 /** Get AKS Config from Key Vault*/
 export const getAksVaultConfig = async ({
   name,
+  version,
   vaultInfo,
   formattedName,
 }: {
   name: string;
+  version?: string;
   vaultInfo: KeyVaultInfo;
   formattedName?: boolean;
 }): Promise<string> => {
   const aksName = formattedName ? name : getAksName(name);
   const rs = await getSecret({
     name: `${aksName}-config`,
+    version,
     vaultInfo,
     nameFormatted: false,
   });
@@ -78,8 +82,8 @@ export const createAksProvider = async ({
   groupName,
   formatedName,
   localAccountDisabled,
-}: AksProps) =>
-  createProvider({
+}: AksProps) => {
+  return createProvider({
     name: aksName,
     namespace,
     kubeconfig: await getAksConfig({
@@ -89,26 +93,31 @@ export const createAksProvider = async ({
       localAccountDisabled,
     }),
   });
+};
 
 /** Get AKS Provider from Key Vault*/
 export const createAksVaultProvider = async ({
   aksName,
+  version,
   secretName,
   namespace,
   vaultInfo,
 }: {
   aksName: string;
   secretName?: string;
+  version?: string;
   vaultInfo: KeyVaultInfo;
   namespace?: string;
-}) =>
-  createProvider({
+}) => {
+  return createProvider({
     name: aksName,
     namespace,
     ignoreChanges: true,
     kubeconfig: await getAksVaultConfig({
       name: secretName ?? aksName,
+      version,
       formattedName: Boolean(secretName),
       vaultInfo,
     }),
   });
+};
