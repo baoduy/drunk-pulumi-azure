@@ -1,5 +1,5 @@
 import { createAxios } from '../Tools/Axios';
-import { replaceAll } from '../Common/Helpers';
+import { replaceAll } from './Helpers';
 import { Input, output, Output } from '@pulumi/pulumi';
 
 interface LocationResult {
@@ -32,5 +32,17 @@ const getLocationString = async (possibleName: string) => {
   return location?.displayName;
 };
 
-export const getLocation = (possibleName: Input<string>): Output<string> =>
+export const getLocation = (
+  possibleName: Input<string>
+): Output<string | undefined> =>
   output(possibleName).apply(async (l) => await getLocationString(l));
+
+export const getMyPublicIpAddress = async (): Promise<string | undefined> => {
+  const res = await fetch('https://api.myip.com');
+
+  if (res.ok) {
+    const data = await res.json();
+    return data.ip;
+  }
+  return undefined;
+};
