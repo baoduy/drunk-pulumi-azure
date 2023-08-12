@@ -1,6 +1,6 @@
 import { DefaultK8sArgs } from './types';
 import * as pulumi from '@pulumi/pulumi';
-import * as kx from './KubX';
+import * as kx from './kx';
 import { Input } from '@pulumi/pulumi';
 
 interface Props extends DefaultK8sArgs {

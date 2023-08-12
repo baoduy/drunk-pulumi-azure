@@ -1,5 +1,5 @@
 import * as k8s from '@pulumi/kubernetes';
-import * as kx from '../KubX';
+import * as kx from '../kx';
 import { NginxIngress, TraefikIngress } from '../Ingress';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getDomainFromUrl, getRootDomainFromUrl } from '../../Common/Helpers';
@@ -62,6 +62,7 @@ interface PodConfigProps {
       timeoutSeconds?: number;
       failureThreshold?: number;
     };
+    lifecycle?: { postStart?: pulumi.Input<string>[] };
   };
 }
 
@@ -169,6 +170,14 @@ const buildPod = ({
                     port: podConfig.probes.liveness.port || podConfig.port!,
                   }
                 : undefined,
+            }
+          : undefined,
+
+        lifecycle: podConfig.probes?.lifecycle?.postStart
+          ? {
+              postStart: {
+                exec: { command: podConfig.probes.lifecycle.postStart },
+              },
             }
           : undefined,
       },
