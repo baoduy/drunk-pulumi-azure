@@ -4,7 +4,7 @@ import { AppInsightInfo, KeyVaultInfo, BasicResourceArgs } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
 import { createThreatProtection } from '../Logs/Helpers';
 import { addInsightMonitor } from '../Logs/WebTest';
-import { parseKeyUrl } from '../KeyVault/Helper';
+import { getSecret, parseKeyUrl } from '../KeyVault/Helper';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 
 import cdnCreator from './CdnEndpoint';
@@ -33,7 +33,7 @@ interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
 
   encryptionKeyUrl?: Output<string> | string;
-  vaultInfo?: KeyVaultInfo;
+  vaultInfo: KeyVaultInfo;
 
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
@@ -370,5 +370,7 @@ export default ({
       primaryConnectionKeyName,
       secondConnectionKeyName,
     },
+    getConnectionString: (name: string = primaryConnectionKeyName) =>
+      getSecret({ name, vaultInfo }),
   };
 };

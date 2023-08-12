@@ -25,6 +25,7 @@ import { getPrivateEndpointName, getServiceBusName } from '../Common/Naming';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import Locker from '../Core/Locker';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { getSecret } from '../KeyVault/Helper';
 
 type TransportTypes = 'AmqpWebSockets' | 'Amqp' | null;
 const duplicateDetectedTime = isPrd ? 'P3D' : 'PT10M';
@@ -83,6 +84,9 @@ const createAndStoreConnection = ({
         namespaceFullName: namespaceName,
         connectionType,
       });
+
+  const primaryName = `${key}-primary`;
+  const secondaryName = `${key}-secondary`;
 
   const rights =
     connectionType == BusConnectionTypes.Manage
@@ -164,7 +168,7 @@ const createAndStoreConnection = ({
       primaryConn += `;TransportType=${transportType};`;
 
     addCustomSecret({
-      name: `${key}-primary`,
+      name: primaryName,
       value: primaryConn,
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${name}`,
@@ -179,7 +183,7 @@ const createAndStoreConnection = ({
       secondConn += `;TransportType=${transportType};`;
 
     addCustomSecret({
-      name: `${key}-secondary`,
+      name: secondaryName,
       value: secondConn,
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${name}`,
@@ -187,7 +191,7 @@ const createAndStoreConnection = ({
     });
   });
 
-  return rule;
+  return { primaryName, secondaryName };
 };
 
 interface TopicProps
@@ -243,9 +247,15 @@ const topicCreator = ({
     Locker({ name: topicName, resourceId: topic.id, dependsOn: topic });
   }
 
+  let primaryConnectionKeys:
+    | { secondaryName: string; primaryName: string }
+    | undefined = undefined;
+  let secondaryConnectionKeys:
+    | { secondaryName: string; primaryName: string }
+    | undefined = undefined;
   if (vaultInfo && enableConnections) {
     //Send Key
-    createAndStoreConnection({
+    primaryConnectionKeys = createAndStoreConnection({
       topicName,
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
@@ -256,7 +266,7 @@ const topicCreator = ({
     });
 
     //Listen Key
-    createAndStoreConnection({
+    secondaryConnectionKeys = createAndStoreConnection({
       topicName,
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
@@ -298,7 +308,12 @@ const topicCreator = ({
     );
   }
 
-  return { name: topicName, topic, subs };
+  return {
+    name: topicName,
+    topic,
+    subs,
+    vaultNames: { primaryConnectionKeys, secondaryConnectionKeys },
+  };
 };
 
 interface SubProps extends BasicArgs {
@@ -340,7 +355,10 @@ const subscriptionCreator = ({
     Locker({ name, resourceId: resource.id, dependsOn: resource });
   }
 
-  return { name, resource };
+  return {
+    name,
+    resource,
+  };
 };
 
 interface QueueProps
@@ -402,9 +420,16 @@ const queueCreator = ({
     Locker({ name, resourceId: queue.id, dependsOn: queue });
   }
 
+  let primaryConnectionKeys:
+    | { secondaryName: string; primaryName: string }
+    | undefined = undefined;
+  let secondaryConnectionKeys:
+    | { secondaryName: string; primaryName: string }
+    | undefined = undefined;
+
   if (vaultInfo && enableConnections) {
     //Send Key
-    createAndStoreConnection({
+    primaryConnectionKeys = createAndStoreConnection({
       queueName: name,
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
@@ -415,7 +440,7 @@ const queueCreator = ({
     });
 
     //Listen Key
-    createAndStoreConnection({
+    secondaryConnectionKeys = createAndStoreConnection({
       queueName: name,
       namespaceName: namespaceFullName,
       resourceGroupName: group.resourceGroupName,
@@ -437,7 +462,11 @@ const queueCreator = ({
     // });
   }
 
-  return { name, queue };
+  return {
+    name,
+    queue,
+    vaultNames: { primaryConnectionKeys, secondaryConnectionKeys },
+  };
 };
 
 interface Props
@@ -460,7 +489,7 @@ interface Props
   } & Partial<PrivateLinkProps>;
   monitoring?: BasicMonitorArgs;
   sku?: bus.SkuName;
-  vaultInfo?: KeyVaultInfo;
+  vaultInfo: KeyVaultInfo;
   enableNamespaceConnections?: boolean;
   enableTopicConnections?: boolean;
   enableQueueConnections?: boolean;
@@ -511,6 +540,12 @@ export default async ({
     });
   }
 
+  let primaryConnectionKeys:
+    | { secondaryName: string; primaryName: string }
+    | undefined = undefined;
+  let secondaryConnectionKeys:
+    | { secondaryName: string; primaryName: string }
+    | undefined = undefined;
   //Create Keys
   if (vaultInfo && enableNamespaceConnections) {
     //Send Key
@@ -524,7 +559,7 @@ export default async ({
     // });
 
     //Listen Key
-    createAndStoreConnection({
+    primaryConnectionKeys = createAndStoreConnection({
       namespaceName: name,
       resourceGroupName: group.resourceGroupName,
       vaultInfo,
@@ -534,7 +569,7 @@ export default async ({
     });
 
     //Manage Key
-    createAndStoreConnection({
+    secondaryConnectionKeys = createAndStoreConnection({
       namespaceName: name,
       resourceGroupName: group.resourceGroupName,
       vaultInfo,
@@ -621,6 +656,9 @@ export default async ({
     resource: namespace,
     queues: qes,
     topics: tps,
+    vaultNames: { primaryConnectionKeys, secondaryConnectionKeys },
+    getConnectionString: (name: string) =>
+      getSecret({ name, nameFormatted: true, vaultInfo }),
     locker,
     diagnostic,
   };
