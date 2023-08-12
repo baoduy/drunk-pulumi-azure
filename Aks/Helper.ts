@@ -101,23 +101,27 @@ export const createAksVaultProvider = async ({
   version,
   secretName,
   namespace,
+    base64Encoded,
   vaultInfo,
 }: {
   aksName: string;
   secretName?: string;
   version?: string;
   vaultInfo: KeyVaultInfo;
+  base64Encoded?:boolean;
   namespace?: string;
 }) => {
+  const value = await getAksVaultConfig({
+        name: secretName ?? aksName,
+        version,
+        formattedName: Boolean(secretName),
+        vaultInfo,
+      });
+
   return createProvider({
     name: aksName,
     namespace,
     ignoreChanges: true,
-    kubeconfig: await getAksVaultConfig({
-      name: secretName ?? aksName,
-      version,
-      formattedName: Boolean(secretName),
-      vaultInfo,
-    }),
+    kubeconfig: base64Encoded? Buffer.from(value,'base64').toString() :value,
   });
 };

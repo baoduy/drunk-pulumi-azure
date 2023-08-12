@@ -3,7 +3,12 @@
     "strict": true,
     "outDir": "bin",
     "target": "esnext",
-    "lib": ["es2019", "esnext.array","esnext.string"],
+    "lib": [
+      "es2019",
+      "esnext.array",
+      "esnext.string",
+      "dom"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,

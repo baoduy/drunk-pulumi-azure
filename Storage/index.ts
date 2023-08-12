@@ -61,6 +61,7 @@ interface StorageProps extends BasicResourceArgs {
     keyExpirationPeriodInDays?: number;
     isBlobVersioningEnabled?: boolean;
     blobSoftDeleteDays?: number;
+    allowBlobPublicAccess?: boolean;
     containerSoftDeleteDays?: number;
     fileShareSoftDeleteDays?: number;
   };
@@ -120,7 +121,7 @@ export default ({
 
     isHnsEnabled: true,
     enableHttpsTrafficOnly: true,
-    allowBlobPublicAccess: false,
+    allowBlobPublicAccess: policies?.allowBlobPublicAccess,
     allowSharedKeyAccess: featureFlags.allowSharedKeyAccess,
     identity: { type: 'SystemAssigned' },
     minimumTlsVersion: 'TLS1_2',
