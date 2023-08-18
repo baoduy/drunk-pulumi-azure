@@ -1,10 +1,11 @@
-import { Output } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import * as native from '@pulumi/azure-native';
 import CdnHttpsEnable from './CdnHttpsEnable';
 import {
   getDefaultResponseHeadersRule,
   enforceHttpsRule,
   indexFileCacheRule,
+  allowsCorsRules,
 } from './CdnRules';
 import { cdnProfileInfo } from '../Common/GlobalEnv';
 import { replaceAll } from '../Common/Helpers';
@@ -13,7 +14,8 @@ import { BasicArgs } from '../types';
 
 interface Props extends BasicArgs {
   name: string;
-  origin: Output<string>;
+  origin: Input<string>;
+  cors?: string[];
   domainName: string;
   httpsEnabled?: boolean;
   includesDefaultResponseHeaders?: boolean;
@@ -23,6 +25,7 @@ export default ({
   name,
   domainName,
   origin,
+  cors,
   httpsEnabled,
   includesDefaultResponseHeaders,
   dependsOn,
@@ -32,6 +35,9 @@ export default ({
   const rules = [enforceHttpsRule, indexFileCacheRule];
   if (includesDefaultResponseHeaders) {
     rules.push(getDefaultResponseHeadersRule(domainName));
+  }
+  if (cors) {
+    rules.push(...allowsCorsRules(cors));
   }
 
   console.log('CDN Endpoint: Link to', cdnProfileInfo);

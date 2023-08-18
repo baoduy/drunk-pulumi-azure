@@ -14,7 +14,9 @@ const getSecurities = (envDomain: string) => [
   `frame-ancestors 'self' https://login.microsoftonline.com https://*.${envDomain}`,
 ];
 
-export const getDefaultResponseHeaders = (envDomain: string) => ({
+export const getDefaultResponseHeaders = (
+  envDomain: string
+): Record<string, string> => ({
   'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
   'X-XSS-Protection': '1; mode=block',
   'X-Content-Type-Options': 'nosniff',
@@ -78,7 +80,7 @@ export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
 export const getDefaultResponseHeadersRule = (
   envDomain: string
 ): native.types.input.cdn.DeliveryRuleArgs => {
-  const defaultResponseHeaders: any = getDefaultResponseHeaders(envDomain);
+  const defaultResponseHeaders = getDefaultResponseHeaders(envDomain);
 
   return {
     name: 'defaultResponseHeaders',
@@ -106,3 +108,35 @@ export const getDefaultResponseHeadersRule = (
     })),
   };
 };
+
+export const allowsCorsRules = (
+  cors: string[]
+): native.types.input.cdn.DeliveryRuleArgs[] =>
+  cors.map((c, i) => ({
+    name: `allowsCors${i + 1}`,
+    order: 5 + i,
+    conditions: [
+      {
+        name: 'RequestHeader',
+        parameters: {
+          typeName: 'DeliveryRuleRequestHeaderConditionParameters',
+          selector: 'Origin',
+          operator: 'Contains',
+          transforms: [],
+          matchValues: [c],
+          negateCondition: false,
+        },
+      },
+    ],
+    actions: [
+      {
+        name: 'ModifyResponseHeader',
+        parameters: {
+          typeName: 'DeliveryRuleHeaderActionParameters',
+          headerAction: 'Overwrite',
+          headerName: 'Access-Control-Allow-Origin',
+          value: c,
+        },
+      },
+    ],
+  }));

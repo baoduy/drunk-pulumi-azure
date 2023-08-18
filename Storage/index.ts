@@ -31,7 +31,7 @@ type ContainerProps = {
 
 interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
-
+  allowsCors?: string[];
   encryptionKeyUrl?: Output<string> | string;
   vaultInfo: KeyVaultInfo;
 
@@ -80,6 +80,7 @@ export default ({
   name,
   group,
   customDomain,
+  allowsCors,
   vaultInfo,
   encryptionKeyUrl,
   defaultManagementRules,
@@ -260,6 +261,7 @@ export default ({
       name,
       domainName: customDomain!,
       origin,
+      cors: allowsCors,
       httpsEnabled: true,
       includesDefaultResponseHeaders:
         featureFlags.includesDefaultResponseHeaders,
