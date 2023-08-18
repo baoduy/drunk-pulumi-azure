@@ -40,6 +40,8 @@ export default ({
     rules.push(...allowsCorsRules(cors));
   }
 
+  //Update rule order
+  rules.forEach((r, i) => (r.order = i + 1));
   console.log('CDN Endpoint: Link to', cdnProfileInfo);
 
   const endpoint = new native.cdn.Endpoint(

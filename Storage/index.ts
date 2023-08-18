@@ -374,6 +374,6 @@ export default ({
       secondConnectionKeyName,
     },
     getConnectionString: (name: string = primaryConnectionKeyName) =>
-      getSecret({ name, vaultInfo }),
+      getSecret({ name, nameFormatted: true, vaultInfo }),
   };
 };
