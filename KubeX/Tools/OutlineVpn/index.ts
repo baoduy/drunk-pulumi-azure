@@ -5,9 +5,6 @@ import { certImportFromVault, certImportFromFolder } from '../../CertImports';
 import * as kubernetes from '@pulumi/kubernetes';
 import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import { randomUuId } from '../../../Core/Random';
-import { NginxIngress } from '../../Ingress';
-import { getTlsName } from '../../CertHelper';
-import * as kx from '../../KubX';
 
 //https://medium.com/asl19-developers/hosting-outline-vpn-server-on-kubernetes-69a8765eed19
 
