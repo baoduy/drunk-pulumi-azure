@@ -14,7 +14,7 @@ export interface ToolPodProps {
 }
 export default ({ namespace, useVirtualHost, ...others }: ToolPodProps) => {
   const name = 'tool-pod';
-  const image = 'aguasjmsft/toolpod';
+  const image = 'baoduy2412/toolbox:latest'; // 'aguasjmsft/toolpod';
 
   new k8s.apps.v1.Deployment(
     name,
