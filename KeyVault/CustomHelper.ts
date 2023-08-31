@@ -1,4 +1,4 @@
-import { Input, output, Resource, Config } from '@pulumi/pulumi';
+import { Input, output, Resource } from '@pulumi/pulumi';
 import { getSecretName } from '../Common/Naming';
 import { VaultSecretResource } from '../CustomProviders/VaultSecret';
 import { KeyVaultInfo } from '../types';
@@ -38,27 +38,6 @@ type SecretProps = {
   }>;
   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 };
-
-// export const addKey = ({
-//   name,
-//   vaultInfo,
-//   tags,
-//   dependsOn,
-// }: Omit<SecretProps, 'value' | 'contentType'>) => {
-//   const n = getSecretName(name);
-//   return new azure.keyvault.Key(
-//     name,
-//     {
-//       name: n,
-//       keyType: 'RSA',
-//       keySize: 2048,
-//       keyVaultId: vaultInfo.id,
-//       keyOpts: ['decrypt', 'encrypt', 'sign', 'verify', 'wrapKey', 'unwrapKey'],
-//       tags,
-//     },
-//     { dependsOn }
-//   );
-// };
 
 /** Add variable to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
 export const addCustomSecret = ({

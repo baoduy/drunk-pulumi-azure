@@ -113,32 +113,6 @@ export const checkKeyExist = async (
     return false;
   }
 };
-// export const addSecret = ({
-//   name,
-//   vaultInfo,
-//   value,
-//   contentType,
-//   tags,
-//   dependsOn,
-// }: SecretProps) => {
-//   const n = getSecretName(name);
-//
-//   return new keyvault.Secret(
-//     replaceAll(name, '.', '-'),
-//     {
-//       secretName: n,
-//       vaultName: vaultInfo.name,
-//       ...vaultInfo.group,
-//       properties: {
-//         value: value ? output(value).apply((v) => v || '') : '',
-//         contentType: contentType || name,
-//         attributes: { enabled: true },
-//       },
-//       tags,
-//     },
-//     { dependsOn }
-//   );
-// };
 
 export const addKey = ({
   name,

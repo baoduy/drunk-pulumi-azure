@@ -1,11 +1,11 @@
 import { DefaultK8sArgs } from '../types';
 import * as k8s from '@pulumi/kubernetes';
+import { all, Input } from '@pulumi/pulumi';
 
-interface CertSecretProps extends Omit<DefaultK8sArgs, 'namespace'> {
-  namespace: string;
-  cert: string;
-  ca?: string;
-  privateKey: string;
+interface CertSecretProps extends DefaultK8sArgs {
+  cert: Input<string>;
+  ca?: Input<string>;
+  privateKey: Input<string>;
 }
 
 export default ({
@@ -16,18 +16,21 @@ export default ({
   privateKey,
   ...others
 }: CertSecretProps) =>
-  new k8s.core.v1.Secret(
-    `${name}-${namespace}`,
-    {
-      metadata: {
-        name,
-        namespace,
-      },
-      type: 'kubernetes.io/tls',
-      stringData: {
-        'tls.crt': ca ? cert + ca : cert,
-        'tls.key': privateKey,
-      },
-    },
-    others
+  all([namespace, cert, ca, privateKey]).apply(
+    ([ns, c, a, key]) =>
+      new k8s.core.v1.Secret(
+        `${name}-${ns}`,
+        {
+          metadata: {
+            name,
+            namespace: ns,
+          },
+          type: 'kubernetes.io/tls',
+          stringData: {
+            'tls.crt': a ? c + a : c,
+            'tls.key': key,
+          },
+        },
+        others
+      )
   );

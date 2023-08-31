@@ -6,9 +6,10 @@ import fs from 'fs';
 import { KeyVaultInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { K8sArgs } from './types';
+import ksCertSecret from './Core/KsCertSecret';
 
 export interface FromCertOrderProps extends K8sArgs {
-  namespaces: Input<string>[];
+  namespaces: string[];
   /** The cert name or domain name */
   certName: string;
 }
@@ -23,23 +24,15 @@ export const certImportFromCertOrder = async ({
   if (!cert) return;
 
   const name = getTlsName(certName, false);
-  namespaces.map(
-    (n, i) =>
-      new k8s.core.v1.Secret(
-        `${name}-${i}`,
-        {
-          metadata: {
-            name,
-            namespace: n,
-          },
-          type: 'kubernetes.io/tls',
-          stringData: {
-            'tls.crt': cert.cert + cert.ca,
-            'tls.key': cert.key,
-          },
-        },
-        others
-      )
+  namespaces.map((n, i) =>
+    ksCertSecret({
+      name: `${name}-${i}`,
+      namespace: n,
+      cert: cert.cert,
+      ca: cert.ca,
+      privateKey: cert.key,
+      ...others,
+    })
   );
 };
 
@@ -61,23 +54,15 @@ export const certImportFromFolder = ({
   if (!cert) return;
 
   const name = getTlsName(certName, false);
-  namespaces.map(
-    (n, i) =>
-      new k8s.core.v1.Secret(
-        `${name}-${i}`,
-        {
-          metadata: {
-            name,
-            namespace: n,
-          },
-          type: 'kubernetes.io/tls',
-          stringData: {
-            'tls.crt': cert.cert + cert.ca,
-            'tls.key': cert.key,
-          },
-        },
-        others
-      )
+  namespaces.map((n, i) =>
+    ksCertSecret({
+      name: `${name}-${i}`,
+      namespace: n,
+      cert: cert.cert,
+      ca: cert.ca,
+      privateKey: cert.key,
+      ...others,
+    })
   );
 
   return name;
@@ -85,7 +70,7 @@ export const certImportFromFolder = ({
 
 interface ImportCertFromVaultProps extends K8sArgs {
   certNames: string[];
-  namespace: Input<string>;
+  namespace: string;
   vaultInfo: KeyVaultInfo;
 }
 
@@ -112,21 +97,14 @@ export const certImportFromVault = async ({
         : undefined;
 
       if (pems) {
-        new k8s.core.v1.Secret(
-          `${c}-${i}`,
-          {
-            metadata: {
-              name: c,
-              namespace,
-            },
-            type: 'kubernetes.io/tls',
-            stringData: {
-              'tls.crt': pems.cert + pems.ca,
-              'tls.key': pems.key,
-            },
-          },
-          others
-        );
+        ksCertSecret({
+          name: `${c}-${i}`,
+          namespace,
+          cert: pems.cert,
+          ca: pems.ca,
+          privateKey: pems.key,
+          ...others,
+        });
       }
     })
   );

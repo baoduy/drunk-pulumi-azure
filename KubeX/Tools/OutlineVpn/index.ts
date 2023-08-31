@@ -5,6 +5,8 @@ import { certImportFromVault, certImportFromFolder } from '../../CertImports';
 import * as kubernetes from '@pulumi/kubernetes';
 import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import { randomUuId } from '../../../Core/Random';
+import { Input } from '@pulumi/pulumi';
+import ksCertSecret from '../../Core/KsCertSecret';
 
 //https://medium.com/asl19-developers/hosting-outline-vpn-server-on-kubernetes-69a8765eed19
 
@@ -13,8 +15,16 @@ export interface OutlineProps extends K8sArgs {
   hostname: string;
   apiPort?: number;
   accessPort?: number;
-  certVaultName?: string;
-  certFolderName?: string;
+  //Either provider 1 of value below
+  cert: {
+    certVaultName?: string;
+    certFolderName?: string;
+    cert?: {
+      cert: Input<string>;
+      ca: Input<string>;
+      privateKey: Input<string>;
+    };
+  };
 
   replicas?: number;
   storageClassName: StorageClassNameTypes;
@@ -24,8 +34,7 @@ export default async ({
   hostname,
   apiPort = 65123,
   accessPort = 45123,
-  certVaultName,
-  certFolderName,
+  cert,
   storageClassName,
   replicas = 1,
   ...others
@@ -44,16 +53,22 @@ export default async ({
   };
 
   //Cert
-  if (certVaultName && vaultInfo) {
+  if (cert.cert) {
+    ksCertSecret({
+      name,
+      ...cert.cert,
+      ...defaultProps,
+    });
+  } else if (cert.certVaultName && vaultInfo) {
     await certImportFromVault({
-      certNames: [certVaultName],
+      certNames: [cert.certVaultName],
       vaultInfo,
       ...defaultProps,
     });
-  } else if (certFolderName) {
+  } else if (cert.certFolderName) {
     certImportFromFolder({
       certName: name,
-      certFolder: certFolderName,
+      certFolder: cert.certFolderName,
       namespaces: [namespace],
       ...defaultProps,
     });
