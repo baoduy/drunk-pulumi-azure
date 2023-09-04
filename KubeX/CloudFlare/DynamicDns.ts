@@ -7,9 +7,10 @@ type CloudFlareProps = {
   zones: Array<{
     id: Input<string>;
     proxied?: boolean;
-    aRecords: string[];
+    aRecords: Array<{ name: string; proxied?: boolean }>;
   }>;
 };
+
 export interface DynamicDnsProps {
   namespace: Input<string>;
   cloudFlare: Array<CloudFlareProps>;
@@ -34,15 +35,22 @@ export default ({
     secrets[`Cloudflare__${ci}__ApiKey`] = c.apiKey;
 
     c.zones.forEach((z, zi) => {
-      configMap[`Cloudflare__${ci}__Zones__${zi}__Id`] = z.id; //Proxied
-      configMap[`Cloudflare__${ci}__Zones__${zi}__Proxied`] = z.proxied
-        ? 'true'
-        : 'false';
+      configMap[`Cloudflare__${ci}__Zones__${zi}__Id`] = z.id;
 
-      z.aRecords.forEach(
-        (r, rI) =>
-          (configMap[`Cloudflare__${ci}__Zones__${zi}__ARecords__${rI}`] = r)
-      );
+      if (z.proxied)
+        configMap[`Cloudflare__${ci}__Zones__${zi}__Proxied`] = z.proxied
+          ? 'true'
+          : 'false';
+
+      z.aRecords.forEach((r, rI) => {
+        configMap[`Cloudflare__${ci}__Zones__${zi}__ARecords__${rI}__Name`] =
+          r.name;
+
+        if (r.proxied)
+          configMap[
+            `Cloudflare__${ci}__Zones__${zi}__ARecords__${rI}__Proxied`
+          ] = r.proxied ? 'true' : 'false';
+      });
     });
   });
 
