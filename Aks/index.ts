@@ -5,8 +5,8 @@ import vmsDiagnostic from './VmSetMonitor';
 import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from '../types';
 import {
   currentEnv,
-  defaultTags,
   defaultScope,
+  defaultTags,
   Environments,
   getResourceIdFromInfo,
   getResourceInfoFromId,
@@ -430,6 +430,16 @@ export default async ({
         managed: true,
         adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
         tenantID: tenantId,
+      },
+
+      storageProfile: {
+        blobCSIDriver: {
+          enabled: true,
+        },
+        diskCSIDriver: {
+          enabled: true,
+        },
+        fileCSIDriver: { enabled: true },
       },
 
       networkProfile: {

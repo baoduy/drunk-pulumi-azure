@@ -5,7 +5,7 @@ import { createPVCForStorageClass } from '../../Storage';
 import { PostgreSqlProps } from '../../types';
 
 export default ({
-  name = 'postgree',
+  name = 'postgres',
   namespace,
   vaultInfo,
   storageClassName,
@@ -43,14 +43,15 @@ export default ({
         {
           name: 'data',
           persistentVolumeClaim: persisVolume.metadata.name,
-          mountPath: '/var/lib/postgresql',
+          mountPath: '/var/lib/postgresql/data',
+          subPath: 'data',
           readOnly: false,
         },
       ],
-      podSecurityContext: { runAsGroup: 1001, runAsUser: 1001 },
+      //podSecurityContext: { runAsGroup: 0, runAsUser: 0, runAsNonRoot: false },
     },
     deploymentConfig: {
-      //args: ['--default-authentication-plugin=mysql_native_password'],
+      //args: ['/bin/chown', '-R', '1001', '/var/lib/postgresql/data'],
     },
     serviceConfig: { port: port },
   });

@@ -1,10 +1,17 @@
 import deployment from '../Deployment';
 import { DefaultKsAppArgs } from '../types';
-import { createPVCForStorageClass } from '../Storage';
+import { createPVCForStorageClass, StorageClassNameTypes } from '../Storage';
 
-export interface UptimeKumaProps extends DefaultKsAppArgs {}
+export interface UptimeKumaProps extends DefaultKsAppArgs {
+  storageClassName?: StorageClassNameTypes;
+}
 
-export default ({ namespace, ingress, ...others }: UptimeKumaProps) => {
+export default ({
+  namespace,
+  ingress,
+  storageClassName,
+  ...others
+}: UptimeKumaProps) => {
   const name = 'uptime-kuma';
   const image = 'louislam/uptime-kuma:latest';
   const port = 3001;
@@ -12,6 +19,7 @@ export default ({ namespace, ingress, ...others }: UptimeKumaProps) => {
   const persisVolume = createPVCForStorageClass({
     name,
     namespace,
+    storageClassName,
     ...others,
   });
 
@@ -27,10 +35,12 @@ export default ({ namespace, ingress, ...others }: UptimeKumaProps) => {
         {
           name: 'data',
           mountPath: '/app/data',
+          subPath: 'data',
           persistentVolumeClaim: persisVolume.metadata.name,
           readOnly: false,
         },
       ],
+      //securityContext: { runAsUser: 1001, runAsGroup: 1001 },
     },
     deploymentConfig: { replicas: 1 },
     ingressConfig: ingress,
