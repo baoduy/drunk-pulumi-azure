@@ -25,7 +25,7 @@ export default ({
   const persisVolume = createPVCForStorageClass({
     name,
     namespace,
-    accessMode: 'ReadWriteMany',
+    //accessMode: 'ReadWriteMany',
     ...others,
     storageClassName,
   });
