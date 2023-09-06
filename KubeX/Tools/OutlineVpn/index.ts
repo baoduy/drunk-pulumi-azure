@@ -240,11 +240,11 @@ export default async ({
   );
 
   //Services
-  const outlineShadowbox_management_service = new kubernetes.core.v1.Service(
-    'outlineShadowbox_management_service',
+  const outlineShadowbox_vpn_service = new kubernetes.core.v1.Service(
+    'outlineShadowbox_vpn_service',
     {
       metadata: {
-        name: 'shadowbox-management',
+        name,
         namespace,
 
         labels: {
@@ -266,41 +266,14 @@ export default async ({
             targetPort: apiPort,
             protocol: 'UDP',
           },
-        ],
-        selector: {
-          app: name,
-        },
-      },
-    },
-    {
-      dependsOn: outlineDeployment,
-      provider: others.provider,
-      deleteBeforeReplace: true,
-    }
-  );
-
-  const outlineShadowbox_vpn_service = new kubernetes.core.v1.Service(
-    'outlineShadowbox_vpn_service',
-    {
-      metadata: {
-        name,
-        namespace,
-
-        labels: {
-          app: name,
-        },
-      },
-      spec: {
-        //type: "LoadBalancer",
-        ports: [
           {
-            name: 'access-tcp',
+            name: 'accessport-tcp',
             port: accessPort,
             targetPort: accessPort,
             protocol: 'TCP',
           },
           {
-            name: 'access-udp',
+            name: 'accessport-udp',
             port: accessPort,
             targetPort: accessPort,
             protocol: 'UDP',

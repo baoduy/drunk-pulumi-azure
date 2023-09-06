@@ -3,7 +3,7 @@ import * as k8s from '@pulumi/kubernetes';
 import { interpolate } from '@pulumi/pulumi';
 import { PostgreSqlProps } from '../../types';
 
-export default async ({
+export default ({
   name = 'postgre-sql',
   namespace,
   vaultInfo,

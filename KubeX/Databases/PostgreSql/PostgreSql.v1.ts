@@ -1,20 +1,17 @@
-import { randomPassword } from '../../Core/Random';
+import { randomPassword } from '../../../Core/Random';
 import { interpolate } from '@pulumi/pulumi';
-import Deployment from '../Deployment';
-import { createPVCForStorageClass } from '../Storage';
-import { MySqlProps } from '../types';
+import Deployment from '../../Deployment';
+import { createPVCForStorageClass } from '../../Storage';
+import { PostgreSqlProps } from '../../types';
 
 export default ({
-  name = 'mysql',
+  name = 'postgree',
   namespace,
-  version = 'latest',
-  customPort,
-  useClusterIP,
   vaultInfo,
   storageClassName,
   auth,
   ...others
-}: MySqlProps) => {
+}: PostgreSqlProps) => {
   const password =
     auth?.rootPass ||
     randomPassword({
@@ -33,33 +30,33 @@ export default ({
     storageClassName,
   });
 
-  const port = 3306;
-  const mysql = Deployment({
+  const port = 5432;
+  const postgrSsql = Deployment({
     name,
     namespace,
     ...others,
-    secrets: { MYSQL_ROOT_PASSWORD: password },
+    secrets: { POSTGRES_PASSWORD: password },
     podConfig: {
       port,
-      image: `mysql:${version}`,
+      image: `postgres:latest`,
       volumes: [
         {
-          name: 'mysql-data',
+          name: 'data',
           persistentVolumeClaim: persisVolume.metadata.name,
-          mountPath: '/var/lib/mysql',
+          mountPath: '/var/lib/postgresql',
           readOnly: false,
         },
       ],
       podSecurityContext: { runAsGroup: 1001, runAsUser: 1001 },
     },
     deploymentConfig: {
-      args: ['--default-authentication-plugin=mysql_native_password'],
+      //args: ['--default-authentication-plugin=mysql_native_password'],
     },
-    serviceConfig: { port: customPort || port, useClusterIP },
+    serviceConfig: { port: port },
   });
 
   return {
-    mysql,
+    postgrSsql,
     host: interpolate`${name}.${namespace}.svc.cluster.local`,
     port,
     username: 'root',
