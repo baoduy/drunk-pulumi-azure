@@ -1,4 +1,3 @@
-import * as k8s from '@pulumi/kubernetes';
 import Namespace from './Namespace';
 import Nginx from './Nginx';
 import Monitoring, { MonitoringProps } from './Monitoring';
@@ -76,7 +75,7 @@ export default async ({
     Object.keys(storageClasses).forEach((k) => {
       const c = storageClasses[k];
       if (!c) return undefined;
-      return StorageClass({ name: k, provider, ...c });
+      return StorageClass({ provider, ...c });
     });
   }
 
