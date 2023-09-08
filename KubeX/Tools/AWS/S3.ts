@@ -9,6 +9,7 @@ export interface AwsS3Props extends Omit<DefaultKsAppArgs, 'name'> {
 export default ({
   namespace,
   ingress,
+  runAs,
   storageClassName,
   ...others
 }: AwsS3Props) => {
@@ -16,13 +17,13 @@ export default ({
   const image = 'scireum/s3-ninja:latest';
 
   //Storage
-  const persisVolume = createPVCForStorageClass({
-    name,
-    namespace,
-    accessMode: 'ReadWriteMany',
-    ...others,
-    storageClassName,
-  });
+  // const persisVolume = createPVCForStorageClass({
+  //   name,
+  //   namespace,
+  //   accessMode: 'ReadWriteMany',
+  //   ...others,
+  //   storageClassName,
+  // });
 
   deployment({
     name,
@@ -38,14 +39,15 @@ export default ({
           cpu: '1',
         },
       },
-      volumes: [
-        {
-          name: 'data',
-          mountPath: '/home/sirius/data',
-          subPath: 'sample',
-          persistentVolumeClaim: persisVolume.metadata.name,
-        },
-      ],
+      // securityContext: runAs,
+      // volumes: [
+      //   {
+      //     name: 'data',
+      //     mountPath: '/home/sirius/data',
+      //     subPath: 'sample',
+      //     persistentVolumeClaim: persisVolume.metadata.name,
+      //   },
+      // ],
     },
     ingressConfig: ingress,
     deploymentConfig: { replicas: 1 },

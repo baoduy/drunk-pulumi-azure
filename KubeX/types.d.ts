@@ -4,6 +4,7 @@ import { IngressTypes } from './Deployment';
 import { CertManagerIssuerTypes } from './Ingress/type';
 import { StorageClassNameTypes } from './Storage';
 import { KeyVaultInfo } from '../types';
+import { RunAsType } from './Core/StorageClass/azureFile';
 
 export interface K8sArgs {
   provider: Provider;
@@ -16,6 +17,7 @@ export interface DefaultK8sArgs extends K8sArgs {
 }
 
 export interface DefaultKsAppArgs extends DefaultK8sArgs {
+  runAs?: RunAsType;
   ingress?: {
     type: IngressTypes;
     hostNames: string[];
