@@ -17,13 +17,13 @@ export default ({
   const image = 'scireum/s3-ninja:latest';
 
   //Storage
-  // const persisVolume = createPVCForStorageClass({
-  //   name,
-  //   namespace,
-  //   accessMode: 'ReadWriteMany',
-  //   ...others,
-  //   storageClassName,
-  // });
+  const persisVolume = createPVCForStorageClass({
+    name,
+    namespace,
+    accessMode: 'ReadWriteMany',
+    ...others,
+    storageClassName,
+  });
 
   deployment({
     name,
@@ -40,14 +40,14 @@ export default ({
         },
       },
       // securityContext: runAs,
-      // volumes: [
-      //   {
-      //     name: 'data',
-      //     mountPath: '/home/sirius/data',
-      //     subPath: 'sample',
-      //     persistentVolumeClaim: persisVolume.metadata.name,
-      //   },
-      // ],
+      volumes: [
+        {
+          name: 'data',
+          mountPath: '/home/sirius/data',
+          subPath: 'sample',
+          persistentVolumeClaim: persisVolume.metadata.name,
+        },
+      ],
     },
     ingressConfig: ingress,
     deploymentConfig: { replicas: 1 },
