@@ -42,6 +42,7 @@ export default ({
         {
           name: 'data',
           mountPath: '/home/sirius/data',
+          subPath: 'sample',
           persistentVolumeClaim: persisVolume.metadata.name,
         },
       ],
