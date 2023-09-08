@@ -1,18 +1,28 @@
-import * as k8s from '@pulumi/kubernetes';
-import { Input, Resource } from '@pulumi/pulumi';
-
 import deployment from '../../Deployment';
+import { DefaultKsAppArgs } from '../../types';
+import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 
-export interface AwsS3Props {
-  namespace: Input<string>;
-  domain: string;
-  provider: k8s.Provider;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
+export interface AwsS3Props extends Omit<DefaultKsAppArgs, 'name'> {
+  storageClassName: StorageClassNameTypes;
 }
 
-export default ({ namespace, domain, ...others }: AwsS3Props) => {
+export default ({
+  namespace,
+  ingress,
+  storageClassName,
+  ...others
+}: AwsS3Props) => {
   const name = 'aws-s3';
   const image = 'scireum/s3-ninja:latest';
+
+  //Storage
+  const persisVolume = createPVCForStorageClass({
+    name,
+    namespace,
+    accessMode: 'ReadWriteMany',
+    ...others,
+    storageClassName,
+  });
 
   deployment({
     name,
@@ -21,13 +31,22 @@ export default ({ namespace, domain, ...others }: AwsS3Props) => {
     podConfig: {
       port: 9000,
       image,
-      resources: { requests: { memory: '1Mi', cpu: '1m' } },
+      resources: {
+        requests: { memory: '1Mi', cpu: '1m' },
+        limits: {
+          memory: '1Gi',
+          cpu: '1',
+        },
+      },
+      volumes: [
+        {
+          name: 'data',
+          mountPath: '/home/sirius/data',
+          persistentVolumeClaim: persisVolume.metadata.name,
+        },
+      ],
     },
-    ingressConfig: {
-      type: 'nginx',
-      certManagerIssuer: true,
-      hostNames: [`s3.${domain}`],
-    },
+    ingressConfig: ingress,
     deploymentConfig: { replicas: 1 },
 
     ...others,
