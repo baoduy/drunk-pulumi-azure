@@ -16,7 +16,7 @@ interface Props {
   >;
 }
 
-export default async ({ s3, localStack, ...others }: Props) => {
+export default ({ s3, localStack, ...others }: Props) => {
   const ns = Namespace({ name: 'aws-local', ...others });
 
   if (s3) AwsS3({ namespace: ns.metadata.name, ...others, ...s3 });

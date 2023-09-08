@@ -1,4 +1,4 @@
-import { DefaultK8sArgs, K8sArgs } from '../../types';
+import { DefaultK8sArgs } from '../../types';
 import * as k8s from '@pulumi/kubernetes';
 import { getTlsName } from '../../CertHelper';
 

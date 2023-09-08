@@ -19,6 +19,7 @@ export default ({ namespace, domain, ...others }: AwsS3Props) => {
     namespace,
 
     podConfig: {
+      port: 9000,
       image,
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
     },
