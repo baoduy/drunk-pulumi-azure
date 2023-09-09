@@ -3,28 +3,25 @@ import { KeyVaultInfo } from '../types';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 export const defaultAllowedUses = [
-  'certSigning',
-  'clientAuth',
-  'keyAgreement',
-  'keyEncipherment',
-  'serverAuth',
+  'cert_signing',
+  'client_auth',
+  'key_agreement',
+  'key_encipherment',
+  'server_auth',
 ];
 
 export const defaultCodeSignUses = [
-  'certSigning',
-  'codeSigning',
-  'contentCommitment',
-  'dataEncipherment',
-  'decipherOnly',
-  'digitalSignature',
-  'emailProtection',
-  'keyAgreement',
-  'keyEncipherment',
-  'microsoftCommercialCodeSigning',
-  'microsoftKernelCodeSigning',
-  'microsoftServerGatedCrypto',
-  'netscapeServerGatedCrypto',
-  'ocspSigning',
+  'cert_signing',
+  'code_signing',
+  'content_commitment',
+  'data_encipherment',
+  'digital_signature',
+  'email_protection',
+  'key_agreement',
+  'key_encipherment',
+  'microsoft_Commercial_Code_Signing',
+  'microsoft_Kernel_Code_Signing',
+  'ocsp_signing',
 ];
 
 export const createSelfSignCert = ({
