@@ -1,43 +1,43 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
-import { createAxios } from '../Tools/Axios';
 import { Input, Resource } from '@pulumi/pulumi';
-import { defaultScope, subscriptionId } from '../Common/AzureEnv';
-import { builtInRoles } from './builtInRoles';
+import { defaultScope } from '../Common/AzureEnv';
+import RolesBuiltIn from './RolesBuiltIn';
 
 type GetRoleProps = {
   roleName: string;
 };
 
-interface AzureRestResult<T> {
-  value: Array<T>;
-}
-
-type RoleDefinitionProps = {
-  name: string;
-  id: string;
-  type: string;
-  properties: {
-    roleName: string;
-    type: 'BuiltInRole';
-    description: string;
-  };
-};
+// interface AzureRestResult<T> {
+//   value: Array<T>;
+// }
+//
+// type RoleDefinitionProps = {
+//   name: string;
+//   id: string;
+//   type: string;
+//   properties: {
+//     roleName: string;
+//     type: 'BuiltInRole';
+//     description: string;
+//   };
+// };
 
 /** The result must be single item if not will return undefined. */
-export const getRoleDefinitionByName = async ({ roleName }: GetRoleProps) => {
-  const role = builtInRoles.find((r) => r.properties.roleName === roleName);
+export const getRoleDefinitionByName = ({ roleName }: GetRoleProps) => {
+  const role = RolesBuiltIn.find((r) => r.properties.roleName === roleName);
   if (role) return role;
+  throw new Error(`The role ${roleName} is not found.`);
 
-  const axios = createAxios();
-  const url = `/providers/Microsoft.Authorization/roleDefinitions?$filter=roleName eq '${roleName}'&api-version=2018-01-01-preview`;
-
-  const rs = await axios
-    .get<AzureRestResult<RoleDefinitionProps>>(url)
-    .then((rs) => rs.data.value);
-
-  if (rs.length <= 0) throw new Error(`Role ${roleName} not found`);
-  return rs[0];
+  // const axios = createAxios();
+  // const url = `/providers/Microsoft.Authorization/roleDefinitions?$filter=roleName eq '${roleName}'&api-version=2018-01-01-preview`;
+  //
+  // const rs = await axios
+  //   .get<AzureRestResult<RoleDefinitionProps>>(url)
+  //   .then((rs) => rs.data.value);
+  //
+  // if (rs.length <= 0) throw new Error(`Role ${roleName} not found`);
+  // return rs[0];
 };
 
 type Props = {
@@ -50,7 +50,7 @@ type Props = {
   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 };
 
-export const roleAssignment = async ({
+export const roleAssignment = ({
   name,
   roleName,
   scope = defaultScope,
@@ -58,7 +58,7 @@ export const roleAssignment = async ({
   principalType,
   dependsOn,
 }: Props) => {
-  const role = await getRoleDefinitionByName({ roleName });
+  const role = getRoleDefinitionByName({ roleName });
 
   return new native.authorization.RoleAssignment(
     `${name}-${roleName.split(' ').join('')}`,

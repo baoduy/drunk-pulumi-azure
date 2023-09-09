@@ -12,7 +12,7 @@ describe('Key Vault Creator tests', () => {
       auth: { enableRbac: false },
     });
 
-    expect(rs.name).to.equal('stack-root-vlt');
+    expect(rs.name).to.equal('stack-root-hbd-vlt');
     expect(rs.toVaultInfo().group).to.equal(group);
 
     rs.vault.urn.apply((n) => expect(n).to.include('stack-root-vlt'));
@@ -28,7 +28,7 @@ describe('Key Vault Creator tests', () => {
       auth: { enableRbac: false },
     });
 
-    expect(rs.name).to.equal('steven-root-vlt');
+    expect(rs.name).to.equal('stack-root-hbd-vlt');
     expect(rs.toVaultInfo().group).to.equal(group);
 
     rs.vault.urn.apply((n) => expect(n).to.include('steven-root-vlt'));

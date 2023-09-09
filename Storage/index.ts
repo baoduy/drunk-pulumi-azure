@@ -33,7 +33,7 @@ interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
   allowsCors?: string[];
   encryptionKeyUrl?: Output<string> | string;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
@@ -374,6 +374,8 @@ export default ({
       secondConnectionKeyName,
     },
     getConnectionString: (name: string = primaryConnectionKeyName) =>
-      getSecret({ name, nameFormatted: true, vaultInfo }),
+      vaultInfo
+        ? getSecret({ name, nameFormatted: true, vaultInfo })
+        : undefined,
   };
 };

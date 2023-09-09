@@ -489,7 +489,7 @@ interface Props
   } & Partial<PrivateLinkProps>;
   monitoring?: BasicMonitorArgs;
   sku?: bus.SkuName;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
   enableNamespaceConnections?: boolean;
   enableTopicConnections?: boolean;
   enableQueueConnections?: boolean;
@@ -658,7 +658,9 @@ export default async ({
     topics: tps,
     vaultNames: { primaryConnectionKeys, secondaryConnectionKeys },
     getConnectionString: (name: string) =>
-      getSecret({ name, nameFormatted: true, vaultInfo }),
+      vaultInfo
+        ? getSecret({ name, nameFormatted: true, vaultInfo })
+        : undefined,
     locker,
     diagnostic,
   };

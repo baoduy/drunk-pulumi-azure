@@ -29,6 +29,6 @@ describe('Key Vault tests', () => {
       vaultInfo,
     });
 
-    (rs as any).secretName.apply((n) => expect(n).to.equal('cache-primary'));
+    expect(rs.name).to.equal('test-stack-cache-primary');
   });
 });

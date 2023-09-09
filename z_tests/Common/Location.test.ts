@@ -1,9 +1,14 @@
 import * as location from '../../Common/Location';
 import { expect } from 'chai';
 
-describe('Location tests', () => {
-  it('Get all locations', async () => {
-    const locations = await location.getAllLocations();
+describe('Common/Location tests', () => {
+  it('Get location', () => {
+    const locations = location.getLocationString('Southeast Asia');
     expect(locations).to.have.length.above(10);
+  });
+
+  it('Get Public IP', async () => {
+    const locations = await location.getMyPublicIpAddress();
+    expect(locations).not.undefined;
   });
 });

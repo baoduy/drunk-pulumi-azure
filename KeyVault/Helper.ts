@@ -11,6 +11,7 @@ import {
 import { getSecretName } from '../Common/Naming';
 import { replaceAll } from '../Common/Helpers';
 import * as console from 'console';
+import { testMode } from '../Common/StackEnv';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -86,6 +87,8 @@ export const getKeyVersions = async ({
 export const checkSecretExist = async (
   props: Omit<GetVaultItemProps, 'version'>
 ) => {
+  if (testMode) return false;
+
   const versions = await getSecretVersions(props);
 
   if (versions.length > 0) {

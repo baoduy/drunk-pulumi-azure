@@ -152,7 +152,7 @@ const buildPod = ({
               name: v.name,
               mountPath: v.mountPath,
               subPath: v.subPath,
-              readOnly: v.readOnly ?? true,
+              readOnly: v.readOnly ?? false,
             }))
           : undefined,
 

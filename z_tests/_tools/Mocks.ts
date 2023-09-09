@@ -44,5 +44,12 @@ export default pulumi.runtime.setMocks({
       },
     };
   },
-  call: (args: pulumi.runtime.MockCallArgs) => args.inputs,
+  call: (args: pulumi.runtime.MockCallArgs) => {
+    if (args.token === 'azure:core/getSubscription:getSubscription')
+      return {
+        id: '00000000-0000-0000-0000-000000000000',
+        display_name: 'subscription',
+      };
+    return args.inputs;
+  },
 });

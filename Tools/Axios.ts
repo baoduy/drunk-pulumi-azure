@@ -2,6 +2,7 @@
 import { ClientCredential } from '../CustomProviders/Base';
 import axios from 'axios';
 import { urlJoin } from 'url-join-ts';
+import { testMode } from '../Common/StackEnv';
 
 export const createAxios = () => {
   const credentials = new ClientCredential();

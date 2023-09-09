@@ -1,4 +1,4 @@
-export const builtInRoles = [
+export default [
   {
     properties: {
       roleName: 'AcrPush',
