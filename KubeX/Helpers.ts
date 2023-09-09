@@ -1,5 +1,5 @@
 import { getCertificateForDomain } from '../Web/Helpers';
-import { convertPfxToPem } from '../KubeX/CertHelper';
+import { convertPfxToPem } from '../Certificate';
 
 export const getKubeDomainCert = async (domain: string) => {
   //Get cert from CertOrder.
@@ -7,9 +7,7 @@ export const getKubeDomainCert = async (domain: string) => {
   //Convert to K8s cert
   return cert
     ? convertPfxToPem({
-        pfxBase64: cert.base64CertData,
-        password: '',
-        includeAll: false,
+        base64Cert: cert.base64CertData,
       })
     : undefined;
 };

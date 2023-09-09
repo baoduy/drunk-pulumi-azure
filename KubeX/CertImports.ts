@@ -1,12 +1,11 @@
-import * as k8s from '@pulumi/kubernetes';
-import { Input } from '@pulumi/pulumi';
 import { getKubeDomainCert } from './Helpers';
-import { convertPfxToPem, getTlsName } from './CertHelper';
+import { getTlsName } from './CertHelper';
 import fs from 'fs';
 import { KeyVaultInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { K8sArgs } from './types';
 import ksCertSecret from './Core/KsCertSecret';
+import { convertPfxToPem } from '../Certificate';
 
 export interface FromCertOrderProps extends K8sArgs {
   namespaces: string[];
@@ -28,9 +27,7 @@ export const certImportFromCertOrder = async ({
     ksCertSecret({
       name: `${name}-${i}`,
       namespace: n,
-      cert: cert.cert,
-      ca: cert.ca,
-      privateKey: cert.key,
+      ...cert,
       ...others,
     })
   );
@@ -90,9 +87,8 @@ export const certImportFromVault = async ({
 
       const pems = cert?.value
         ? convertPfxToPem({
-            pfxBase64: cert.value,
+            base64Cert: cert.value,
             password: '',
-            includeAll: false,
           })
         : undefined;
 
@@ -100,9 +96,7 @@ export const certImportFromVault = async ({
         ksCertSecret({
           name: `${c}-${i}`,
           namespace,
-          cert: pems.cert,
-          ca: pems.ca,
-          privateKey: pems.key,
+          ...pems,
           ...others,
         });
       }

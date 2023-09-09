@@ -1,13 +1,19 @@
 import * as tls from '@pulumi/tls';
+import fs from 'fs';
+import * as pem from './p12';
 import { KeyVaultInfo } from '../types';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import forge from 'node-forge';
 
 export const defaultAllowedUses = [
+  'data_encipherment',
+  'digital_signature',
   'cert_signing',
   'client_auth',
   'key_agreement',
   'key_encipherment',
   'server_auth',
+  'timestamping',
 ];
 
 export const defaultCodeSignUses = [
@@ -45,7 +51,7 @@ export const createSelfSignCert = ({
 
   const privateKey = new tls.PrivateKey(`${dnsName}-privateKey`, {
     algorithm: 'RSA',
-    rsaBits: 4096,
+    rsaBits: 2048,
   });
 
   const cert = new tls.SelfSignedCert(`${dnsName}-selfSignedCert`, {
@@ -78,13 +84,41 @@ export const createSelfSignCert = ({
     addCustomSecret({
       name: vaultPrivateKeyName,
       vaultInfo,
-      value: cert.privateKeyPem,
+      value: privateKey.privateKeyPem,
       contentType: `${dnsName} self sign private key.`,
     });
   }
 
   return {
     cert: cert.certPem,
-    privateKey: cert.privateKeyPem,
+    privateKey: privateKey.privateKeyPem,
   };
+};
+
+export const convertPfxFileToPem = async ({
+  certPath,
+  password,
+}: {
+  certPath: string;
+  password?: string;
+}) => {
+  const p12File = await fs.promises.readFile(certPath, { encoding: 'binary' });
+  const cert = pem.convertToPem(p12File, password);
+
+  console.log('Loaded P12 file', certPath);
+  return { cert: cert.pemCertificate, privateKey: cert.pemKey };
+};
+
+export const convertPfxToPem = ({
+  base64Cert,
+  password,
+}: {
+  base64Cert: string;
+  password?: string;
+}) => {
+  const byteArray = Buffer.from(base64Cert, 'base64');
+  const cert = pem.convertToPem(byteArray.toString('binary'), password);
+
+  console.log('Loaded P12 base64');
+  return { cert: cert.pemCertificate, privateKey: cert.pemKey };
 };
