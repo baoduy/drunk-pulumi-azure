@@ -21,7 +21,7 @@ export interface OutlineProps extends K8sArgs {
     certFolderName?: string;
     cert?: {
       cert: Input<string>;
-      ca: Input<string>;
+      ca?: Input<string>;
       privateKey: Input<string>;
     };
   };

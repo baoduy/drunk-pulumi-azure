@@ -1,4 +1,3 @@
-import * as azure from '@pulumi/azure';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getCertName, getSecretName } from '../Common/Naming';
 import { KeyVaultInfo } from '../types';

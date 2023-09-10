@@ -52,18 +52,6 @@ const getCurrentEnv = () => {
 
 export const currentEnv = getCurrentEnv();
 
-export const getAlertActionGroupInfo = (
-  env: Environments
-):
-  | {
-      name: string;
-      resourceGroupName: string;
-    }
-  | undefined => {
-  //TODO: Define the alert action group name
-  return undefined;
-};
-
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
 export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
   const vaultName = getKeyVaultName(groupName);

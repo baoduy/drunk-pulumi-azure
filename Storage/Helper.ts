@@ -1,5 +1,4 @@
 import * as storage from '@pulumi/azure-native/storage';
-import dayjs from 'dayjs';
 
 import {
   getConnectionName,
@@ -89,14 +88,19 @@ export const getStorageSecretsById = async ({
   return secrets ? { info, secrets } : undefined;
 };
 
-export const getAccountSAS = ({ group, name }: BasicResourceArgs) =>
-  storage.listStorageAccountSAS({
+export const getAccountSAS = ({ group, name }: BasicResourceArgs) => {
+  const now = new Date();
+  const expireDate = new Date();
+  expireDate.setMonth(expireDate.getMonth() + 3);
+
+  return storage.listStorageAccountSAS({
     accountName: name,
     ...group,
     resourceTypes: storage.SignedResourceTypes.C,
     services: storage.Services.B,
     permissions: storage.Permissions.W,
     protocols: storage.HttpProtocol.Https,
-    sharedAccessStartTime: dayjs().toISOString(),
-    sharedAccessExpiryTime: dayjs().add(3, 'year').toISOString(),
+    sharedAccessStartTime: now.toISOString(),
+    sharedAccessExpiryTime: expireDate.toISOString(),
   });
+};

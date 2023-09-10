@@ -1,9 +1,5 @@
-import * as vault from '@pulumi/azure/keyvault';
 import * as pulumi from '@pulumi/pulumi';
-
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { tenantId } from '../Common/AzureEnv';
-import { KeyVaultInfo } from '../types';
 import * as native from '@pulumi/azure-native';
 
 export interface PermissionProps {
@@ -15,7 +11,7 @@ export interface PermissionProps {
   principalType?: native.authorization.PrincipalType;
 }
 
-export const grantVaultRbacPermission = async ({
+export const grantVaultRbacPermission = ({
   name,
   objectId,
   permission,
@@ -34,19 +30,19 @@ export const grantVaultRbacPermission = async ({
 
   //ReadOnly
   if (permission === 'ReadOnly') {
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-encrypt`,
       roleName: 'Key Vault Crypto Service Encryption User',
       principalType,
     });
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-crypto`,
       roleName: 'Key Vault Crypto User',
       principalType,
     });
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-secret`,
       roleName: 'Key Vault Secrets User',
@@ -54,25 +50,25 @@ export const grantVaultRbacPermission = async ({
     });
     //Read and Write
   } else {
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-contributor`,
       roleName: 'Key Vault Administrator',
       principalType,
     });
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-cert`,
       roleName: 'Key Vault Certificates Officer',
       principalType,
     });
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-crypto`,
       roleName: 'Key Vault Crypto Officer',
       principalType,
     });
-    await roleAssignment({
+    roleAssignment({
       ...defaultProps,
       name: `${vn}-secret`,
       roleName: 'Key Vault Secrets Officer',
@@ -161,33 +157,33 @@ export const KeyVaultReadOnlyPolicy = {
   storage: ['Get', 'List'],
 };
 
-export const grantVaultAccessPolicy = ({
-  name,
-  objectId,
-  permission,
-  vaultInfo,
-}: PermissionProps & {
-  name: string;
-  vaultInfo: KeyVaultInfo;
-}) =>
-  new vault.AccessPolicy(name, {
-    keyVaultId: vaultInfo.id,
-    objectId,
-    tenantId,
-    certificatePermissions:
-      permission === 'ReadOnly'
-        ? KeyVaultReadOnlyPolicy.certificates
-        : KeyVaultAdminPolicy.certificates,
-    keyPermissions:
-      permission === 'ReadOnly'
-        ? KeyVaultReadOnlyPolicy.keys
-        : KeyVaultAdminPolicy.keys,
-    secretPermissions:
-      permission === 'ReadOnly'
-        ? KeyVaultReadOnlyPolicy.secrets
-        : KeyVaultAdminPolicy.secrets,
-    storagePermissions:
-      permission === 'ReadOnly'
-        ? KeyVaultReadOnlyPolicy.storage
-        : KeyVaultAdminPolicy.storage,
-  });
+// export const grantVaultAccessPolicy = ({
+//   name,
+//   objectId,
+//   permission,
+//   vaultInfo,
+// }: PermissionProps & {
+//   name: string;
+//   vaultInfo: KeyVaultInfo;
+// }) =>
+//   new vault.AccessPolicy(name, {
+//     keyVaultId: vaultInfo.id,
+//     objectId,
+//     tenantId,
+//     certificatePermissions:
+//       permission === 'ReadOnly'
+//         ? KeyVaultReadOnlyPolicy.certificates
+//         : KeyVaultAdminPolicy.certificates,
+//     keyPermissions:
+//       permission === 'ReadOnly'
+//         ? KeyVaultReadOnlyPolicy.keys
+//         : KeyVaultAdminPolicy.keys,
+//     secretPermissions:
+//       permission === 'ReadOnly'
+//         ? KeyVaultReadOnlyPolicy.secrets
+//         : KeyVaultAdminPolicy.secrets,
+//     storagePermissions:
+//       permission === 'ReadOnly'
+//         ? KeyVaultReadOnlyPolicy.storage
+//         : KeyVaultAdminPolicy.storage,
+//   });

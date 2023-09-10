@@ -1,6 +1,5 @@
 import { KeyVaultInfo } from '../../types';
 import Identity from '../Identity';
-import { grantVaultAccessPolicy } from '../../KeyVault/VaultPermissions';
 import { getIdentity } from '../Helper';
 import { getGraphPermissions } from '../GraphDefinition';
 
@@ -63,14 +62,14 @@ export default async ({
   });
 
   //Grant key vault permission to ADO
-  if (allowAccessPolicy && vaultInfo) {
-    grantVaultAccessPolicy({
-      vaultInfo,
-      name: 'azure-devops-vault-permission',
-      permission: 'ReadWrite',
-      objectId: ado.objectId,
-    });
-  }
+  // if (allowAccessPolicy && vaultInfo) {
+  //   grantVaultAccessPolicy({
+  //     vaultInfo,
+  //     name: 'azure-devops-vault-permission',
+  //     permission: 'ReadWrite',
+  //     objectId: ado.objectId,
+  //   });
+  // }
 
   console.log(
     `Add this principal ${name} to [User administrator, Application administrator, Cloud application administrator and Global Reader] of Azure AD to allow to Add/Update and Delete Groups, Users`

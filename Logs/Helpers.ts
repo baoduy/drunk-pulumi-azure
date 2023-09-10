@@ -1,4 +1,3 @@
-import * as azure from '@pulumi/azure';
 import * as native from '@pulumi/azure-native';
 import { Input, interpolate } from '@pulumi/pulumi';
 
@@ -72,12 +71,11 @@ interface ThreatProtectionProps {
 export const createThreatProtection = ({
   name,
   targetResourceId,
-}: ThreatProtectionProps) => {
-  return new azure.securitycenter.AdvancedThreatProtection(name, {
-    enabled: true,
-    targetResourceId,
+}: ThreatProtectionProps) =>
+  new native.security.AdvancedThreatProtection(name, {
+    isEnabled: true,
+    resourceId: targetResourceId,
   });
-};
 
 export const getLogWpSecrets = async ({
   fullName,

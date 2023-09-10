@@ -2,7 +2,8 @@ import * as network from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
 import { stack } from '../../Common/StackEnv';
 import VNetPeering, { VNetPeeringProps } from '../NetworkPeering';
-import * as azure from '@pulumi/azure';
+
+//This ignore and to be convert to azure-native later once needed
 
 interface Props {
   name: string;

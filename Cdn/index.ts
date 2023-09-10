@@ -1,13 +1,10 @@
-import { BasicResourceArgs, KeyVaultInfo, ResourceGroupInfo } from "../types";
-import * as cdn from "@pulumi/azure-native/cdn";
-import * as azureAd from "@pulumi/azuread";
-import { getCdnProfileName } from "../Common/Naming";
-import { global } from "../Common";
-import { defaultTags } from "../Common/AzureEnv";
-import {
-  grantVaultAccessPolicy,
-  grantVaultRbacPermission,
-} from "../KeyVault/VaultPermissions";
+import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import * as cdn from '@pulumi/azure-native/cdn';
+import * as azureAd from '@pulumi/azuread';
+import { getCdnProfileName } from '../Common/Naming';
+import { global } from '../Common';
+import { defaultTags } from '../Common/AzureEnv';
+import { grantVaultRbacPermission } from '../KeyVault/VaultPermissions';
 
 interface Props {
   name: string;
@@ -28,7 +25,7 @@ export default async ({
   const profile = new cdn.Profile(name, {
     profileName: name,
     ...group,
-    location: "global",
+    location: 'global',
     sku: { name: cdn.SkuName.Standard_Microsoft },
     tags: defaultTags,
   });
@@ -38,27 +35,28 @@ export default async ({
     const n = `${name}-sp`;
 
     const sp = new azureAd.ServicePrincipal(n, {
-      applicationId: "205478c0-bd83-4e1b-a9d6-db63a3e1e1c8",
+      applicationId: '205478c0-bd83-4e1b-a9d6-db63a3e1e1c8',
     });
 
     if (vaultAccess.enableRbacAccess) {
       await grantVaultRbacPermission({
         name: n,
         objectId: sp.objectId,
-        permission: "ReadOnly",
+        permission: 'ReadOnly',
         applicationId: sp.applicationId,
-        principalType: "ServicePrincipal",
+        principalType: 'ServicePrincipal',
         scope: vaultAccess.vaultInfo.id,
       });
-    } else
-      grantVaultAccessPolicy({
-        name: n,
-        objectId: sp.objectId,
-        permission: "ReadOnly",
-        applicationId: sp.applicationId,
-        principalType: "ServicePrincipal",
-        vaultInfo: vaultAccess.vaultInfo,
-      });
+    }
+    // else
+    //   grantVaultAccessPolicy({
+    //     name: n,
+    //     objectId: sp.objectId,
+    //     permission: "ReadOnly",
+    //     applicationId: sp.applicationId,
+    //     principalType: "ServicePrincipal",
+    //     vaultInfo: vaultAccess.vaultInfo,
+    //   });
   }
 
   return profile;

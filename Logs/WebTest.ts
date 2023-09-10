@@ -1,16 +1,15 @@
-import * as azure from "@pulumi/azure";
-import * as native from "@pulumi/azure-native";
-
-import { AppInsightInfo } from "../types";
-import { currentEnv, defaultTags } from "../Common/AzureEnv";
-import { randomUuId } from "../Core/Random";
-import { getWebTestName, getAlertName } from "../Common/Naming";
-import { getAlertActionGroupInfo } from "../Common/AzureEnv";
-import * as pulumi from "@pulumi/pulumi";
+import * as native from '@pulumi/azure-native';
+import { AppInsightInfo } from '../types';
+import { randomUuId } from '../Core/Random';
+import { getWebTestName, getAlertName } from '../Common/Naming';
+import * as pulumi from '@pulumi/pulumi';
 
 interface InsightMonitorProps {
   name: string;
-  enableAlert?: boolean;
+  alertGroupAction?: {
+    resourceGroupName: string;
+    actionGroupName: string;
+  };
   appInsight: AppInsightInfo;
   url: string;
   frequency?: 300 | 600 | 900;
@@ -18,13 +17,13 @@ interface InsightMonitorProps {
 
 export const addInsightMonitor = ({
   name,
-  enableAlert,
+  alertGroupAction,
   appInsight,
   url,
   frequency = 900,
 }: InsightMonitorProps) => {
   const guid = randomUuId(`${name}-WebTest`).result;
-  if (!url.includes("https")) url = `https://${url}`;
+  if (!url.includes('https')) url = `https://${url}`;
 
   pulumi.all([guid, appInsight.id]).apply(async ([g, id]) => {
     if (!g) return;
@@ -36,11 +35,11 @@ export const addInsightMonitor = ({
 
       description: `Health check ${name}`,
       webTestKind: native.insights.WebTestKind.Ping,
-      kind: "ping",
+      kind: 'ping',
       locations: [
-        { location: "apac-sg-sin-azr" },
-        { location: "apac-hk-hkn-azr" },
-        { location: "emea-au-syd-edge" },
+        { location: 'apac-sg-sin-azr' },
+        { location: 'apac-hk-hkn-azr' },
+        { location: 'emea-au-syd-edge' },
       ],
       enabled: true,
       retryEnabled: true,
@@ -59,29 +58,29 @@ export const addInsightMonitor = ({
       },
 
       tags: {
-        [`hidden-link:${id}`]: "Resource",
+        [`hidden-link:${id}`]: 'Resource',
       },
     });
 
     //Enable Alert
-    const alertGroupAction = getAlertActionGroupInfo(currentEnv);
-    if (enableAlert && alertGroupAction) {
-      const alertGroup = await azure.monitoring.getActionGroup(
-        alertGroupAction
-      );
+    if (alertGroupAction) {
+      const alertGroup = await native.insights.getActionGroup(alertGroupAction);
 
       const alertName = getAlertName(name);
-      new azure.monitoring.MetricAlert(alertName, {
-        name: alertName,
+      new native.insights.MetricAlert(alertName, {
         resourceGroupName: appInsight.group.resourceGroupName,
         enabled: true,
         scopes: [webTest.id, appInsight.id],
-        applicationInsightsWebTestLocationAvailabilityCriteria: {
+        severity: 100,
+        evaluationFrequency: 'PT15M',
+        criteria: {
           webTestId: webTest.id,
-          componentId: appInsight.id,
+          componentId: id,
           failedLocationCount: webTest.locations.length,
+          odataType:
+            'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria',
         },
-        windowSize: "PT15M",
+        windowSize: 'PT15M',
         actions: [{ actionGroupId: alertGroup.id }],
       });
     }
