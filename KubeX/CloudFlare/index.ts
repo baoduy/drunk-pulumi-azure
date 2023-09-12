@@ -27,8 +27,13 @@ export default async ({
     ...others,
   });
 
-  if (certImports) await CertImports({ ...others, ...certImports });
-  if (dynamicDns)
+  if (certImports) {
+    await CertImports({ ...others, ...certImports });
+  }
+  if (dynamicDns) {
     DynamicDns({ ...others, ...dynamicDns, namespace: ns.metadata.name });
-  if (tunnel) Tunnel({ ...others, ...tunnel, namespace: ns.metadata.name });
+  }
+  if (tunnel) {
+    Tunnel({ ...others, ...tunnel, namespace: ns.metadata.name });
+  }
 };
