@@ -3,6 +3,7 @@ import { Input } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 import { getRootDomainFromUrl } from '../../Common/Helpers';
+
 interface Props extends DefaultK8sArgs {
   hostNames: string[];
   volume?: {

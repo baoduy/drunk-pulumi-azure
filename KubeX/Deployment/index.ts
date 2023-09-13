@@ -12,6 +12,11 @@ import ConfigSecret from '../ConfigSecret';
 
 type restartPolicies = 'Always' | 'OnFailure' | 'Never';
 
+export const defaultResources = {
+  limits: { memory: '0.5Gi', cpu: '500m' },
+  requests: { memory: '10Mi', cpu: '1m' },
+};
+
 export const virtualHostConfig = {
   nodeSelector: {
     'kubernetes.io/role': 'agent',
@@ -95,10 +100,7 @@ const buildPod = ({
   const resources =
     podConfig.resources === false
       ? undefined
-      : podConfig.resources || {
-          limits: { memory: '1Gi', cpu: '500m' },
-          requests: { memory: '10Mi', cpu: '10m' },
-        };
+      : podConfig.resources || defaultResources;
 
   return new kx.PodBuilder({
     terminationGracePeriodSeconds: 30,

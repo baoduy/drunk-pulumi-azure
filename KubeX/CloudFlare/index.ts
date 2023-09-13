@@ -1,4 +1,5 @@
 import { K8sArgs } from '../types';
+import { output } from '@pulumi/pulumi';
 import Namespace from '../Core/Namespace';
 import DynamicDns, { DynamicDnsProps } from './DynamicDns';
 import Tunnel, { TunnelProps } from './Tunnel';
@@ -15,7 +16,7 @@ interface Props extends K8sArgs {
   tunnel?: Omit<TunnelProps, 'namespace' | 'provider' | 'dependsOn'>;
 }
 
-export default async ({
+export default ({
   namespace = 'cloudflare',
   dynamicDns,
   tunnel,
@@ -28,7 +29,7 @@ export default async ({
   });
 
   if (certImports) {
-    await CertImports({ ...others, ...certImports });
+    output(CertImports({ ...others, ...certImports }));
   }
   if (dynamicDns) {
     DynamicDns({ ...others, ...dynamicDns, namespace: ns.metadata.name });

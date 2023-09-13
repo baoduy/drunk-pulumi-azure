@@ -58,7 +58,7 @@ export type IdentityResult = {
   resource: azureAD.Application;
 };
 
-export default async ({
+export default ({
   name,
   owners,
   createClientSecret = false,
@@ -73,16 +73,14 @@ export default async ({
   publicClient = false,
   principalRoles,
   vaultInfo,
-}: IdentityProps): Promise<
-  IdentityResult & {
-    vaultNames: {
-      clientIdKeyName: string;
-      clientSecretKeyName: string;
-      principalIdKeyName: string;
-      principalSecretKeyName: string;
-    };
-  }
-> => {
+}: IdentityProps): IdentityResult & {
+  vaultNames: {
+    clientIdKeyName: string;
+    clientSecretKeyName: string;
+    principalIdKeyName: string;
+    principalSecretKeyName: string;
+  };
+} => {
   // Azure AD Application no need suffix
   name = getIdentityName(name);
 
@@ -185,16 +183,14 @@ export default async ({
     }).value;
 
     if (principalRoles) {
-      await Promise.all(
-        principalRoles.map((r) =>
-          roleAssignment({
-            name,
-            roleName: r.roleName,
-            principalId: principal!.id,
-            principalType: 'ServicePrincipal',
-            scope: r.scope || defaultScope,
-          })
-        )
+      principalRoles.map((r) =>
+        roleAssignment({
+          name,
+          roleName: r.roleName,
+          principalId: principal!.id,
+          principalType: 'ServicePrincipal',
+          scope: r.scope || defaultScope,
+        })
       );
     }
 
