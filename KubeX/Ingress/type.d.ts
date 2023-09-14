@@ -1,5 +1,5 @@
 import { Input, Resource } from '@pulumi/pulumi';
-import * as kx from '../KubX';
+import * as kx from '../kx';
 import * as k8s from '@pulumi/kubernetes';
 import { defaultResponseHeaders } from './Conts';
 

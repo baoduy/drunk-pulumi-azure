@@ -33,7 +33,7 @@ export const virtualHostConfig = {
 };
 
 interface PodConfigProps {
-  port: number;
+  ports: kx.types.PortMap;
   image: Input<string>;
   imagePullSecret?: string;
   imagePullPolicy?: 'Always' | 'Never' | 'IfNotPresent';
@@ -61,7 +61,7 @@ interface PodConfigProps {
   probes?: {
     liveness?: {
       httpGet: string;
-      port?: number;
+      port: number;
       initialDelaySeconds?: number;
       periodSeconds?: number;
       timeoutSeconds?: number;
@@ -142,7 +142,7 @@ const buildPod = ({
         name,
         image: podConfig.image,
         imagePullPolicy: podConfig.imagePullPolicy,
-        ports: { http: podConfig.port! },
+        ports: podConfig.ports,
         envFrom,
 
         securityContext: podConfig.podSecurityContext,
@@ -169,7 +169,7 @@ const buildPod = ({
               httpGet: podConfig.probes.liveness.httpGet
                 ? {
                     path: podConfig.probes.liveness.httpGet,
-                    port: podConfig.probes.liveness.port || podConfig.port!,
+                    port: podConfig.probes.liveness.port,
                   }
                 : undefined,
             }
@@ -218,11 +218,13 @@ interface Props {
       }
     | false;
 
-  serviceConfig?: {
-    usePodPort?: boolean;
-    port?: number;
-    useClusterIP?: boolean;
-  };
+  serviceConfig?:
+    | {
+        //usePodPort?: boolean;
+        //port?: number;
+        useClusterIP?: boolean;
+      }
+    | false;
 
   jobConfigs?: Array<{
     name: string;
@@ -318,7 +320,7 @@ export default ({
     });
   }
 
-  if (!podConfig.port) podConfig.port = 8080;
+  if (!podConfig.ports) podConfig.ports = { http: 8080 };
 
   const deployment =
     deploymentConfig == false
@@ -402,26 +404,42 @@ export default ({
   }
 
   let service: kx.Service | undefined = undefined;
-  if (deployment) {
-    const servicePort: any = {
-      name: 'http',
-      port: 80,
-      targetPort: podConfig.port,
-      protocol: 'TCP',
-    };
+  if (deployment && serviceConfig !== false) {
+    // const servicePort: any = {
+    //   name: 'http',
+    //   port: 80,
+    //   targetPort: podConfig.port,
+    //   protocol: 'TCP',
+    // };
+    //
+    // if (serviceConfig?.usePodPort) {
+    //   servicePort.port = podConfig.port;
+    //   //servicePort.targetPort = podConfig.port;
+    // } else if (serviceConfig?.port) {
+    //   servicePort.port = serviceConfig.port;
+    //   //servicePort.targetPort = podConfig.port;
+    // }
 
-    if (serviceConfig?.usePodPort) {
-      servicePort.port = podConfig.port;
-      //servicePort.targetPort = podConfig.port;
-    } else if (serviceConfig?.port) {
-      servicePort.port = serviceConfig.port;
-      //servicePort.targetPort = podConfig.port;
-    }
-
+    const portKeys = Object.keys(podConfig.ports);
     //Service
     service = deployment.createService({
       name,
-      ports: [servicePort],
+      ports:
+        portKeys.length == 1
+          ? [
+              {
+                name: 'http',
+                port: 80,
+                targetPort: podConfig.ports[0],
+                protocol: 'TCP',
+              },
+            ]
+          : portKeys.map((k) => ({
+              name: k,
+              port: podConfig.ports[k],
+              //targetPort: podConfig.ports[k],
+              protocol: 'TCP',
+            })),
       type: serviceConfig?.useClusterIP ? 'LoadBalancer' : undefined,
     });
   }
@@ -453,8 +471,9 @@ export default ({
       dependsOn: [service],
     };
 
-    if (ingressConfig.type === 'nginx') NginxIngress(ingressProps);
-    else TraefikIngress(ingressProps);
+    if (ingressConfig.type === 'nginx') {
+      NginxIngress(ingressProps);
+    } else TraefikIngress(ingressProps);
   }
 
   if (enableHA && deployment) {
