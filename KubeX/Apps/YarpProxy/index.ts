@@ -2,8 +2,9 @@ import { DefaultKsAppArgs } from '../../types';
 import { KeyVaultInfo } from '../../../types';
 import Deployment from '../../Deployment';
 import { defaultDotNetConfig } from '../../../Common/AppConfigs/dotnetConfig';
-import { ReverseProxy, ForwardedProxy } from './type';
+import { ForwardedProxy, ReverseProxy } from './type';
 import VariableResolver from '../../VairableResolvers';
+import { Input } from '@pulumi/pulumi';
 
 interface Props extends DefaultKsAppArgs {
   reverseProxy?: ReverseProxy;
@@ -13,12 +14,12 @@ interface Props extends DefaultKsAppArgs {
   enableDebug?: boolean;
 }
 
-const createReverseProxyConfig = (
+const createReverseProxyConfig = async (
   reverseProxy: ReverseProxy,
   vaultInfo?: KeyVaultInfo
 ) => {
-  const clusterConfig: any = {};
-  const routeConfig: any = {};
+  const clusterConfig: Record<string, Input<string>> = {};
+  const routeConfig: Record<string, Input<string>> = {};
   let routeIndex = 0;
 
   reverseProxy.clusters.forEach((c, i) => {
@@ -61,7 +62,7 @@ const createReverseProxyConfig = (
       }
 
       if (r.transforms) {
-        r.transforms.forEach((ts: any, i) =>
+        r.transforms.forEach((ts: object, i) =>
           Object.keys(ts).forEach(
             (k) =>
               (routeConfig[`${routeName}__Transforms__${i}__${k}`] =
@@ -73,18 +74,18 @@ const createReverseProxyConfig = (
   });
 
   if (vaultInfo)
-    return VariableResolver({
+    return await VariableResolver({
       config: { ...routeConfig, ...clusterConfig },
       vaultInfo,
     });
   return { configMap: { ...routeConfig, ...clusterConfig }, secrets: {} };
 };
 
-const createForwardedProxyConfig = (
+const createForwardedProxyConfig = async (
   forwarderProxy: ForwardedProxy[],
   vaultInfo?: KeyVaultInfo
 ) => {
-  const config: any = {};
+  const config: Record<string, Input<string>> = {};
 
   forwarderProxy.forEach((c, i) => {
     config[`ForwarderProxy__${i}__Route`] = c.route;
@@ -110,7 +111,7 @@ const createForwardedProxyConfig = (
     }
   });
 
-  if (vaultInfo) return VariableResolver({ config, vaultInfo });
+  if (vaultInfo) return await VariableResolver({ config, vaultInfo });
   return { configMap: config, secrets: {} };
 };
 
@@ -120,7 +121,7 @@ export default async ({
   forwardedProxy,
   namespace,
   ingress,
-  name,
+  name = 'proxy',
   enableDebug,
   enableHA,
   vaultInfo,
@@ -133,7 +134,7 @@ export default async ({
     ? await createForwardedProxyConfig(forwardedProxy, vaultInfo)
     : { configMap: {}, secrets: {} };
 
-  const proxy = await Deployment({
+  const proxy = Deployment({
     ...others,
     name,
     namespace,
@@ -149,12 +150,7 @@ export default async ({
     },
     secrets: { ...proxyConfig.secrets, ...forwarderConfig.secrets },
 
-    ingressConfig: ingress
-      ? {
-          ...ingress,
-          hostNames: [`${name}.${ingress.domain}`],
-        }
-      : undefined,
+    ingressConfig: ingress,
 
     podConfig: {
       port: 8080,

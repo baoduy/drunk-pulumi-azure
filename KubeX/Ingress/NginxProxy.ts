@@ -1,8 +1,9 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
-import NginxIngress, { IngressCanary, IngressClassName } from './NginxIngress';
-import { getTlsName } from '../CertImports';
+import NginxIngress from './NginxIngress';
 import { getRootDomainFromUrl } from '../../Common/Helpers';
+import { IngressCanary, IngressClassName } from './type';
+import { getTlsName } from '../CertHelper';
 
 interface Props {
   name: string;

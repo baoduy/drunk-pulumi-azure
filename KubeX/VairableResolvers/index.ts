@@ -1,25 +1,15 @@
 import { KeyVaultInfo } from '../../types';
 import { getSecret } from '../../KeyVault/Helper';
-import { Input, Output } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 
 interface Props {
-  config: { [key: string]: string | Output<string> };
+  config: { [key: string]: string | Input<string> };
   vaultInfo: KeyVaultInfo;
 }
 
-export default async ({
-  config,
-  vaultInfo,
-}: Props): Promise<{
-  configMap?: Input<{
-    [key: string]: Input<string>;
-  }>;
-  secrets?: Input<{
-    [key: string]: Input<string>;
-  }>;
-}> => {
-  const secrets: any = {};
-  const configMap: any = {};
+export default async ({ config, vaultInfo }: Props) => {
+  const secrets: Record<string, Input<string>> = {};
+  const configMap: Record<string, Input<string>> = {};
   const notfound = new Array<string>();
 
   const rs = await Promise.all(
@@ -41,7 +31,7 @@ export default async ({
 
         if (value) return { key: k, value, secret };
         else {
-          notfound.push(`${k}:${config[k]}`);
+          notfound.push(k);
           return undefined;
         }
       })

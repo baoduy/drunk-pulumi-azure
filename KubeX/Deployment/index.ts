@@ -1,11 +1,11 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as kx from '../kx';
 import { NginxIngress, TraefikIngress } from '../Ingress';
+import * as pulumi from '@pulumi/pulumi';
 import { Input, output, Resource } from '@pulumi/pulumi';
 import { getDomainFromUrl, getRootDomainFromUrl } from '../../Common/Helpers';
 import { getTlsName } from '../CertHelper';
 import { IngressProps } from '../Ingress/type';
-import * as pulumi from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/kubernetes/types';
 import { PodAutoScale, PodAutoScaleProps } from './PodAutoscaler';
 import ConfigSecret from '../ConfigSecret';
@@ -33,7 +33,7 @@ export const virtualHostConfig = {
 };
 
 interface PodConfigProps {
-  port?: number;
+  port: number;
   image: Input<string>;
   imagePullSecret?: string;
   imagePullPolicy?: 'Always' | 'Never' | 'IfNotPresent';
