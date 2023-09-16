@@ -199,12 +199,12 @@ export default ({
         {
           backend: {
             service: {
-              name: service.metadata.name,
+              name: service!.metadata.name,
               port: {
-                number: service.spec.ports[0].port,
-                name: service.spec.ports[0].port
+                number: service!.spec.ports[0].port,
+                name: service!.spec.ports[0].port
                   ? undefined
-                  : service.spec.ports[0].name,
+                  : service!.spec.ports[0].name,
               },
             },
           },
