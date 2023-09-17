@@ -3,6 +3,7 @@ import { output } from '@pulumi/pulumi';
 import Namespace from '../Core/Namespace';
 import DynamicDns, { DynamicDnsProps } from './DynamicDns';
 import Tunnel, { TunnelProps } from './Tunnel';
+import TunnelHelm, { TunnelHelmProps } from './Tunnel-Helm';
 import CertImports, { CloudFlareCertImportProps } from './CertImports';
 
 interface Props extends K8sArgs {
@@ -13,7 +14,10 @@ interface Props extends K8sArgs {
     'namespace' | 'provider' | 'dependsOn'
   >;
   dynamicDns?: Omit<DynamicDnsProps, 'namespace' | 'provider' | 'dependsOn'>;
-  tunnel?: Omit<TunnelProps, 'namespace' | 'provider' | 'dependsOn'>;
+  tunnel?: Omit<
+    TunnelProps | TunnelHelmProps,
+    'namespace' | 'provider' | 'dependsOn'
+  >;
 }
 
 export default ({
@@ -35,6 +39,20 @@ export default ({
     DynamicDns({ ...others, ...dynamicDns, namespace: ns.metadata.name });
   }
   if (tunnel) {
-    Tunnel({ ...others, ...tunnel, namespace: ns.metadata.name });
+    if (
+      tunnel.parameters.hasOwnProperty('tunnelId') &&
+      tunnel.parameters.hasOwnProperty('secret')
+    )
+      TunnelHelm({
+        ...others,
+        ...(tunnel as TunnelHelmProps),
+        namespace: ns.metadata.name,
+      });
+    else
+      Tunnel({
+        ...others,
+        ...(tunnel as TunnelProps),
+        namespace: ns.metadata.name,
+      });
   }
 };
