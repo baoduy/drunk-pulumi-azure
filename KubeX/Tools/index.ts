@@ -7,13 +7,17 @@ import OutlineVpn, { OutlineProps } from './OutlineVpn';
 import NoIp, { NoIpProps } from './NoIp';
 import AppHealthMonitor, { AppHealthMonitorProps } from './AppHealthzMonitor';
 import UptimeKuma, { UptimeKumaProps } from './UptimeKuma';
-import HelloWorld, { HelloWorldProps } from './HelloWorld';
+import HelloWorld from './HelloWorld';
+import EchoApp from './Echo-App';
+import { DefaultKsAppArgs } from '../types';
 
 interface Props {
   namespace: Input<string>;
   provider: k8s.Provider;
 
-  helloWorld?: Omit<HelloWorldProps, 'namespace' | 'provider' | 'dependsOn'>;
+  helloWorld?: Omit<DefaultKsAppArgs, 'namespace' | 'provider' | 'dependsOn'>;
+  echo?: Omit<DefaultKsAppArgs, 'namespace' | 'provider' | 'dependsOn'>;
+
   noIp?: Omit<NoIpProps, 'namespace' | 'provider' | 'dependsOn'>;
   sqlPad?: Omit<SqlPadProps, 'namespace' | 'provider' | 'dependsOn'>;
   toolPod?: Omit<ToolPodProps, 'namespace' | 'provider' | 'dependsOn'>;
@@ -30,6 +34,8 @@ interface Props {
 
 export default async ({
   helloWorld,
+  echo,
+
   enableKubeCleanup,
   toolPod,
   noIp,
@@ -41,6 +47,8 @@ export default async ({
   ...others
 }: Props) => {
   if (helloWorld) HelloWorld({ ...others, ...helloWorld });
+  if (echo) EchoApp({ ...others, ...echo });
+
   if (enableKubeCleanup) KubeCleanup(others);
   if (toolPod) ToolPod({ ...others, ...toolPod });
   if (noIp) NoIp({ ...others, ...noIp });

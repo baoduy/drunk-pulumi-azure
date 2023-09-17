@@ -50,9 +50,9 @@ export default ({
     secrets: { token },
 
     podConfig: {
-      port: 3000,
+      ports: { http: 3000 },
       image: 'cloudflare/cloudflared:latest',
-      podSecurityContext: { readOnlyRootFilesystem: false },
+      podSecurityContext: { readOnlyRootFilesystem: true },
       probes: {
         liveness: enableLiveness
           ? {

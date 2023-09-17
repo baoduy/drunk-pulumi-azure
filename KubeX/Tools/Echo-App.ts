@@ -2,8 +2,8 @@ import deployment from '../Deployment';
 import { DefaultKsAppArgs } from '../types';
 
 export default ({ namespace, ingress, ...others }: DefaultKsAppArgs) => {
-  const name = 'hello-world';
-  const image = 'strm/helloworld-http';
+  const name = 'echo-app';
+  const image = 'ealen/echo-server';
   const port = 80;
 
   deployment({
