@@ -429,7 +429,9 @@ export default ({
           ? [
               {
                 name: 'http',
-                port: serviceConfig?.usePodPort ? podConfig.ports[0] : 80,
+                port: serviceConfig?.usePodPort
+                  ? podConfig.ports[portKeys[0]]
+                  : 80,
                 targetPort: podConfig.ports[0],
                 protocol: 'TCP',
               },
