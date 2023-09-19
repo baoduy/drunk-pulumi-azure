@@ -37,7 +37,7 @@ export default ({
     ...others,
     secrets: { POSTGRES_PASSWORD: password },
     podConfig: {
-      port,
+      ports: { http: port },
       image: `postgres:latest`,
       volumes: [
         {
@@ -53,7 +53,7 @@ export default ({
     deploymentConfig: {
       //args: ['/bin/chown', '-R', '1001', '/var/lib/postgresql/data'],
     },
-    serviceConfig: { port: port },
+    serviceConfig: { usePodPort: true },
   });
 
   return {

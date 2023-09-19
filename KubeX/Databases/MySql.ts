@@ -40,7 +40,7 @@ export default ({
     ...others,
     secrets: { MYSQL_ROOT_PASSWORD: password },
     podConfig: {
-      port,
+      ports: { http: port },
       image: `mysql:${version}`,
       volumes: [
         {
@@ -55,7 +55,7 @@ export default ({
     deploymentConfig: {
       args: ['--default-authentication-plugin=mysql_native_password'],
     },
-    serviceConfig: { port: customPort || port, useClusterIP },
+    //serviceConfig: { port: customPort || port, useClusterIP },
   });
 
   return {

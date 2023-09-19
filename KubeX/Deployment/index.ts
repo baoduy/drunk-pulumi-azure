@@ -220,7 +220,7 @@ interface Props {
 
   serviceConfig?:
     | {
-        //usePodPort?: boolean;
+        usePodPort?: boolean;
         //port?: number;
         useClusterIP?: boolean;
       }
@@ -429,7 +429,7 @@ export default ({
           ? [
               {
                 name: 'http',
-                port: 80,
+                port: serviceConfig?.usePodPort ? podConfig.ports[0] : 80,
                 targetPort: podConfig.ports[0],
                 protocol: 'TCP',
               },

@@ -7,12 +7,14 @@ import { getGraphPermissions } from '../../AzAd/GraphDefinition';
 
 export interface AstroPageProps extends DefaultKsAppArgs {
   googleSiteVerification?: Input<string>;
+  replicas?:number;
   //googleAnalyticId?: Input<string>;
 }
 
 export default ({
   name = 'astro-page',
   namespace,
+  replicas,
   ingress,
   provider,
   googleSiteVerification,
@@ -30,14 +32,14 @@ AstroPageProps) => {
     configMap,
 
     podConfig: {
-      port: 80,
+      ports: {http: 80},
       image: 'baoduy2412/astro-blog:latest',
       imagePullPolicy: 'Always',
       //podSecurityContext: { readOnlyRootFilesystem: false },
     },
 
     deploymentConfig: {
-      replicas: 1,
+      replicas,
     },
 
     ingressConfig: ingress
