@@ -432,7 +432,7 @@ export default ({
                 port: serviceConfig?.usePodPort
                   ? podConfig.ports[portKeys[0]]
                   : 80,
-                targetPort: podConfig.ports[0],
+                targetPort: podConfig.ports[portKeys[0]],
                 protocol: 'TCP',
               },
             ]
