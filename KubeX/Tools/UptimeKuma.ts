@@ -29,7 +29,7 @@ export default ({
 
     podConfig: {
       image,
-      port,
+      ports: { http: port },
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
       volumes: [
         {
