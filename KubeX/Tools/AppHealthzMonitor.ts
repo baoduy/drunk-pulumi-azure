@@ -1,7 +1,7 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
 
-import deployment, { IngressTypes } from '../Deployment';
+import deployment from '../Deployment';
 import { getTlsName } from '../CertHelper';
 import { getRootDomainFromUrl } from '../../Common/Helpers';
 import { defaultDotNetConfig } from '../../Common/AppConfigs/dotnetConfig';
@@ -20,7 +20,7 @@ export interface AppHealthMonitorProps {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default async ({
+export default ({
   name = 'healthz-monitor',
   namespace,
   hostName,
@@ -34,7 +34,7 @@ export default async ({
   const callbackUrl = `https://${hostName}/signin-oidc`;
 
   const identity = auth?.azureAD
-    ? await IdentityCreator({
+    ? IdentityCreator({
         name,
 
         createClientSecret: false,
@@ -45,7 +45,7 @@ export default async ({
       })
     : undefined;
 
-  const configMap: any = { ...defaultDotNetConfig };
+  const configMap: Record<string, Input<string>> = { ...defaultDotNetConfig };
 
   if (identity) {
     configMap['AzureAd__TenantId'] = tenantId;
@@ -75,6 +75,7 @@ export default async ({
     },
 
     podConfig: {
+      ports: { http: 8080 },
       image,
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
     },
