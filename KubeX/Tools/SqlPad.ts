@@ -29,7 +29,7 @@ const createIdentity = async ({
   });
 
   //Create Azure AD Identity for Authentication
-  return await IdentityCreator({
+  return IdentityCreator({
     name,
 
     appRoleAssignmentRequired: true,
@@ -113,7 +113,7 @@ export default async ({
     ...others,
   });
 
-  const secrets: any = {
+  const secrets: Record<string, Input<string>> = {
     SQLPAD_PASSPHRASE: randomPassword({ name, policy: false, vaultInfo })
       .result,
 
@@ -135,9 +135,9 @@ export default async ({
     //Disable UserName and Password login
     secrets['SQLPAD_USERPASS_AUTH_DISABLED'] = 'true';
     secrets['SQLPAD_OIDC_LINK_HTML'] = 'Sign in with Azure AD';
-    secrets['SQLPAD_OIDC_CLIENT_ID'] = adIdentity?.clientId;
+    secrets['SQLPAD_OIDC_CLIENT_ID'] = adIdentity?.clientId ?? '';
     secrets['SQLPAD_OIDC_CLIENT_SECRET'] = secrets['SQLPAD_OIDC_CLIENT_ID'] =
-      adIdentity?.clientId;
+      adIdentity?.clientId ?? '';
 
     secrets[
       'SQLPAD_OIDC_ISSUER'
@@ -153,9 +153,9 @@ export default async ({
     ] = interpolate`https://graph.microsoft.com/oidc/userinfo`;
 
     secrets['SQLPAD_OIDC_SCOPE'] = 'openid profile email';
-    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth.azureAd?.allowedDomain;
+    secrets['SQLPAD_ALLOWED_DOMAINS'] = auth.azureAd?.allowedDomain ?? '';
   } else {
-    secrets['SQLPAD_ADMIN'] = auth.admin?.email;
+    secrets['SQLPAD_ADMIN'] = auth.admin?.email ?? '';
     secrets['SQLPAD_ADMIN_PASSWORD'] = randomPassword({
       name: `${name}-admin`,
       policy: false,
@@ -176,7 +176,7 @@ export default async ({
     secrets,
 
     podConfig: {
-      port,
+      ports: { http: port },
       image,
       //securityContext: defaultSecurityContext,
       //podSecurityContext: defaultPodSecurityContext,
