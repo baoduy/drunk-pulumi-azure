@@ -21,7 +21,9 @@ export default ({
   googleSiteVerification,
 }: //notionToken,
 NobeliumProps) => {
-  const configMap: any = { NOTION_PAGE_ID: notionPageId };
+  const configMap: Record<string, Input<string>> = {
+    NOTION_PAGE_ID: notionPageId,
+  };
   if (googleAnalyticId) configMap['GG_ANALYTIC_ID'] = googleAnalyticId;
   if (googleSiteVerification)
     configMap['GG_SITE_VERIFICATION'] = googleSiteVerification;
@@ -34,7 +36,7 @@ NobeliumProps) => {
     configMap,
 
     podConfig: {
-      port: 3000,
+      ports: { http: 3000 },
       image: 'baoduy2412/nobelium:latest',
       imagePullPolicy: 'Always',
       //podSecurityContext: { readOnlyRootFilesystem: false },
