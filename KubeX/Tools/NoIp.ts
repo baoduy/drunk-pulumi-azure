@@ -1,7 +1,7 @@
 import * as k8s from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
 
-import deployment, { IngressTypes } from '../Deployment';
+import deployment from '../Deployment';
 
 export interface NoIpProps {
   namespace: Input<string>;
@@ -35,6 +35,7 @@ export default ({
     secrets: { USERNAME: username, PASSWORD: password },
 
     podConfig: {
+      ports: { http: 8080 },
       image,
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
     },
