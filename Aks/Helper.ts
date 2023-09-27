@@ -2,9 +2,8 @@ import * as containerservice from '@pulumi/azure-native/containerservice';
 import { getAksName, getResourceGroupName } from '../Common/Naming';
 import { createProvider } from '../KubeX/Providers';
 import { KeyVaultInfo } from '../types';
-import { getSecret, getSecretVersions } from '../KeyVault/Helper';
+import { getSecret } from '../KeyVault/Helper';
 import { getIdentitySecrets } from '../AzAd/Helper';
-import * as console from 'console';
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
@@ -101,27 +100,27 @@ export const createAksVaultProvider = async ({
   version,
   secretName,
   namespace,
-    base64Encoded,
+  base64Encoded,
   vaultInfo,
 }: {
   aksName: string;
   secretName?: string;
   version?: string;
   vaultInfo: KeyVaultInfo;
-  base64Encoded?:boolean;
+  base64Encoded?: boolean;
   namespace?: string;
 }) => {
   const value = await getAksVaultConfig({
-        name: secretName ?? aksName,
-        version,
-        formattedName: Boolean(secretName),
-        vaultInfo,
-      });
+    name: secretName ?? aksName,
+    version,
+    formattedName: Boolean(secretName),
+    vaultInfo,
+  });
 
   return createProvider({
     name: aksName,
     namespace,
     ignoreChanges: true,
-    kubeconfig: base64Encoded? Buffer.from(value,'base64').toString() :value,
+    kubeconfig: base64Encoded ? Buffer.from(value, 'base64').toString() : value,
   });
 };

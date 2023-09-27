@@ -1,10 +1,10 @@
-import * as documentdb from "@pulumi/azure-native/documentdb";
-import { getCosmosDbName } from "../Common/Naming";
-import { DefaultResourceArgs, KeyVaultInfo, ResourceGroupInfo } from "../types";
-import ResourceCreator from "../Core/ResourceCreator";
-import { defaultTags, isPrd } from "../Common/AzureEnv";
-import { createThreatProtection } from "../Logs/Helpers";
-import { Input } from "@pulumi/pulumi";
+import * as documentdb from '@pulumi/azure-native/documentdb';
+import { getCosmosDbName } from '../Common/Naming';
+import { DefaultResourceArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import ResourceCreator from '../Core/ResourceCreator';
+import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { createThreatProtection } from '../Logs/Helpers';
+import { Input } from '@pulumi/pulumi';
 
 interface CosmosDbProps {
   name: string;
@@ -12,9 +12,9 @@ interface CosmosDbProps {
   vaultInfo?: KeyVaultInfo;
   locations?: Input<string>[];
   enableMultipleWriteLocations?: boolean;
-  capabilities?: Array<"EnableCassandra" | "EnableTable" | "EnableGremlin">;
-  kind?: documentdb.DatabaseAccountKind,
-  enableThreatProtection?:boolean;
+  capabilities?: Array<'EnableCassandra' | 'EnableTable' | 'EnableGremlin'>;
+  kind?: documentdb.DatabaseAccountKind;
+  enableThreatProtection?: boolean;
   network?: {
     publicNetworkAccess?: boolean;
     allowAzureServicesAccess?: boolean;
@@ -47,7 +47,7 @@ export default async ({
   enableThreatProtection,
   network,
   sqlDbs,
-                        kind= documentdb.DatabaseAccountKind.GlobalDocumentDB,
+  kind = documentdb.DatabaseAccountKind.GlobalDocumentDB,
 }: CosmosDbProps) => {
   name = getCosmosDbName(name);
 
@@ -70,7 +70,7 @@ export default async ({
     ...group,
     databaseAccountOfferType: documentdb.DatabaseAccountOfferType.Standard,
     kind,
-    identity: { type: "SystemAssigned" },
+    identity: { type: 'SystemAssigned' },
 
     capabilities: capabilities
       ? capabilities.map((n) => ({ name: n }))
@@ -80,7 +80,7 @@ export default async ({
 
     backupPolicy: isPrd
       ? {
-          type: "Periodic",
+          type: 'Periodic',
           periodicModeProperties: {
             backupIntervalInMinutes: 30,
             backupRetentionIntervalInHours: 4,
@@ -126,21 +126,24 @@ export default async ({
     //keyVaultKeyId: encryptKey?.properties.id,
     monitoring: {
       logsCategories: [
-        "CassandraRequests",
-        "PartitionKeyStatistics",
-        "ControlPlaneRequests",
-        "MongoRequests",
-        "QueryRuntimeStatistics",
-        "GremlinRequests",
-        "PartitionKeyRUConsumption",
-        "DataPlaneRequests",
+        'CassandraRequests',
+        'PartitionKeyStatistics',
+        'ControlPlaneRequests',
+        'MongoRequests',
+        'QueryRuntimeStatistics',
+        'GremlinRequests',
+        'PartitionKeyRUConsumption',
+        'DataPlaneRequests',
       ],
-      metricsCategories: ["Requests"],
+      metricsCategories: ['Requests'],
     },
     tags: defaultTags,
   } as unknown as documentdb.DatabaseAccountArgs & DefaultResourceArgs);
 
-  if(enableThreatProtection && kind!== documentdb.DatabaseAccountKind.MongoDB) {
+  if (
+    enableThreatProtection &&
+    kind !== documentdb.DatabaseAccountKind.MongoDB
+  ) {
     //Thread Protection
     createThreatProtection({
       name,
@@ -150,7 +153,7 @@ export default async ({
 
   //Vault variables
   if (vaultInfo) {
-    const keys = resource.id.apply(async (id) => {
+    resource.id.apply(async (id) => {
       if (!id) return undefined;
       return await documentdb.listDatabaseAccountKeys({
         accountName: name,
@@ -162,7 +165,7 @@ export default async ({
   //Database and Containers
   if (sqlDbs) {
     sqlDbs.forEach((db) => {
-      const database = new documentdb.SqlResourceSqlDatabase(
+      new documentdb.SqlResourceSqlDatabase(
         db.name,
         {
           databaseName: db.name,
@@ -184,7 +187,7 @@ export default async ({
               resource: {
                 id: c.name,
                 defaultTtl: c.ttl,
-                partitionKey: { paths: [c.partitionKeyPath || "/id"] },
+                partitionKey: { paths: [c.partitionKeyPath || '/id'] },
               },
             })
         );

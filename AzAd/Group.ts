@@ -1,9 +1,7 @@
 import * as azuread from '@pulumi/azuread';
 import { Input, Output } from '@pulumi/pulumi';
-
 import { defaultScope } from '../Common/AzureEnv';
 import { roleAssignment } from './RoleAssignment';
-import { testMode } from '../Common/StackEnv';
 
 export interface GroupPermissionProps {
   /** The name of the roles would like to assign to this group*/
@@ -43,7 +41,7 @@ export default async ({ name, permissions, members, owners }: AdGroupProps) => {
 
   if (permissions) {
     await Promise.all(
-      permissions.map((p, i) =>
+      permissions.map((p) =>
         roleAssignment({
           name,
           principalId: group.objectId,

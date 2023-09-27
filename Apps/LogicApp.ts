@@ -9,7 +9,7 @@ import { getCertOrderName } from '../Common/Naming';
 
 interface Props extends BasicResourceArgs, DefaultResourceArgs {}
 
-export default ({ name, group, ...others }: Props) => {
+export default ({ name, ...others }: Props) => {
   const n = getCertOrderName(name);
 
   const order = creator(logic.Workflow, {

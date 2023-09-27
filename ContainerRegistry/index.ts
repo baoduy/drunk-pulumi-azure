@@ -1,11 +1,10 @@
 import * as containerregistry from '@pulumi/azure-native/containerregistry';
 import {
-  BasicResourceArgs,
+  DefaultResourceArgs,
   KeyVaultInfo,
   NetworkRulesProps,
   ResourceGroupInfo,
-} from './../types.d';
-import { DefaultResourceArgs } from '../types';
+} from '../types';
 import creator from '../Core/ResourceCreator';
 import * as global from '../Common/GlobalEnv';
 import {

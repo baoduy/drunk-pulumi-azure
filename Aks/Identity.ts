@@ -19,7 +19,7 @@ export default async ({ name, vaultInfo }: Props) => {
     { name: 'Directory.Read.All', type: 'Role' }
   );
 
-  const serverIdentity = await identityCreator({
+  const serverIdentity = identityCreator({
     name,
     createClientSecret: true,
     createPrincipal: true,
@@ -29,7 +29,7 @@ export default async ({ name, vaultInfo }: Props) => {
     vaultInfo,
   });
 
-  await roleAssignment({
+  roleAssignment({
     name: `${name}-aks-identity-acr-pull`,
     principalId: serverIdentity.principalId!,
     principalType: 'ServicePrincipal',

@@ -1,5 +1,4 @@
 import { DefaultK8sArgs } from '../types';
-import Deployment from '../Deployment';
 import { Input } from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 

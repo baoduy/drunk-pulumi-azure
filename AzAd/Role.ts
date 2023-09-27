@@ -1,5 +1,5 @@
 import adGroupCreator, { GroupPermissionProps } from './Group';
-import { currentEnv, Environments } from '../Common/AzureEnv';
+import { Environments } from '../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import { organization } from '../Common/StackEnv';
 

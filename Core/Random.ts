@@ -161,7 +161,7 @@ export const randomSsh = ({
   };
 };
 
-export const randomLogin = async ({
+export const randomLogin = ({
   name,
   loginPrefix,
   maxUserNameLength,

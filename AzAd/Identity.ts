@@ -1,16 +1,15 @@
 import * as azureAD from '@pulumi/azuread';
+import { ServicePrincipal } from '@pulumi/azuread';
 import * as pulumi from '@pulumi/pulumi';
+import { Input, Output } from '@pulumi/pulumi';
 import { getIdentityName } from '../Common/Naming';
 import {
+  ApplicationApiOauth2PermissionScope,
   ApplicationAppRole,
   ApplicationRequiredResourceAccess,
-  ApplicationApiOauth2PermissionScope,
 } from '@pulumi/azuread/types/input';
 
 import { KeyVaultInfo } from '../types';
-import { Input, Output } from '@pulumi/pulumi';
-import { ServicePrincipal } from '@pulumi/azuread';
-import { randomPassword } from '../Core/Random';
 import { roleAssignment } from './RoleAssignment';
 import { defaultScope } from '../Common/AzureEnv';
 import { addCustomSecret } from '../KeyVault/CustomHelper';

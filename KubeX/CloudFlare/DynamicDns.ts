@@ -28,8 +28,8 @@ export default ({
   const name = 'cloudflare-ddns';
   const image = 'baoduy2412/cloudflare-ddns:latest';
 
-  const configMap: any = {};
-  const secrets: any = {};
+  const configMap: Record<string, Input<string>> = {};
+  const secrets: Record<string, Input<string>> = {};
 
   cloudFlare.forEach((c, ci) => {
     secrets[`Cloudflare__${ci}__ApiKey`] = c.apiKey;
@@ -62,6 +62,7 @@ export default ({
     secrets,
 
     podConfig: {
+      ports: { http: 8080 },
       image,
       resources: { requests: { memory: '1Mi', cpu: '1m' } },
     },

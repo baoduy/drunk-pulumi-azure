@@ -1,6 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import { AxiosInstance } from 'axios';
-import {createAxios} from '../Tools/Axios';
+import { createAxios } from '../Tools/Axios';
 
 import {
   BaseOptions,

@@ -39,7 +39,7 @@ export default async ({
     });
 
     if (vaultAccess.enableRbacAccess) {
-      await grantVaultRbacPermission({
+      grantVaultRbacPermission({
         name: n,
         objectId: sp.objectId,
         permission: 'ReadOnly',

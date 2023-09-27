@@ -15,8 +15,8 @@
     "test": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.test.ts'",
     "testcert": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/cert.test.ts'",
     "test-cover": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
-    "lint": "eslint **/*.{js,ts}",
-    "lint:fix": "eslint **/*.{js,ts} --fix"
+    "lint": "eslint **/*.ts",
+    "lint:fix": "eslint **/*.ts --fix"
   },
   "devDependencies": {
     "@types/chai": "^4.3.6",

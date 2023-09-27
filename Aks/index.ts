@@ -636,7 +636,7 @@ export default async ({
       // }
 
       if (acrScope && identityProfile && identityProfile['kubeletidentity']) {
-        await roleAssignment({
+        roleAssignment({
           name: `${name}-aks-identity-profile-pull`,
           principalId: identityProfile['kubeletidentity'].objectId!,
           principalType: 'ServicePrincipal',
@@ -666,7 +666,7 @@ export default async ({
       // }
 
       if (network.subnetId && identity) {
-        await roleAssignment({
+        roleAssignment({
           name: `${name}-system-net`,
           principalId: identity.principalId,
           roleName: 'Contributor',
@@ -678,7 +678,7 @@ export default async ({
       }
 
       if (privateZone && identity) {
-        await roleAssignment({
+        roleAssignment({
           name: `${name}-private-dns`,
           principalId: identity.principalId,
           roleName: 'Private DNS Zone Contributor',
@@ -689,7 +689,7 @@ export default async ({
     });
 
   //Apply monitoring for VMScale Sets
-  await vmsDiagnostic({
+  vmsDiagnostic({
     group: { resourceGroupName: nodeResourceGroup },
     ...log,
     vaultInfo,

@@ -3,7 +3,6 @@ import fs from 'fs';
 import * as pem from './p12';
 import { KeyVaultInfo } from '../types';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import forge from 'node-forge';
 
 export const defaultAllowedUses = [
   'data_encipherment',
