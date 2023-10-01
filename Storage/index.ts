@@ -6,7 +6,6 @@ import { createThreatProtection } from '../Logs/Helpers';
 import { addInsightMonitor } from '../Logs/WebTest';
 import { getSecret, parseKeyUrl } from '../KeyVault/Helper';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
-
 import cdnCreator from './CdnEndpoint';
 
 import {
@@ -51,9 +50,9 @@ interface StorageProps extends BasicResourceArgs {
     /**Only available when static site using CDN*/
     includesDefaultResponseHeaders?: boolean;
 
-    /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force enable CDN regardless to customDomain. */
+    /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
     forceUseCdn?: boolean;
-    /** This option only able to enabled once Account is created and the Principal added to the Key Vault Read Permission Group */
+    /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
     enableAccountLevelEncryption?: boolean;
   };
 

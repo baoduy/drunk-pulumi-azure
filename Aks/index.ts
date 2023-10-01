@@ -167,7 +167,7 @@ interface AksProps extends BasicResourceArgs {
   };
 
   vaultInfo: KeyVaultInfo;
-  log?: BasicMonitorArgs;
+  log?: Pick<BasicMonitorArgs, 'logWpId'>;
   /**Lock resource from delete*/
   lock?: boolean;
   dependsOn?: pulumi.Input<pulumi.Resource>[];
