@@ -279,7 +279,7 @@ export default async ({
         authorizedIPRanges: aksAccess?.enablePrivateCluster
           ? []
           : aksAccess?.authorizedIPRanges || [],
-
+        disableRunCommand: true,
         enablePrivateCluster: aksAccess?.enablePrivateCluster,
         privateDNSZone: privateZone?.id,
       },
@@ -297,8 +297,8 @@ export default async ({
 
         azurePolicy: { enabled: Boolean(addon.enableAzurePolicy) },
         kubeDashboard: { enabled: Boolean(addon.enableKubeDashboard) },
-        //If there is no public P address provided the public app can access via HTTP app routing only and feature only support HTTP.
-        //TO enable HTTPS support need to create cluster with a public IP address.
+        //If there is no public P address provided, the public app can access via HTTP app routing only and feature only support HTTP.
+        //TO enable HTTPS support need to create a cluster with a public IP address.
         httpApplicationRouting: {
           enabled:
             !network.outboundIpAddress?.ipAddressId &&
@@ -351,11 +351,11 @@ export default async ({
         count: p.mode === 'System' ? 1 : 0,
         //orchestratorVersion: kubernetesVersion,
         vnetSubnetID: network.subnetId,
-
         kubeletDiskType: 'OS',
         osSKU: 'Ubuntu',
         osType: 'Linux',
 
+        //upgradeSettings: {},
         tags: {
           ...defaultNodePool.tags,
           mode: p.mode,
@@ -388,6 +388,12 @@ export default async ({
         skipNodesWithLocalStorage: 'false',
         skipNodesWithSystemPods: 'true',
       },
+
+      //Still under preview
+      // workloadAutoScalerProfile: enableAutoScale
+      //   ? { keda: { enabled: true } }
+      //   : undefined,
+
       servicePrincipalProfile: serviceIdentity
         ? {
             clientId: serviceIdentity.clientId,
@@ -395,13 +401,25 @@ export default async ({
           }
         : undefined,
 
+      securityProfile: {
+        defender: isPrd
+          ? {
+              logAnalyticsWorkspaceResourceId: log?.logWpId,
+              securityMonitoring: { enabled: true },
+            }
+          : undefined,
+        imageCleaner: { enabled: true, intervalHours: 24 },
+        workloadIdentity: { enabled: false },
+      },
+
+      //azureMonitorProfile: { metrics: { enabled } },
       //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
       enablePodSecurityPolicy: false,
       podIdentityProfile: featureFlags.enablePodIdentity
         ? {
             enabled: featureFlags.enablePodIdentity,
             //Not allow pod to use kublet command
-            allowNetworkPluginKubenet: true,
+            allowNetworkPluginKubenet: false,
           }
         : undefined,
 
@@ -420,9 +438,9 @@ export default async ({
 
       //Preview Features
       autoUpgradeProfile: {
-        upgradeChannel: native.containerservice.UpgradeChannel.Stable,
+        upgradeChannel: native.containerservice.UpgradeChannel.Patch,
       },
-
+      //securityProfile:{},
       disableLocalAccounts,
       enableRBAC: true,
       aadProfile: {
