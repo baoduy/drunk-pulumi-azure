@@ -6,6 +6,7 @@ export interface PodAutoScaleProps {
   name: string;
   maxReplicas: number;
   minReplicas?: number;
+  averageUtilization?: number;
   deployment: kx.Deployment | k8s.apps.v1.Deployment;
   provider: Provider;
 }
@@ -14,6 +15,7 @@ export const PodAutoScale = ({
   name,
   maxReplicas = 3,
   minReplicas = 1,
+  averageUtilization = 80,
   deployment,
   provider,
 }: PodAutoScaleProps) => {
@@ -41,16 +43,16 @@ export const PodAutoScale = ({
             type: 'Resource',
             resource: {
               name: 'cpu',
-              target: { type: 'Utilization', averageUtilization: 80 },
+              target: { type: 'Utilization', averageUtilization },
             },
           },
-          // {
-          //   type: 'Resource',
-          //   resource: {
-          //     name: 'memory',
-          //     target: { type: 'AverageValue', averageValue: '1Gi' },
-          //   },
-          // },
+          {
+            type: 'Resource',
+            resource: {
+              name: 'memory',
+              target: { type: 'Utilization', averageUtilization },
+            },
+          },
         ],
 
         behavior: {
