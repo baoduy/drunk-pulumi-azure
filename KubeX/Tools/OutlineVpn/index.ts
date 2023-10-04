@@ -1,12 +1,13 @@
 import { K8sArgs } from '../../types';
 import Namespace from '../../Core/Namespace';
 import { KeyVaultInfo } from '../../../types';
-import { certImportFromVault, certImportFromFolder } from '../../CertImports';
+import { certImportFromFolder, certImportFromVault } from '../../CertImports';
 import * as kubernetes from '@pulumi/kubernetes';
 import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import { randomUuId } from '../../../Core/Random';
 import { Input } from '@pulumi/pulumi';
 import ksCertSecret from '../../Core/KsCertSecret';
+import PodAutoScale from '../../Deployment/PodAutoscaler';
 
 //https://medium.com/asl19-developers/hosting-outline-vpn-server-on-kubernetes-69a8765eed19
 
@@ -27,6 +28,7 @@ export interface OutlineProps extends K8sArgs {
   };
 
   replicas?: number;
+  autoScale?: boolean;
   storageClassName: StorageClassNameTypes;
 }
 export default async ({
@@ -37,6 +39,7 @@ export default async ({
   cert,
   storageClassName,
   replicas = 1,
+  autoScale,
   ...others
 }: OutlineProps) => {
   const name = 'outline-vpn';
@@ -192,8 +195,8 @@ export default async ({
                 ],
 
                 resources: {
-                  requests: { memory: '100Mi', cpu: '0.1' },
-                  limits: { memory: '4Gi', cpu: '2' },
+                  requests: { memory: '100Mi', cpu: '0.5' },
+                  limits: { memory: '1Gi', cpu: '1.5' },
                 },
               },
             ],
@@ -239,8 +242,18 @@ export default async ({
     }
   );
 
+  if (autoScale) {
+    PodAutoScale({
+      name,
+      deployment: outlineDeployment,
+      minReplicas: 1,
+      maxReplicas: 5,
+      ...others,
+    });
+  }
+
   //Services
-  const outlineShadowbox_vpn_service = new kubernetes.core.v1.Service(
+  new kubernetes.core.v1.Service(
     'outlineShadowbox_vpn_service',
     {
       metadata: {
