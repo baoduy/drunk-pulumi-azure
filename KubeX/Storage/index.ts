@@ -1,6 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import { randomUuId } from '../../Core/Random';
+import { K8sArgs } from '../types';
 
 const defaultMountOptions = [
   'dir_mode=0777',
@@ -96,7 +97,7 @@ export type StorageClassNameTypes =
   | 'azurefile-csi-premium'
   | string;
 
-interface StorageClassProps {
+interface StorageClassProps extends K8sArgs {
   name: string;
   namespace?: pulumi.Input<string>;
   storageClassName?: StorageClassNameTypes;
@@ -105,7 +106,6 @@ interface StorageClassProps {
   storageGb?: string;
   //mountOptions?: string[];
   accessMode?: 'ReadWriteOnce' | 'ReadWriteMany';
-  provider: k8s.Provider;
 }
 
 export const createPVCForStorageClass = ({
@@ -115,6 +115,7 @@ export const createPVCForStorageClass = ({
   storageGb = '5Gi',
   accessMode = 'ReadWriteOnce',
   provider,
+  dependsOn,
 }: StorageClassProps) => {
   return new k8s.core.v1.PersistentVolumeClaim(
     `${name}-claim`,
@@ -135,6 +136,6 @@ export const createPVCForStorageClass = ({
         storageClassName,
       },
     },
-    { provider }
+    { provider, dependsOn }
   );
 };

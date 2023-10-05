@@ -102,7 +102,7 @@ export default async ({
 
   //Deployment
   const outlineDeployment = new kubernetes.apps.v1.Deployment(
-    'outlineShadowbox_Deployment',
+    name,
     {
       metadata: {
         name,
@@ -196,7 +196,7 @@ export default async ({
 
                 resources: {
                   requests: { memory: '100Mi', cpu: '0.5' },
-                  limits: { memory: '1Gi', cpu: '2' },
+                  limits: { memory: '1Gi', cpu: '1.5' },
                 },
               },
             ],
@@ -254,7 +254,7 @@ export default async ({
 
   //Services
   new kubernetes.core.v1.Service(
-    'outlineShadowbox_vpn_service',
+    name,
     {
       metadata: {
         name,
