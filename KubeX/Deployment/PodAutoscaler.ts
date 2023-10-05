@@ -46,13 +46,13 @@ export const PodAutoScale = ({
               target: { type: 'Utilization', averageUtilization },
             },
           },
-          {
-            type: 'Resource',
-            resource: {
-              name: 'memory',
-              target: { type: 'Utilization', averageUtilization },
-            },
-          },
+          // {
+          //   type: 'Resource',
+          //   resource: {
+          //     name: 'memory',
+          //     target: { type: 'Utilization', averageUtilization },
+          //   },
+          // },
         ],
 
         behavior: {

@@ -247,7 +247,7 @@ export default async ({
       name,
       deployment: outlineDeployment,
       minReplicas: 1,
-      maxReplicas: 5,
+      maxReplicas: 3,
       ...others,
     });
   }

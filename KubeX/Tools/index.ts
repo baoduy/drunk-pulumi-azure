@@ -54,7 +54,6 @@ export default async ({
   if (noIp) NoIp({ ...others, ...noIp });
   if (sqlPad) await SqlPad({ ...others, ...sqlPad });
   if (outlineVpn) await OutlineVpn({ ...others, ...outlineVpn });
-  if (appHealthMonitor)
-    await AppHealthMonitor({ ...others, ...appHealthMonitor });
+  if (appHealthMonitor) AppHealthMonitor({ ...others, ...appHealthMonitor });
   if (uptimeKuma) UptimeKuma({ ...others, ...uptimeKuma });
 };
