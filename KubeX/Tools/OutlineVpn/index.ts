@@ -196,7 +196,7 @@ export default async ({
 
                 resources: {
                   requests: { memory: '100Mi', cpu: '0.5' },
-                  limits: { memory: '1Gi', cpu: '1.5' },
+                  limits: { memory: '1Gi', cpu: '2' },
                 },
               },
             ],
