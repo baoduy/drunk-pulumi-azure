@@ -246,7 +246,7 @@ export default async ({
     PodAutoScale({
       name,
       deployment: outlineDeployment,
-      minReplicas: 1,
+      minReplicas: replicas ?? 1,
       maxReplicas: 3,
       ...others,
     });
