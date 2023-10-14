@@ -215,6 +215,7 @@ interface Props {
         replicas?: number;
         /** Run App and Jobs using Virtual Node **/
         useVirtualHost?: boolean;
+        strategy?: 'Recreate' | 'RollingUpdate';
       }
     | false;
 
@@ -342,6 +343,7 @@ export default ({
             }).asDeploymentSpec({
               replicas: deploymentConfig?.replicas ?? 1,
               revisionHistoryLimit: 1,
+              strategy: { type: deploymentConfig?.strategy },
             }),
           },
           {
