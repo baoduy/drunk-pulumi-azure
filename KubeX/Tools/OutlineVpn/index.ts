@@ -109,6 +109,7 @@ export default async ({
         namespace,
         annotations: {
           'pulumi.com/skipAwait': 'true',
+          'pulumi.com/patchForce': 'true',
         },
       },
       spec: {

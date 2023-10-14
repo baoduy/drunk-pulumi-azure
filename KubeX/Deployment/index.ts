@@ -343,7 +343,10 @@ export default ({
             }).asDeploymentSpec({
               replicas: deploymentConfig?.replicas ?? 1,
               revisionHistoryLimit: 1,
-              strategy: { type: deploymentConfig?.strategy },
+              // strategy: {
+              //   type: deploymentConfig?.strategy,
+              //   rollingUpdate: undefined,
+              // },
             }),
           },
           {
