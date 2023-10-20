@@ -7,6 +7,7 @@ export interface PodAutoScaleProps {
   maxReplicas: number;
   minReplicas?: number;
   averageUtilization?: number;
+  stabilizationMinutes?: number;
   deployment: kx.Deployment | k8s.apps.v1.Deployment;
   provider: Provider;
 }
@@ -16,6 +17,7 @@ export const PodAutoScale = ({
   maxReplicas = 3,
   minReplicas = 1,
   averageUtilization = 80,
+  stabilizationMinutes = 30,
   deployment,
   provider,
 }: PodAutoScaleProps) => {
@@ -37,7 +39,6 @@ export const PodAutoScale = ({
         maxReplicas,
         minReplicas,
 
-        //targetCPUUtilizationPercentage: 80,
         metrics: [
           {
             type: 'Resource',
@@ -46,23 +47,23 @@ export const PodAutoScale = ({
               target: { type: 'Utilization', averageUtilization },
             },
           },
-          // {
-          //   type: 'Resource',
-          //   resource: {
-          //     name: 'memory',
-          //     target: { type: 'Utilization', averageUtilization },
-          //   },
-          // },
+          {
+            type: 'Resource',
+            resource: {
+              name: 'memory',
+              target: { type: 'Utilization', averageUtilization },
+            },
+          },
         ],
 
         behavior: {
           scaleDown: {
-            stabilizationWindowSeconds: 300,
-            policies: [{ type: 'Pods', value: 1, periodSeconds: 1800 }], //scale down 30m
+            stabilizationWindowSeconds: stabilizationMinutes * 60,
+            policies: [{ type: 'Pods', value: 1, periodSeconds: 15 * 60 }],
           },
           scaleUp: {
-            stabilizationWindowSeconds: 300,
-            policies: [{ type: 'Pods', value: 1, periodSeconds: 300 }], //scale up 5m
+            stabilizationWindowSeconds: stabilizationMinutes * 60,
+            policies: [{ type: 'Pods', value: 1, periodSeconds: 15 * 60 }],
           },
         },
       },
