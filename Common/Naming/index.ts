@@ -118,6 +118,9 @@ export const getSqlDbName = (name: string) =>
 export const getSqlServerName = (name: string) =>
   getResourceName(name, { suffix: 'sql' });
 
+export const getPostgresqlName = (name: string) =>
+  getResourceName(name, { suffix: 'postgres' });
+
 export const getFirewallName = (name: string) =>
   getResourceName(name, { suffix: 'fw' });
 
