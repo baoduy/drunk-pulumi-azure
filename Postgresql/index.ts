@@ -5,12 +5,13 @@ import * as azure from '@pulumi/azure-native';
 import { tenantId } from '../Common/AzureEnv';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 export interface PostgresProps extends BasicResourceArgs {
-  auth: {
-    adminLogin?: pulumi.Input<string>;
-    password?: pulumi.Input<string>;
-  };
+  // auth: {
+  //   adminLogin?: pulumi.Input<string>;
+  //   password?: pulumi.Input<string>;
+  // };
   sku?: pulumi.Input<inputs.dbforpostgresql.SkuArgs>;
   vaultInfo?: KeyVaultInfo;
   version?: azure.dbforpostgresql.ServerVersion;
@@ -21,7 +22,7 @@ export interface PostgresProps extends BasicResourceArgs {
 export default ({
   name,
   group,
-  auth,
+  //auth,
   version = azure.dbforpostgresql.ServerVersion.ServerVersion_14,
   storageSizeGB = 128,
   /**
@@ -37,10 +38,11 @@ export default ({
 }: PostgresProps) => {
   name = getPostgresqlName(name);
 
-  const password =
-    auth.password ??
-    randomPassword({ name, vaultInfo, length: 25, options: { special: false } })
-      .result;
+  const password = randomPassword({
+    name,
+    length: 25,
+    options: { special: false },
+  }).result;
 
   const postgres = new azure.dbforpostgresql.Server(
     name,
@@ -50,11 +52,11 @@ export default ({
       version,
       storage: { storageSizeGB },
       authConfig: {
-        passwordAuth: auth.adminLogin ? 'Enabled' : 'Disabled',
+        passwordAuth: 'Enabled',
         activeDirectoryAuth: 'Enabled',
         tenantId,
       },
-      administratorLogin: auth.adminLogin ?? 'postgres',
+      administratorLogin: 'postgresadmin',
       administratorLoginPassword: password,
       dataEncryption: { type: 'SystemManaged' },
       //maintenanceWindow: { dayOfWeek: 6 },
@@ -62,8 +64,23 @@ export default ({
       sku,
       //network:{delegatedSubnetResourceId}
     },
-    { dependsOn }
+    { dependsOn, protect: true }
   );
+
+  if (vaultInfo) {
+    addCustomSecret({
+      name: `${name}-login`,
+      value: 'postgresadmin',
+      vaultInfo,
+      contentType: name,
+    });
+    addCustomSecret({
+      name: `${name}-pass`,
+      value: password,
+      vaultInfo,
+      contentType: name,
+    });
+  }
 
   if (databases) {
     databases.map(
@@ -75,7 +92,7 @@ export default ({
             databaseName: d,
             ...group,
           },
-          { dependsOn: postgres }
+          { dependsOn: postgres, protect: true }
         )
     );
   }
