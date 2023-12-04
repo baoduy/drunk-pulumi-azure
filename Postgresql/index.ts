@@ -8,7 +8,7 @@ import * as inputs from '@pulumi/azure-native/types/input';
 
 export interface PostgresProps extends BasicResourceArgs {
   auth: {
-    adminLogin: pulumi.Input<string>;
+    adminLogin?: pulumi.Input<string>;
     password?: pulumi.Input<string>;
   };
   sku?: pulumi.Input<inputs.dbforpostgresql.SkuArgs>;
@@ -37,7 +37,10 @@ export default ({
 }: PostgresProps) => {
   name = getPostgresqlName(name);
 
-  const password = auth.password ?? randomPassword({ name, vaultInfo }).result;
+  const password =
+    auth.password ??
+    randomPassword({ name, vaultInfo, length: 25, options: { special: false } })
+      .result;
 
   const postgres = new azure.dbforpostgresql.Server(
     name,
@@ -51,7 +54,7 @@ export default ({
         activeDirectoryAuth: 'Enabled',
         tenantId,
       },
-      administratorLogin: auth.adminLogin,
+      administratorLogin: auth.adminLogin ?? 'postgres',
       administratorLoginPassword: password,
       dataEncryption: { type: 'SystemManaged' },
       //maintenanceWindow: { dayOfWeek: 6 },
