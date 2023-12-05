@@ -2,7 +2,7 @@ import { BasicResourceArgs, KeyVaultInfo } from '../types';
 import { getPostgresqlName } from '../Common/Naming';
 import * as pulumi from '@pulumi/pulumi';
 import * as azure from '@pulumi/azure-native';
-import { tenantId } from '../Common/AzureEnv';
+import { isPrd, tenantId } from '../Common/AzureEnv';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -17,6 +17,13 @@ export interface PostgresProps extends BasicResourceArgs {
   version?: azure.dbforpostgresql.ServerVersion;
   storageSizeGB?: number;
   databases?: Array<string>;
+  network?: {
+    allowsPublicAccess?: boolean;
+    firewallRules?: Array<{
+      startIpAddress: string;
+      endIpAddress: string;
+    }>;
+  };
 }
 
 export default ({
@@ -32,12 +39,14 @@ export default ({
     name: 'Standard_B1ms',
     tier: 'Burstable',
   },
+  network,
   databases,
   vaultInfo,
   dependsOn,
 }: PostgresProps) => {
   name = getPostgresqlName(name);
 
+  const username = 'postgresadmin';
   const password = randomPassword({
     name,
     length: 25,
@@ -56,21 +65,50 @@ export default ({
         activeDirectoryAuth: 'Enabled',
         tenantId,
       },
-      administratorLogin: 'postgresadmin',
+      administratorLogin: username,
       administratorLoginPassword: password,
       dataEncryption: { type: 'SystemManaged' },
       //maintenanceWindow: { dayOfWeek: 6 },
-      //availabilityZone: isPrd ? [1, 2, 3] : undefined,
+      //
       sku,
-      //network:{delegatedSubnetResourceId}
+      network: {},
+      backup: {
+        geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
+        backupRetentionDays: 7,
+      },
+      highAvailability: { mode: isPrd ? 'ZoneRedundant' : 'Disabled' },
+      availabilityZone: isPrd ? 3 : 1,
     },
-    { dependsOn, protect: true }
+    { dependsOn, protect: true, ignoreChanges: ['administratorLogin'] }
   );
+
+  if (network) {
+    if (network.firewallRules) {
+      network.firewallRules.map(
+        (f, i) =>
+          new azure.dbforpostgresql.FirewallRule(`${name}-firewall-${i}`, {
+            firewallRuleName: `${name}-firewall-${i}`,
+            serverName: postgres.name,
+            ...group,
+            ...f,
+          })
+      );
+    }
+
+    if (network.allowsPublicAccess)
+      new azure.dbforpostgresql.FirewallRule(`${name}-firewall-allowpublic`, {
+        firewallRuleName: `${name}-firewall-allowpublic`,
+        serverName: postgres.name,
+        ...group,
+        startIpAddress: '0.0.0.0',
+        endIpAddress: '255.255.255.255',
+      });
+  }
 
   if (vaultInfo) {
     addCustomSecret({
       name: `${name}-login`,
-      value: 'postgresadmin',
+      value: username,
       vaultInfo,
       contentType: name,
     });
