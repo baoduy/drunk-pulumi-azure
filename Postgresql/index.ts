@@ -69,7 +69,6 @@ export default ({
       administratorLoginPassword: password,
       dataEncryption: { type: 'SystemManaged' },
       //maintenanceWindow: { dayOfWeek: 6 },
-      //
       sku,
       network: {},
       backup: {
@@ -81,6 +80,7 @@ export default ({
     },
     { dependsOn, protect: true, ignoreChanges: ['administratorLogin'] }
   );
+
 
   if (network) {
     if (network.firewallRules) {
