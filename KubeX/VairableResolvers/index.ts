@@ -16,7 +16,7 @@ export const secretOutput = (
     Promise.all(
       names.map(async (n) => {
         const rs = await getSecret({ name: n, vaultInfo });
-        return rs?.value;
+        return rs?.value ?? n;
       })
     )
   );
