@@ -70,17 +70,16 @@ export default ({
       dataEncryption: { type: 'SystemManaged' },
       //maintenanceWindow: { dayOfWeek: 6 },
       sku,
-      network: {},
+      //network: {},
       backup: {
         geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
         backupRetentionDays: 7,
       },
       highAvailability: { mode: isPrd ? 'ZoneRedundant' : 'Disabled' },
-      availabilityZone: isPrd ? 3 : 1,
+      //availabilityZone: isPrd ? 3 : 1,
     },
     { dependsOn, protect: true, ignoreChanges: ['administratorLogin'] }
   );
-
 
   if (network) {
     if (network.firewallRules) {
