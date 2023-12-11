@@ -141,7 +141,7 @@ export default ({
   if (vaultInfo)
     addCustomSecret({
       name: clientIdKeyName,
-      value: app.applicationId,
+      value: app.clientId,
       vaultInfo,
       contentType: 'Identity',
     });
@@ -150,7 +150,7 @@ export default ({
   if (createClientSecret) {
     clientSecret = new azureAD.ApplicationPassword(name, {
       displayName: name,
-      applicationObjectId: app.objectId,
+      applicationId: app.objectId,
       endDateRelative: '43800h',
       //value: randomPassword({ name: `${name}-clientSecret` }).result,
     }).value;
@@ -171,7 +171,7 @@ export default ({
     principal = new azureAD.ServicePrincipal(name, {
       //Allow to access to application as the permission is manage by Group assignment.
       appRoleAssignmentRequired,
-      applicationId: app.applicationId,
+      clientId: app.clientId,
     });
 
     principalSecret = new azureAD.ServicePrincipalPassword(name, {
@@ -213,7 +213,7 @@ export default ({
   return {
     name,
     objectId: app.objectId,
-    clientId: app.applicationId,
+    clientId: app.clientId,
     clientSecret,
     principalId: principal?.objectId,
     principalSecret,
