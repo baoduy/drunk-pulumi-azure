@@ -17,7 +17,7 @@ interface Props
   extends Omit<DefaultResourceArgs, 'monitoring'>,
     Omit<BasicResourceArgs, 'group'> {
   formattedName?: boolean;
-
+  location?: string;
   /** Grant permission of this group into Environment Roles groups*/
   envRoleNames?: EnvRoleNamesType;
 }
@@ -26,38 +26,35 @@ interface Props
 //   resourceGroupName: getResourceGroupName(name),
 // });
 
-export default async ({
+export default ({
   name,
   formattedName,
   envRoleNames,
   ...others
-}: Props): Promise<
-  ResourceResultProps<ResourceGroup> & { toGroupInfo: () => ResourceGroupInfo }
-> => {
+}: Props): ResourceResultProps<ResourceGroup> & {
+  toGroupInfo: () => ResourceGroupInfo;
+} => {
   name = formattedName ? name : getResourceGroupName(name);
 
-  const { resource, locker, diagnostic } = await ResourceCreator(
-    ResourceGroup,
-    {
-      resourceGroupName: name,
-      ...others,
-    } as ResourceGroupArgs & DefaultResourceArgs
-  );
+  const { resource, locker, diagnostic } = ResourceCreator(ResourceGroup, {
+    resourceGroupName: name,
+    ...others,
+  } as ResourceGroupArgs & DefaultResourceArgs);
 
   const g = resource as ResourceGroup;
 
   if (envRoleNames) {
-    await assignRolesToGroup({
+    assignRolesToGroup({
       groupName: envRoleNames.readOnly,
       roles: ['Reader'],
       scope: g.id,
     });
-    await assignRolesToGroup({
+    assignRolesToGroup({
       groupName: envRoleNames.contributor,
       roles: ['Contributor'],
       scope: g.id,
     });
-    await assignRolesToGroup({
+    assignRolesToGroup({
       groupName: envRoleNames.admin,
       roles: ['Owner'],
       scope: g.id,
