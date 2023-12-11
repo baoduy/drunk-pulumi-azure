@@ -1,13 +1,27 @@
 import { KeyVaultInfo } from '../../types';
 import { getSecret } from '../../KeyVault/Helper';
-import { Input } from '@pulumi/pulumi';
+import { Input, Output, output } from '@pulumi/pulumi';
 
 interface Props {
   config: { [key: string]: string | Input<string> };
   vaultInfo: KeyVaultInfo;
 }
 
-export default async ({ config, vaultInfo }: Props) => {
+/** Resolve the secrets from KeyVault*/
+export const secretOutput = (
+  vaultInfo: KeyVaultInfo,
+  ...names: string[]
+): Output<Array<string | undefined>> =>
+  output(
+    Promise.all(
+      names.map(async (n) => {
+        const rs = await getSecret({ name: n, vaultInfo });
+        return rs?.value;
+      })
+    )
+  );
+
+const resolver = async ({ config, vaultInfo }: Props) => {
   const secrets: Record<string, Input<string>> = {};
   const configMap: Record<string, Input<string>> = {};
   const notfound = new Array<string>();
@@ -53,3 +67,5 @@ export default async ({ config, vaultInfo }: Props) => {
 
   return { configMap, secrets };
 };
+
+export default resolver;

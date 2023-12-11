@@ -60,6 +60,7 @@ export default ({
       ...group,
       version,
       storage: { storageSizeGB },
+
       authConfig: {
         passwordAuth: 'Enabled',
         activeDirectoryAuth: 'Enabled',
@@ -78,7 +79,11 @@ export default ({
       highAvailability: { mode: isPrd ? 'ZoneRedundant' : 'Disabled' },
       //availabilityZone: isPrd ? 3 : 1,
     },
-    { dependsOn, protect: true, ignoreChanges: ['administratorLogin'] }
+    {
+      dependsOn,
+      protect: true,
+      ignoreChanges: ['administratorLogin', 'dataEncryption'],
+    }
   );
 
   if (network) {
