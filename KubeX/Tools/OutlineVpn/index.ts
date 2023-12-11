@@ -1,4 +1,4 @@
-import { K8sArgs } from '../../types';
+import { K8sArgs, K8sResourceType } from '../../types';
 import Namespace from '../../Core/Namespace';
 import { KeyVaultInfo } from '../../../types';
 import { certImportFromFolder, certImportFromVault } from '../../CertImports';
@@ -29,10 +29,7 @@ export interface OutlineProps extends K8sArgs {
 
   replicas?: number;
   autoScale?: boolean;
-  resources?: {
-    requests?: { memory: string; cpu: string };
-    limits?: { memory: string; cpu: string };
-  };
+  resources?: K8sResourceType;
   storageClassName: StorageClassNameTypes;
 }
 export default async ({
