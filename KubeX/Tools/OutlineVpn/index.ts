@@ -29,6 +29,10 @@ export interface OutlineProps extends K8sArgs {
 
   replicas?: number;
   autoScale?: boolean;
+  resources?: {
+    requests?: { memory: string; cpu: string };
+    limits?: { memory: string; cpu: string };
+  };
   storageClassName: StorageClassNameTypes;
 }
 export default async ({
@@ -39,6 +43,10 @@ export default async ({
   cert,
   storageClassName,
   replicas = 1,
+  resources = {
+    requests: { memory: '100Mi', cpu: '0.5' },
+    limits: { memory: '600Mi', cpu: '1' },
+  },
   autoScale,
   ...others
 }: OutlineProps) => {
@@ -195,10 +203,7 @@ export default async ({
                   },
                 ],
 
-                resources: {
-                  requests: { memory: '100Mi', cpu: '0.5' },
-                  limits: { memory: '600Mi', cpu: '1' },
-                },
+                resources,
               },
             ],
             volumes: [
