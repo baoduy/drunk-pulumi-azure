@@ -25,6 +25,7 @@ interface NginxProps {
   replicaCount?: number;
   vnetResourceGroup?: string;
   internalIngress?: boolean;
+  allowSnippetAnnotations?: boolean;
   public?: NginxItemProps & { forceUseIngressClass?: boolean };
   private?: Omit<NginxItemProps, 'publicIpAddress'>;
 }
@@ -102,7 +103,7 @@ const nginxCreator = ({
   replicaCount,
   vnetResourceGroup,
   internalIngress,
-
+  allowSnippetAnnotations,
   provider,
 
   ...info
@@ -119,7 +120,7 @@ const nginxCreator = ({
       version,
       namespace,
       replicaCount,
-
+      allowSnippetAnnotations,
       useIngressClassOnly:
         info.public.forceUseIngressClass || info.private !== undefined,
 
@@ -144,6 +145,7 @@ const nginxCreator = ({
       version,
       namespace,
       useIngressClassOnly: true,
+      allowSnippetAnnotations,
 
       tcp: info.private.tcp,
       udp: info.private.udp,

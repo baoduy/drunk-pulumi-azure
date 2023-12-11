@@ -1,8 +1,8 @@
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import { DefaultK8sArgs } from '../../types';
 import { applyDeploymentRules } from '../SecurityRules';
-import { Input } from '@pulumi/pulumi';
 
 const defaultConfigs = {
   useForwardedHeaders: 'true',
@@ -29,6 +29,7 @@ interface Props extends DefaultK8sArgs {
   replicaCount?: number;
   useIngressClassOnly?: boolean;
   defaultIngressClass?: boolean;
+  allowSnippetAnnotations?: boolean;
 
   network: {
     /** The resource group of virtual network and public IpAddress. */
@@ -65,6 +66,7 @@ export default ({
 
   useIngressClassOnly = true,
   defaultIngressClass,
+  allowSnippetAnnotations,
   replicaCount = 1,
   network,
   config,
@@ -114,6 +116,7 @@ export default ({
 
         controller: {
           hostNetwork: false,
+          allowSnippetAnnotations,
           replicaCount,
 
           proxySetHeaders,
