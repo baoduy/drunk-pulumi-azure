@@ -221,7 +221,7 @@ export default ({
   return {
     name,
     objectId: app.objectId,
-    clientId: app.clientId ?? app.applicationId,
+    clientId: app.applicationId ?? app.clientId,
     clientSecret,
     principalId: principal?.objectId,
     principalSecret,

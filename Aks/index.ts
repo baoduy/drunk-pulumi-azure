@@ -508,14 +508,7 @@ export default async ({
         : dependsOn,
       import: importFrom,
       deleteBeforeReplace: true,
-      //replaceOnChanges: [ 'servicePrincipalProfile'],
-      ignoreChanges: [
-        'privateLinkResources',
-        'networkProfile',
-        'linuxProfile',
-        //'windowsProfile',
-        //'servicePrincipalProfile.secret',
-      ],
+      ignoreChanges: ['privateLinkResources', 'networkProfile', 'linuxProfile'],
     }
   );
 

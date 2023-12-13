@@ -37,5 +37,6 @@ export default async ({ name, vaultInfo }: Props) => {
     scope: defaultScope,
   });
 
+  serverIdentity.clientId.apply((i) => console.log(i));
   return serverIdentity;
 };
