@@ -26,6 +26,7 @@ import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import { getAksConfig } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { checkSecretExist } from '../KeyVault/Helper';
+import * as inputs from '@pulumi/azure-native/types/input';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -62,7 +63,7 @@ const autoScaleFor = ({
   };
 };
 
-const defaultNodePool = {
+const defaultNodePoolProps = {
   availabilityZones: isPrd ? ['1', '2', '3'] : undefined,
   type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
   vmSize: 'Standard_B2s',
@@ -106,14 +107,13 @@ export enum VmSizes {
   Standard_A4m_v2_205 = 'Standard_A4m_v2',
 }
 
-interface NodePoolProps {
+interface NodePoolProps
+  extends Partial<inputs.containerservice.ManagedClusterAgentPoolProfileArgs> {
   name: string;
   mode: native.containerservice.AgentPoolMode;
-  vmSize?: VmSizes;
-  maxPods?: number;
-  osDiskSizeGB?: number;
-  osDiskType?: native.containerservice.OSDiskType;
-  /**Not all machine is support this feature*/
+  vmSize: VmSizes;
+  osDiskSizeGB: number;
+  maxPods: number;
   enableEncryptionAtHost?: boolean;
 }
 
@@ -135,7 +135,8 @@ interface AksProps extends BasicResourceArgs {
   };
 
   //kubernetesVersion?: Input<string>;
-  nodePools: Array<Omit<NodePoolProps, 'subnetId' | 'aksId'>>;
+  defaultNodePool: Omit<NodePoolProps, 'subnetId' | 'aksId'>;
+  nodePools?: Array<Omit<NodePoolProps, 'subnetId' | 'aksId'>>;
   enableAutoScale?: boolean;
 
   featureFlags?: {
@@ -182,6 +183,7 @@ export default async ({
   name,
   linux,
   //kubernetesVersion,
+  defaultNodePool,
   nodePools,
   enableAutoScale,
   network,
@@ -339,29 +341,31 @@ export default async ({
         tier,
       },
 
-      agentPoolProfiles: nodePools.map((p) => ({
-        ...defaultNodePool,
-        ...p,
+      agentPoolProfiles: [
+        {
+          ...defaultNodePoolProps,
+          ...defaultNodePool,
 
-        ...autoScaleFor({
-          env: currentEnv,
-          nodeType: p.mode,
-          enableAutoScaling: enableAutoScale,
-        }),
+          ...autoScaleFor({
+            env: currentEnv,
+            nodeType: defaultNodePool.mode,
+            enableAutoScaling: enableAutoScale,
+          }),
 
-        count: p.mode === 'System' ? 1 : 0,
-        //orchestratorVersion: kubernetesVersion,
-        vnetSubnetID: network.subnetId,
-        kubeletDiskType: 'OS',
-        osSKU: 'Ubuntu',
-        osType: 'Linux',
+          count: defaultNodePool.mode === 'System' ? 1 : 0,
+          //orchestratorVersion: kubernetesVersion,
+          vnetSubnetID: network.subnetId,
+          kubeletDiskType: 'OS',
+          osSKU: 'Ubuntu',
+          osType: 'Linux',
 
-        //upgradeSettings: {},
-        tags: {
-          ...defaultNodePool.tags,
-          mode: p.mode,
+          //upgradeSettings: {},
+          tags: {
+            ...defaultNodePoolProps.tags,
+            mode: defaultNodePool.mode,
+          },
         },
-      })),
+      ],
 
       linuxProfile: linux
         ? {
@@ -517,6 +521,34 @@ export default async ({
     Locker({ name: aksName, resourceId: aks.id, dependsOn: aks });
   }
 
+  if (nodePools) {
+    nodePools.map(
+      (p) =>
+        new native.containerservice.AgentPool(`${name}-${p.name}`, {
+          ...defaultNodePoolProps,
+          ...p,
+
+          ...autoScaleFor({
+            env: currentEnv,
+            nodeType: p.mode,
+            enableAutoScaling: enableAutoScale,
+          }),
+
+          count: p.mode === 'System' ? 1 : 0,
+          //orchestratorVersion: kubernetesVersion,
+          vnetSubnetID: network.subnetId,
+          kubeletDiskType: 'OS',
+          osSKU: 'Ubuntu',
+          osType: 'Linux',
+
+          //upgradeSettings: {},
+          tags: {
+            ...defaultNodePoolProps.tags,
+            mode: p.mode,
+          },
+        })
+    );
+  }
   if (vaultInfo) {
     aks.id.apply(async (id) => {
       if (!id) return;
