@@ -71,6 +71,7 @@ const defaultNodePool = {
   enableFIPS: false,
   enableNodePublicIP: false,
 
+  enableUltraSSD: isPrd,
   osDiskSizeGB: 128,
   osDiskType: native.containerservice.OSDiskType.Managed,
 
