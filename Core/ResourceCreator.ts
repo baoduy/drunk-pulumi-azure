@@ -35,18 +35,18 @@ const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
   return name;
 };
 
-type ClassOf<T> = new (
+type ClassOf = new (
   name: string,
-  props: unknown,
+  props: any,
   opts?: pulumi.CustomResourceOptions
-) => T & {
+) => pulumi.CustomResource & {
   id: pulumi.Output<string>;
   urn: pulumi.Output<string>;
 };
 
 /** Create Resource with Locker */
 export default function <
-  TClass extends ClassOf<pulumi.CustomResource>,
+  TClass extends ClassOf,
   TProps extends Omit<DefaultResourceArgs, 'name' | 'group'>
 >(
   Class: TClass,
