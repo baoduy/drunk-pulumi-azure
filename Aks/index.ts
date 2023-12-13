@@ -525,6 +525,10 @@ export default async ({
     nodePools.map(
       (p) =>
         new native.containerservice.AgentPool(`${name}-${p.name}`, {
+          //agentPoolName:p.name,
+          resourceName: aks.name,
+          ...group,
+
           ...defaultNodePoolProps,
           ...p,
 
