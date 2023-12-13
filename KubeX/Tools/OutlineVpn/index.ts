@@ -16,6 +16,7 @@ export interface OutlineProps extends K8sArgs {
   hostname: string;
   apiPort?: number;
   accessPort?: number;
+  priorityClassName?: string;
   //Either provider 1 of value below
   cert: {
     certVaultName?: string;
@@ -39,6 +40,7 @@ export default async ({
   accessPort = 45123,
   cert,
   storageClassName,
+  priorityClassName = 'system-cluster-critical',
   replicas = 1,
   resources = {
     requests: { memory: '100Mi', cpu: '0.5' },
@@ -133,6 +135,7 @@ export default async ({
             },
           },
           spec: {
+            priorityClassName,
             containers: [
               {
                 name,
