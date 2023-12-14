@@ -204,6 +204,7 @@ export type DeploymentIngress = Omit<
 >;
 
 export type IngressTypes = 'nginx' | 'traefik';
+
 interface Props {
   name: string;
   namespace: Input<string>;
@@ -215,7 +216,9 @@ interface Props {
         replicas?: number;
         /** Run App and Jobs using Virtual Node **/
         useVirtualHost?: boolean;
-        strategy?: 'Recreate' | 'RollingUpdate';
+        //strategy?: 'Recreate' | 'RollingUpdate';
+        /** Enforce resources to be redeployed everytime */
+        enforceReDeployment?: boolean;
       }
     | false;
 
@@ -282,6 +285,11 @@ export default ({
   provider,
   dependsOn,
 }: Props) => {
+  const deploymentTime =
+    typeof deploymentConfig === 'object' && deploymentConfig.enforceReDeployment
+      ? new Date().getTime().toString()
+      : '';
+
   if (!podConfig.volumes) podConfig.volumes = [];
   const configSecret = ConfigSecret({
     name,
@@ -332,7 +340,7 @@ export default ({
             metadata: {
               namespace,
               annotations: { 'pulumi.com/skipAwait': 'true' },
-              labels: { app: name },
+              labels: { app: name, time: deploymentTime },
             },
             spec: buildPod({
               name,
@@ -353,7 +361,10 @@ export default ({
             provider,
             dependsOn,
             deleteBeforeReplace: true,
-            customTimeouts: { create: '10m', update: '10m' },
+            replaceOnChanges: deploymentConfig?.enforceReDeployment
+              ? ['*']
+              : undefined,
+            customTimeouts: { create: '1m', update: '1m' },
           }
         );
 
@@ -382,7 +393,7 @@ export default ({
               ...job.cron,
             }),
           },
-          { provider }
+          { provider, deleteBeforeReplace: true }
         );
 
       return new kx.Job(
@@ -403,7 +414,7 @@ export default ({
             ttlSecondsAfterFinished: job.ttlSecondsAfterFinished || 604800, //7 days
           }),
         },
-        { provider }
+        { provider, deleteBeforeReplace: true }
       );
     });
   }
