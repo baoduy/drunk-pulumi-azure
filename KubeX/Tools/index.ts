@@ -7,6 +7,7 @@ import OutlineVpn, { OutlineProps } from './OutlineVpn';
 import NoIp, { NoIpProps } from './NoIp';
 import AppHealthMonitor, { AppHealthMonitorProps } from './AppHealthzMonitor';
 import UptimeKuma, { UptimeKumaProps } from './UptimeKuma';
+import OpenLDAP, { OpenLDAPProps } from './OpenLDAP';
 import HelloWorld from './HelloWorld';
 import EchoApp from './Echo-App';
 import { DefaultKsAppArgs } from '../types';
@@ -21,7 +22,8 @@ interface Props {
   noIp?: Omit<NoIpProps, 'namespace' | 'provider' | 'dependsOn'>;
   sqlPad?: Omit<SqlPadProps, 'namespace' | 'provider' | 'dependsOn'>;
   toolPod?: Omit<ToolPodProps, 'namespace' | 'provider' | 'dependsOn'>;
-  outlineVpn?: Omit<OutlineProps, 'namespace' | 'provider' | 'dependsOn'>;
+  outlineVpn?: Omit<OutlineProps, 'provider' | 'dependsOn'>;
+  openLdap?: Omit<OpenLDAPProps, 'provider' | 'dependsOn'>;
   appHealthMonitor?: Omit<
     AppHealthMonitorProps,
     'namespace' | 'provider' | 'dependsOn'
@@ -41,19 +43,22 @@ export default async ({
   noIp,
   sqlPad,
   outlineVpn,
-
+  openLdap,
   appHealthMonitor,
   uptimeKuma,
+  namespace,
   ...others
 }: Props) => {
-  if (helloWorld) HelloWorld({ ...others, ...helloWorld });
-  if (echo) EchoApp({ ...others, ...echo });
+  if (helloWorld) HelloWorld({ namespace, ...others, ...helloWorld });
+  if (echo) EchoApp({ namespace, ...others, ...echo });
 
-  if (enableKubeCleanup) KubeCleanup(others);
-  if (toolPod) ToolPod({ ...others, ...toolPod });
-  if (noIp) NoIp({ ...others, ...noIp });
-  if (sqlPad) await SqlPad({ ...others, ...sqlPad });
+  if (enableKubeCleanup) KubeCleanup({ namespace, ...others });
+  if (toolPod) ToolPod({ namespace, ...others, ...toolPod });
+  if (noIp) NoIp({ namespace, ...others, ...noIp });
+  if (sqlPad) await SqlPad({ namespace, ...others, ...sqlPad });
   if (outlineVpn) await OutlineVpn({ ...others, ...outlineVpn });
-  if (appHealthMonitor) AppHealthMonitor({ ...others, ...appHealthMonitor });
-  if (uptimeKuma) UptimeKuma({ ...others, ...uptimeKuma });
+  if (openLdap) OpenLDAP({ ...others, ...openLdap });
+  if (appHealthMonitor)
+    AppHealthMonitor({ namespace, ...others, ...appHealthMonitor });
+  if (uptimeKuma) UptimeKuma({ namespace, ...others, ...uptimeKuma });
 };

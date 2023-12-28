@@ -41,6 +41,7 @@ interface PodConfigProps {
   volumes?: Array<{
     name: string;
     mountPath: string;
+    emptyDir?: boolean;
     subPath?: string;
     readOnly?: boolean;
     /** The secret name */
@@ -111,6 +112,7 @@ const buildPod = ({
     volumes: podConfig.volumes
       ? podConfig.volumes.map((v) => ({
           name: v.name.toLowerCase(),
+          emptyDir: v.emptyDir ? {} : undefined,
 
           csi:
             v.secretName && v.type === 'azureFile'

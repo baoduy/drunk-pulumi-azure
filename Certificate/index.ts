@@ -29,6 +29,96 @@ export const defaultCodeSignUses = [
   'ocsp_signing',
 ];
 
+export const createSelfSignCertV2 = ({
+  dnsName,
+  commonName,
+  organization,
+  allowedUses = defaultAllowedUses,
+  validYears = 3,
+  vaultInfo,
+}: {
+  dnsName: string;
+  commonName: string;
+  organization: string;
+  allowedUses?: string[];
+  validYears?: number;
+  vaultInfo?: KeyVaultInfo;
+}) => {
+  const vaultCertName = `${dnsName}-cert`;
+  const vaultCAName = `${dnsName}-ca`;
+  const vaultPrivateKeyName = `${dnsName}-key`;
+  const validityPeriodHours = validYears * 365 * 24;
+
+  // Create a private key
+  const privateKey = new tls.PrivateKey(vaultCertName, {
+    algorithm: 'RSA',
+    rsaBits: 2048,
+  });
+
+  // Create a certificate authority
+  const ca = new tls.SelfSignedCert(vaultCAName, {
+    dnsNames: [dnsName],
+    subject: {
+      commonName,
+      organization,
+    },
+    allowedUses,
+    isCaCertificate: true,
+    privateKeyPem: privateKey.privateKeyPem,
+    validityPeriodHours,
+    earlyRenewalHours: 30 * 24,
+  });
+
+  //Create Cert Request
+  const certRequest = new tls.CertRequest(`${dnsName}-cert-request`, {
+    dnsNames: [dnsName],
+    subject: {
+      commonName,
+      organization,
+    },
+    privateKeyPem: privateKey.privateKeyPem,
+  });
+
+  // Create a local certificate signed by the certificate authority
+  const cert = new tls.LocallySignedCert(vaultCertName, {
+    certRequestPem: certRequest.certRequestPem,
+    caPrivateKeyPem: ca.privateKeyPem,
+    caCertPem: ca.certPem,
+    validityPeriodHours,
+    isCaCertificate: false,
+    allowedUses: ['key_encipherment', 'digital_signature', 'server_auth'],
+  });
+
+  if (vaultInfo) {
+    addCustomSecret({
+      name: vaultCertName,
+      vaultInfo,
+      value: cert.certPem,
+      contentType: `${dnsName} self sign cert.`,
+    });
+
+    addCustomSecret({
+      name: vaultCAName,
+      vaultInfo,
+      value: ca.certPem,
+      contentType: `${dnsName} self sign ca cert.`,
+    });
+
+    addCustomSecret({
+      name: vaultPrivateKeyName,
+      vaultInfo,
+      value: privateKey.privateKeyPem,
+      contentType: `${dnsName} self sign private key.`,
+    });
+  }
+
+  return {
+    cert: cert.certPem,
+    privateKey: privateKey.privateKeyPem,
+    ca: ca.certPem,
+  };
+};
+
 export const createSelfSignCert = ({
   dnsName,
   commonName,
@@ -45,23 +135,26 @@ export const createSelfSignCert = ({
   vaultInfo?: KeyVaultInfo;
 }) => {
   const vaultCertName = `${dnsName}-cert`;
-  //const vaultCAName = `${dnsName}-ca`;
   const vaultPrivateKeyName = `${dnsName}-key`;
+  const validityPeriodHours = validYears * 365 * 24;
 
-  const privateKey = new tls.PrivateKey(`${dnsName}-privateKey`, {
+  // Create a private key
+  const privateKey = new tls.PrivateKey(vaultCertName, {
     algorithm: 'RSA',
     rsaBits: 2048,
   });
 
-  const cert = new tls.SelfSignedCert(`${dnsName}-selfSignedCert`, {
+  // Create a certificate authority
+  const cert = new tls.SelfSignedCert(vaultCertName, {
     dnsNames: [dnsName],
     subject: {
       commonName,
       organization,
     },
     allowedUses,
+    isCaCertificate: false,
     privateKeyPem: privateKey.privateKeyPem,
-    validityPeriodHours: validYears * 365 * 24,
+    validityPeriodHours,
     earlyRenewalHours: 30 * 24,
   });
 
@@ -72,13 +165,6 @@ export const createSelfSignCert = ({
       value: cert.certPem,
       contentType: `${dnsName} self sign cert.`,
     });
-
-    // addCustomSecret({
-    //   name: vaultCAName,
-    //   vaultInfo,
-    //   value: cert.,
-    //   contentType: `${dnsName} self sign ca cert.`,
-    // });
 
     addCustomSecret({
       name: vaultPrivateKeyName,
@@ -91,6 +177,7 @@ export const createSelfSignCert = ({
   return {
     cert: cert.certPem,
     privateKey: privateKey.privateKeyPem,
+    ca: undefined,
   };
 };
 

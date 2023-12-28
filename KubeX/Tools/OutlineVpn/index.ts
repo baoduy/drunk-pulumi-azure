@@ -59,7 +59,7 @@ export default async ({
   if (cert.cert) {
     ksCertSecret({
       name: `tls-${name}-imported`,
-      ...cert.cert,
+      certInfo: cert.cert,
       ...defaultProps,
     });
   } else if (cert.certVaultName && vaultInfo) {
