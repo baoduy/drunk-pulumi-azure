@@ -7,21 +7,26 @@ import Locker from './Locker';
 import { createDiagnostic } from '../Logs/Helpers';
 import { defaultTags } from '../Common/AzureEnv';
 
-const tryFindName = (props: any, isResourceGroup: boolean) => {
+const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
+  const rs = props as {
+    resourceGroupName?: string;
+    name?: string;
+    resourceName?: string;
+    [key: string]: string | undefined;
+  };
   //If resource group then just return the resourceGroupName or name.
-  if (isResourceGroup) return props.resourceGroupName || props.name;
+  let name: string | undefined = rs.resourceGroupName || rs.name;
+  if (isResourceGroup && name) return name;
 
-  let name = props.resourceName || props.name;
+  name = rs.resourceName || rs.name;
+  if (name) return name;
 
-  if (!name) {
-    const keys = Object.keys(props);
-    //Try to find the name that is not a resourceGroupName
-    let key = keys.find((k) => k.endsWith('Name') && k !== 'resourceGroupName');
+  const keys = Object.keys(rs);
+  //Try to find the name that is not a resourceGroupName
+  const key = keys.find((k) => k.endsWith('Name') && k !== 'resourceGroupName');
 
-    if (key) {
-      //console.log('Found the Name is: ', key);
-      name = props[key];
-    }
+  if (key) {
+    name = rs[key] as string;
   }
 
   if (!name)
@@ -30,26 +35,24 @@ const tryFindName = (props: any, isResourceGroup: boolean) => {
   return name;
 };
 
-type ClassOf<T> = new (
+type ClassOf = new (
   name: string,
   props: any,
   opts?: pulumi.CustomResourceOptions
-) => T & {
+) => pulumi.CustomResource & {
   id: pulumi.Output<string>;
   urn: pulumi.Output<string>;
 };
 
 /** Create Resource with Locker */
-export default async function <
-  TClass extends ClassOf<pulumi.CustomResource>,
+export default function <
+  TClass extends ClassOf,
   TProps extends Omit<DefaultResourceArgs, 'name' | 'group'>
 >(
   Class: TClass,
   { lock, monitoring, dependsOn, ignoreChanges, importUri, ...props }: TProps
 ) {
   const isResourceGroup = Class.name.endsWith('ResourceGroup');
-  //console.log('Creating Resource: ', Class.name);
-
   const name = tryFindName(props, isResourceGroup);
 
   const resource = new Class(
@@ -67,7 +70,7 @@ export default async function <
   //Azure DiagnosticSetting
   let diagnostic: DiagnosticSetting | undefined = undefined;
   if (monitoring) {
-    diagnostic = await createDiagnostic({
+    diagnostic = createDiagnostic({
       name,
       targetResourceId: resource.id,
       ...monitoring,

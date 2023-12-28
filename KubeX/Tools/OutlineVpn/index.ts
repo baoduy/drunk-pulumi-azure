@@ -1,4 +1,4 @@
-import { K8sArgs } from '../../types';
+import { K8sArgs, K8sResourceType } from '../../types';
 import Namespace from '../../Core/Namespace';
 import { KeyVaultInfo } from '../../../types';
 import { certImportFromFolder, certImportFromVault } from '../../CertImports';
@@ -16,6 +16,7 @@ export interface OutlineProps extends K8sArgs {
   hostname: string;
   apiPort?: number;
   accessPort?: number;
+  priorityClassName?: string;
   //Either provider 1 of value below
   cert: {
     certVaultName?: string;
@@ -29,6 +30,7 @@ export interface OutlineProps extends K8sArgs {
 
   replicas?: number;
   autoScale?: boolean;
+  resources?: K8sResourceType;
   storageClassName: StorageClassNameTypes;
 }
 export default async ({
@@ -38,7 +40,12 @@ export default async ({
   accessPort = 45123,
   cert,
   storageClassName,
+  priorityClassName = 'system-cluster-critical',
   replicas = 1,
+  resources = {
+    requests: { memory: '100Mi', cpu: '0.5' },
+    limits: { memory: '600Mi', cpu: '1' },
+  },
   autoScale,
   ...others
 }: OutlineProps) => {
@@ -128,6 +135,7 @@ export default async ({
             },
           },
           spec: {
+            priorityClassName,
             containers: [
               {
                 name,
@@ -195,10 +203,7 @@ export default async ({
                   },
                 ],
 
-                resources: {
-                  requests: { memory: '100Mi', cpu: '0.5' },
-                  limits: { memory: '1Gi', cpu: '2' },
-                },
+                resources,
               },
             ],
             volumes: [

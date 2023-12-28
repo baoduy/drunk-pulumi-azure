@@ -412,7 +412,7 @@ export class Deployment extends k8s.apps.v1.Deployment {
         },
         spec: serviceSpec,
       },
-      { ...this.opts, parent: this, dependsOn: this }
+      { ...this.opts, parent: this, dependsOn: this, deleteBeforeReplace: true }
     );
   }
 }

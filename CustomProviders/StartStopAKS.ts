@@ -11,12 +11,12 @@ import {
 import * as console from 'console';
 import { AxiosError } from 'axios';
 
-interface AksTurnOffInputs extends DefaultInputs {
+interface StartStopAKSInputs extends DefaultInputs {
   resourceGroupName: string;
   resourceName: string;
 }
 
-interface AksTurnOffOutputs extends AksTurnOffInputs, DefaultOutputs {}
+interface StartStopAKSOutputs extends StartStopAKSInputs, DefaultOutputs {}
 
 export interface AksResult {
   id: string;
@@ -37,17 +37,17 @@ export interface PowerState {
 const getAksStatus = async ({
   resourceGroupName,
   resourceName,
-}: AksTurnOffInputs) => {
+}: StartStopAKSInputs) => {
   const axios = createAxios();
   const url = `/resourceGroups/${resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/${resourceName}?api-version=2021-05-01`;
   return await axios.get<AksResult>(url).then((rs) => rs.data);
 };
 
-const aksTurnOff = async ({
+const startStopAKS = async ({
   resourceGroupName,
   resourceName,
   start,
-}: AksTurnOffInputs & { start?: boolean }) => {
+}: StartStopAKSInputs & { start?: boolean }) => {
   const axios = createAxios();
   //POST https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/{resourceName}/start?api-version=2023-02-01
   //POST https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/{resourceName}/stop?api-version=2023-02-01
@@ -55,26 +55,26 @@ const aksTurnOff = async ({
   const url = `/resourceGroups/${resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/${resourceName}/${
     start ? 'start' : 'stop'
   }?api-version=2023-02-01`;
-  //console.log('aksTurnOff', url);
+  //console.log('StartStopAKS', url);StartStopAKS.ts
 
   return await axios
     .post(url)
     //.then((rs) => rs.data)
     .catch((err: AxiosError) => {
-      console.log('aksTurnOff', err.response?.data || err);
+      console.log('StartStopAKS', err.response?.data || err);
       throw err;
     });
 };
 
-class AksTurnOffResourceProvider
-  implements BaseProvider<AksTurnOffInputs, AksTurnOffOutputs>
+class StartStopAKSResourceProvider
+  implements BaseProvider<StartStopAKSInputs, StartStopAKSOutputs>
 {
   constructor(private name: string) {}
 
   async diff(
     id: string,
-    previousOutput: AksTurnOffOutputs,
-    news: AksTurnOffInputs
+    previousOutput: StartStopAKSOutputs,
+    news: StartStopAKSInputs
   ): Promise<pulumi.dynamic.DiffResult> {
     const rs = await getAksStatus(news);
 
@@ -85,8 +85,10 @@ class AksTurnOffResourceProvider
     };
   }
 
-  async create(inputs: AksTurnOffInputs): Promise<pulumi.dynamic.CreateResult> {
-    await aksTurnOff({ ...inputs, start: false });
+  async create(
+    inputs: StartStopAKSInputs
+  ): Promise<pulumi.dynamic.CreateResult> {
+    await startStopAKS({ ...inputs, start: false });
     return {
       id: this.name,
       outs: inputs,
@@ -95,8 +97,8 @@ class AksTurnOffResourceProvider
 
   async update(
     id: string,
-    olds: AksTurnOffOutputs,
-    news: AksTurnOffInputs
+    olds: StartStopAKSOutputs,
+    news: StartStopAKSInputs
   ): Promise<pulumi.dynamic.UpdateResult> {
     //Ignored the error if cluster already stopped
 
@@ -104,25 +106,25 @@ class AksTurnOffResourceProvider
     return { outs: news };
   }
 
-  async delete(id: string, inputs: AksTurnOffInputs): Promise<void> {
-    await aksTurnOff({ ...inputs, start: true }).catch(() => undefined);
+  async delete(id: string, inputs: StartStopAKSInputs): Promise<void> {
+    await startStopAKS({ ...inputs, start: true }).catch(() => undefined);
   }
 }
 
-export class AksTurnOffResource extends BaseResource<
-  AksTurnOffInputs,
-  AksTurnOffOutputs
+export class StartStopAKSResource extends BaseResource<
+  StartStopAKSInputs,
+  StartStopAKSOutputs
 > {
   public readonly name: string;
 
   constructor(
     name: string,
-    args: BaseOptions<AksTurnOffInputs>,
+    args: BaseOptions<StartStopAKSInputs>,
     opts?: pulumi.CustomResourceOptions
   ) {
     super(
-      new AksTurnOffResourceProvider(name),
-      `csp:AksTurnOffs:${name}`,
+      new StartStopAKSResourceProvider(name),
+      `csp:StartStopAKSs:${name}`,
       args,
       opts
     );

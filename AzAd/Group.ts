@@ -1,5 +1,5 @@
 import * as azuread from '@pulumi/azuread';
-import { Input, Output } from '@pulumi/pulumi';
+import { Input, Output, output } from '@pulumi/pulumi';
 import { defaultScope } from '../Common/AzureEnv';
 import { roleAssignment } from './RoleAssignment';
 
@@ -100,7 +100,7 @@ export const addGroupToGroup = async (
   );
 };
 
-export const assignRolesToGroup = async ({
+export const assignRolesToGroup = ({
   roles,
   groupName,
   scope,
@@ -108,18 +108,18 @@ export const assignRolesToGroup = async ({
   groupName: string;
   roles: Array<string>;
   scope?: Input<string>;
-}) => {
-  const group = await getAdGroup(groupName);
-
-  await Promise.all(
-    roles.map((p) =>
-      roleAssignment({
-        name: groupName,
-        principalId: group.objectId,
-        principalType: 'Group',
-        roleName: p,
-        scope: scope ?? defaultScope,
-      })
-    )
-  );
-};
+}) =>
+  output(async () => {
+    const group = await getAdGroup(groupName);
+    return await Promise.all(
+      roles.map((p) =>
+        roleAssignment({
+          name: groupName,
+          principalId: group.objectId,
+          principalType: 'Group',
+          roleName: p,
+          scope: scope ?? defaultScope,
+        })
+      )
+    );
+  });

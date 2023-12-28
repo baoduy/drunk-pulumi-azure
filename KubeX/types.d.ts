@@ -11,14 +11,16 @@ export interface K8sArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
+export type K8sResourceType = {
+  limits?: { memory: string; cpu: string };
+  requests?: { memory: string; cpu: string };
+};
+
 export interface DefaultK8sArgs extends K8sArgs {
   name?: string;
   namespace: Input<string>;
 
-  resources?: {
-    limits: { memory: string; cpu: string };
-    requests: { memory: string; cpu: string };
-  };
+  resources?: K8sResourceType;
 }
 
 export interface DefaultKsAppArgs extends DefaultK8sArgs {
