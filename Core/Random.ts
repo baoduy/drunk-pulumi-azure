@@ -56,7 +56,7 @@ export const randomPassword = ({
     minSpecial: 2,
     ...options,
     //Exclude some special characters that are not accepted by XML and SQLServer.
-    overrideSpecial: '#%&*+-/:<>?^_|~',
+    overrideSpecial: options?.special == false ? '' : '#%&*+-/:<>?^_|~',
   });
 
   if (vaultInfo) {
@@ -76,7 +76,7 @@ export const randomUuId = (name: string) => new random.RandomUuid(name);
 const randomString = (name: string, length = 5) =>
   new random.RandomString(name, {
     length,
-    number: true,
+    numeric: true,
     lower: true,
     upper: true,
     special: false,
@@ -100,7 +100,7 @@ const randomUserName = ({
 };
 
 interface LoginProps extends UserNameProps {
-  passwordPolicy?: 'monthly' | 'yearly' | false;
+  passwordOptions?: Omit<RandomPassProps, 'name'>;
   vaultInfo?: KeyVaultInfo;
 }
 
@@ -108,7 +108,7 @@ export const randomSsh = ({
   name,
   loginPrefix,
   maxUserNameLength,
-  passwordPolicy = false,
+  passwordOptions = { policy: false },
   vaultInfo,
 }: LoginProps & { vaultInfo: KeyVaultInfo }) => {
   name = getSshName(name);
@@ -119,7 +119,7 @@ export const randomSsh = ({
   const privateKeyName = `${name}-privateKey`;
 
   const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
-  const pass = randomPassword({ name, policy: passwordPolicy });
+  const pass = randomPassword({ name, ...passwordOptions });
 
   const rs = new SshKeyResource(
     name,
@@ -165,11 +165,11 @@ export const randomLogin = ({
   name,
   loginPrefix,
   maxUserNameLength,
-  passwordPolicy = 'yearly',
+  passwordOptions = { policy: 'yearly' },
   vaultInfo,
 }: LoginProps) => {
   const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
-  const password = randomPassword({ name, policy: passwordPolicy }).result;
+  const password = randomPassword({ name, ...passwordOptions }).result;
 
   const userNameKey = `${name}-user`;
   const passwordKey = `${name}-password`;

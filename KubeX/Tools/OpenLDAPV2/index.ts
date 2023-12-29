@@ -1,5 +1,5 @@
 import * as k8s from '@pulumi/kubernetes';
-import { randomPassword } from '../../../Core/Random';
+import { randomPassword, randomLogin } from '../../../Core/Random';
 import { DefaultK8sArgs } from '../../types';
 import { KeyVaultInfo } from '../../../types';
 import Namespace from '../../Core/Namespace';
@@ -23,7 +23,7 @@ export default ({
   ...others
 }: OpenLDAPProps) => {
   //Admin Pass
-  const adminUser = `${name}-admin`;
+  const adminUser = `${name}Admin`;
   const adminPass = randomPassword({
     name: `${name}-admin`,
     vaultInfo,
@@ -32,7 +32,7 @@ export default ({
     policy: 'yearly',
   });
   //Config Pass
-  const configUser = `${name}-config`;
+  const configUser = `${name}Config`;
   const configPass = randomPassword({
     name: `${name}-config`,
     vaultInfo,
@@ -51,6 +51,9 @@ export default ({
       fetchOpts: { repo: 'https://jp-gouin.github.io/helm-openldap' },
 
       values: {
+        users: 'demo',
+        userPasswords: 'demo@stdynamo',
+
         global: {
           ldapDomain,
           adminUser,
@@ -70,7 +73,7 @@ export default ({
           ingress: { enabled: false, ingressClassName: 'nginx' },
         },
         'ltb-passwd': {
-          enabled: false,
+          enabled: true,
           ingress: { enabled: false, ingressClassName: 'nginx' },
         },
         persistence: { storageClass: storageClassName },
