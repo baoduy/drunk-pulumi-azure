@@ -29,7 +29,7 @@ export default ({
     vaultInfo,
     length: 25,
     options: { special: false },
-    policy: 'yearly',
+    policy: false,
   });
   //Config Pass
   const configUser = `${name}Config`;
@@ -38,7 +38,7 @@ export default ({
     vaultInfo,
     length: 25,
     options: { special: false },
-    policy: 'yearly',
+    policy: false,
   });
   const ns = Namespace({ name: namespace, ...others });
 
@@ -73,7 +73,7 @@ export default ({
           ingress: { enabled: false, ingressClassName: 'nginx' },
         },
         'ltb-passwd': {
-          enabled: true,
+          enabled: false,
           ingress: { enabled: false, ingressClassName: 'nginx' },
         },
         persistence: { storageClass: storageClassName },
