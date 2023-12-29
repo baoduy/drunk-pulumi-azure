@@ -27,7 +27,7 @@ export const certImportFromCertOrder = async ({
     ksCertSecret({
       name: `${name}-${i}`,
       namespace: n,
-      ...cert,
+      certInfo: cert,
       ...others,
     })
   );
@@ -36,9 +36,11 @@ export const certImportFromCertOrder = async ({
 const getCertFromFolder = (folder: string) => {
   const cert = fs.readFileSync(`./${folder}/cert.crt`, { encoding: 'utf8' });
   const ca = fs.readFileSync(`./${folder}/ca.crt`, { encoding: 'utf8' });
-  const key = fs.readFileSync(`./${folder}/private.key`, { encoding: 'utf8' });
+  const privateKey = fs.readFileSync(`./${folder}/private.key`, {
+    encoding: 'utf8',
+  });
 
-  return { cert, ca, key };
+  return { cert, ca, privateKey };
 };
 
 export const certImportFromFolder = ({
@@ -55,9 +57,7 @@ export const certImportFromFolder = ({
     ksCertSecret({
       name: `${name}-${i}`,
       namespace: n,
-      cert: cert.cert,
-      ca: cert.ca,
-      privateKey: cert.key,
+      certInfo: cert,
       ...others,
     })
   );
@@ -96,7 +96,7 @@ export const certImportFromVault = async ({
         ksCertSecret({
           name: `${c}-${i}`,
           namespace,
-          ...pems,
+          certInfo: pems,
           ...others,
         });
       }

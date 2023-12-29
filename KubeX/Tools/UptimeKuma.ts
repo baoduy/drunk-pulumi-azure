@@ -42,7 +42,7 @@ export default ({
       ],
       //securityContext: { runAsUser: 1001, runAsGroup: 1001 },
     },
-    deploymentConfig: { replicas: 1, strategy: 'Recreate' },
+    deploymentConfig: { replicas: 1 },
     ingressConfig: ingress,
 
     ...others,

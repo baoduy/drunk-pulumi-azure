@@ -40,32 +40,29 @@ export default async ({
         });
 
       return c.zones.map(async (z) => {
-        const cert = certExisted && vaultInfo
-          ? await getCloudflareOriginCert({ domainName: z, vaultInfo })
-          : await certCreator({
-              domainName: z,
-              vaultInfo,
-              provider: cfProvider,
-            });
+        const cert =
+          certExisted && vaultInfo
+            ? await getCloudflareOriginCert({ domainName: z, vaultInfo })
+            : await certCreator({
+                domainName: z,
+                vaultInfo,
+                provider: cfProvider,
+              });
 
         // const ns = c.namespaces ?? namespaces;
         // if (!ns || !Array.isArray(ns))
         //   throw new Error(`The namespaces of ${z} is invalid.`);
 
-        return pulumi
-          .all([namespaces, cert.cert, cert.privateKey, cert.ca])
-          .apply(([ns, cert, privateKey, ca]) =>
-            ns.map((n) =>
-              KsCertSecret({
-                name: getTlsName(z, false),
-                namespace: n,
-                cert,
-                ca,
-                privateKey,
-                ...others,
-              })
-            )
-          );
+        return pulumi.all([namespaces]).apply(([ns]) =>
+          ns.map((n) =>
+            KsCertSecret({
+              name: getTlsName(z, false),
+              namespace: n,
+              certInfo: cert,
+              ...others,
+            })
+          )
+        );
       });
     })
   );
