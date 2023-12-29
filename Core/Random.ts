@@ -50,7 +50,7 @@ export const randomPassword = ({
     minLower: 2,
     upper: true,
     minUpper: 2,
-    number: true,
+    numeric: true,
     minNumeric: 2,
     special: true,
     minSpecial: 2,

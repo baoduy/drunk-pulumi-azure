@@ -17,7 +17,7 @@ export default ({
   namespace = 'ldap',
   vaultInfo,
   resources,
-  replicas,
+  replicas = 1,
   ldapDomain,
   storageClassName,
   ...others
@@ -27,7 +27,7 @@ export default ({
   const adminPass = randomPassword({
     name: `${name}-admin`,
     vaultInfo,
-    length: 24,
+    length: 25,
     options: { special: false },
     policy: 'yearly',
   });
@@ -36,11 +36,13 @@ export default ({
   const configPass = randomPassword({
     name: `${name}-config`,
     vaultInfo,
-    length: 24,
+    length: 25,
     options: { special: false },
     policy: 'yearly',
   });
   const ns = Namespace({ name: namespace, ...others });
+
+  //https://github.com/jp-gouin/helm-openldap/blob/master/values.yaml
   const openLDAP = new k8s.helm.v3.Chart(
     name,
     {
@@ -58,7 +60,11 @@ export default ({
           configPassword: configPass.result,
         },
         replicaCount: replicas,
-        initTLSSecret: { tls_enabled: false, secret: undefined },
+        initTLSSecret: {
+          enabled: false,
+          tls_enabled: false,
+          secret: undefined,
+        },
         phpldapadmin: {
           enabled: true,
           ingress: { enabled: false, ingressClassName: 'nginx' },
