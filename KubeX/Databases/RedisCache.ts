@@ -1,10 +1,7 @@
-import { DefaultK8sArgs, MySqlProps } from '../types';
-import { KeyVaultInfo } from '../../types';
+import { MySqlProps } from '../types';
 import { randomPassword } from '../../Core/Random';
-import { StorageClassNameTypes } from '../Storage';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
-import { getPasswordName } from '../../Common/Naming';
-import { Input, interpolate } from '@pulumi/pulumi';
+import { interpolate } from '@pulumi/pulumi';
 import Deployment from '../Deployment';
 import { createPVCForStorageClass } from '../Storage';
 
@@ -57,7 +54,7 @@ export default ({
     ...others,
     secrets: { PASSWORD: password },
     podConfig: {
-      port,
+      ports: { http: port },
       image: `redis:${version}`,
       podSecurityContext: {},
       securityContext: {},
@@ -75,7 +72,6 @@ export default ({
     deploymentConfig: {
       args: [interpolate`--requirepass ${password}`],
     },
-    serviceConfig: { port },
   });
 
   return {

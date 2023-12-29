@@ -5,7 +5,7 @@ import { interpolate } from '@pulumi/pulumi';
 
 interface MariaDbProps extends MySqlProps {}
 
-export default async ({
+export default ({
   name = 'mariadb',
   namespace,
   version,

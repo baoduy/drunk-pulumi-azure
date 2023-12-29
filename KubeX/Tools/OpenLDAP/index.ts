@@ -33,13 +33,21 @@ export default ({
   const image = 'osixia/openldap:latest';
   const ns = Namespace({ name: namespace, ...others });
   //Storage Volume
-  const persisVolume = createPVCForStorageClass({
+  const dataPV = createPVCForStorageClass({
     name,
     namespace,
     accessMode: 'ReadWriteMany',
     ...others,
     storageClassName,
   });
+  const configPV = createPVCForStorageClass({
+    name: `${name}-config`,
+    namespace,
+    accessMode: 'ReadWriteMany',
+    ...others,
+    storageClassName,
+  });
+
   //Admin Pass
   const adminPass = randomPassword({
     name: `${name}-admin`,
@@ -58,7 +66,7 @@ export default ({
     vaultInfo,
     policy: false,
   });
-  //Certficate
+  //Certificate
   const cert = createSelfSignCertV2({
     dnsName: environments.LDAP_DOMAIN,
     commonName: environments.LDAP_DOMAIN,
@@ -66,14 +74,14 @@ export default ({
     validYears: 3,
     vaultInfo,
   });
-  const dhparamBase64 = dhparam();
+  const dhparamInfo = dhparam();
   //Cert Secret
   const certSecret = KsCertSecret({
     name: 'cert',
     namespace,
     certInfo: {
       ...cert,
-      dhparam: dhparamBase64,
+      dhparam: dhparamInfo.dhparamPem,
     },
     ...others,
     dependsOn: ns,
@@ -168,12 +176,12 @@ export default ({
         {
           name: 'ldap-data',
           mountPath: '/var/lib/ldap',
-          persistentVolumeClaim: persisVolume.metadata.name,
+          persistentVolumeClaim: dataPV.metadata.name,
         },
         {
           name: 'ldap-config',
           mountPath: '/etc/ldap/slapd.d',
-          persistentVolumeClaim: persisVolume.metadata.name,
+          persistentVolumeClaim: configPV.metadata.name,
         },
       ],
       resources,

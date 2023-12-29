@@ -1,19 +1,30 @@
-'use strict';
 import crypto from 'crypto';
-import asn1js from 'asn1js';
-import { toBase64 } from 'pvutils';
 
-export function dhparam(bits?: number): string {
+export const dhparam = (bits?: number) => {
+  // Create a Diffie-Hellman key exchange object
   const dh = crypto.createDiffieHellman(bits || 2048);
 
-  const p = new asn1js.Integer({ valueHex: dh.getPrime() });
-  const g = new asn1js.Integer({ value: 2 });
-  const seq = new asn1js.Sequence({
-    value: [p, g],
-  });
+  // Generate the private key using the generator and prime
+  const privateKey = dh.generateKeys();
 
-  const asn1Value = seq.toBER(false);
-  const asn1Base64 = toBase64(asn1js.fromBER(asn1Value).result.toString());
+  // Get the prime and generator
+  const prime = dh.getPrime();
+  const generator = dh.getGenerator();
 
-  return asn1Base64;
-}
+  // Convert the private key to a PEM formatted string
+  const privateKeyPem = `
+-----BEGIN PRIVATE KEY-----
+${privateKey.toString('base64')}
+-----END PRIVATE KEY-----
+`;
+
+  // Combine the prime and generator into a PEM formatted string
+  const dhparamPem = `
+-----BEGIN DH PARAMETERS-----
+${prime.toString('base64')}
+${generator.toString('base64')}
+-----END DH PARAMETERS-----
+`;
+
+  return { dhparamPem, privateKeyPem };
+};

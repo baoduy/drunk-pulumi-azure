@@ -7,7 +7,7 @@ import OutlineVpn, { OutlineProps } from './OutlineVpn';
 import NoIp, { NoIpProps } from './NoIp';
 import AppHealthMonitor, { AppHealthMonitorProps } from './AppHealthzMonitor';
 import UptimeKuma, { UptimeKumaProps } from './UptimeKuma';
-import OpenLDAP, { OpenLDAPProps } from './OpenLDAP';
+import OpenLDAP, { OpenLDAPProps } from './OpenLDAPV2';
 import HelloWorld from './HelloWorld';
 import EchoApp from './Echo-App';
 import { DefaultKsAppArgs } from '../types';
