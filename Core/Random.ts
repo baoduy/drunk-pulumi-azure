@@ -14,7 +14,7 @@ interface RandomPassProps {
   options?: {
     lower?: boolean;
     upper?: boolean;
-    number?: boolean;
+    numeric?: boolean;
     special?: boolean;
   };
   vaultInfo?: KeyVaultInfo;
