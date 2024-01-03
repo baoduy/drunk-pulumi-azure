@@ -144,6 +144,10 @@ export default async ({
       : await Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
     : undefined;
 
+  const ignoreChanges = ['administratorLogin', 'administrators'];
+  if (auth.azureAdOnlyAuthentication)
+    ignoreChanges.push('administratorLoginPassword');
+
   const sqlServer = new sql.Server(
     sqlName,
     {
@@ -154,7 +158,9 @@ export default async ({
 
       identity: { type: 'SystemAssigned' },
       administratorLogin: auth?.adminLogin,
-      administratorLoginPassword: auth?.password,
+      administratorLoginPassword: auth.azureAdOnlyAuthentication
+        ? undefined
+        : auth?.password,
 
       administrators:
         auth?.enableAdAdministrator && adminGroup
@@ -176,7 +182,7 @@ export default async ({
       tags: defaultTags,
     },
     {
-      ignoreChanges: ['administratorLogin', 'administrators'],
+      ignoreChanges,
       protect: lock,
     }
   );
