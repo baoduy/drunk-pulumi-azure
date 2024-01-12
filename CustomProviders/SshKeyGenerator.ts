@@ -5,16 +5,15 @@ import {
   BaseOptions,
   BaseProvider,
   BaseResource,
-  ClientCredential,
   DefaultInputs,
   DefaultOutputs,
 } from './Base';
 
 import { generateKeyPair, RSAKeyPairOptions } from 'crypto';
-import { SecretClient } from '@azure/keyvault-secrets';
 import { getSecretName } from '../Common/Naming';
+import { createKeyVaultClient } from './Helper';
 
-export const generateKeys = (options: RSAKeyPairOptions<'pem', 'pem'>) =>
+const generateKeys = (options: RSAKeyPairOptions<'pem', 'pem'>) =>
   new Promise<{ publicKey: string; privateKey: string }>((resolve, reject) => {
     generateKeyPair(
       'rsa',
@@ -85,8 +84,7 @@ class SshKeyResourceProvider
     });
 
     //Create Key Vault items
-    const url = `https://${inputs.vaultName}.vault.azure.net?api-version=7.0`;
-    const client = new SecretClient(url, new ClientCredential());
+    const client = createKeyVaultClient(inputs.vaultName);
 
     await client.setSecret(getSecretName(inputs.publicKeyName), publicKey, {
       enabled: true,
@@ -111,30 +109,33 @@ class SshKeyResourceProvider
   ): Promise<pulumi.dynamic.UpdateResult> {
     const rs = await this.create(news);
     //Delete Ols key
-
-    const url = `https://${olds.vaultName}.vault.azure.net?api-version=7.0`;
-    const client = new SecretClient(url, new ClientCredential());
+    const client = createKeyVaultClient(olds.vaultName);
 
     if (
       olds.vaultName !== news.vaultName ||
       olds.publicKeyName !== news.publicKeyName
     ) {
-      await client
-        .beginDeleteSecret(getSecretName(olds.publicKeyName))
-        .catch((e) => {
-          //ignore if any error
-        });
+      await client.beginDeleteSecret(getSecretName(olds.publicKeyName)).catch();
     }
 
     if (
       olds.vaultName !== news.vaultName ||
       olds.privateKeyName !== news.privateKeyName
     ) {
-      await client.beginDeleteSecret(getSecretName(olds.privateKeyName));
+      await client
+        .beginDeleteSecret(getSecretName(olds.privateKeyName))
+        .catch();
     }
 
     return rs;
   }
+
+  // No need to be deleted the keys will be upsert when creating a new one.
+  // async delete(id: string, props: SshKeyOutputs) {
+  //   const client = createKeyVaultClient(props.vaultName);
+  //   await client.beginDeleteSecret(getSecretName(props.publicKeyName)).catch();
+  //   await client.beginDeleteSecret(getSecretName(props.privateKeyName)).catch();
+  // }
 }
 
 export class SshKeyResource extends BaseResource<SshKeyInputs, SshKeyOutputs> {

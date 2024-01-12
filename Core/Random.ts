@@ -88,7 +88,7 @@ interface UserNameProps {
   maxUserNameLength?: number;
 }
 
-const randomUserName = ({
+export const randomUserName = ({
   name,
   loginPrefix = 'admin',
   maxUserNameLength = 15,
@@ -99,67 +99,10 @@ const randomUserName = ({
   );
 };
 
-interface LoginProps extends UserNameProps {
+export interface LoginProps extends UserNameProps {
   passwordOptions?: Omit<RandomPassProps, 'name'>;
   vaultInfo?: KeyVaultInfo;
 }
-
-export const randomSsh = ({
-  name,
-  loginPrefix,
-  maxUserNameLength,
-  passwordOptions = { policy: false },
-  vaultInfo,
-}: LoginProps & { vaultInfo: KeyVaultInfo }) => {
-  name = getSshName(name);
-
-  const userNameKey = `${name}-user`;
-  const passwordKeyName = `${name}-password`;
-  const publicKeyName = `${name}-publicKey`;
-  const privateKeyName = `${name}-privateKey`;
-
-  const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
-  const pass = randomPassword({ name, ...passwordOptions });
-
-  const rs = new SshKeyResource(
-    name,
-    {
-      password: pass.result,
-      vaultName: vaultInfo.name,
-      publicKeyName,
-      privateKeyName,
-    },
-    { dependsOn: pass }
-  );
-
-  addCustomSecret({
-    name: userNameKey,
-    value: userName,
-    vaultInfo,
-    contentType: 'Random Ssh',
-  });
-
-  addCustomSecret({
-    name: passwordKeyName,
-    value: pass.result,
-    vaultInfo,
-    contentType: 'Random Ssh',
-    dependsOn: rs,
-  });
-
-  return {
-    userName,
-    ssh: rs,
-    password: pass.result,
-    vaultNames: { passwordKeyName, publicKeyName, privateKeyName },
-    lists: {
-      getUserName: async () =>
-        (await getSecret({ name: userNameKey, vaultInfo }))?.value,
-      getPublicKey: async () =>
-        (await getSecret({ name: publicKeyName, vaultInfo }))?.value,
-    },
-  };
-};
 
 export const randomLogin = ({
   name,
