@@ -1,5 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import { generateKey } from 'openpgp';
+import { generateKey, SerializedKeyPair } from 'openpgp';
 
 import {
   BaseOptions,
@@ -10,7 +10,6 @@ import {
 } from './Base';
 
 import { getSecretName } from '../Common/Naming';
-import { SerializedKeyPair } from 'openpgp';
 import { createKeyVaultClient } from './Helper';
 
 export interface PGPProps {
@@ -99,7 +98,7 @@ class PGPResourceProvider implements BaseProvider<PGPInputs, PGPOutputs> {
 
     return {
       id: this.name,
-      outs: { ...inputs, publicKey, privateKey },
+      outs: inputs,
     };
   }
 

@@ -98,7 +98,7 @@ class SshKeyResourceProvider
 
     return {
       id: this.name,
-      outs: { ...inputs, publicKey, privateKey },
+      outs: inputs,
     };
   }
 
