@@ -55,13 +55,15 @@ export default ({
               ...randomPassOptions,
             }).result,
           },
-          database: {
-            DB_TYPE: 'postgres',
-            HOST: `${postgres.host}:${postgres.port}`,
-            NAME: postgres.database,
-            USER: postgres.username,
-            PASSWD: postgres.password,
-            SCHEMA: 'gitea',
+          config: {
+            database: {
+              DB_TYPE: 'postgres',
+              HOST: `${postgres.host}:${postgres.port}`,
+              NAME: postgres.database,
+              USER: postgres.username,
+              PASSWD: postgres.password,
+              SCHEMA: 'gitea',
+            },
           },
         },
 
