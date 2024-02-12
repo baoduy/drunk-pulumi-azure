@@ -17,6 +17,7 @@ export default async ({
         name,
         length: 25,
         options: { special: false },
+        policy: false,
         vaultInfo,
       }).result;
 

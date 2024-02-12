@@ -9,7 +9,7 @@ import { KeyVaultInfo } from '../types';
 
 interface RandomPassProps {
   name: string;
-  policy?: 'monthly' | 'yearly' | false;
+  policy?: 'monthly' | 'yearly' | boolean;
   length?: number;
   options?: {
     lower?: boolean;
@@ -53,7 +53,7 @@ export const randomPassword = ({
     numeric: true,
     minNumeric: 2,
     special: true,
-    minSpecial: 2,
+    minSpecial: options?.special ? 2 : 0,
     ...options,
     //Exclude some special characters that are not accepted by XML and SQLServer.
     overrideSpecial: options?.special == false ? '' : '#%&*+-/:<>?^_|~',
