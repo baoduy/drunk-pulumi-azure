@@ -1,12 +1,17 @@
 import { DefaultK8sArgs } from '../types';
 import * as k8s from '@pulumi/kubernetes';
-import { Input } from '@pulumi/pulumi';
+import { Input, interpolate } from '@pulumi/pulumi';
 import { randomPassword } from '../../Core/Random';
 import { KeyVaultInfo } from '../../types';
 
 interface HarborRepoProps extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
   storageClass: Input<string>;
+
+  auth?: {
+    localAdmin?: { username: string; email: string };
+    enableAzureAuth?: boolean;
+  };
 
   postgres: {
     host: Input<string>;
@@ -58,11 +63,11 @@ export default ({
           config: {
             database: {
               DB_TYPE: 'postgres',
-              HOST: `${postgres.host}:${postgres.port}`,
+              HOST: interpolate`${postgres.host}:${postgres.port}`,
               NAME: postgres.database,
               USER: postgres.username,
               PASSWD: postgres.password,
-              SCHEMA: 'gitea',
+              SCHEMA: 'public',
             },
           },
         },
