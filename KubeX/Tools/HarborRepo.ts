@@ -4,9 +4,14 @@ import { Input } from '@pulumi/pulumi';
 import { randomPassword } from '../../Core/Random';
 import { KeyVaultInfo } from '../../types';
 
-interface HarborGitProps extends DefaultK8sArgs {
+interface HarborRepoProps extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
+
   externalURL: string;
+  coreURL: string;
+  notaryURL: string;
+  tlsSecretName: string;
+
   storageClass: Input<string>;
   accessMode?: 'ReadWriteMany' | 'ReadWriteOnce';
   postgres: {
@@ -29,7 +34,12 @@ interface HarborGitProps extends DefaultK8sArgs {
 export default ({
   name = 'harbor',
   namespace,
+
   externalURL,
+  coreURL,
+  notaryURL,
+  tlsSecretName,
+
   storageClass,
   accessMode = 'ReadWriteOnce',
   postgres,
@@ -37,7 +47,7 @@ export default ({
   vaultInfo,
   provider,
   dependsOn,
-}: HarborGitProps) => {
+}: HarborRepoProps) => {
   const redisType = redis ? 'external' : 'internal';
   const randomPassOptions = {
     length: 16,
@@ -57,6 +67,13 @@ export default ({
         expose: {
           type: 'clusterIP', // ingress, clusterIP, nodePort, loadBalancer
           tls: { auto: { commonName: externalURL.replace('https://', '') } },
+          ingress: {
+            hosts: {
+              core: coreURL,
+              notary: notaryURL,
+              secretName: tlsSecretName,
+            },
+          },
         },
         externalURL,
 
