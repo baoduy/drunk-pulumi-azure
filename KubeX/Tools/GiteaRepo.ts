@@ -109,7 +109,7 @@ export default ({
     : {};
 
   if (captcha) {
-    if (captcha.type === 'recaptcha') {
+    if (captcha.type === 'cfturnstile') {
       captchaConfig['CF_TURNSTILE_SITEKEY'] = captcha.siteKey;
       captchaConfig['CF_TURNSTILE_SECRET'] = captcha.secret;
       captchaConfig['CF_TURNSTILE_URL'] = captcha.url ?? '';
