@@ -88,19 +88,10 @@ export const createPVCForAzureFileShare = ({
   );
 };
 
-export type StorageClassNameTypes =
-  | 'default'
-  | 'managed'
-  | 'managed-premium'
-  | 'managed-csi-premium'
-  | 'azurefile-csi'
-  | 'azurefile-csi-premium'
-  | string;
-
 interface StorageClassProps extends K8sArgs {
   name: string;
   namespace?: pulumi.Input<string>;
-  storageClassName?: StorageClassNameTypes;
+  storageClassName?: pulumi.Input<string>;
   volumeMode?: 'Filesystem';
   /** requests storage: 5Gi or 10Gi*/
   storageGb?: string;

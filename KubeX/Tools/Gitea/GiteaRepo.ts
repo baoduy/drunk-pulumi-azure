@@ -1,11 +1,11 @@
-import { DefaultK8sArgs } from '../types';
+import { DefaultK8sArgs } from '../../types';
 import * as k8s from '@pulumi/kubernetes';
 import { Input, interpolate } from '@pulumi/pulumi';
-import { randomPassword } from '../../Core/Random';
-import { KeyVaultInfo } from '../../types';
-import IdentityCreator from '../../AzAd/Identity';
-import RoleCreator from '../../AzAd/Role';
-import { Environments, tenantId } from '../../Common/AzureEnv';
+import { randomPassword } from '../../../Core/Random';
+import { KeyVaultInfo } from '../../../types';
+import IdentityCreator from '../../../AzAd/Identity';
+import RoleCreator from '../../../AzAd/Role';
+import { Environments, tenantId } from '../../../Common/AzureEnv';
 
 type CaptchaType = {
   type: 'image' | 'recaptcha' | 'hcaptcha' | 'mcaptcha' | 'cfturnstile';
@@ -57,6 +57,7 @@ interface HarborRepoProps extends DefaultK8sArgs {
   };
 
   captcha?: CaptchaType;
+  enabledActions?: boolean;
 
   postgres: {
     host: Input<string>;
@@ -78,7 +79,7 @@ export default ({
   captcha,
   storageClass,
   postgres,
-
+  enabledActions,
   vaultInfo,
   provider,
   dependsOn,
@@ -168,6 +169,8 @@ export default ({
           ldap: auth?.ldap,
 
           config: {
+            actions: { ENABLED: `${Boolean(enabledActions)}` },
+
             admin: {
               DISABLE_REGULAR_ORG_CREATION: 'true', //Only Admin able to create new Organization
             },
