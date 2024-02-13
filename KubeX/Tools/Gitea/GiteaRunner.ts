@@ -7,12 +7,14 @@ interface GiteaRunnerProps extends DefaultK8sArgs {
   storageClassName: Input<string>;
   giteaUrl?: Input<string>;
   giteaToken: Input<string>;
+  storageGb?: number;
 }
 
 export default ({
   name = 'gitea-runner',
   namespace,
   storageClassName,
+  storageGb = 10,
   giteaUrl,
   giteaToken,
   ...others
@@ -21,6 +23,7 @@ export default ({
     name,
     namespace,
     accessMode: 'ReadWriteOnce',
+    storageGb: `${storageGb}Gi`,
     ...others,
     storageClassName,
   });
