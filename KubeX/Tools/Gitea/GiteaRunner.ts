@@ -33,6 +33,8 @@ export default ({
       DOCKER_HOST: 'tcp://localhost:2376',
       DOCKER_CERT_PATH: '/certs/client',
       DOCKER_TLS_VERIFY: '0',
+      GITEA_RUNNER_NAME: name,
+      //GITEA_RUNNER_LABELS: '',
       GITEA_INSTANCE_URL:
         giteaUrl ??
         interpolate`http://gitea-http.${namespace}.svc.cluster.local:3000`,
