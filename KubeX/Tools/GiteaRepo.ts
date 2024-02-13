@@ -106,6 +106,11 @@ export default ({
         appType: 'web',
         replyUrls: [`https://${host}/user/oauth2/AzureAD/callback`],
         vaultInfo,
+
+        optionalClaims: {
+          idTokens: [{ name: 'groups', essential: false }],
+          accessTokens: [{ name: 'groups', essential: false }],
+        },
       })
     : undefined;
 
@@ -152,7 +157,7 @@ export default ({
                   // requiredClaimValue
                   scopes: 'openid email',
                   groupClaimName: 'groups',
-                  //adminGroup: adminGroup.objectId,
+                  adminGroup: adminGroup.objectId,
                   //groupTeamMap: interpolate`{"${adminGroup.objectId}": {"creamteam": ["Developers"]}}`,
                 },
               ]
@@ -176,7 +181,7 @@ export default ({
             openid: {
               ENABLE_OPENID_SIGNIN: 'false',
               ENABLE_OPENID_SIGNUP: 'true',
-              WHITELISTED_URIS: 'login.microsoftonline.com',
+              WHITELISTED_URIS: 'login.microsoftonline.com google.com',
             },
             database: {
               DB_TYPE: 'postgres',
@@ -197,6 +202,7 @@ export default ({
               ENABLE_BASIC_AUTHENTICATION: 'false', // `${Boolean(auth?.localAdmin)}`,
               ALLOW_ONLY_EXTERNAL_REGISTRATION: 'true',
               DEFAULT_ALLOW_CREATE_ORGANIZATION: 'true', //only Admin able to create Organization
+              SHOW_REGISTRATION_BUTTON: 'false',
             },
             server: {
               DISABLE_SSH: 'true',
