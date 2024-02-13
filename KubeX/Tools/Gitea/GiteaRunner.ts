@@ -17,6 +17,7 @@ export default ({
   storageGb = 10,
   giteaUrl,
   giteaToken,
+  resources,
   ...others
 }: GiteaRunnerProps) => {
   const persisVolume = createPVCForStorageClass({
@@ -24,8 +25,8 @@ export default ({
     namespace,
     accessMode: 'ReadWriteOnce',
     storageGb: `${storageGb}Gi`,
-    ...others,
     storageClassName,
+    ...others,
   });
 
   return Deployment({
@@ -49,6 +50,7 @@ export default ({
       ports: { http: 3000 },
       securityContext: { fsGroup: 1000 },
       podSecurityContext: { privileged: true },
+      resources,
       volumes: [
         {
           name: 'runner-data',
@@ -60,5 +62,6 @@ export default ({
     },
 
     ...others,
+    dependsOn: persisVolume,
   });
 };

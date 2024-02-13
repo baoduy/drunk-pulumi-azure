@@ -127,6 +127,6 @@ export const createPVCForStorageClass = ({
         storageClassName,
       },
     },
-    { provider, dependsOn }
+    { provider, dependsOn, deleteBeforeReplace: true }
   );
 };
