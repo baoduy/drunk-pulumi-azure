@@ -7,6 +7,16 @@ import IdentityCreator from '../../AzAd/Identity';
 import RoleCreator from '../../AzAd/Role';
 import { Environments, tenantId } from '../../Common/AzureEnv';
 
+type CaptchaType = {
+  type: 'image' | 'recaptcha' | 'hcaptcha' | 'mcaptcha' | 'cfturnstile';
+  siteKey: Input<string>;
+  secret: Input<string>;
+  url?: Input<string>;
+};
+
+const getCaptchaPrefixKey = (captcha: CaptchaType) =>
+  captcha.type === 'cfturnstile' ? 'CF_TURNSTILE' : captcha.type.toUpperCase();
+
 interface HarborRepoProps extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
   storageClass: Input<string>;
@@ -46,12 +56,7 @@ interface HarborRepoProps extends DefaultK8sArgs {
     };
   };
 
-  captcha?: {
-    type: 'image' | 'recaptcha' | 'hcaptcha' | 'mcaptcha' | 'cfturnstile';
-    siteKey: Input<string>;
-    secret: Input<string>;
-    url?: Input<string>;
-  };
+  captcha?: CaptchaType;
 
   postgres: {
     host: Input<string>;
@@ -104,21 +109,14 @@ export default ({
       })
     : undefined;
 
-  const captchaConfig: { [key: string]: Input<string> } = captcha
-    ? { CAPTCHA_TYPE: captcha.type }
+  const captchaConfig = captcha
+    ? {
+        CAPTCHA_TYPE: captcha.type,
+        [`${getCaptchaPrefixKey(captcha)}_SITEKEY`]: captcha.siteKey,
+        [`${getCaptchaPrefixKey(captcha)}_SECRET`]: captcha.secret,
+        [`${getCaptchaPrefixKey(captcha)}_URL`]: captcha.url ?? '',
+      }
     : {};
-
-  if (captcha) {
-    if (captcha.type === 'cfturnstile') {
-      captchaConfig['CF_TURNSTILE_SITEKEY'] = captcha.siteKey;
-      captchaConfig['CF_TURNSTILE_SECRET'] = captcha.secret;
-      captchaConfig['CF_TURNSTILE_URL'] = captcha.url ?? '';
-    } else {
-      captchaConfig[`${captcha.type.toUpperCase()}_SITEKEY`] = captcha.siteKey;
-      captchaConfig[`${captcha.type.toUpperCase()}_SECRET`] = captcha.secret;
-      captchaConfig[`${captcha.type.toUpperCase()}_URL`] = captcha.url ?? '';
-    }
-  }
 
   const gitea = new k8s.helm.v3.Chart(
     name,
