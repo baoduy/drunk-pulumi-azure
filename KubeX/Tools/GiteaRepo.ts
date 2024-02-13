@@ -3,14 +3,54 @@ import * as k8s from '@pulumi/kubernetes';
 import { Input, interpolate } from '@pulumi/pulumi';
 import { randomPassword } from '../../Core/Random';
 import { KeyVaultInfo } from '../../types';
+import IdentityCreator from '../../AzAd/Identity';
+import RoleCreator from '../../AzAd/Role';
+import { Environments, tenantId } from '../../Common/AzureEnv';
 
 interface HarborRepoProps extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
   storageClass: Input<string>;
+  host: string;
 
   auth?: {
     localAdmin?: { username: string; email: string };
-    enableAzureAuth?: boolean;
+    disableRegistration?: boolean;
+    enableAzureAD?: boolean;
+    oauth?: {
+      name: string;
+      iconUrl?: Input<string>;
+      key: Input<string>;
+      secret: Input<string>;
+      scopes?: Input<string>;
+      autoDiscoverUrl?: Input<string>;
+      useCustomUrls?: Input<string>;
+      customAuthUrl?: Input<string>;
+      customTokenUrl?: Input<string>;
+      customProfileUrl?: Input<string>;
+      customEmailUrl?: Input<string>;
+    };
+    ldap?: {
+      name: string;
+      iconUrl?: Input<string>;
+      securityProtocol: Input<string>;
+      host: Input<string>;
+      port: Input<string>;
+      userSearchBase: Input<string>;
+      userFilter: Input<string>;
+      adminFilter: Input<string>;
+      emailAttribute: Input<string>;
+      bindDn: Input<string>;
+      bindPassword: Input<string>;
+      usernameAttribute: Input<string>;
+      publicSSHKeyAttribute: Input<string>;
+    };
+  };
+
+  captcha?: {
+    type: 'image' | 'recaptcha' | 'hcaptcha' | 'mcaptcha' | 'cfturnstile';
+    siteKey: Input<string>;
+    secret: Input<string>;
+    url?: Input<string>;
   };
 
   postgres: {
@@ -28,7 +68,9 @@ interface HarborRepoProps extends DefaultK8sArgs {
 export default ({
   name = 'gitea',
   namespace,
-
+  host,
+  auth = { disableRegistration: true },
+  captcha,
   storageClass,
   postgres,
 
@@ -43,6 +85,41 @@ export default ({
     vaultInfo,
   };
 
+  //Create 2 Groups for Admin and Users
+  const adminGroup = RoleCreator({
+    env: Environments.Dev,
+    appName: name,
+    roleName: 'Admin',
+    includeOrganization: true,
+  });
+  const identity = auth?.enableAzureAD
+    ? IdentityCreator({
+        name,
+        appRoleAssignmentRequired: false,
+        createPrincipal: false,
+        createClientSecret: true,
+        appType: 'web',
+        replyUrls: [`https://${host}/user/oauth2/AzureAD/callback`],
+        vaultInfo,
+      })
+    : undefined;
+
+  const captchaConfig: { [key: string]: Input<string> } = captcha
+    ? { CAPTCHA_TYPE: captcha.type }
+    : {};
+
+  if (captcha) {
+    if (captcha.type === 'recaptcha') {
+      captchaConfig['CF_TURNSTILE_SITEKEY'] = captcha.siteKey;
+      captchaConfig['CF_TURNSTILE_SECRET'] = captcha.secret;
+      captchaConfig['CF_TURNSTILE_URL'] = captcha.url ?? '';
+    } else {
+      captchaConfig[`${captcha.type.toUpperCase()}_SITEKEY`] = captcha.siteKey;
+      captchaConfig[`${captcha.type.toUpperCase()}_SECRET`] = captcha.secret;
+      captchaConfig[`${captcha.type.toUpperCase()}_URL`] = captcha.url ?? '';
+    }
+  }
+
   const gitea = new k8s.helm.v3.Chart(
     name,
     {
@@ -52,15 +129,57 @@ export default ({
 
       values: {
         gitea: {
-          admin: {
-            username: `${name}Admin`,
-            email: `${name}Admin@drunkcoding.net`,
-            password: randomPassword({
-              name: `${name}-admin`,
-              ...randomPassOptions,
-            }).result,
-          },
+          admin: auth?.localAdmin
+            ? {
+                username: auth.localAdmin.username,
+                email: auth.localAdmin.email,
+                password: randomPassword({
+                  name: `${name}-admin`,
+                  ...randomPassOptions,
+                }).result,
+              }
+            : undefined,
+
+          oauth: identity
+            ? [
+                {
+                  name: 'AzureAD',
+                  iconUrl:
+                    'https://code.benco.io/icon-collection/azure-icons/Azure-AD-B2C.svg',
+                  provider: 'openidConnect',
+                  key: identity.clientId,
+                  secret: identity.clientSecret,
+                  autoDiscoverUrl: interpolate`https://login.microsoftonline.com/${tenantId}/v2.0/.well-known/openid-configuration`,
+                  // requiredClaimName
+                  // requiredClaimValue
+                  scopes: 'openid email',
+                  groupClaimName: 'groups',
+                  //adminGroup: adminGroup.objectId,
+                  //groupTeamMap: interpolate`{"${adminGroup.objectId}": {"creamteam": ["Developers"]}}`,
+                },
+              ]
+            : auth?.oauth
+            ? [{ provider: 'openidConnect', ...auth.oauth }]
+            : undefined,
+
+          ldap: auth?.ldap,
+
           config: {
+            admin: {
+              DISABLE_REGULAR_ORG_CREATION: 'true', //Only Admin able to create new Organization
+            },
+            oauth2_client: {
+              ENABLE_AUTO_REGISTRATION: 'true',
+              ACCOUNT_LINKING: 'auto',
+              UPDATE_AVATAR: 'true',
+              OPENID_CONNECT_SCOPES: 'openid email',
+              USERNAME: 'email',
+            },
+            openid: {
+              ENABLE_OPENID_SIGNIN: 'false',
+              ENABLE_OPENID_SIGNUP: 'true',
+              WHITELISTED_URIS: 'login.microsoftonline.com',
+            },
             database: {
               DB_TYPE: 'postgres',
               HOST: interpolate`${postgres.host}:${postgres.port}`,
@@ -69,6 +188,42 @@ export default ({
               PASSWD: postgres.password,
               SCHEMA: 'public',
             },
+            service: {
+              ENABLE_CAPTCHA: `${Boolean(captchaConfig)}`,
+              REQUIRE_CAPTCHA_FOR_LOGIN: `${Boolean(captchaConfig)}`,
+              ...captchaConfig,
+
+              DISABLE_REGISTRATION: auth?.disableRegistration
+                ? 'true'
+                : 'false',
+              ENABLE_BASIC_AUTHENTICATION: 'false', // `${Boolean(auth?.localAdmin)}`,
+              ALLOW_ONLY_EXTERNAL_REGISTRATION: 'true',
+              DEFAULT_ALLOW_CREATE_ORGANIZATION: 'true', //only Admin able to create Organization
+            },
+            server: {
+              DISABLE_SSH: 'true',
+              START_SSH_SERVER: 'false',
+              //APP_DATA_PATH = /data
+              DOMAIN: host,
+              HTTP_PORT: '3000',
+              PROTOCOL: 'http',
+              ROOT_URL: `https://${host}`,
+              SSH_DOMAIN: host,
+              SSH_LISTEN_PORT: '22',
+              SSH_PORT: '22',
+              ENABLE_PPROF: 'false',
+
+              DISABLE_REGISTRATION: auth?.disableRegistration
+                ? 'true'
+                : 'false',
+            },
+            session: {
+              SAME_SITE: 'lax',
+              COOKIE_SECURE: 'true',
+              COOKIE_NAME: 'gitea_session',
+              DOMAIN: host,
+            },
+            repository: { DEFAULT_PRIVATE: 'true', FORCE_PRIVATE: 'true' },
           },
         },
 

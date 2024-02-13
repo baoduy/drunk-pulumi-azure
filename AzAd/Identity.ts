@@ -7,6 +7,7 @@ import {
   ApplicationApiOauth2PermissionScope,
   ApplicationAppRole,
   ApplicationRequiredResourceAccess,
+  ApplicationOptionalClaims,
 } from '@pulumi/azuread/types/input';
 
 import { KeyVaultInfo } from '../types';
@@ -44,6 +45,7 @@ type IdentityProps = {
     roleName: string;
     scope?: Input<string>;
   }>;
+  optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
   vaultInfo?: KeyVaultInfo;
 };
 
@@ -71,6 +73,7 @@ export default ({
   oauth2Permissions,
   publicClient = false,
   principalRoles,
+  optionalClaims,
   vaultInfo,
 }: IdentityProps): IdentityResult & {
   vaultNames: {
@@ -136,6 +139,8 @@ export default ({
     requiredResourceAccesses: requiredResourceAccesses
       ? pulumi.output(requiredResourceAccesses).apply((r) => [...r])
       : undefined,
+
+    optionalClaims,
   });
 
   if (vaultInfo)
@@ -152,7 +157,7 @@ export default ({
       name,
       {
         displayName: name,
-        applicationId: app.id.apply((i) => `/applications/${i}`),
+        applicationId: app.id,
         endDateRelative: '43800h',
         //value: randomPassword({ name: `${name}-clientSecret` }).result,
       },
