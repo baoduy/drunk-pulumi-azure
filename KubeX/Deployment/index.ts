@@ -38,11 +38,13 @@ interface PodConfigProps {
   imagePullSecret?: string;
   imagePullPolicy?: 'Always' | 'Never' | 'IfNotPresent';
   resources?: Input<k8s.types.input.core.v1.ResourceRequirements> | false;
+  command?: string[];
   volumes?: Array<{
     name: string;
     mountPath: string;
     emptyDir?: boolean;
     subPath?: string;
+    hostPath?: string;
     readOnly?: boolean;
     /** The secret name */
 
@@ -113,7 +115,7 @@ const buildPod = ({
       ? podConfig.volumes.map((v) => ({
           name: v.name.toLowerCase(),
           emptyDir: v.emptyDir ? {} : undefined,
-
+          hostPath: v.hostPath ? { path: v.hostPath } : undefined,
           csi:
             v.secretName && v.type === 'azureFile'
               ? {
@@ -145,6 +147,7 @@ const buildPod = ({
         image: podConfig.image,
         imagePullPolicy: podConfig.imagePullPolicy,
         ports: podConfig.ports,
+        command: podConfig.command,
         envFrom,
 
         securityContext: podConfig.podSecurityContext,
