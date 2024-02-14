@@ -8,7 +8,7 @@ interface GiteaRunnerProps extends DefaultK8sArgs {
   giteaToken: Input<string>;
   /* the value separate by comma*/
   labels?: Input<string>;
-  enabledDind?: boolean;
+  //enabledDind?: boolean;
 }
 
 //https://github.com/kha7iq/charts/tree/main/charts/act-runner
@@ -19,7 +19,7 @@ export default ({
   labels,
   giteaUrl,
   giteaToken,
-  enabledDind = true,
+  //enabledDind = true,
   resources,
   ...others
 }: GiteaRunnerProps) => {
@@ -28,6 +28,8 @@ export default ({
     { name: 'DOCKER_CERT_PATH', value: '/certs/client' },
     { name: 'DOCKER_TLS_VERIFY', value: '1' },
     { name: 'GITEA_RUNNER_NAME', value: name },
+    { name: 'VALID_VOLUMES', value: '**' },
+    { name: 'NETWORK', value: 'bridge' },
   ];
 
   if (labels) {
@@ -48,7 +50,7 @@ export default ({
         runner: {
           instanceURL: giteaUrl,
           runnerToken: { value: giteaToken },
-          dockerDind: { enabled: enabledDind },
+          dockerDind: { enabled: true },
         },
         persistence: { storageClassName },
       },

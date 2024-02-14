@@ -7,8 +7,8 @@ interface GiteaRunnerProps extends DefaultK8sArgs {
   storageClassName: Input<string>;
   giteaUrl?: Input<string>;
   giteaToken: Input<string>;
-  dockerHost?: Input<string>;
-  image?: string;
+  /* the value separate by comma*/
+  labels?: Input<string>;
   storageGb?: number;
 }
 
@@ -16,11 +16,10 @@ export default ({
   name = 'gitea-runner',
   namespace,
   storageClassName,
+  labels,
   storageGb = 10,
   giteaUrl,
   giteaToken,
-  dockerHost = 'tcp://localhost:2376',
-  image = 'gitea/act_runner:nightly', // 'gitea/act_runner:latest', // 'gitea/act_runner:nightly-dind-rootless',
   resources,
   ...others
 }: GiteaRunnerProps) => {
@@ -32,6 +31,45 @@ export default ({
     storageClassName,
     ...others,
   });
+
+  const env = [
+    {
+      name: 'DOCKER_HOST',
+      value: 'unix:///var/run/user/1000/docker.sock',
+    },
+    // {
+    //   name: 'DOCKER_CERT_PATH',
+    //   value: '/certs/client',
+    // },
+    // {
+    //   name: 'DOCKER_TLS_VERIFY',
+    //   value: '0',
+    // },
+    {
+      name: 'GITEA_RUNNER_NAME',
+      value: name,
+    },
+    {
+      name: 'GITEA_INSTANCE_URL',
+      value: giteaUrl,
+    },
+    {
+      name: 'GITEA_RUNNER_REGISTRATION_TOKEN',
+      value: giteaToken,
+    },
+    {
+      name: 'GITEA_RUNNER_LABELS',
+      value:
+        'ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04',
+    },
+  ];
+
+  if (labels) {
+    env.push({
+      name: 'GITEA_RUNNER_LABELS',
+      value: `${labels},ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04`,
+    });
+  }
 
   return new apps.v1.Deployment(
     name,
@@ -50,84 +88,27 @@ export default ({
           spec: {
             containers: [
               {
-                // command: [
-                //   'sh',
-                //   '-c',
-                //   "while ! nc -z localhost 2376 </dev/null; do echo 'waiting for docker daemon...'; sleep 5; done; /sbin/tini -- /opt/act/run.sh",
-                // ],
-                env: [
-                  {
-                    name: 'DOCKER_HOST',
-                    value: dockerHost,
-                  },
-                  {
-                    name: 'DOCKER_CERT_PATH',
-                    value: '/certs/client',
-                  },
-                  {
-                    name: 'DOCKER_TLS_VERIFY',
-                    value: '0',
-                  },
-                  {
-                    name: 'GITEA_RUNNER_NAME',
-                    value: name,
-                  },
-                  {
-                    name: 'GITEA_INSTANCE_URL',
-                    value: giteaUrl,
-                  },
-                  {
-                    name: 'GITEA_RUNNER_REGISTRATION_TOKEN',
-                    value: giteaToken,
-                  },
+                command: [
+                  'sh',
+                  '-c',
+                  '(sleep 10 && chmod a+rwx /run/user/1000/docker.sock) & /usr/bin/supervisord -c /etc/supervisord.conf',
                 ],
-                image,
+                env,
+                image: 'gitea/act_runner:nightly-dind-rootless',
                 name: 'runner',
                 securityContext: {
                   privileged: true,
                 },
                 volumeMounts: [
                   {
-                    mountPath: '/certs',
-                    name: 'docker-certs',
-                  },
-                  {
                     mountPath: '/data',
                     name: 'runner-data',
                   },
-                  { name: 'docker-host', mountPath: '/var/run/docker.sock' },
                 ],
               },
-              // {
-              //   env: [
-              //     {
-              //       name: 'DOCKER_TLS_CERTDIR',
-              //       value: '/certs',
-              //     },
-              //   ],
-              //   image: 'docker:23.0.6-dind',
-              //   name: 'daemon',
-              //   securityContext: {
-              //     privileged: true,
-              //   },
-              //   volumeMounts: [
-              //     {
-              //       mountPath: '/certs',
-              //       name: 'docker-certs',
-              //     },
-              //   ],
-              // },
             ],
             restartPolicy: 'Always',
             volumes: [
-              {
-                emptyDir: {},
-                name: 'docker-certs',
-              },
-              {
-                name: 'docker-host',
-                hostPath: { path: '/var/run/docker.sock' },
-              },
               {
                 name: 'runner-data',
                 persistentVolumeClaim: {
