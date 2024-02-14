@@ -6,7 +6,9 @@ interface GiteaRunnerProps extends DefaultK8sArgs {
   storageClassName: Input<string>;
   giteaUrl?: Input<string>;
   giteaToken: Input<string>;
-  labels?: string[];
+  /* the value separate by comma*/
+  labels?: Input<string>;
+  enabledDind?: boolean;
 }
 
 //https://github.com/kha7iq/charts/tree/main/charts/act-runner
@@ -17,7 +19,7 @@ export default ({
   labels,
   giteaUrl,
   giteaToken,
-
+  enabledDind = true,
   resources,
   ...others
 }: GiteaRunnerProps) => {
@@ -29,9 +31,12 @@ export default ({
   ];
 
   if (labels) {
-    env.push({ name: 'GITEA_RUNNER_LABELS', value: labels.join(',') });
+    env.push({
+      name: 'GITEA_RUNNER_LABELS',
+      value: `${labels},ubuntu-latest:docker://node:16-bullseye,ubuntu-22.04:docker://node:16-bullseye,ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster`,
+    });
   }
-  const runner = new k8s.helm.v3.Chart(
+  return new k8s.helm.v3.Chart(
     name,
     {
       namespace,
@@ -43,7 +48,7 @@ export default ({
         runner: {
           instanceURL: giteaUrl,
           runnerToken: { value: giteaToken },
-          dockerDind: { enabled: true },
+          dockerDind: { enabled: enabledDind },
         },
         persistence: { storageClassName },
       },
