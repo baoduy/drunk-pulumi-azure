@@ -36,7 +36,7 @@ export default ({
     configMap: {
       DOCKER_HOST: 'tcp://localhost:2376',
       DOCKER_CERT_PATH: '/certs/client',
-      DOCKER_TLS_VERIFY: '0',
+      DOCKER_TLS_VERIFY: '1',
       GITEA_RUNNER_NAME: name,
       //GITEA_RUNNER_LABELS: '',
       GITEA_INSTANCE_URL:
