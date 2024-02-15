@@ -35,7 +35,7 @@ export default ({
   const env = [
     {
       name: 'DOCKER_HOST',
-      value: 'unix:///var/run/user/1000/docker.sock',
+      value: 'unix:///var/run/user/$(id -u)/docker.sock',
     },
     // {
     //   name: 'DOCKER_CERT_PATH',
@@ -57,11 +57,6 @@ export default ({
       name: 'GITEA_RUNNER_REGISTRATION_TOKEN',
       value: giteaToken,
     },
-    {
-      name: 'GITEA_RUNNER_LABELS',
-      value:
-        'ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04',
-    },
   ];
 
   if (labels) {
@@ -69,7 +64,12 @@ export default ({
       name: 'GITEA_RUNNER_LABELS',
       value: `${labels},ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04`,
     });
-  }
+  } else
+    env.push({
+      name: 'GITEA_RUNNER_LABELS',
+      value:
+        'ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04',
+    });
 
   return new apps.v1.Deployment(
     name,
@@ -86,6 +86,11 @@ export default ({
         template: {
           metadata: { labels: { app: name } },
           spec: {
+            securityContext: {
+              runAsUser: 1000,
+              runAsGroup: 1000,
+              fsGroup: 1000,
+            },
             containers: [
               {
                 command: [
@@ -105,6 +110,12 @@ export default ({
                     name: 'runner-data',
                   },
                 ],
+
+                resources: {
+                  requests: {
+                    'ephemeral-storage': '10Gi',
+                  },
+                },
               },
             ],
             restartPolicy: 'Always',
