@@ -6,6 +6,7 @@ import { Input, Resource } from '@pulumi/pulumi';
 import StorageClass, { StorageClassProps } from './StorageClass';
 import { K8sArgs } from '../types';
 import MetalLB, { MetalLBProps } from './LoadBalancer/MetalLB';
+import Longhorn, { LonghornProps } from '../Storage/Longhorn';
 
 interface NginxItemProps {
   name: string;
@@ -38,6 +39,7 @@ interface Props extends K8sArgs {
     };
   }>;
   metalLb?: Omit<MetalLBProps, 'provider' | 'dependsOn'>;
+  longhorn?: Omit<LonghornProps, 'provider' | 'dependsOn'>;
   nginx?: NginxProps;
   monitoring?: Omit<MonitoringProps, 'provider' | 'dependsOn'>;
   certManager?: Omit<CertManagerProps, 'namespace' | 'provider' | 'dependsOn'>;
@@ -52,6 +54,7 @@ export default async ({
   provider,
   dependsOn,
   metalLb,
+  longhorn,
   nginx,
   monitoring,
   certManager,
@@ -94,6 +97,9 @@ export default async ({
     resources.push(await Monitoring({ ...monitoring, provider, dependsOn }));
   }
 
+  if (longhorn) {
+    resources.push(Longhorn({ ...longhorn, provider, dependsOn }));
+  }
   return { namespacesList, resources };
 };
 
