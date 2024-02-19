@@ -102,7 +102,7 @@ interface StorageClassProps extends K8sArgs {
 export const createPVCForStorageClass = ({
   name,
   namespace,
-  storageClassName = 'default',
+  storageClassName = '',
   storageGb = '5Gi',
   accessMode = 'ReadWriteOnce',
   provider,
