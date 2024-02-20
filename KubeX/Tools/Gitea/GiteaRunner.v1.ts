@@ -23,6 +23,9 @@ export default ({
   resources,
   ...others
 }: GiteaRunnerProps) => {
+  const userId = 1000;
+  const dockerSock = `/var/run/user/${userId}/docker.sock`;
+
   const persisVolume = createPVCForStorageClass({
     name,
     namespace,
@@ -35,7 +38,7 @@ export default ({
   const env = [
     {
       name: 'DOCKER_HOST',
-      value: 'unix:///var/run/user/$(id -u)/docker.sock',
+      value: `unix://${dockerSock}`,
     },
     // {
     //   name: 'DOCKER_CERT_PATH',
@@ -96,7 +99,7 @@ export default ({
                 command: [
                   'sh',
                   '-c',
-                  '(sleep 10 && chmod a+rwx /run/user/1000/docker.sock) & /usr/bin/supervisord -c /etc/supervisord.conf',
+                  `(sleep 10 && chmod a+rwx ${dockerSock}) & /usr/bin/supervisord -c /etc/supervisord.conf`,
                 ],
                 env,
                 image: 'gitea/act_runner:nightly-dind-rootless',
