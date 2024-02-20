@@ -92,12 +92,19 @@ export default ({
   };
 
   //Create 2 Groups for Admin and Users
+  const devGroup = RoleCreator({
+    env: Environments.Dev,
+    appName: name,
+    roleName: 'Developers',
+    includeOrganization: true,
+  });
   const adminGroup = RoleCreator({
     env: Environments.Dev,
     appName: name,
-    roleName: 'Admin',
+    roleName: 'Admins',
     includeOrganization: true,
   });
+
   const identity = auth?.enableAzureAD
     ? IdentityCreator({
         name,
@@ -154,8 +161,8 @@ export default ({
                   key: identity.clientId,
                   secret: identity.clientSecret,
                   autoDiscoverUrl: interpolate`https://login.microsoftonline.com/${tenantId}/v2.0/.well-known/openid-configuration`,
-                  // requiredClaimName
-                  // requiredClaimValue
+                  requiredClaimName: 'groups',
+                  requiredClaimValue: interpolate`${devGroup.objectId};${adminGroup.objectId}`,
                   scopes: 'openid email',
                   groupClaimName: 'groups',
                   adminGroup: adminGroup.objectId,
