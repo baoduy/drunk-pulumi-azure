@@ -1,9 +1,9 @@
 import deployment from '../Deployment';
 import { DefaultKsAppArgs } from '../types';
-import { createPVCForStorageClass, StorageClassNameTypes } from '../Storage';
+import { createPVCForStorageClass } from '../Storage';
 
 export interface UptimeKumaProps extends DefaultKsAppArgs {
-  storageClassName?: StorageClassNameTypes;
+  storageClassName?: string;
 }
 
 export default ({

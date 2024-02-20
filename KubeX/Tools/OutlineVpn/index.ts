@@ -3,7 +3,7 @@ import Namespace from '../../Core/Namespace';
 import { KeyVaultInfo } from '../../../types';
 import { certImportFromFolder, certImportFromVault } from '../../CertImports';
 import * as kubernetes from '@pulumi/kubernetes';
-import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
+import { createPVCForStorageClass } from '../../Storage';
 import { randomUuId } from '../../../Core/Random';
 import { Input } from '@pulumi/pulumi';
 import ksCertSecret from '../../Core/KsCertSecret';
@@ -31,7 +31,7 @@ export interface OutlineProps extends K8sArgs {
   replicas?: number;
   autoScale?: boolean;
   resources?: K8sResourceType;
-  storageClassName: StorageClassNameTypes;
+  storageClassName: string;
 }
 export default async ({
   vaultInfo,
