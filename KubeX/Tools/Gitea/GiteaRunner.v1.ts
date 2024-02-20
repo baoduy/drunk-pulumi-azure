@@ -2,6 +2,7 @@ import { DefaultK8sArgs } from '../../types';
 import { apps } from '@pulumi/kubernetes';
 import { Input } from '@pulumi/pulumi';
 import { createPVCForStorageClass } from '../../Storage';
+import * as k8s from '@pulumi/kubernetes';
 
 interface GiteaRunnerProps extends DefaultK8sArgs {
   storageClassName: Input<string>;
@@ -24,7 +25,7 @@ export default ({
   ...others
 }: GiteaRunnerProps) => {
   const userId = 1000;
-  const dockerSock = `/var/run/user/${userId}/docker.sock`;
+  const dockerSock = `/run/user/${userId}/docker.sock`;
 
   const persisVolume = createPVCForStorageClass({
     name,
@@ -56,10 +57,6 @@ export default ({
       name: 'GITEA_INSTANCE_URL',
       value: giteaUrl,
     },
-    {
-      name: 'GITEA_RUNNER_REGISTRATION_TOKEN',
-      value: giteaToken,
-    },
   ];
 
   if (labels) {
@@ -74,6 +71,19 @@ export default ({
         'ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04',
     });
 
+  const secret = new k8s.core.v1.Secret(
+    name,
+    {
+      metadata: {
+        name,
+        namespace,
+      },
+      stringData: {
+        GITEA_RUNNER_REGISTRATION_TOKEN: giteaToken,
+      },
+    },
+    others
+  );
   return new apps.v1.Deployment(
     name,
     {
@@ -90,9 +100,9 @@ export default ({
           metadata: { labels: { app: name } },
           spec: {
             securityContext: {
-              runAsUser: 1000,
-              runAsGroup: 1000,
-              fsGroup: 1000,
+              runAsUser: userId,
+              runAsGroup: userId,
+              fsGroup: userId,
             },
             containers: [
               {
@@ -101,9 +111,17 @@ export default ({
                   '-c',
                   `(sleep 10 && chmod a+rwx ${dockerSock}) & /usr/bin/supervisord -c /etc/supervisord.conf`,
                 ],
-                env,
                 image: 'gitea/act_runner:nightly-dind-rootless',
                 name: 'runner',
+
+                env,
+                envFrom: [
+                  {
+                    secretRef: {
+                      name: secret.metadata.name,
+                    },
+                  },
+                ],
                 securityContext: {
                   privileged: true,
                 },
