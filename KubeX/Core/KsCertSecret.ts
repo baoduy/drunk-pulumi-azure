@@ -17,6 +17,7 @@ export default ({ name, namespace, certInfo, ...others }: CertSecretProps) =>
       'tls.crt': info.cert,
       'tls.key': info.privateKey,
     };
+
     if (info.ca) stringData['tls.ca'] = info.ca;
     if (info.dhparam) stringData['tls.dhparam'] = info.dhparam;
 

@@ -1,6 +1,6 @@
 import { DefaultK8sArgs } from '../../types';
 import * as k8s from '@pulumi/kubernetes';
-import { Input, interpolate } from '@pulumi/pulumi';
+import { Input, interpolate, output } from '@pulumi/pulumi';
 import { randomPassword } from '../../../Core/Random';
 import { KeyVaultInfo } from '../../../types';
 import IdentityCreator from '../../../AzAd/Identity';
@@ -14,8 +14,74 @@ type CaptchaType = {
   url?: Input<string>;
 };
 
+type GroupMapType = {
+  azureGroupId: Input<string>;
+  giteaOrganization: Input<string>;
+  giteaTeam: Input<string>;
+};
+
+type GroupMapsType = Array<GroupMapType>;
+
 const getCaptchaPrefixKey = (captcha: CaptchaType) =>
   captcha.type === 'cfturnstile' ? 'CF_TURNSTILE' : captcha.type.toUpperCase();
+
+const createAzureADIdentity = ({
+  name,
+  host,
+  vaultInfo,
+  groupMap,
+}: {
+  name: string;
+  host: string;
+  vaultInfo?: KeyVaultInfo;
+  groupMap?: GroupMapsType;
+}) => {
+  //Create 2 Groups for Admin and Users
+  const adminGroup = RoleCreator({
+    env: Environments.Dev,
+    appName: name,
+    roleName: 'Admins',
+    includeOrganization: true,
+  });
+
+  const devGroup = RoleCreator({
+    env: Environments.Dev,
+    appName: name,
+    roleName: 'Developers',
+    includeOrganization: true,
+    members: groupMap
+      ? [adminGroup.objectId, ...groupMap.map((g) => g.azureGroupId)]
+      : [adminGroup.objectId],
+  });
+
+  const identity = IdentityCreator({
+    name,
+    appRoleAssignmentRequired: false,
+    createPrincipal: false,
+    createClientSecret: true,
+    appType: 'web',
+    replyUrls: [`https://${host}/user/oauth2/AzureAD/callback`],
+    vaultInfo,
+
+    optionalClaims: {
+      idTokens: [{ name: 'groups', essential: false }],
+      accessTokens: [{ name: 'groups', essential: false }],
+    },
+  });
+
+  const groupTeamMap = groupMap
+    ? output(groupMap).apply((gs) => {
+        const rs: any = {};
+        gs.forEach((g) => {
+          rs[g.azureGroupId] = { [g.giteaOrganization]: [g.giteaTeam] };
+        });
+
+        return JSON.stringify(rs);
+      })
+    : undefined;
+
+  return { adminGroup, devGroup, groupTeamMap, identity };
+};
 
 interface HarborRepoProps extends DefaultK8sArgs {
   vaultInfo?: KeyVaultInfo;
@@ -25,7 +91,11 @@ interface HarborRepoProps extends DefaultK8sArgs {
   auth?: {
     localAdmin?: { username: string; email: string };
     disableRegistration?: boolean;
-    enableAzureAD?: boolean;
+    enableAzureAD?: {
+      enabled: true;
+      groupMap?: GroupMapsType;
+    };
+
     oauth?: {
       name: string;
       iconUrl?: Input<string>;
@@ -91,39 +161,6 @@ export default ({
     vaultInfo,
   };
 
-  //Create 2 Groups for Admin and Users
-
-  const adminGroup = RoleCreator({
-    env: Environments.Dev,
-    appName: name,
-    roleName: 'Admins',
-    includeOrganization: true,
-  });
-  const devGroup = RoleCreator({
-    env: Environments.Dev,
-    appName: name,
-    roleName: 'Developers',
-    includeOrganization: true,
-    members: [adminGroup.objectId],
-  });
-
-  const identity = auth?.enableAzureAD
-    ? IdentityCreator({
-        name,
-        appRoleAssignmentRequired: false,
-        createPrincipal: false,
-        createClientSecret: true,
-        appType: 'web',
-        replyUrls: [`https://${host}/user/oauth2/AzureAD/callback`],
-        vaultInfo,
-
-        optionalClaims: {
-          idTokens: [{ name: 'groups', essential: false }],
-          accessTokens: [{ name: 'groups', essential: false }],
-        },
-      })
-    : undefined;
-
   const captchaConfig = captcha
     ? {
         CAPTCHA_TYPE: captcha.type,
@@ -132,6 +169,15 @@ export default ({
         [`${getCaptchaPrefixKey(captcha)}_URL`]: captcha.url ?? '',
       }
     : {};
+
+  const identityInfo = auth?.enableAzureAD
+    ? createAzureADIdentity({
+        name,
+        host,
+        vaultInfo,
+        groupMap: auth.enableAzureAD.groupMap,
+      })
+    : undefined;
 
   const gitea = new k8s.helm.v3.Chart(
     name,
@@ -153,22 +199,22 @@ export default ({
               }
             : undefined,
 
-          oauth: identity
+          oauth: identityInfo
             ? [
                 {
                   name: 'AzureAD',
                   iconUrl:
                     'https://code.benco.io/icon-collection/azure-icons/Azure-AD-B2C.svg',
                   provider: 'openidConnect',
-                  key: identity.clientId,
-                  secret: identity.clientSecret,
+                  key: identityInfo.identity.clientId,
+                  secret: identityInfo.identity.clientSecret,
                   autoDiscoverUrl: interpolate`https://login.microsoftonline.com/${tenantId}/v2.0/.well-known/openid-configuration`,
                   requiredClaimName: 'groups',
-                  requiredClaimValue: devGroup.objectId,
+                  requiredClaimValue: identityInfo.devGroup.objectId,
                   scopes: 'openid email',
                   groupClaimName: 'groups',
-                  adminGroup: adminGroup.objectId,
-                  //groupTeamMap: interpolate`{"${adminGroup.objectId}": {"creamteam": ["Developers"]}}`,
+                  adminGroup: identityInfo.adminGroup.objectId,
+                  groupTeamMap: identityInfo.groupTeamMap,
                 },
               ]
             : auth?.oauth
