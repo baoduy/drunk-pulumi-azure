@@ -2,7 +2,6 @@ import { Provider } from '@pulumi/kubernetes';
 import { Input, Resource } from '@pulumi/pulumi';
 import { IngressTypes } from './Deployment';
 import { CertManagerIssuerTypes } from './Ingress/type';
-import { StorageClassNameTypes } from './Storage';
 import { KeyVaultInfo } from '../types';
 import { RunAsType } from './Core/StorageClass/azureFile';
 
@@ -39,7 +38,7 @@ export interface PostgreSqlProps extends Omit<DefaultK8sArgs, 'name'> {
   name?: string;
   vaultInfo?: KeyVaultInfo;
   auth?: AuthType;
-  storageClassName: StorageClassNameTypes;
+  storageClassName: string;
 }
 
 export interface MySqlProps extends PostgreSqlProps {

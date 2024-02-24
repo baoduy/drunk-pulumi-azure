@@ -1,6 +1,6 @@
 import { DefaultK8sArgs } from '../types';
-import * as k8s from '@pulumi/kubernetes';
 import { all, Input } from '@pulumi/pulumi';
+import KsSecret from './KsSecret';
 
 interface CertSecretProps extends DefaultK8sArgs {
   certInfo: Input<{
@@ -21,16 +21,11 @@ export default ({ name, namespace, certInfo, ...others }: CertSecretProps) =>
     if (info.ca) stringData['tls.ca'] = info.ca;
     if (info.dhparam) stringData['tls.dhparam'] = info.dhparam;
 
-    return new k8s.core.v1.Secret(
-      `${name}-${ns}`,
-      {
-        metadata: {
-          name,
-          namespace: ns,
-        },
-        type: 'kubernetes.io/tls',
-        stringData,
-      },
-      others
-    );
+    return KsSecret({
+      name: `${name}-${ns}`,
+      namespace: ns,
+      type: 'kubernetes.io/tls',
+      stringData,
+      ...others,
+    });
   });

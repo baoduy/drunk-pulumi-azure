@@ -3,6 +3,7 @@ import * as k8s from '@pulumi/kubernetes';
 import * as path from 'path';
 import { Input, Resource } from '@pulumi/pulumi';
 import Namespace from '../Namespace';
+import KsSecret from '../KsSecret';
 //import * as global from '../../../Common/GlobalEnv';
 
 export interface CertManagerProps {
@@ -107,20 +108,16 @@ export default ({
   }
 
   if (azureDnsIssuer) {
-    new k8s.core.v1.Secret(
-      `${name}-identity`,
-      {
-        metadata: {
-          name: `${name}-identity`,
-          namespace,
-        },
-        stringData: {
-          clientId: azureDnsIssuer.clientId,
-          clientSecret: azureDnsIssuer.clientSecret,
-        },
+    KsSecret({
+      name: `${name}-identity`,
+      namespace,
+      stringData: {
+        clientId: azureDnsIssuer.clientId,
+        clientSecret: azureDnsIssuer.clientSecret,
       },
-      { provider, dependsOn: [certManager] }
-    );
+      provider,
+      dependsOn: [certManager],
+    });
 
     new k8s.yaml.ConfigFile(
       'cluster-issuer-azdns',

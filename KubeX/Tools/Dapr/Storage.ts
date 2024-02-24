@@ -1,6 +1,7 @@
 import { K8sArgs } from '../../types';
 import * as k8s from '@pulumi/kubernetes';
 import { Input } from '@pulumi/pulumi';
+import KsSecret from '../../Core/KsSecret';
 
 const secretKeys = [
   'accountKey',
@@ -126,14 +127,7 @@ export default ({ name, namespace, storage, ...others }: Props) => {
     metadata,
   };
 
-  new k8s.core.v1.Secret(
-    name,
-    {
-      metadata: { name, namespace },
-      stringData: secrets,
-    },
-    others
-  );
+  KsSecret({ name, namespace, stringData: secrets, ...others });
 
   return new k8s.apiextensions.CustomResource(
     name,

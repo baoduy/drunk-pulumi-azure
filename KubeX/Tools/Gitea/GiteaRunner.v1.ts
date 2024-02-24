@@ -3,6 +3,7 @@ import { apps } from '@pulumi/kubernetes';
 import { Input } from '@pulumi/pulumi';
 import { createPVCForStorageClass } from '../../Storage';
 import * as k8s from '@pulumi/kubernetes';
+import KsSecret from '../../Core/KsSecret';
 
 interface GiteaRunnerProps extends DefaultK8sArgs {
   storageClassName: Input<string>;
@@ -71,19 +72,15 @@ export default ({
         'ubuntu-latest:docker://catthehacker/ubuntu:runner-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:runner-20.04',
     });
 
-  const secret = new k8s.core.v1.Secret(
+  const secret = KsSecret({
     name,
-    {
-      metadata: {
-        name,
-        namespace,
-      },
-      stringData: {
-        GITEA_RUNNER_REGISTRATION_TOKEN: giteaToken,
-      },
+    namespace,
+    stringData: {
+      GITEA_RUNNER_REGISTRATION_TOKEN: giteaToken,
     },
-    others
-  );
+    ...others,
+  });
+
   return new apps.v1.Deployment(
     name,
     {
