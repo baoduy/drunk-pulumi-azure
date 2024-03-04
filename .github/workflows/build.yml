@@ -72,6 +72,7 @@ jobs:
 
       - name: Update version in package.json
         run: |
+          cd .out-bin
           sed -i 's/"version": "0.0.1"/"version": "${{ steps.bump-semver.outputs.new_version }}"/' package.json
 
       # Create Release
