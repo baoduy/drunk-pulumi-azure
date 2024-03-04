@@ -1,10 +1,10 @@
-import * as native from "@pulumi/azure-native";
+import * as native from '@pulumi/azure-native';
 
-import { getB2cName } from "../Common/Naming";
-import { BasicResourceArgs } from "../types";
-import Locker from "../Core/Locker";
+import { getB2cName } from '../Common/Naming';
+import { BasicResourceArgs } from '../types';
+import Locker from '../Core/Locker';
 
-type Locations = "United States" | "Europe" | "Asia Pacific" | "Australia";
+type Locations = 'United States' | 'Europe' | 'Asia Pacific' | 'Australia';
 
 interface Props extends BasicResourceArgs {
   displayName: string;
@@ -14,16 +14,16 @@ interface Props extends BasicResourceArgs {
 
 const getCountryCode = (location: Locations) => {
   switch (location) {
-    case "Asia Pacific":
-      return "SG";
-    case "Australia":
-      return "AU";
-    case "United States":
-      return "US";
-    case "Europe":
-      return "EU";
+    case 'Asia Pacific':
+      return 'SG';
+    case 'Australia':
+      return 'AU';
+    case 'United States':
+      return 'US';
+    case 'Europe':
+      return 'EU';
     default:
-      return "SG";
+      return 'SG';
   }
 };
 
@@ -35,10 +35,8 @@ export default ({ name, group, location, displayName, lock }: Props) => {
     ...group,
     location,
 
-    properties: {
-      countryCode: getCountryCode(location),
-      displayName,
-    },
+    countryCode: getCountryCode(location),
+    displayName,
 
     sku: {
       name: native.azureactivedirectory.B2CResourceSKUName.Standard,

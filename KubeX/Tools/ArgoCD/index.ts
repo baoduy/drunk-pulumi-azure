@@ -1,9 +1,9 @@
 import { K8sArgs } from '../../types';
 import Namespace from '../../Core/Namespace';
 import * as k8s from '@pulumi/kubernetes';
-import { DeploymentIngress, IngressTypes } from '../../Deployment';
+import { DeploymentIngress } from '../../Deployment';
 import { NginxIngress } from '../../Ingress';
-import { output, interpolate } from '@pulumi/pulumi';
+import { interpolate } from '@pulumi/pulumi';
 import { getTlsName } from '../../CertHelper';
 import {
   getDomainFromUrl,
@@ -11,8 +11,6 @@ import {
   toBase64,
 } from '../../../Common/Helpers';
 import { IngressProps } from '../../Ingress/type';
-import * as console from 'console';
-import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
 import identityCreator from '../../../AzAd/Identity';
 import { KeyVaultInfo } from '../../../types';
 import { tenantId } from '../../../Common/AzureEnv';
@@ -21,7 +19,7 @@ import { randomPassword } from '../../../Core/Random';
 interface Props extends K8sArgs {
   name?: string;
   namespace?: string;
-  storageClassName: StorageClassNameTypes;
+  storageClassName: string;
   auth?: {
     enableAzureAD?: boolean;
   };
@@ -32,7 +30,7 @@ interface Props extends K8sArgs {
 //**
 // https://artifacthub.io/packages/helm/bitnami/argo-cd
 // */
-export default async ({
+export default ({
   name = 'argo-cd',
   namespace = 'argo-cd',
   ingressConfig,
@@ -44,7 +42,7 @@ export default async ({
   const ns = Namespace({ name, ...others });
   const url = `https://${ingressConfig?.hostName}`;
   const identity = auth?.enableAzureAD
-    ? await identityCreator({
+    ? identityCreator({
         name,
         createClientSecret: true,
         createPrincipal: true,

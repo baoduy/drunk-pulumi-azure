@@ -1,9 +1,9 @@
 import deployment from '../../Deployment';
 import { DefaultKsAppArgs } from '../../types';
-import { createPVCForStorageClass, StorageClassNameTypes } from '../../Storage';
+import { createPVCForStorageClass } from '../../Storage';
 
 export interface AwsS3Props extends Omit<DefaultKsAppArgs, 'name'> {
-  storageClassName: StorageClassNameTypes;
+  storageClassName: string;
 }
 
 export default ({
@@ -30,7 +30,7 @@ export default ({
     namespace,
 
     podConfig: {
-      port: 9000,
+      ports: { http: 9000 },
       image,
       resources: {
         requests: { memory: '1Mi', cpu: '1m' },

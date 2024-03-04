@@ -53,7 +53,7 @@ export default ({
         : '',
     },
     podConfig: {
-      port: 80,
+      ports: { http: 80 },
       image: 'wordpress:latest',
       volumes: volume
         ? [

@@ -8,7 +8,7 @@ interface CustomHeaderProps extends Omit<DefaultK8sArgs, 'namespace'> {
 }
 
 export default ({
-  name,
+  name = 'traefik',
   headers,
   customRequestHeaders,
   customResponseHeaders,

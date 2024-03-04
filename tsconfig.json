@@ -1,27 +1,28 @@
 {
   "compilerOptions": {
     "strict": true,
-    "outDir": "bin",
-    "target": "esnext",
+    "outDir": "./.out-bin",
+    "declaration": true,
+    "esModuleInterop": true,
+    "target": "es5",
+    "module": "commonjs",
     "lib": [
       "es2019",
       "esnext.array",
       "esnext.string",
       "dom"
     ],
-    "module": "commonjs",
     "moduleResolution": "node",
-    "sourceMap": true,
+    "sourceMap": false,
     "experimentalDecorators": true,
     "pretty": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
     "baseUrl": ".",
     "resolveJsonModule": true
   },
   "files": ["index.ts"],
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "*.test.ts"]
+  "exclude": ["**/node_modules","z_tests",".out-bin", "**/*.test.ts"]
 }

@@ -6,12 +6,10 @@ export const getLocationString = (possibleName: string) => {
   const location = LocationBuiltIn.value.find(
     (l) => l.name === replaceAll(possibleName, ' ', '').toLowerCase()
   );
-  return location?.displayName;
+  return location?.displayName ?? 'Southeast Asia';
 };
 
-export const getLocation = (
-  possibleName: Input<string>
-): Output<string | undefined> =>
+export const getLocation = (possibleName: Input<string>): Output<string> =>
   output(possibleName).apply((l) => getLocationString(l));
 
 export const getMyPublicIpAddress = async (): Promise<string | undefined> => {

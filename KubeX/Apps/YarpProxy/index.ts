@@ -62,7 +62,7 @@ const createReverseProxyConfig = async (
       }
 
       if (r.transforms) {
-        r.transforms.forEach((ts: object, i) =>
+        r.transforms.forEach((ts: any, i) =>
           Object.keys(ts).forEach(
             (k) =>
               (routeConfig[`${routeName}__Transforms__${i}__${k}`] =
@@ -153,11 +153,11 @@ export default async ({
     ingressConfig: ingress,
 
     podConfig: {
-      port: 8080,
+      ports: { http: 8080 },
       image: 'baoduy2412/hbd.yarp-proxy:latest',
     },
     deploymentConfig: { replicas: 1 },
-    enableHA: enableHA ? { maxReplicas: 3, minReplicas: 1 } : undefined,
+    enableHA: enableHA ? { name, maxReplicas: 3, minReplicas: 1 } : undefined,
   });
 
   return proxy;

@@ -2,8 +2,6 @@ import { PoliciesProps, SetHeaderTypes } from '../ApiProduct/PolicyBuilder';
 import { ApimInfo, KeyVaultInfo } from '../../types';
 import { createProduct } from '../ApiProduct/Product';
 import { createApi } from '../ApiProduct/Api';
-import { envDomain } from '../../Common/AzureEnv';
-import { ApimAuthHeaderKey, ApimHookHeaderKey } from '../../Common/config';
 
 interface Props {
   name?: string;
@@ -11,15 +9,17 @@ interface Props {
   subscriptionRequired?: boolean;
   vaultInfo?: KeyVaultInfo;
   policies?: PoliciesProps;
-  authHeaderKey?: string;
-  hookHeaderKey?: string;
+  domain: string;
+  authHeaderKey: string;
+  hookHeaderKey: string;
 }
 
 export default async ({
   name = 'hook-proxy',
   subscriptionRequired = true,
-  hookHeaderKey = ApimHookHeaderKey,
-  authHeaderKey = ApimAuthHeaderKey,
+  domain,
+  hookHeaderKey,
+  authHeaderKey,
   policies,
   ...props
 }: Props) => {
@@ -39,7 +39,7 @@ export default async ({
       },
     },
     //Dummy Url as it will be set from request header key `hookHeaderKey`
-    serviceUrl: `https://${envDomain}`,
+    serviceUrl: `https://${domain}`,
     operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
   });
 

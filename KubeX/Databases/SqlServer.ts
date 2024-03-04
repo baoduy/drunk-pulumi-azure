@@ -1,10 +1,8 @@
-import { DefaultK8sArgs, MySqlProps } from '../types';
-import { KeyVaultInfo } from '../../types';
+import { MySqlProps } from '../types';
 import { randomPassword } from '../../Core/Random';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
-import { getPasswordName } from '../../Common/Naming';
 import Deployment from '../Deployment';
-import { createPVCForStorageClass, StorageClassNameTypes } from '../Storage';
+import { createPVCForStorageClass } from '../Storage';
 import { interpolate } from '@pulumi/pulumi';
 
 interface Props extends MySqlProps {
@@ -41,7 +39,7 @@ export default ({
     secrets: { SA_PASSWORD: password },
 
     podConfig: {
-      port: 1433,
+      ports: { tcp: 1433 },
       image: 'mcr.microsoft.com/mssql/server:2019-latest',
 
       securityContext: { fsGroup: 10001 },

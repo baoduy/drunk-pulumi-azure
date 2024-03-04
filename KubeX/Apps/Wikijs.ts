@@ -27,7 +27,7 @@ export default async ({
   postgresql,
   provider,
 }: WikiJsProps) => {
-  const hostName = `${name}.${ingress?.domain}`;
+  const hostName = ingress?.hostNames[0];
 
   const graphAccess = getGraphPermissions(
     { name: 'User.Read.All', type: 'Role' },
@@ -38,7 +38,7 @@ export default async ({
   );
 
   const identity = createAzureAdIdentity
-    ? await Identity({
+    ? Identity({
         name,
         createClientSecret: true,
         vaultInfo,
@@ -65,7 +65,7 @@ export default async ({
     },
 
     podConfig: {
-      port: 3000,
+      ports: { http: 3000 },
       image: 'requarks/wiki:latest',
       podSecurityContext: { readOnlyRootFilesystem: false },
     },
@@ -78,7 +78,6 @@ export default async ({
     ingressConfig: ingress
       ? {
           ...ingress,
-          hostNames: [hostName],
           responseHeaders: {
             'Content-Security-Policy': `default-src 'self' *.diagrams.net *.msecnd.net *.services.visualstudio.com data: 'unsafe-inline' 'unsafe-eval'`,
             'referrer-policy': 'no-referrer',
