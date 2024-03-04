@@ -1,28 +1,18 @@
 {
   "compilerOptions": {
-    "strict": true,
     "outDir": "./.out-bin",
-    "declaration": true,
-    "esModuleInterop": true,
-    "target": "esnext",
+    "target": "es2016",
     "module": "commonjs",
-    "lib": [
-      "es2019",
-      "esnext.array",
-      "esnext.string",
-      "dom"
-    ],
     "moduleResolution": "node",
-    "sourceMap": false,
+    "declaration": true,
+    "inlineSourceMap": true,
+    "stripInternal": true,
     "experimentalDecorators": true,
-    "pretty": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "resolveJsonModule": true
+    "strict": true
   },
-  "files": ["index.ts"],
+  "files": ["**/*.ts"],
   "include": ["**/*.ts"],
-  "exclude": ["**/node_modules","z_tests",".out-bin", "**/*.test.ts","packageForPublish.ts"]
+  "exclude": ["**/node_modules","z_tests",".out-bin",".tools", "**/*.test.ts","packageForPublish.ts"]
 }

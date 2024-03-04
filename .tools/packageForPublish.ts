@@ -1,13 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const tsConfigPath = './tsconfig.json'; // Path to tsconfig.json
-const srcPackageJsonPath = './package.json'; // Source package.json path
+const tsConfigPath = '../tsconfig.json'; // Path to tsconfig.json
+const srcPackageJsonPath = '../package.json'; // Source package.json path
 
 // Read the tsconfig.json file to determine the output directory
 const tsConfigRaw = fs.readFileSync(tsConfigPath, 'utf8');
 const tsConfig = JSON.parse(tsConfigRaw);
-const targetDir = tsConfig?.compilerOptions?.outDir ?? './.out-bin'; // Fallback to '../other-folder' if outDir is not specified
+const targetDir = tsConfig?.compilerOptions?.outDir ?? '../.out-bin'; // Fallback to '../other-folder' if outDir is not specified
 
 // Validate that we have a meaningful targetDir
 if (!targetDir) {
