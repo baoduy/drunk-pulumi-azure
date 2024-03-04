@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const tsConfigPath = '../tsconfig.json'; // Path to tsconfig.json
-const srcPackageJsonPath = '../package.json'; // Source package.json path
+const tsConfigPath = './tsconfig.json'; // Path to tsconfig.json
+const srcPackageJsonPath = './package.json'; // Source package.json path
 
 // Read the tsconfig.json file to determine the output directory
 const tsConfigRaw = fs.readFileSync(tsConfigPath, 'utf8');

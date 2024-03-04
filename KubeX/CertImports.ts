@@ -1,6 +1,6 @@
 import { getKubeDomainCert } from './Helpers';
 import { getTlsName } from './CertHelper';
-import fs from 'fs';
+import * as fs from 'fs';
 import { KeyVaultInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { K8sArgs } from './types';

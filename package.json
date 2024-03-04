@@ -6,8 +6,9 @@
     "name": "drunk-coding"
   },
   "scripts": {
-    "build": "cross-env TEST_MODE=false NODE_ENV=production npx tsc && npm run copy-pkg",
+    "build": "cross-env TEST_MODE=false NODE_ENV=production npm run update-tsconfig && npx tsc && npm run copy-pkg",
     "copy-pkg": "ts-node ./.tools/packageForPublish.ts && cpy ReadMe.md .out-bin/",
+    "update-tsconfig": "ts-node ./.tools/update_tsconfig.ts",
     "pack": "cd .out-bin && npm pack && cd ../",
     "postinstall": "husky install",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",

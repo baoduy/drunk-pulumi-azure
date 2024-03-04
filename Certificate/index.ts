@@ -1,5 +1,5 @@
 import * as tls from '@pulumi/tls';
-import fs from 'fs';
+import * as fs from 'fs';
 import * as pem from './p12';
 import { KeyVaultInfo } from '../types';
 import { addCustomSecret } from '../KeyVault/CustomHelper';

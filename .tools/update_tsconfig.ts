@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const tsconfigPath: string = path.join(__dirname, '../tsconfig.json');
-const srcFolderPath: string = path.join(__dirname, '../'); // Adjust 'src' if your TS files are in a different directory
+const tsconfigPath: string = './tsconfig.json';
+const srcFolderPath: string = './'; // Adjust 'src' if your TS files are in a different directory
 const excludeFolders: string[] = [
   'node_modules',
   '.out-bin',
@@ -22,9 +22,7 @@ function findTsFiles(dir: string, arrayOfFiles: string[] = []): string[] {
         arrayOfFiles = findTsFiles(fullPath, arrayOfFiles);
       }
     } else if (file.endsWith('.ts')) {
-      arrayOfFiles.push(
-        './' + path.relative(__dirname, fullPath).replace(/\\/g, '/')
-      );
+      arrayOfFiles.push(path.relative('./', fullPath).replace(/\\/g, '/'));
     }
   });
 
