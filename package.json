@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "npx tsc && npm run copy-pkg",
-    "copy-pkg": "cpy package.json .out-bin/ && cpy ReadMe.md .out-bin/",
+    "copy-pkg": "ts-node ./packageForPublish.ts && cpy ReadMe.md .out-bin/",
     "pack": "cd .out-bin && npm pack && cd ../",
     "postinstall": "husky install",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",
