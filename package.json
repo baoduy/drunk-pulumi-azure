@@ -2,7 +2,7 @@
   "name": "drunk-pulumi",
   "version": "0.0.1",
   "scripts": {
-    "build": "npx tsc && npm run copy-pkg",
+    "build": "cross-env TEST_MODE=false NODE_ENV=production npx tsc && npm run copy-pkg",
     "copy-pkg": "ts-node ./packageForPublish.ts && cpy ReadMe.md .out-bin/",
     "pack": "cd .out-bin && npm pack && cd ../",
     "postinstall": "husky install",
