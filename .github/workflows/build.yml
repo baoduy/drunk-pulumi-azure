@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  Enable_Release: 'false'
+  Enable_Release: 'true'
 
 jobs:
   build:
@@ -70,10 +70,14 @@ jobs:
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run build
 
+      - name: Update version in package.json
+        run: |
+          sed -i 's/"version": "0.0.1"/"version": "${{ steps.bump-semver.outputs.new_version }}"/' package.json
+
       # Create Release
       - name: Create Release
         id: create_release
-        #if: ${{ env.Enable_Release == 'true' }}
+        if: ${{ env.Enable_Release == 'true' }}
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,10 +87,10 @@ jobs:
           draft: false
           prerelease: false
 
-#      - name: Publish to npm
-#        if: ${{ env.Enable_Release == 'true' }}
-#        run: |
-#          cd .out-bin
-#          npm publish
-#        env:
-#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm
+        if: ${{ env.Enable_Release == 'true' }}
+        run: |
+          cd .out-bin
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
