@@ -2,12 +2,12 @@ import {
   DefaultResourceArgs,
   ResourceGroupInfo,
   ResourceResultProps,
+  BasicResourceArgs,
 } from '../types';
 import {
   ResourceGroup,
   ResourceGroupArgs,
 } from '@pulumi/azure-native/resources';
-import { BasicResourceArgs } from './../types.d';
 import ResourceCreator from './ResourceCreator';
 import { getResourceGroupName } from '../Common/Naming';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
