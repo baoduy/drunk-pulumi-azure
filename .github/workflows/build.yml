@@ -5,14 +5,32 @@ name: CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+
+env:
+  Enable_Release: 'false'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+        # Versioning
+      - name: Get version and version code
+        uses: xom9ikk/version-by-tag@v1
+        id: versioning
+        with:
+          isUseGithubRunNumber: true
+
+      - uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        with:
+          current_version: ${{ steps.versioning.outputs.semver }}
+          level: patch
+
+      - name: Print Variables
+        run: |
+          echo "New version: ${{ steps.bump-semver.outputs.new_version }}"
 
       - name: Cache node modules
         id: cache-npm
@@ -51,11 +69,24 @@ jobs:
         run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run build
-          npm run pack
 
-      - name: Publish to npm
-        run: | 
-          cd .out-bin
-          npm publish
+      # Create Release
+      - name: Create Release
+        id: create_release
+        #if: ${{ env.Enable_Release == 'true' }}
+        uses: actions/create-release@v1
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+        with:
+          tag_name: ${{ steps.bump-semver.outputs.new_version }}
+          release_name: Release ${{ steps.bump-semver.outputs.new_version }}
+          draft: false
+          prerelease: false
+
+#      - name: Publish to npm
+#        if: ${{ env.Enable_Release == 'true' }}
+#        run: |
+#          cd .out-bin
+#          npm publish
+#        env:
+#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
