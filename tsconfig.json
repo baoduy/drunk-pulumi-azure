@@ -4,7 +4,7 @@
     "outDir": "./.out-bin",
     "declaration": true,
     "esModuleInterop": true,
-    "target": "es5",
+    "target": "esnext",
     "module": "commonjs",
     "lib": [
       "es2019",
