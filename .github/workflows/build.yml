@@ -16,7 +16,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - run: npm install --force
+          registry-url: 'https://registry.npmjs.org/'
+
+      - run: npm ci
       
       - name: Test
         continue-on-error: true
@@ -30,3 +32,10 @@ jobs:
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run build
           npm run pack
+
+      - name: Publish to npm
+        run: | 
+          cd .out-bin
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -5,5 +5,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false
-  }
+  },
+  "files": ["index.ts"],
+  "include": ["**/*.ts"],
+  "exclude": ["**/node_modules",".out-bin"]
 }
