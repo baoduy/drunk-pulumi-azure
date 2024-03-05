@@ -5,7 +5,6 @@ import {
   GetTokenOptions,
 } from '@azure/identity';
 import { Config } from '@pulumi/pulumi';
-import { testMode } from '../../Common/StackEnv';
 
 type WebResource = { headers: { set: (key: string, value: string) => void } };
 
@@ -33,8 +32,6 @@ export class ClientCredential implements TokenCredential {
     scopes: string | string[] = 'https://management.azure.com/.default',
     options?: GetTokenOptions | undefined
   ) {
-    if (testMode) return null;
-
     const credential = this.getCredentials();
     return await credential.getToken(scopes, options);
   }

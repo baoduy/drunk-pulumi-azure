@@ -4,7 +4,7 @@ import { all, interpolate, output } from '@pulumi/pulumi';
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { ResourceInfoArg } from './ResourceEnv';
-import { organization, projectName, stack, testMode } from './StackEnv';
+import { organization, projectName, stack } from './StackEnv';
 
 const config = output(native.authorization.getClientConfig());
 export const tenantId = config.tenantId;
@@ -45,7 +45,6 @@ const getCurrentEnv = () => {
   if (isSandbox) return Environments.Sandbox;
 
   if (isDev) return Environments.Dev;
-  if (testMode) return Environments.Dev;
 
   return Environments.Local;
 };
