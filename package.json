@@ -6,7 +6,7 @@
     "name": "drunk-coding"
   },
   "scripts": {
-    "build": "cross-env TEST_MODE=false NODE_ENV=production npm run update-tsconfig && npx tsc && npm run copy-pkg",
+    "build": "cross-env NODE_ENV=production npm run update-tsconfig && npx tsc && npm run copy-pkg",
     "copy-pkg": "ts-node ./.tools/packageForPublish.ts && cpy ReadMe.md .out-bin/",
     "update-tsconfig": "ts-node ./.tools/update_tsconfig.ts",
     "pack": "cd .out-bin && npm pack && cd ../",
@@ -18,10 +18,10 @@
     "update": "npx npm-check-updates -u",
     "export": "pulumi stack export --file state.json",
     "import": "pulumi stack import --file state.json",
-    "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
-    "test": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.test.ts'",
-    "testcert": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/cert.test.ts'",
-    "test-cover": "cross-env TEST_MODE=true TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
+    "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
+    "test": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.test.ts'",
+    "testcert": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/cert.test.ts'",
+    "test-cover": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
     "lint": "eslint **/*.ts",
     "lint:fix": "eslint **/*.ts --fix"
   },

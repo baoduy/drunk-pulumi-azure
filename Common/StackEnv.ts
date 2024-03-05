@@ -1,14 +1,12 @@
 import * as pulumi from '@pulumi/pulumi';
 import { getValue } from './ConfigHelper';
 
-export const testMode = Boolean(process.env.TEST_MODE);
-export const organization = testMode
-  ? 'hbd'
-  : getValue('organization') ?? pulumi.getOrganization().toLowerCase();
-export const projectName = pulumi.getProject().toLowerCase();
-export const stack = pulumi.getStack().toLowerCase();
+console.log("Environment", process.env);
+
+export const organization =process.env['PULUMI_NODEJS_ORGANIZATION']?? getValue('organization') ?? pulumi.getOrganization().toLowerCase();
+export const projectName =process.env['PULUMI_NODEJS_PROJECT']?? pulumi.getProject().toLowerCase();
+export const stack =process.env['PULUMI_NODEJS_STACK']?? pulumi.getStack().toLowerCase();
 
 console.log(
   `Current Pulumi Project: ${projectName}, Organization: ${organization} and Stack: ${stack}`
 );
-if (testMode) console.log(` & Running in Test mode.`);
