@@ -1,7 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
 
 console.log(
-  'Environments\n',
+  'Pulumi Environments\n',
   Object.keys(process.env)
     .filter((key) => key.startsWith('PULUMI_'))
     .map((key) => `\t${key}: ${process.env[key]}`)
@@ -14,7 +14,3 @@ export const projectName =
   process.env.PULUMI_NODEJS_PROJECT ?? pulumi.getProject().toLowerCase();
 export const stack =
   process.env.PULUMI_NODEJS_STACK ?? pulumi.getStack().toLowerCase();
-
-console.log(
-  `Current Pulumi Project: ${projectName}, Organization: ${organization} and Stack: ${stack}`
-);
