@@ -1,11 +1,15 @@
 import * as pulumi from '@pulumi/pulumi';
-import { getValue } from './ConfigHelper';
+
+console.log(
+  'Environments\n',
+  Object.keys(process.env)
+    .filter((key) => key.startsWith('PULUMI_'))
+    .map((key) => `\t${key}: ${process.env[key]}`)
+    .join('\n')
+);
 
 export const isDryRun = Boolean(process.env.PULUMI_NODEJS_DRY_RUN);
-export const organization =
-  process.env.PULUMI_NODEJS_ORGANIZATION ??
-  getValue('organization') ??
-  pulumi.getOrganization().toLowerCase();
+export const organization = process.env.PULUMI_NODEJS_ORGANIZATION!;
 export const projectName =
   process.env.PULUMI_NODEJS_PROJECT ?? pulumi.getProject().toLowerCase();
 export const stack =
