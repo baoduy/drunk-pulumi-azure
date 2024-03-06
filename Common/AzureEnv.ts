@@ -1,16 +1,17 @@
-import * as native from '@pulumi/azure-native';
-import { all, interpolate, output } from '@pulumi/pulumi';
-
+import { all, interpolate } from '@pulumi/pulumi';
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { ResourceInfoArg } from './ResourceEnv';
 import { organization, projectName, stack } from './StackEnv';
 
-const config = output(native.authorization.getClientConfig());
-export const tenantId = config.tenantId;
-export const subscriptionId = config.subscriptionId;
-export const currentServicePrincipal = config.objectId;
-export const defaultScope = subscriptionId.apply((s) => `/subscriptions/${s}`);
+const config = JSON.parse(process.env.PULUMI_CONFIG ?? '');
+export const tenantId = config['azure-native:config:tenantId'] as string;
+export const subscriptionId = config[
+  'azure-native:config:subscriptionId'
+] as string;
+//export const currentServicePrincipal = config.objectId;
+export const currentLocation = config['azure-native:config:location'] as string;
+export const defaultScope = interpolate`/subscriptions/${subscriptionId}`;
 
 //Print and Check
 all([subscriptionId, tenantId]).apply(([s, t]) => {
@@ -58,7 +59,7 @@ export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
 
   return {
     name: vaultName,
-    group: { resourceGroupName: resourceGroupName },
+    group: { resourceGroupName: resourceGroupName, location: currentLocation },
     id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
   };
 };
@@ -99,5 +100,10 @@ export const getResourceInfoFromId = (id: string): ResourceInfo | undefined => {
     if (index === details.length - 1) name = d;
   });
 
-  return { name, id, group: { resourceGroupName: groupName }, subscriptionId };
+  return {
+    name,
+    id,
+    group: { resourceGroupName: groupName, location: currentLocation },
+    subscriptionId,
+  };
 };

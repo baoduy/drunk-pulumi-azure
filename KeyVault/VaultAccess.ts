@@ -1,6 +1,6 @@
-import { grantVaultRbacPermission, PermissionProps } from './VaultPermissions';
+import { PermissionProps } from './VaultPermissions';
 import GroupRole from '../AzAd/Role';
-import { currentEnv, currentServicePrincipal } from '../Common/AzureEnv';
+import { currentEnv } from '../Common/AzureEnv';
 import { getAdGroup } from '../AzAd/Group';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import * as azuread from '@pulumi/azuread';
@@ -21,7 +21,7 @@ export default async ({ name, auth }: Props) => {
   //Permission Groups
   const readOnlyGroup = auth.envRoleNames
     ? await getAdGroup(auth.envRoleNames.readOnly)
-    : await GroupRole({
+    : GroupRole({
         env: currentEnv,
         appName: `${name}-vault`,
         roleName: 'ReadOnly',
@@ -30,7 +30,7 @@ export default async ({ name, auth }: Props) => {
 
   const adminGroup = auth.envRoleNames
     ? await getAdGroup(auth.envRoleNames.contributor)
-    : await GroupRole({
+    : GroupRole({
         env: currentEnv,
         appName: `${name}-vault`,
         roleName: 'Admin',
@@ -40,10 +40,10 @@ export default async ({ name, auth }: Props) => {
   //Add current service principal in
   if (auth.permissions == undefined) {
     auth.permissions = [
-      {
-        objectId: currentServicePrincipal,
-        permission: 'ReadWrite',
-      },
+      // {
+      //   objectId: currentServicePrincipal,
+      //   permission: 'ReadWrite',
+      // },
     ];
   }
 
