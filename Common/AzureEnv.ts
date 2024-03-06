@@ -4,7 +4,7 @@ import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { ResourceInfoArg } from './ResourceEnv';
 import { organization, projectName, stack } from './StackEnv';
 
-const config = JSON.parse(process.env.PULUMI_CONFIG ?? '');
+const config = JSON.parse(process.env.PULUMI_CONFIG ?? '{}');
 export const tenantId = config['azure-native:config:tenantId'] as string;
 export const subscriptionId = config[
   'azure-native:config:subscriptionId'
