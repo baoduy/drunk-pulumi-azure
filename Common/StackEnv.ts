@@ -1,8 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import { getValue } from './ConfigHelper';
 
-console.log('Environment', process.env);
-
 export const isDryRun = Boolean(process.env.PULUMI_NODEJS_DRY_RUN);
 export const organization =
   process.env.PULUMI_NODEJS_ORGANIZATION ??
