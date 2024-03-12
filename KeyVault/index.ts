@@ -108,7 +108,7 @@ export default async ({
 
   //Grant RBAC permission
   if (auth?.enableRbac) {
-    await grantVaultRbacPermission({
+    grantVaultRbacPermission({
       name: `${name}-ReadOnlyGroup`,
       scope: resource.id,
       objectId: readOnlyGroup.objectId,
@@ -116,7 +116,7 @@ export default async ({
       principalType: 'Group',
     });
 
-    await grantVaultRbacPermission({
+    grantVaultRbacPermission({
       name: `${name}-AdminGroup`,
       scope: resource.id,
       objectId: adminGroup.objectId,
