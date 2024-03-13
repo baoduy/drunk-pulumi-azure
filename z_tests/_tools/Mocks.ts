@@ -16,40 +16,46 @@ const tryFindName = (props: any) => {
   return name;
 };
 
-export default pulumi.runtime.setMocks({
-  newResource: (
-    args: pulumi.runtime.MockResourceArgs
-  ): {
-    id: string;
-    name: string;
-    state: any;
-  } => {
-    const name = tryFindName(args.inputs);
-    //console.log(`Mocks resource ${name}`);
+export default pulumi.runtime.setMocks(
+  {
+    newResource: (
+      args: pulumi.runtime.MockResourceArgs
+    ): {
+      id: string;
+      name: string;
+      state: any;
+    } => {
+      const name = tryFindName(args.inputs);
+      //console.log(`Mocks resource ${name}`);
 
-    return {
-      id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
-      name,
-      state: {
-        name,
-        ...args.inputs,
-        result: args.type.includes('Random')
-          ? '5c1c5657-085b-41c8-8d11-de897e70eae7'
-          : name.endsWith('ssh')
-          ? {
-              publicKey: '1234567890',
-              privateKey: '1234567890',
-            }
-          : '',
-      },
-    };
-  },
-  call: (args: pulumi.runtime.MockCallArgs) => {
-    if (args.token === 'azure:core/getSubscription:getSubscription')
       return {
-        id: '00000000-0000-0000-0000-000000000000',
-        display_name: 'subscription',
+        id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
+        name,
+        state: {
+          name,
+          ...args.inputs,
+          result: args.type.includes('Random')
+            ? '5c1c5657-085b-41c8-8d11-de897e70eae7'
+            : name.endsWith('ssh')
+            ? {
+                publicKey: '1234567890',
+                privateKey: '1234567890',
+              }
+            : '',
+        },
       };
-    return args.inputs;
+    },
+    call: (args: pulumi.runtime.MockCallArgs) => {
+      if (args.token === 'azure:core/getSubscription:getSubscription')
+        return {
+          id: '00000000-0000-0000-0000-000000000000',
+          display_name: 'subscription',
+        };
+      return args.inputs;
+    },
   },
-});
+  'testProject',
+  'testStack',
+  false,
+  'testOrganization'
+);

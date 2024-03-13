@@ -10,6 +10,7 @@
     "experimentalDecorators": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
     "strict": true
   },
   "files": [
@@ -226,7 +227,7 @@
     "**/*.ts"
   ],
   "exclude": [
-    "**/node_modules",
+    "node_modules",
     "z_tests",
     ".out-bin",
     ".tools",

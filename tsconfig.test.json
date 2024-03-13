@@ -1,12 +1,23 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
+    "target": "esnext",
+    "module": "commonjs",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "noImplicitAny": false
   },
-  "files": ["index.ts"],
-  "include": ["**/*.ts"],
-  "exclude": ["**/node_modules",".out-bin"]
+  "ts-node": {
+    "esm": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.d.ts",
+    "z_tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".out-bin",
+    ".tools",
+  ]
 }

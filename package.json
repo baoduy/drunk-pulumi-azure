@@ -20,7 +20,7 @@
     "import": "pulumi stack import --file state.json",
     "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
     "test": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.test.ts'",
-    "testcert": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/cert.test.ts'",
+    "testcert": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register '**/*.ts'",
     "test-cover": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
     "lint": "eslint **/*.ts",
     "lint:fix": "eslint **/*.ts --fix"
@@ -39,7 +39,7 @@
     "eslint": "^8.57.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "mocha": "^10.3.0",
+    "mocha": "^9.2.2",
     "nyc": "^15.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
