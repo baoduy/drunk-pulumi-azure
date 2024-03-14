@@ -6,10 +6,10 @@ class KeyVaultCache {
   _secretsCache: Record<string, KeyVaultSecret | undefined> = {};
   _keyCache: Record<string, KeyVaultKey | undefined> = {};
 
-  constructor(private readonly vaultInfo: KeyVaultInfo) {}
+  constructor(private readonly keyVaultName: string) {}
 
   private getName(name: string) {
-    return `${this.vaultInfo.name}-${name}`;
+    return `${this.keyVaultName}-${name}`;
   }
 
   public setSecret(secret: KeyVaultSecret) {
@@ -29,11 +29,12 @@ class KeyVaultCache {
 
 const _keyVaultCache: Record<string, KeyVaultCache> = {};
 
-export const getKeyVaultCache = (vaultInfo: KeyVaultInfo) => {
-  let cache = _keyVaultCache[vaultInfo.name];
+export function getKeyVaultCache(vaultInfo: KeyVaultInfo | string) {
+  const n = typeof vaultInfo === 'string' ? vaultInfo : vaultInfo.name;
+  let cache = _keyVaultCache[n];
   if (cache) return cache;
 
-  cache = new KeyVaultCache(vaultInfo);
-  _keyVaultCache[vaultInfo.name] = cache;
+  cache = new KeyVaultCache(n);
+  _keyVaultCache[n] = cache;
   return cache;
-};
+}

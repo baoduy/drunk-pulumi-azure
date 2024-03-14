@@ -6,6 +6,8 @@ import {
 } from '@azure/identity';
 import { KeyClient } from '@azure/keyvault-keys';
 import { getKeyVaultCache } from './KeyVaultCache';
+import { TokenCredential } from '@azure/core-auth';
+import { isDryRun } from '../Common/StackEnv';
 
 /** The Key vault management */
 class KeyVaultBase {
@@ -13,10 +15,10 @@ class KeyVaultBase {
   private readonly _keyClient: KeyClient;
 
   constructor(
-    private readonly vaultInfo: KeyVaultInfo,
-    credential: TokenCredentialOptions | undefined = undefined
+    private readonly keyVaultName: string,
+    credential: TokenCredential | undefined = undefined
   ) {
-    const url = `https://${vaultInfo.name}.vault.azure.net?api-version=7.0`;
+    const url = `https://${keyVaultName}.vault.azure.net?api-version=7.0`;
     credential = credential ?? new DefaultAzureCredential();
 
     this._secretClient = new SecretClient(url, credential);
@@ -24,7 +26,7 @@ class KeyVaultBase {
   }
 
   private get Cache() {
-    return getKeyVaultCache(this.vaultInfo);
+    return getKeyVaultCache(this.keyVaultName);
   }
 
   /** Get Secret Versions*/
@@ -36,13 +38,14 @@ class KeyVaultBase {
       .listPropertiesOfSecretVersions(name)
       .byPage({ maxPageSize: 10 });
 
-    const versions = new Array<SecretProperties>();
+    const versionsList = new Array<SecretProperties>();
     for await (const s of rs) {
-      s.forEach((p) => versions.push(p));
+      s.forEach((p) => versionsList.push(p));
     }
+
     //Filter for specific version only
-    if (versions) return versions.filter((s) => s.version === version);
-    return versions;
+    if (version) return versionsList.filter((s) => s.version === version);
+    return versionsList;
   }
 
   /** Get Key Versions*/
@@ -54,14 +57,14 @@ class KeyVaultBase {
       .listPropertiesOfKeyVersions(name)
       .byPage({ maxPageSize: 10 });
 
-    const versions = new Array<SecretProperties>();
+    const versionsList = new Array<SecretProperties>();
     for await (const s of rs) {
-      s.forEach((p) => versions.push(p));
+      s.forEach((p) => versionsList.push(p));
     }
 
     //Filter for specific version only
-    if (versions) return versions.filter((s) => s.version === version);
-    return versions;
+    if (version) return versionsList.filter((s) => s.version === version);
+    return versionsList;
   }
 
   /** Check whether Secret is existed or not*/
@@ -88,11 +91,11 @@ class KeyVaultBase {
     const versions = await this.getKeyVersions(name, version);
 
     if (versions.length > 0) {
-      console.log(`The secret '${name}' is existed.`);
+      console.log(`The key '${name}' is existed.`);
       return true;
     }
 
-    console.log(`The secret '${name}' is NOT existed.`);
+    console.log(`The key '${name}' is NOT existed.`);
     return false;
   }
 
@@ -110,6 +113,8 @@ class KeyVaultBase {
 
   /**Recover the deleted Secret*/
   public async recoverDeletedSecret(name: string) {
+    if (isDryRun) return undefined;
+
     const deleted = await this.getDeletedSecret(name);
     //Recover deleted items
     if (deleted) {
@@ -123,6 +128,8 @@ class KeyVaultBase {
 
   /**Recover deleted Key*/
   public async recoverDeletedKey(name: string) {
+    if (isDryRun) return undefined;
+
     const deleted = await this.getDeletedKey(name);
     //Recover deleted items
     if (deleted) {
@@ -141,6 +148,8 @@ class KeyVaultBase {
     contentType: string | undefined = undefined,
     tags: { [p: string]: string } | undefined = undefined
   ) {
+    if (isDryRun) return undefined;
+
     await this.recoverDeletedSecret(name);
     return await this._secretClient.setSecret(name, value, {
       enabled: true,
@@ -154,6 +163,8 @@ class KeyVaultBase {
     name: string,
     tags: { [p: string]: string } | undefined = undefined
   ) {
+    if (isDryRun) return undefined;
+
     await this.recoverDeletedKey(name);
     const expiresOn = new Date(
       new Date().setFullYear(new Date().getFullYear() + 3)
@@ -179,7 +190,7 @@ class KeyVaultBase {
     result = await this._secretClient
       .getSecret(name, { version })
       .catch((err) => {
-        console.error(`${this.vaultInfo.name}: ${err.message || err}`);
+        console.error(`${this.keyVaultName}: ${err.message || err}`);
         return undefined;
       });
 
@@ -193,7 +204,7 @@ class KeyVaultBase {
     if (result) return result;
 
     result = await this._keyClient.getKey(name, { version }).catch((err) => {
-      console.error(`${this.vaultInfo.name}: ${err.message || err}`);
+      console.error(`${this.keyVaultName}: ${err.message || err}`);
       return undefined;
     });
 
@@ -209,22 +220,25 @@ class KeyVaultBase {
 
   /** Delete Secret */
   public async deleteSecret(name: string) {
+    if (isDryRun) return undefined;
     await this._secretClient.beginDeleteSecret(name).catch();
   }
 
   /** Delete Key */
   public async deleteKey(name: string) {
+    if (isDryRun) return undefined;
     await this._keyClient.beginDeleteKey(name).catch();
   }
 }
 
 export const _keyVaultBaseCache: Record<string, KeyVaultBase> = {};
 
-export const getKeyVaultBase = (vaultInfo: KeyVaultInfo) => {
-  let cache = _keyVaultBaseCache[vaultInfo.name];
+export function getKeyVaultBase(vaultInfo: KeyVaultInfo | string) {
+  const n = typeof vaultInfo === 'string' ? vaultInfo : vaultInfo.name;
+  let cache = _keyVaultBaseCache[n];
   if (cache) return cache;
 
-  cache = new KeyVaultBase(vaultInfo);
-  _keyVaultBaseCache[vaultInfo.name] = cache;
+  cache = new KeyVaultBase(n);
+  _keyVaultBaseCache[n] = cache;
   return cache;
-};
+}

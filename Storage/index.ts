@@ -1,10 +1,10 @@
 import * as storage from '@pulumi/azure-native/storage';
 
 import { AppInsightInfo, KeyVaultInfo, BasicResourceArgs } from '../types';
-import { Input, Output } from '@pulumi/pulumi';
+import { Input, output } from '@pulumi/pulumi';
 import { createThreatProtection } from '../Logs/Helpers';
 import { addInsightMonitor } from '../Logs/WebTest';
-import { getSecret, parseKeyUrl } from '../KeyVault/Helper';
+import { getSecret } from '../KeyVault/Helper';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 import cdnCreator from './CdnEndpoint';
 
@@ -20,6 +20,7 @@ import {
   DefaultManagementRules,
   ManagementRules,
 } from './ManagementRules';
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 
 type ContainerProps = {
   name: string;
@@ -31,8 +32,9 @@ type ContainerProps = {
 interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
   allowsCors?: string[];
-  encryptionKeyUrl?: Output<string> | string;
-  vaultInfo?: KeyVaultInfo;
+
+  //This is required for encryption key
+  vaultInfo: KeyVaultInfo;
 
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
@@ -53,7 +55,7 @@ interface StorageProps extends BasicResourceArgs {
     /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
     forceUseCdn?: boolean;
     /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
-    enableAccountLevelEncryption?: boolean;
+    enableKeyVaultEncryption?: boolean;
   };
 
   policies?: {
@@ -67,12 +69,17 @@ interface StorageProps extends BasicResourceArgs {
 
   network?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
 
-  onKeysLoaded?: (
-    keys: Array<{ name: string; key: string; connectionString: string }>,
-    storageName: Output<string>
-  ) => Promise<void>;
+  // onKeysLoaded?: (
+  //   keys: Array<{ name: string; key: string; connectionString: string }>,
+  //   storageName: Output<string>
+  // ) => Promise<void>;
   lock?: boolean;
 }
+
+const getEncryptionKey = (name: string, vaultInfo: KeyVaultInfo) => {
+  const n = `${name}-encrypt-key`;
+  return output(getKeyVaultBase(vaultInfo).getOrCreateKey(n));
+};
 
 /** Storage Creator */
 export default ({
@@ -81,7 +88,6 @@ export default ({
   customDomain,
   allowsCors,
   vaultInfo,
-  encryptionKeyUrl,
   defaultManagementRules,
   containers = [],
   queues = [],
@@ -90,7 +96,6 @@ export default ({
   network,
   featureFlags = {},
   policies = { keyExpirationPeriodInDays: 365 },
-  onKeysLoaded,
   lock = true,
 }: StorageProps) => {
   name = getStorageName(name);
@@ -99,11 +104,8 @@ export default ({
   const secondaryKeyName = getKeyName(name, 'secondary');
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
   const secondConnectionKeyName = getConnectionName(name, 'secondary');
-
-  const keyInfo = encryptionKeyUrl
-    ? typeof encryptionKeyUrl === 'string'
-      ? parseKeyUrl(encryptionKeyUrl)
-      : encryptionKeyUrl.apply(parseKeyUrl)
+  const encryptionKey = featureFlags.enableKeyVaultEncryption
+    ? getEncryptionKey(name, vaultInfo)
     : undefined;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
@@ -131,17 +133,25 @@ export default ({
       keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
     },
 
-    encryption:
-      keyInfo && featureFlags.enableAccountLevelEncryption
-        ? {
-            keySource: 'Microsoft.Keyvault',
-            keyVaultProperties: {
-              keyName: keyInfo.name,
-              keyVaultUri: keyInfo.vaultUrl,
-              keyVersion: keyInfo.version,
+    encryption: encryptionKey
+      ? {
+          services: {
+            blob: {
+              enabled: true,
+              keyType: storage.KeyType.Account,
             },
-          }
-        : undefined,
+            file: {
+              enabled: true,
+              keyType: storage.KeyType.Account,
+            },
+          },
+          keySource: storage.KeySource.Microsoft_Keyvault,
+          keyVaultProperties: {
+            keyName: encryptionKey.apply((k) => k!.name),
+            keyVaultUri: encryptionKey.apply((k) => k!.properties.vaultUrl),
+          },
+        }
+      : undefined,
 
     sasPolicy: {
       expirationAction: storage.ExpirationAction.Log,
@@ -273,9 +283,6 @@ export default ({
       containerName: c.name.toLowerCase(),
       ...group,
       accountName: stg.name,
-      defaultEncryptionScope: featureFlags.enableAccountLevelEncryption
-        ? 'AccountScope'
-        : undefined,
       //denyEncryptionScopeOverride: true,
       publicAccess: c.public ? 'Blob' : 'None',
     });
@@ -325,9 +332,10 @@ export default ({
       connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
     }));
 
-    if (onKeysLoaded) await onKeysLoaded(keys, stg.name);
-
     if (vaultInfo) {
+      //Add Storage Identity to Azure Key Vault Group
+      //addUserToGroup(storage.);
+      //new storage.
       //Keys
       addCustomSecret({
         name: primaryKeyName,

@@ -30,21 +30,9 @@ export const createAxios = () => {
     return config;
   });
 
-  axiosWrapper.interceptors.response.use(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    (rs) => rs
-    // (error) => {
-    //   let final = error;
-
-    //   if (error.response) {
-    //     final = error.response.data;
-    //   } else if (error.request) {
-    //     final = error.request;
-    //   } else {
-    //     final = error.message;
-    //   }
-    //   throw new Error(final);
-    // }
-  );
+  // axiosWrapper.interceptors.response.use(
+  //   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  //   (rs) => rs
+  // );
   return axiosWrapper;
 };

@@ -9,7 +9,6 @@ import {
   DefaultOutputs,
 } from './Base';
 import * as console from 'console';
-import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 
 interface VaultSecretInputs extends DefaultInputs {
   name: string;
@@ -29,12 +28,10 @@ class VaultSecretResourceProvider
 {
   constructor(private name: string) {}
 
-  private getClient(vaultInfo: KeyVaultInfo) {
-    return getKeyVaultBase(vaultInfo);
-  }
-
   async create(props: VaultSecretInputs): Promise<pulumi.dynamic.CreateResult> {
-    const client = this.getClient(props.vaultInfo);
+    const client = require('../AzBase/KeyVaultBase').getKeyVaultBase(
+      props.vaultInfo
+    );
     const ss = await client.setSecret(
       props.name,
       props.value,
@@ -67,7 +64,9 @@ class VaultSecretResourceProvider
   }
 
   async delete(id: string, props: VaultSecretOutputs): Promise<void> {
-    const client = this.getClient(props.vaultInfo);
+    const client = require('../AzBase/KeyVaultBase').getKeyVaultBase(
+      props.vaultInfo
+    );
     return client.deleteSecret(props.name);
   }
 
