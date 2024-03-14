@@ -141,6 +141,7 @@ class KeyVaultBase {
     });
   }
 
+  /** Get Rsa Key*/
   public async createRsaKey(
     name: string,
     tags: { [p: string]: string } | undefined = undefined
@@ -190,6 +191,12 @@ class KeyVaultBase {
 
     if (result) this.Cache.setKey(result);
     return result;
+  }
+
+  /** Get or create Key */
+  public async getOrCreateKey(name: string, type: 'Rsa' = 'Rsa') {
+    if (await this.checkKeyExist(name)) return await this.getKey(name);
+    return await this.createRsaKey(name);
   }
 
   /** Delete Secret */
