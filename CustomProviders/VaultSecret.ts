@@ -1,4 +1,3 @@
-import { SecretClient } from '@azure/keyvault-secrets';
 import * as pulumi from '@pulumi/pulumi';
 import { KeyVaultInfo } from '../types';
 
@@ -6,11 +5,11 @@ import {
   BaseOptions,
   BaseProvider,
   BaseResource,
-  ClientCredential,
   DefaultInputs,
   DefaultOutputs,
 } from './Base';
 import * as console from 'console';
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 
 interface VaultSecretInputs extends DefaultInputs {
   name: string;
@@ -29,40 +28,19 @@ class VaultSecretResourceProvider
   implements BaseProvider<VaultSecretInputs, VaultSecretOutputs>
 {
   constructor(private name: string) {}
-  private _client: SecretClient | undefined = undefined;
 
-  getClient(vaultName: string) {
-    if (this._client) return this._client;
-
-    const url = `https://${vaultName}.vault.azure.net?api-version=7.0`;
-    this._client = new SecretClient(url, new ClientCredential());
-    return this._client;
-  }
-
-  async tryGetDeletedSecret(props: VaultSecretInputs) {
-    const client = this.getClient(props.vaultInfo.name);
-    return await client.getDeletedSecret(props.name).catch(() => undefined);
-  }
-
-  async tryRecoverSecret(props: VaultSecretInputs): Promise<void> {
-    const client = this.getClient(props.vaultInfo.name);
-    const deleted = await this.tryGetDeletedSecret(props);
-    //Recover deleted items
-    if (deleted)
-      await (
-        await client.beginRecoverDeletedSecret(deleted.name)
-      ).pollUntilDone();
+  private getClient(vaultInfo: KeyVaultInfo) {
+    return getKeyVaultBase(vaultInfo);
   }
 
   async create(props: VaultSecretInputs): Promise<pulumi.dynamic.CreateResult> {
-    await this.tryRecoverSecret(props);
-
-    const client = this.getClient(props.vaultInfo.name);
-    const ss = await client.setSecret(props.name, props.value, {
-      enabled: true,
-      contentType: props.contentType,
-      tags: props.tags,
-    });
+    const client = this.getClient(props.vaultInfo);
+    const ss = await client.setSecret(
+      props.name,
+      props.value,
+      props.contentType,
+      props.tags
+    );
 
     return { id: ss.properties.id || this.name, outs: props };
   }
@@ -89,12 +67,8 @@ class VaultSecretResourceProvider
   }
 
   async delete(id: string, props: VaultSecretOutputs): Promise<void> {
-    try {
-      const client = this.getClient(props.vaultInfo.name);
-      await client.beginDeleteSecret(props.name);
-    } catch {
-      //Ignore
-    }
+    const client = this.getClient(props.vaultInfo);
+    return client.deleteSecret(props.name);
   }
 
   async diff(
@@ -102,13 +76,9 @@ class VaultSecretResourceProvider
     previousOutput: VaultSecretOutputs,
     news: VaultSecretInputs
   ): Promise<pulumi.dynamic.DiffResult> {
-    //check if secret is deleted then commit changes to recover it.
-    const deleted = await this.tryGetDeletedSecret(news);
-
     return {
       deleteBeforeReplace: false,
       changes:
-        deleted != undefined ||
         previousOutput.name !== news.name ||
         previousOutput.vaultInfo.name !== news.vaultInfo.name ||
         previousOutput.value !== news.value ||
