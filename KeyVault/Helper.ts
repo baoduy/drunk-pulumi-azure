@@ -73,7 +73,7 @@ export const getKey = async ({
 }: GetVaultItemProps) => {
   const n = nameFormatted ? name : getSecretName(name);
   const client = getKeyVaultBase(vaultInfo);
-  return client.getSecret(n, version);
+  return client.getKey(n, version);
 };
 
 /** Get Secret */
@@ -85,7 +85,7 @@ export const getSecret = async ({
 }: GetVaultItemProps) => {
   const n = nameFormatted ? name : getSecretName(name);
   const client = getKeyVaultBase(vaultInfo);
-  return client.getKey(n, version);
+  return client.getSecret(n, version);
 };
 
 interface KeyResult {

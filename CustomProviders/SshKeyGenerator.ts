@@ -11,7 +11,8 @@ import {
 
 import { generateKeyPair, RSAKeyPairOptions } from 'crypto';
 import { getSecretName } from '../Common/Naming';
-import { createKeyVaultClient } from './Helper';
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
+import { KeyVaultInfo } from '../types';
 
 const generateKeys = (options: RSAKeyPairOptions<'pem', 'pem'>) =>
   new Promise<{ publicKey: string; privateKey: string }>((resolve, reject) => {
@@ -38,7 +39,7 @@ const generateKeys = (options: RSAKeyPairOptions<'pem', 'pem'>) =>
 
 interface SshKeyInputs extends DefaultInputs {
   password: string;
-  vaultName: string;
+  vaultInfo: KeyVaultInfo;
   publicKeyName: string;
   privateKeyName: string;
 }
@@ -62,7 +63,6 @@ class SshKeyResourceProvider
       deleteBeforeReplace: false,
       changes:
         previousOutput.password !== news.password ||
-        previousOutput.vaultName !== news.vaultName ||
         previousOutput.publicKeyName !== news.publicKeyName ||
         previousOutput.privateKeyName !== news.privateKeyName,
     };
@@ -84,17 +84,19 @@ class SshKeyResourceProvider
     });
 
     //Create Key Vault items
-    const client = createKeyVaultClient(inputs.vaultName);
+    const client = getKeyVaultBase(inputs.vaultInfo);
 
-    await client.setSecret(getSecretName(inputs.publicKeyName), publicKey, {
-      enabled: true,
-      contentType: this.name,
-    });
+    await client.setSecret(
+      getSecretName(inputs.publicKeyName),
+      publicKey,
+      this.name
+    );
 
-    await client.setSecret(getSecretName(inputs.privateKeyName), privateKey, {
-      enabled: true,
-      contentType: this.name,
-    });
+    await client.setSecret(
+      getSecretName(inputs.privateKeyName),
+      privateKey,
+      this.name
+    );
 
     return {
       id: this.name,
@@ -107,27 +109,7 @@ class SshKeyResourceProvider
     olds: SshKeyOutputs,
     news: SshKeyInputs
   ): Promise<pulumi.dynamic.UpdateResult> {
-    const rs = await this.create(news);
-    //Delete Ols key
-    const client = createKeyVaultClient(olds.vaultName);
-
-    if (
-      olds.vaultName !== news.vaultName ||
-      olds.publicKeyName !== news.publicKeyName
-    ) {
-      await client.beginDeleteSecret(getSecretName(olds.publicKeyName)).catch();
-    }
-
-    if (
-      olds.vaultName !== news.vaultName ||
-      olds.privateKeyName !== news.privateKeyName
-    ) {
-      await client
-        .beginDeleteSecret(getSecretName(olds.privateKeyName))
-        .catch();
-    }
-
-    return rs;
+    return await this.create(news);
   }
 
   // No need to be deleted the keys will be upsert when creating a new one.

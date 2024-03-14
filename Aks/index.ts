@@ -25,8 +25,8 @@ import { getAdGroup } from '../AzAd/Group';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 import { getAksConfig } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { checkSecretExist } from '../KeyVault/Helper';
 import * as inputs from '@pulumi/azure-native/types/input';
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -206,10 +206,7 @@ export default async ({
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const disableLocalAccounts = vaultInfo
-    ? await checkSecretExist({
-        name: secretName,
-        vaultInfo,
-      })
+    ? await getKeyVaultBase(vaultInfo).checkSecretExist(secretName)
     : false;
   console.log(name, { disableLocalAccounts });
   nodeResourceGroup = nodeResourceGroup || `${aksName}-nodes`;

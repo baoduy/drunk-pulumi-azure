@@ -10,7 +10,8 @@ import {
 } from './Base';
 
 import { getSecretName } from '../Common/Naming';
-import { createKeyVaultClient } from './Helper';
+import { KeyVaultInfo } from '../types';
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 
 export interface PGPProps {
   user: { name: string; email: string };
@@ -37,7 +38,7 @@ const generatePGP = ({ user, passphrase, type, validDays }: PGPProps) => {
 
 interface PGPInputs extends DefaultInputs {
   pgp: PGPProps;
-  vaultName: string;
+  vaultInfo: KeyVaultInfo;
 }
 
 interface PGPOutputs
@@ -60,7 +61,6 @@ class PGPResourceProvider implements BaseProvider<PGPInputs, PGPOutputs> {
       changes:
         previousOutput.pgp.passphrase !== news.pgp.passphrase ||
         previousOutput.pgp.validDays !== news.pgp.validDays ||
-        previousOutput.vaultName !== news.vaultName ||
         previousOutput.pgp.type !== news.pgp.type,
     };
   }
@@ -71,29 +71,24 @@ class PGPResourceProvider implements BaseProvider<PGPInputs, PGPOutputs> {
     );
 
     //Create Key Vault items
-    const client = createKeyVaultClient(inputs.vaultName);
+    const client = getKeyVaultBase(inputs.vaultInfo);
 
-    await client.setSecret(getSecretName(`${this.name}-publicKey`), publicKey, {
-      enabled: true,
-      contentType: this.name,
-    });
+    await client.setSecret(
+      getSecretName(`${this.name}-publicKey`),
+      publicKey,
+      this.name
+    );
 
     await client.setSecret(
       getSecretName(`${this.name}-privateKey`),
       privateKey,
-      {
-        enabled: true,
-        contentType: this.name,
-      }
+      this.name
     );
 
     await client.setSecret(
       getSecretName(`${this.name}-revocationCertificate`),
       revocationCertificate,
-      {
-        enabled: true,
-        contentType: this.name,
-      }
+      this.name
     );
 
     return {

@@ -27,7 +27,7 @@ export const generateSsh = ({
     name,
     {
       password: pass.result,
-      vaultName: vaultInfo.name,
+      vaultInfo,
       publicKeyName,
       privateKeyName,
     },
@@ -74,7 +74,7 @@ export const generatePGP = ({
 }) => {
   const rs = new PGPResource(name, {
     pgp: options,
-    vaultName: vaultInfo.name,
+    vaultInfo,
   });
 
   return {
