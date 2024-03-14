@@ -1,6 +1,9 @@
 import { KeyVaultInfo } from '../types';
 import { SecretClient, SecretProperties } from '@azure/keyvault-secrets';
-import { DefaultAzureCredential } from '@azure/identity';
+import {
+  DefaultAzureCredential,
+  TokenCredentialOptions,
+} from '@azure/identity';
 import { KeyClient } from '@azure/keyvault-keys';
 import { getKeyVaultCache } from './KeyVaultCache';
 
@@ -9,10 +12,15 @@ class KeyVaultBase {
   private readonly _secretClient: SecretClient;
   private readonly _keyClient: KeyClient;
 
-  constructor(private readonly vaultInfo: KeyVaultInfo) {
+  constructor(
+    private readonly vaultInfo: KeyVaultInfo,
+    credential: TokenCredentialOptions | undefined = undefined
+  ) {
     const url = `https://${vaultInfo.name}.vault.azure.net?api-version=7.0`;
-    this._secretClient = new SecretClient(url, new DefaultAzureCredential());
-    this._keyClient = new KeyClient(url, new DefaultAzureCredential());
+    credential = credential ?? new DefaultAzureCredential();
+
+    this._secretClient = new SecretClient(url, credential);
+    this._keyClient = new KeyClient(url, credential);
   }
 
   private get Cache() {
