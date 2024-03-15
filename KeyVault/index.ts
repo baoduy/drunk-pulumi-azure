@@ -28,7 +28,7 @@ interface Props extends BasicResourceArgs {
   };
 
   /** The permission and principals that allows to be access to this Key Vault */
-  auth?: VaultAccessType & { enableRbac?: boolean };
+  auth?: VaultAccessType;
 }
 
 export default async ({
@@ -37,7 +37,7 @@ export default async ({
   group,
   auth = {
     includeOrganization: true,
-    permissions: new Array<PermissionProps>(),
+    //permissions: new Array<PermissionProps>(),
   },
   createDefaultValues,
   network,
@@ -47,22 +47,22 @@ export default async ({
 
   const { readOnlyGroup, adminGroup } = await VaultAccess({ name, auth });
 
-  const accessPolicies =
-    new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();
+  // const accessPolicies =
+  //   new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();
 
   //Grant Access permission
-  if (!auth?.enableRbac) {
-    accessPolicies.push({
-      objectId: readOnlyGroup.objectId,
-      tenantId,
-      permissions: KeyVaultReadOnlyPolicy,
-    });
-    accessPolicies.push({
-      objectId: adminGroup.objectId,
-      tenantId,
-      permissions: KeyVaultAdminPolicy,
-    });
-  }
+  // if (!auth?.enableRbac) {
+  //   accessPolicies.push({
+  //     objectId: readOnlyGroup.objectId,
+  //     tenantId,
+  //     permissions: KeyVaultReadOnlyPolicy,
+  //   });
+  //   accessPolicies.push({
+  //     objectId: adminGroup.objectId,
+  //     tenantId,
+  //     permissions: KeyVaultAdminPolicy,
+  //   });
+  // }
 
   const resource = new native.keyvault.Vault(vaultName, {
     vaultName,
@@ -74,8 +74,8 @@ export default async ({
       sku: { name: 'standard', family: 'A' },
       createMode: 'default',
 
-      enableRbacAuthorization: auth?.enableRbac,
-      accessPolicies: !auth?.enableRbac ? accessPolicies : undefined,
+      enableRbacAuthorization: true,
+      accessPolicies: undefined,
 
       enablePurgeProtection: true,
       enableSoftDelete: true,
@@ -107,23 +107,23 @@ export default async ({
   });
 
   //Grant RBAC permission
-  if (auth?.enableRbac) {
-    grantVaultRbacPermission({
-      name: `${name}-ReadOnlyGroup`,
-      scope: resource.id,
-      objectId: readOnlyGroup.objectId,
-      permission: 'ReadOnly',
-      principalType: 'Group',
-    });
+  //if (auth?.enableRbac) {
+  grantVaultRbacPermission({
+    name: `${name}-ReadOnlyGroup`,
+    scope: resource.id,
+    objectId: readOnlyGroup.objectId,
+    permission: 'ReadOnly',
+    principalType: 'Group',
+  });
 
-    grantVaultRbacPermission({
-      name: `${name}-AdminGroup`,
-      scope: resource.id,
-      objectId: adminGroup.objectId,
-      permission: 'ReadWrite',
-      principalType: 'Group',
-    });
-  }
+  grantVaultRbacPermission({
+    name: `${name}-AdminGroup`,
+    scope: resource.id,
+    objectId: adminGroup.objectId,
+    permission: 'ReadWrite',
+    principalType: 'Group',
+  });
+  //}
 
   //To Vault Info
   const toVaultInfo = () => ({ name: vaultName, group, id: resource.id });

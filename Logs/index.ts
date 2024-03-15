@@ -28,14 +28,12 @@ const defaultStorageRules: Array<DefaultManagementRules> = [
 interface Props {
   name: string;
   group: ResourceGroupInfo;
-
   workspace?: WorkspaceType;
-
   storage?: {
     /** The management rule applied to Storage level (all containers)*/
     storageRules?: Array<DefaultManagementRules>;
   };
-  vaultInfo?: KeyVaultInfo;
+  vaultInfo: KeyVaultInfo;
 }
 
 export default ({ group, name, workspace, storage, vaultInfo }: Props) => {

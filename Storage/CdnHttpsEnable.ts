@@ -7,8 +7,9 @@ import {
   DefaultInputs,
   DefaultOutputs,
   BaseProvider,
-  ClientCredential,
 } from '../CustomProviders/Base';
+import { DefaultAzureCredential } from '@azure/identity';
+import { subscriptionId } from '../Common/AzureEnv';
 
 interface CdnManagedHttpsParameters {
   certificateSource: 'Cdn';
@@ -85,8 +86,8 @@ class CdnHttpsEnableProvider
     props: CdnHttpsEnableInputs
   ): Promise<pulumi.dynamic.CreateResult> {
     //DONOT update this to Tools/Axios.
-    const credentials = new ClientCredential();
-    const token = await credentials.getToken();
+    const credentials = new DefaultAzureCredential();
+    const token = await credentials.getToken('https://management.azure.com');
 
     const url = `https://management.azure.com/${props.customDomainId}/enableCustomHttps?api-version=2019-12-31`;
 
@@ -100,7 +101,7 @@ class CdnHttpsEnableProvider
             '#Microsoft.Azure.Cdn.Models.KeyVaultCertificateSourceParameters',
           deleteRule: 'NoAction',
           updateRule: 'NoAction',
-          subscriptionId: credentials.subscriptionID,
+          subscriptionId,
           ...props.vaultSecretInfo,
         },
         protocolType: 'ServerNameIndication',

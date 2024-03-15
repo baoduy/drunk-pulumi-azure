@@ -1,10 +1,9 @@
 import * as storage from '@pulumi/azure-native/storage';
 
-import { AppInsightInfo, KeyVaultInfo, BasicResourceArgs } from '../types';
-import { Input, Output } from '@pulumi/pulumi';
+import { KeyVaultInfo, BasicResourceArgs } from '../types';
+import { Input, output } from '@pulumi/pulumi';
 import { createThreatProtection } from '../Logs/Helpers';
-import { addInsightMonitor } from '../Logs/WebTest';
-import { getSecret, parseKeyUrl } from '../KeyVault/Helper';
+import { getSecret } from '../KeyVault/Helper';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 import cdnCreator from './CdnEndpoint';
 
@@ -13,13 +12,14 @@ import {
   getKeyName,
   getStorageName,
 } from '../Common/Naming';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import Locker from '../Core/Locker';
 import {
   createManagementRules,
   DefaultManagementRules,
   ManagementRules,
 } from './ManagementRules';
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 
 type ContainerProps = {
   name: string;
@@ -31,8 +31,9 @@ type ContainerProps = {
 interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
   allowsCors?: string[];
-  encryptionKeyUrl?: Output<string> | string;
-  vaultInfo?: KeyVaultInfo;
+
+  //This is required for encryption key
+  vaultInfo: KeyVaultInfo;
 
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
@@ -41,7 +42,7 @@ interface StorageProps extends BasicResourceArgs {
   queues?: Array<string>;
   fileShares?: Array<string>;
 
-  appInsight?: AppInsightInfo;
+  //appInsight?: AppInsightInfo;
 
   featureFlags?: {
     allowSharedKeyAccess?: boolean;
@@ -49,11 +50,10 @@ interface StorageProps extends BasicResourceArgs {
     enableStaticWebsite?: boolean;
     /**Only available when static site using CDN*/
     includesDefaultResponseHeaders?: boolean;
-
     /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
     forceUseCdn?: boolean;
     /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
-    enableAccountLevelEncryption?: boolean;
+    enableKeyVaultEncryption?: boolean;
   };
 
   policies?: {
@@ -67,12 +67,17 @@ interface StorageProps extends BasicResourceArgs {
 
   network?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
 
-  onKeysLoaded?: (
-    keys: Array<{ name: string; key: string; connectionString: string }>,
-    storageName: Output<string>
-  ) => Promise<void>;
+  // onKeysLoaded?: (
+  //   keys: Array<{ name: string; key: string; connectionString: string }>,
+  //   storageName: Output<string>
+  // ) => Promise<void>;
   lock?: boolean;
 }
+
+const getEncryptionKey = (name: string, vaultInfo: KeyVaultInfo) => {
+  const n = `${name}-encrypt-key`;
+  return output(getKeyVaultBase(vaultInfo.name).getOrCreateKey(n));
+};
 
 /** Storage Creator */
 export default ({
@@ -81,16 +86,14 @@ export default ({
   customDomain,
   allowsCors,
   vaultInfo,
-  encryptionKeyUrl,
   defaultManagementRules,
   containers = [],
   queues = [],
   fileShares = [],
-  appInsight,
+  //appInsight,
   network,
   featureFlags = {},
   policies = { keyExpirationPeriodInDays: 365 },
-  onKeysLoaded,
   lock = true,
 }: StorageProps) => {
   name = getStorageName(name);
@@ -99,11 +102,8 @@ export default ({
   const secondaryKeyName = getKeyName(name, 'secondary');
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
   const secondConnectionKeyName = getConnectionName(name, 'secondary');
-
-  const keyInfo = encryptionKeyUrl
-    ? typeof encryptionKeyUrl === 'string'
-      ? parseKeyUrl(encryptionKeyUrl)
-      : encryptionKeyUrl.apply(parseKeyUrl)
+  const encryptionKey = featureFlags.enableKeyVaultEncryption
+    ? getEncryptionKey(name, vaultInfo)
     : undefined;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
@@ -131,17 +131,25 @@ export default ({
       keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
     },
 
-    encryption:
-      keyInfo && featureFlags.enableAccountLevelEncryption
-        ? {
-            keySource: 'Microsoft.Keyvault',
-            keyVaultProperties: {
-              keyName: keyInfo.name,
-              keyVaultUri: keyInfo.vaultUrl,
-              keyVersion: keyInfo.version,
+    encryption: encryptionKey
+      ? {
+          services: {
+            blob: {
+              enabled: true,
+              keyType: storage.KeyType.Account,
             },
-          }
-        : undefined,
+            file: {
+              enabled: true,
+              keyType: storage.KeyType.Account,
+            },
+          },
+          keySource: storage.KeySource.Microsoft_Keyvault,
+          keyVaultProperties: encryptionKey.apply((k) => ({
+            keyName: k!.name,
+            keyVaultUri: k!.properties.vaultUrl,
+          })),
+        }
+      : undefined,
 
     sasPolicy: {
       expirationAction: storage.ExpirationAction.Log,
@@ -245,9 +253,9 @@ export default ({
       { dependsOn: stg }
     );
 
-    if (appInsight && customDomain) {
-      addInsightMonitor({ name, appInsight, url: customDomain });
-    }
+    // if (appInsight && customDomain) {
+    //   addInsightMonitor({ name, appInsight, url: customDomain });
+    // }
   } else if (isPrd) createThreatProtection({ name, targetResourceId: stg.id });
 
   //Create Azure CDN if customDomain provided
@@ -273,9 +281,6 @@ export default ({
       containerName: c.name.toLowerCase(),
       ...group,
       accountName: stg.name,
-      defaultEncryptionScope: featureFlags.enableAccountLevelEncryption
-        ? 'AccountScope'
-        : undefined,
       //denyEncryptionScopeOverride: true,
       publicAccess: c.public ? 'Blob' : 'None',
     });
@@ -314,6 +319,13 @@ export default ({
   stg.id.apply(async (id) => {
     if (!id) return;
 
+    stg.identity.apply((i) =>
+      console.log(
+        'Add this ID into Key Vault ReadOnly Group to allows custom key encryption:',
+        i!.principalId
+      )
+    );
+
     const keys = (
       await storage.listStorageAccountKeys({
         accountName: name,
@@ -325,41 +337,30 @@ export default ({
       connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
     }));
 
-    if (onKeysLoaded) await onKeysLoaded(keys, stg.name);
-
     if (vaultInfo) {
       //Keys
-      addCustomSecret({
-        name: primaryKeyName,
-        value: keys[0].key,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'Storage',
         formattedName: true,
-      });
-
-      addCustomSecret({
-        name: secondaryKeyName,
-        value: keys[0].connectionString,
-        vaultInfo,
-        contentType: 'Storage',
-        formattedName: true,
-      });
-
-      //Connection String. The custom Secret will auto restore the deleted secret
-      addCustomSecret({
-        name: primaryConnectionKeyName,
-        value: keys[0].connectionString,
-        vaultInfo,
-        contentType: 'Storage',
-        formattedName: true,
-      });
-
-      addCustomSecret({
-        name: secondConnectionKeyName,
-        value: keys[0].connectionString,
-        vaultInfo,
-        contentType: 'Storage',
-        formattedName: true,
+        items: [
+          {
+            name: primaryKeyName,
+            value: keys[0].key,
+          },
+          {
+            name: secondaryKeyName,
+            value: keys[1].key,
+          },
+          {
+            name: primaryConnectionKeyName,
+            value: keys[0].connectionString,
+          },
+          {
+            name: secondConnectionKeyName,
+            value: keys[1].connectionString,
+          },
+        ],
       });
     }
   });
