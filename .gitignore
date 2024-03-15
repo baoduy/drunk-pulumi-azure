@@ -5,3 +5,4 @@ bin
 .nyc_output
 .vscode
 .idea
+.fleet

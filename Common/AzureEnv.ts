@@ -1,4 +1,5 @@
 import { all, interpolate } from '@pulumi/pulumi';
+import { registerAutoTags } from 'drunk-pulumi/Common/AutoTags';
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { ResourceInfoArg } from './ResourceEnv';
@@ -25,6 +26,9 @@ export const defaultTags = {
   organization: organization,
   'pulumi-project': projectName,
 };
+
+registerAutoTags(defaultTags);
+
 export enum Environments {
   Global = 'global',
   Local = 'local',

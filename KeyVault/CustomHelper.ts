@@ -25,7 +25,7 @@ export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
   });
 };
 
-type SecretProps = {
+interface SecretProps {
   name: string;
   /**Use the name directly without applying naming format*/
   formattedName?: boolean;
@@ -37,9 +37,9 @@ type SecretProps = {
     [key: string]: string;
   }>;
   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
-};
+}
 
-/** Add variable to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
+/** Add a secret to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
 export const addCustomSecret = ({
   name,
   formattedName,
@@ -65,3 +65,11 @@ export const addCustomSecret = ({
     { dependsOn }
   );
 };
+
+interface MultiSecretProps extends Omit<SecretProps, 'value' | 'name'> {
+  items: Array<{ name: string; value: Input<string> }>;
+}
+
+/** Add multi secrets to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
+export const addCustomSecrets = ({ items, ...others }: MultiSecretProps) =>
+  items.map((i) => addCustomSecret({ ...i, ...others }));

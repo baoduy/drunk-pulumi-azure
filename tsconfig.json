@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "outDir": "./.out-bin",
     "target": "es2016",
     "module": "commonjs",
@@ -11,7 +12,12 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+      "drunk-pulumi/*": [
+        "./*"
+      ]
+    }
   },
   "files": [
     "Aks/Helper.ts",
@@ -49,6 +55,7 @@
     "Certificate/index.ts",
     "Certificate/p12.ts",
     "Common/AppConfigs/dotnetConfig.ts",
+    "Common/AutoTags.ts",
     "Common/AzureEnv.ts",
     "Common/ConfigHelper.ts",
     "Common/GlobalEnv.ts",

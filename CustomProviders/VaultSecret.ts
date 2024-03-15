@@ -1,5 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import { KeyVaultInfo } from '../types';
+import { KeyVaultInfo } from 'drunk-pulumi/types';
 
 import {
   BaseOptions,
@@ -29,7 +29,7 @@ class VaultSecretResourceProvider
   constructor(private name: string) {}
 
   async create(props: VaultSecretInputs): Promise<pulumi.dynamic.CreateResult> {
-    const client = require('../AzBase/KeyVaultBase').getKeyVaultBase(
+    const client = require('drunk-pulumi/AzBase/KeyVaultBase').getKeyVaultBase(
       props.vaultInfo
     );
     const ss = await client.setSecret(
@@ -64,7 +64,7 @@ class VaultSecretResourceProvider
   }
 
   async delete(id: string, props: VaultSecretOutputs): Promise<void> {
-    const client = require('../AzBase/KeyVaultBase').getKeyVaultBase(
+    const client = require('drunk-pulumi/AzBase/KeyVaultBase').getKeyVaultBase(
       props.vaultInfo
     );
     return client.deleteSecret(props.name);

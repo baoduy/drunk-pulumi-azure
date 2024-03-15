@@ -1,9 +1,8 @@
 import * as storage from '@pulumi/azure-native/storage';
 
-import { AppInsightInfo, KeyVaultInfo, BasicResourceArgs } from '../types';
+import { KeyVaultInfo, BasicResourceArgs } from '../types';
 import { Input, output } from '@pulumi/pulumi';
 import { createThreatProtection } from '../Logs/Helpers';
-import { addInsightMonitor } from '../Logs/WebTest';
 import { getSecret } from '../KeyVault/Helper';
 import { defaultTags, isPrd } from '../Common/AzureEnv';
 import cdnCreator from './CdnEndpoint';
@@ -13,7 +12,7 @@ import {
   getKeyName,
   getStorageName,
 } from '../Common/Naming';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import Locker from '../Core/Locker';
 import {
   createManagementRules,
@@ -43,7 +42,7 @@ interface StorageProps extends BasicResourceArgs {
   queues?: Array<string>;
   fileShares?: Array<string>;
 
-  appInsight?: AppInsightInfo;
+  //appInsight?: AppInsightInfo;
 
   featureFlags?: {
     allowSharedKeyAccess?: boolean;
@@ -51,7 +50,6 @@ interface StorageProps extends BasicResourceArgs {
     enableStaticWebsite?: boolean;
     /**Only available when static site using CDN*/
     includesDefaultResponseHeaders?: boolean;
-
     /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
     forceUseCdn?: boolean;
     /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
@@ -92,7 +90,7 @@ export default ({
   containers = [],
   queues = [],
   fileShares = [],
-  appInsight,
+  //appInsight,
   network,
   featureFlags = {},
   policies = { keyExpirationPeriodInDays: 365 },
@@ -146,10 +144,10 @@ export default ({
             },
           },
           keySource: storage.KeySource.Microsoft_Keyvault,
-          keyVaultProperties: {
-            keyName: encryptionKey.apply((k) => k!.name),
-            keyVaultUri: encryptionKey.apply((k) => k!.properties.vaultUrl),
-          },
+          keyVaultProperties: encryptionKey.apply((k) => ({
+            keyName: k!.name,
+            keyVaultUri: k!.properties.vaultUrl,
+          })),
         }
       : undefined,
 
@@ -255,9 +253,9 @@ export default ({
       { dependsOn: stg }
     );
 
-    if (appInsight && customDomain) {
-      addInsightMonitor({ name, appInsight, url: customDomain });
-    }
+    // if (appInsight && customDomain) {
+    //   addInsightMonitor({ name, appInsight, url: customDomain });
+    // }
   } else if (isPrd) createThreatProtection({ name, targetResourceId: stg.id });
 
   //Create Azure CDN if customDomain provided
@@ -321,6 +319,13 @@ export default ({
   stg.id.apply(async (id) => {
     if (!id) return;
 
+    stg.identity.apply((i) =>
+      console.log(
+        'Add this ID into Key Vault ReadOnly Group to allows custom key encryption:',
+        i!.principalId
+      )
+    );
+
     const keys = (
       await storage.listStorageAccountKeys({
         accountName: name,
@@ -333,41 +338,29 @@ export default ({
     }));
 
     if (vaultInfo) {
-      //Add Storage Identity to Azure Key Vault Group
-      //addUserToGroup(storage.);
-      //new storage.
       //Keys
-      addCustomSecret({
-        name: primaryKeyName,
-        value: keys[0].key,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'Storage',
         formattedName: true,
-      });
-
-      addCustomSecret({
-        name: secondaryKeyName,
-        value: keys[0].connectionString,
-        vaultInfo,
-        contentType: 'Storage',
-        formattedName: true,
-      });
-
-      //Connection String. The custom Secret will auto restore the deleted secret
-      addCustomSecret({
-        name: primaryConnectionKeyName,
-        value: keys[0].connectionString,
-        vaultInfo,
-        contentType: 'Storage',
-        formattedName: true,
-      });
-
-      addCustomSecret({
-        name: secondConnectionKeyName,
-        value: keys[0].connectionString,
-        vaultInfo,
-        contentType: 'Storage',
-        formattedName: true,
+        items: [
+          {
+            name: primaryKeyName,
+            value: keys[0].key,
+          },
+          {
+            name: secondaryKeyName,
+            value: keys[1].key,
+          },
+          {
+            name: primaryConnectionKeyName,
+            value: keys[0].connectionString,
+          },
+          {
+            name: secondConnectionKeyName,
+            value: keys[1].connectionString,
+          },
+        ],
       });
     }
   });
