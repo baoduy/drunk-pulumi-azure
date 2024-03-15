@@ -79,8 +79,6 @@
     "CustomProviders/ApimSignUpSettings.ts",
     "CustomProviders/AppConfigDisableAccessKeys.ts",
     "CustomProviders/Base/BaseProvider.ts",
-    "CustomProviders/Base/Credentials.ts",
-    "CustomProviders/Base/NativeToken.ts",
     "CustomProviders/Base/index.ts",
     "CustomProviders/NetworkRuote/index.ts",
     "CustomProviders/NetworkRuote/type.ts",

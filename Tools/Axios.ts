@@ -1,10 +1,12 @@
 /* eslint-disable */
-import { ClientCredential } from '../CustomProviders/Base';
+
 import axios from 'axios';
 import { urlJoin } from 'url-join-ts';
+import { DefaultAzureCredential } from '@azure/identity';
+import { subscriptionId } from 'drunk-pulumi/Common/AzureEnv';
 
 export const createAxios = () => {
-  const credentials = new ClientCredential();
+  const credentials = new DefaultAzureCredential();
   let token: string | undefined;
   let baseUrl: string | undefined;
 
@@ -12,9 +14,11 @@ export const createAxios = () => {
 
   axiosWrapper.interceptors.request.use(async (config) => {
     if (!token) {
-      const tokenRequest = await credentials.getToken();
+      const tokenRequest = await credentials.getToken(
+        'https://management.azure.com'
+      );
       token = tokenRequest?.token;
-      baseUrl = `https://management.azure.com/subscriptions/${credentials.subscriptionID!}`;
+      baseUrl = `https://management.azure.com/subscriptions/${subscriptionId}`;
     }
 
     if (!config.url || !config.url.startsWith('http')) {
