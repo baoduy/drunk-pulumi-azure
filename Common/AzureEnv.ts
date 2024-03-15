@@ -1,5 +1,5 @@
 import { all, interpolate } from '@pulumi/pulumi';
-import { registerAutoTags } from 'drunk-pulumi/Common/AutoTags';
+import { registerAutoTags } from './AutoTags';
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { ResourceInfoArg } from './ResourceEnv';

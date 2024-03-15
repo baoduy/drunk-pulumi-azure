@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import { KeyVaultInfo } from 'drunk-pulumi/types';
-
+import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 import {
   BaseOptions,
   BaseProvider,
@@ -29,9 +29,8 @@ class VaultSecretResourceProvider
   constructor(private name: string) {}
 
   async create(props: VaultSecretInputs): Promise<pulumi.dynamic.CreateResult> {
-    const client = require('drunk-pulumi/AzBase/KeyVaultBase').getKeyVaultBase(
-      props.vaultInfo
-    );
+    const client = getKeyVaultBase(props.vaultInfo.name);
+
     const ss = await client.setSecret(
       props.name,
       props.value,
@@ -39,7 +38,7 @@ class VaultSecretResourceProvider
       props.tags
     );
 
-    return { id: ss.properties.id || this.name, outs: props };
+    return { id: ss!.properties.id || this.name, outs: props };
   }
 
   async update(
@@ -56,17 +55,13 @@ class VaultSecretResourceProvider
 
     //Delete the old Secret
     if (olds.name !== news.name || olds.vaultInfo.name !== news.vaultInfo.name)
-      await this.delete(id, olds).catch((e) =>
-        console.log(`Cannot delete ${this.name}`, e?.resource?.data)
-      );
+      await this.delete(id, olds).catch();
 
     return rs;
   }
 
   async delete(id: string, props: VaultSecretOutputs): Promise<void> {
-    const client = require('drunk-pulumi/AzBase/KeyVaultBase').getKeyVaultBase(
-      props.vaultInfo
-    );
+    const client = getKeyVaultBase(props.vaultInfo.name);
     return client.deleteSecret(props.name);
   }
 

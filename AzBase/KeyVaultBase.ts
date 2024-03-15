@@ -233,12 +233,11 @@ class KeyVaultBase {
 
 export const _keyVaultBaseCache: Record<string, KeyVaultBase> = {};
 
-export function getKeyVaultBase(vaultInfo: KeyVaultInfo | string) {
-  const n = typeof vaultInfo === 'string' ? vaultInfo : vaultInfo.name;
-  let cache = _keyVaultBaseCache[n];
+export function getKeyVaultBase(keyVaultName: string) {
+  let cache = _keyVaultBaseCache[keyVaultName];
   if (cache) return cache;
 
-  cache = new KeyVaultBase(n);
-  _keyVaultBaseCache[n] = cache;
+  cache = new KeyVaultBase(keyVaultName);
+  _keyVaultBaseCache[keyVaultName] = cache;
   return cache;
 }

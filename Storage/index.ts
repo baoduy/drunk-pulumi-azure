@@ -76,7 +76,7 @@ interface StorageProps extends BasicResourceArgs {
 
 const getEncryptionKey = (name: string, vaultInfo: KeyVaultInfo) => {
   const n = `${name}-encrypt-key`;
-  return output(getKeyVaultBase(vaultInfo).getOrCreateKey(n));
+  return output(getKeyVaultBase(vaultInfo.name).getOrCreateKey(n));
 };
 
 /** Storage Creator */

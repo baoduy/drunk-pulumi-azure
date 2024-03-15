@@ -206,7 +206,7 @@ export default async ({
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const disableLocalAccounts = vaultInfo
-    ? await getKeyVaultBase(vaultInfo).checkSecretExist(secretName)
+    ? await getKeyVaultBase(vaultInfo.name).checkSecretExist(secretName)
     : false;
   console.log(name, { disableLocalAccounts });
   nodeResourceGroup = nodeResourceGroup || `${aksName}-nodes`;

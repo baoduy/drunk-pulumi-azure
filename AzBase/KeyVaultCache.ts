@@ -29,12 +29,11 @@ class KeyVaultCache {
 
 const _keyVaultCache: Record<string, KeyVaultCache> = {};
 
-export function getKeyVaultCache(vaultInfo: KeyVaultInfo | string) {
-  const n = typeof vaultInfo === 'string' ? vaultInfo : vaultInfo.name;
-  let cache = _keyVaultCache[n];
+export function getKeyVaultCache(keyVaultName: string) {
+  let cache = _keyVaultCache[keyVaultName];
   if (cache) return cache;
 
-  cache = new KeyVaultCache(n);
-  _keyVaultCache[n] = cache;
+  cache = new KeyVaultCache(keyVaultName);
+  _keyVaultCache[keyVaultName] = cache;
   return cache;
 }

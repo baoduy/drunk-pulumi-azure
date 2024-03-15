@@ -71,7 +71,7 @@ class PGPResourceProvider implements BaseProvider<PGPInputs, PGPOutputs> {
     );
 
     //Create Key Vault items
-    const client = getKeyVaultBase(inputs.vaultInfo);
+    const client = getKeyVaultBase(inputs.vaultInfo.name);
 
     await client.setSecret(
       getSecretName(`${this.name}-publicKey`),
