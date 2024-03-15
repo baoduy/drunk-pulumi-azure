@@ -3,7 +3,7 @@
 import axios from 'axios';
 import { urlJoin } from 'url-join-ts';
 import { DefaultAzureCredential } from '@azure/identity';
-import { subscriptionId } from 'drunk-pulumi/Common/AzureEnv';
+import { subscriptionId } from '../Common/AzureEnv';
 
 export const createAxios = () => {
   const credentials = new DefaultAzureCredential();

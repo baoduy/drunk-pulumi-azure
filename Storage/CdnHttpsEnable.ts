@@ -9,7 +9,7 @@ import {
   BaseProvider,
 } from '../CustomProviders/Base';
 import { DefaultAzureCredential } from '@azure/identity';
-import { subscriptionId } from 'drunk-pulumi/Common/AzureEnv';
+import { subscriptionId } from '../Common/AzureEnv';
 
 interface CdnManagedHttpsParameters {
   certificateSource: 'Cdn';

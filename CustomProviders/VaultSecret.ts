@@ -1,5 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import { KeyVaultInfo } from 'drunk-pulumi/types';
+import { KeyVaultInfo } from '../types';
 import { getKeyVaultBase } from '../AzBase/KeyVaultBase';
 import {
   BaseOptions,
