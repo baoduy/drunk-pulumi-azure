@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./.out-bin",
-    "target": "ESNext",
+    "target": "ES5",
     "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,
