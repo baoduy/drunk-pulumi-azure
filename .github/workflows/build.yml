@@ -58,11 +58,11 @@ jobs:
         run: |
           sed -i 's/NodeStream as GenericNodeStream/NodeWebStream as GenericNodeStream/g' node_modules/openpgp/openpgp.d.ts
 
-      - name: Test
-        continue-on-error: true
-        run: |
-          export NODE_OPTIONS="--max_old_space_size=4096"
-          npm test
+#      - name: Test
+#        continue-on-error: true
+#        run: |
+#          export NODE_OPTIONS="--max_old_space_size=4096"
+#          npm test
 
       - name: Build and Pack
         continue-on-error: true

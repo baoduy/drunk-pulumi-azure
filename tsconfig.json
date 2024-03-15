@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./.out-bin",
-    "target": "ES5",
+    "target": "ESNext",
     "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,
@@ -12,7 +12,7 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
-    "strict": true,
+    "strict": true
   },
   "files": [
     "Aks/Helper.ts",
