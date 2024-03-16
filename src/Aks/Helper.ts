@@ -1,6 +1,5 @@
 import * as containerservice from '@pulumi/azure-native/containerservice';
 import { getAksName, getResourceGroupName } from '../Common/Naming';
-import { createProvider } from '../KubeX/Providers';
 import { KeyVaultInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { getIdentitySecrets } from '../AzAd/Helper';
@@ -74,25 +73,25 @@ interface AksProps {
   localAccountDisabled?: boolean;
 }
 
-/** Get AKS Provider from Managed Cluster*/
-export const createAksProvider = async ({
-  aksName,
-  namespace,
-  groupName,
-  formatedName,
-  localAccountDisabled,
-}: AksProps) => {
-  return createProvider({
-    name: aksName,
-    namespace,
-    kubeconfig: await getAksConfig({
-      name: aksName,
-      groupName,
-      formattedName: formatedName,
-      localAccountDisabled,
-    }),
-  });
-};
+// /** Get AKS Provider from Managed Cluster*/
+// export const createAksProvider = async ({
+//   aksName,
+//   namespace,
+//   groupName,
+//   formatedName,
+//   localAccountDisabled,
+// }: AksProps) => {
+//   return createProvider({
+//     name: aksName,
+//     namespace,
+//     kubeconfig: await getAksConfig({
+//       name: aksName,
+//       groupName,
+//       formattedName: formatedName,
+//       localAccountDisabled,
+//     }),
+//   });
+// };
 
 /** Get AKS Provider from Key Vault*/
 export const createAksVaultProvider = async ({
