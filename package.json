@@ -1,21 +1,32 @@
 {
   "name": "@drunk-pulumi/azure",
   "version": "0.0.1",
+  "author": "drunkcoding@outlook.com",
+  "description": "The custom dynamic providers for pulumi-azure",
+  "license": "MIT",
+  "private": false,
+  "keywords": ["pulumi-azure","dynamic providers"],
   "pulumi": {
     "resource": true,
     "name": "@drunk-pulumi/azure"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/baoduy/drunk-pulumi-azure.git"
+  },
   "scripts": {
-    "build": "cross-env NODE_ENV=production npm run update-tsconfig && npx tsc && npm run copy-pkg",
-    "copy-pkg": "ts-node ./.tools/packageForPublish.ts && cpy ReadMe.md .out-bin/",
-    "update-tsconfig": "ts-node ./.tools/update_tsconfig.ts",
+    "build": "cross-env NODE_ENV=production npm run fix-issue && npm run update-tsconfig && npx tsc && npm run copy-pkg",
+    "copy-pkg": "ts-node ./.tasks/npm-package.ts && cpy ReadMe.md .out-bin/",
+    "fix-issue": "ts-node ./.tasks/fix-issues.ts",
+    "update-tsconfig": "ts-node ./.tasks/update-tsconfig.ts",
     "pack": "cd .out-bin && npm pack && cd ../",
     "postinstall": "husky install",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",
     "up": "pulumi up --yes --skip-preview",
     "reup": "pulumi up --refresh --yes --skip-preview",
     "destroy": "pulumi destroy --yes --skip-preview",
-    "update": "npx npm-check-updates -u",
+    "update": "npx npm-check-updates -u --deprecated",
+    "check": "npx depcheck --detailed",
     "export": "pulumi stack export --file state.json",
     "import": "pulumi stack import --file state.json",
     "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
@@ -44,10 +55,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
-    "@azure/identity": "^4.0.1",
-    "@azure/keyvault-keys": "^4.8.0",
-    "@azure/keyvault-secrets": "^4.8.0",
-    "@openpgp/web-stream-tools": "^0.1.1",
+    "@drunk-pulumi/azure-providers": "^0.0.3",
     "@pulumi/azure-native": "^2.32.0",
     "@pulumi/azuread": "5.47.2",
     "@pulumi/cloudflare": "^5.22.0",
@@ -58,9 +66,7 @@
     "axios": "^1.6.8",
     "netmask": "^2.0.2",
     "node-forge": "^1.3.1",
-    "openpgp": "^5.11.1",
-    "to-words": "^4.0.1",
-    "url-join-ts": "^1.0.5"
+    "to-words": "^4.0.1"
   },
   "husky": {
     "hooks": {
