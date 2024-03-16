@@ -1,3 +1,5 @@
+/* eslint-disable  @typescript-eslint/no-unsafe-return */
+
 import * as pulumi from '@pulumi/pulumi';
 import { createAxios } from '../Tools/Axios';
 
@@ -27,6 +29,7 @@ class AppConfigDisableAccessKeysResourceProvider
 {
   constructor(private name: string) {}
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async diff(
     id: string,
     previousOutput: AppConfigDisableAccessKeysOutputs,

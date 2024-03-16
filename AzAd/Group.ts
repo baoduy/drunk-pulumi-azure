@@ -57,9 +57,9 @@ export default async ({ name, permissions, members, owners }: AdGroupProps) => {
 };
 
 export const getAdGroup = (displayName: string) =>
-  azuread.getGroup({ displayName });
+  output( azuread.getGroup({ displayName }));
 
-export const addUserToGroup = async ({
+export const addUserToGroup = ({
   name,
   userName,
   objectId,
@@ -76,7 +76,7 @@ export const addUserToGroup = async ({
     throw new Error('Either UserName or ObjectId must be defined.');
 
   const user = userName
-    ? await azuread.getUser({ userPrincipalName: userName })
+    ? output( azuread.getUser({ userPrincipalName: userName }))
     : { objectId: objectId };
 
   return new azuread.GroupMember(name, {
@@ -85,11 +85,11 @@ export const addUserToGroup = async ({
   });
 };
 
-export const addGroupToGroup = async (
+export const addGroupToGroup = (
   groupMemberName: string,
   groupObjectId: Output<string>
 ) => {
-  const group = await getAdGroup(groupMemberName);
+  const group = getAdGroup(groupMemberName);
 
   return groupObjectId.apply(
     (g) =>
@@ -110,7 +110,7 @@ export const assignRolesToGroup = ({
   scope?: Input<string>;
 }) =>
   output(async () => {
-    const group = await getAdGroup(groupName);
+    const group = getAdGroup(groupName);
     return await Promise.all(
       roles.map((p) =>
         roleAssignment({

@@ -65,6 +65,7 @@ class VaultSecretResourceProvider
     return client.deleteSecret(props.name);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async diff(
     id: string,
     previousOutput: VaultSecretOutputs,

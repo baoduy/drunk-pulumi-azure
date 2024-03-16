@@ -17,7 +17,7 @@ export const getMyPublicIpAddress = async (): Promise<string | undefined> => {
 
   if (res.ok) {
     const data = await res.json();
-    return data.ip;
+    return data.ip as string;
   }
   return undefined;
 };

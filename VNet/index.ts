@@ -65,7 +65,7 @@ interface Props {
   monitorConfig?: BasicMonitorArgs;
 }
 
-export default async ({
+export default ({
   group,
   name,
   ddosId,
@@ -202,7 +202,7 @@ export default async ({
     features.enableFirewall &&
     !features.enableFirewall.disabledFirewallCreation
   ) {
-    firewall = await createFirewall({
+    firewall = createFirewall({
       name,
       group,
 
@@ -215,14 +215,14 @@ export default async ({
         {
           name: `${name}-outbound`,
           publicIpAddress: publicIpAddress!,
-          subnetId: vnet.firewallSubnet!.apply((c) => c!.id!),
+          subnetId: vnet.firewallSubnet.apply((c) => c.id!),
         },
       ],
       management: features.enableFirewall.publicManageIpAddress
         ? {
             name: `${name}-management`,
             publicIpAddress: features.enableFirewall.publicManageIpAddress,
-            subnetId: vnet.firewallManageSubnet!.apply((c) => c!.id!),
+            subnetId: vnet.firewallManageSubnet.apply((c) => c.id!),
           }
         : undefined,
       sku: features.enableFirewall.sku,
@@ -289,14 +289,14 @@ interface FirewallProps
   dependsOn?: Input<Resource>[];
 }
 
-const createFirewall = async ({
+const createFirewall = ({
   name,
   group,
   routeTableName,
   dependsOn = [],
   ...others
 }: FirewallProps) => {
-  const rs = await Firewall({
+  const rs = Firewall({
     name,
     group,
     ...others,

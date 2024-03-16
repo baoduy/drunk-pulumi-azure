@@ -22,7 +22,7 @@ interface RouteProps
   extends BasicResourceArgs,
     Omit<
       network.RouteArgs,
-      'name' | 'name' | 'id' | 'resourceGroupName' | 'type'
+      'name'   | 'id' | 'resourceGroupName' | 'type'
     > {
   routes?: Input<Input<network.RouteArgs>[]>;
 }

@@ -20,7 +20,7 @@ interface Props
   };
 }
 
-export default async ({
+export default ({
   name,
   group,
   hubAddressPrefix,
@@ -39,7 +39,7 @@ export default async ({
   });
 
   const azFirewall = firewall?.create
-    ? await Firewall({
+    ? Firewall({
         name,
         group,
         policy: firewall.policy,

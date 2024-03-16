@@ -1,3 +1,7 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+/* eslint-disable  @typescript-eslint/no-unsafe-call */
+/* eslint-disable  @typescript-eslint/no-unsafe-argument */
+
 import * as forge from 'node-forge';
 import { util } from 'node-forge';
 
@@ -29,7 +33,7 @@ function getKeyFromP12(p12: any, password: string | undefined) {
     throw new Error('Unable to get private key.');
   }
 
-  let pemKey = forge.pki.privateKeyToPem(pkcs8Key.key!);
+  let pemKey = forge.pki.privateKeyToPem(pkcs8Key.key);
   pemKey = pemKey.replace(/\r\n/g, '');
 
   return pemKey;

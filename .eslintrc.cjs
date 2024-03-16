@@ -15,6 +15,9 @@ module.exports = {
   rules: {
     "require-await": "off",
     "@typescript-eslint/require-await": "error",
+    "@typescript-eslint/no-unsafe-member-access":"off",
+    "@typescript-eslint/no-unsafe-assignment":"off",
+    //"@typescript-eslint/no-unsafe-assignment":"off"
   },
   root: true,
 };

@@ -15,7 +15,6 @@ import { getVnetName } from '../Common/Naming';
 import Bastion from './Bastion';
 import CreateSubnet, { SubnetProps } from './Subnet';
 import { Lifted, OutputInstance } from '@pulumi/pulumi';
-import { PublicIPAddress } from '@pulumi/azure-native/network';
 
 export type DelegateServices =
   | 'Microsoft.ContainerInstance/containerGroups'

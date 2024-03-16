@@ -1,3 +1,6 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+/* eslint-disable  @typescript-eslint/no-unsafe-argument */
+
 /** Replace all characters in string*/
 export function replaceAll(value: string, search: string, replace: string) {
   if (!value) return value;

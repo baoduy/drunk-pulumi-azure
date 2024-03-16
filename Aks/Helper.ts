@@ -55,7 +55,7 @@ export const getAksVaultConfig = async ({
   return rs?.value || '';
 };
 
-export const getAksIdentitySecrets = async ({
+export const getAksIdentitySecrets = ({
   name,
   vaultInfo,
 }: {

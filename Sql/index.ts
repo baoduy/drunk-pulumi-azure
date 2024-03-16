@@ -114,7 +114,7 @@ interface Props extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export default async ({
+export default ({
   name,
   auth,
   group,
@@ -140,8 +140,8 @@ export default async ({
 
   const adminGroup = auth?.enableAdAdministrator
     ? auth.envRoleNames
-      ? await getAdGroup(auth.envRoleNames.admin)
-      : await Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
+      ? getAdGroup(auth.envRoleNames.admin)
+      : Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
     : undefined;
 
   const ignoreChanges = ['administratorLogin', 'administrators'];
@@ -252,7 +252,7 @@ export default async ({
   if (vulnerabilityAssessment) {
     //Grant Storage permission
     if (vulnerabilityAssessment.logStorageId) {
-      await roleAssignment({
+      roleAssignment({
         name,
         principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
         principalType: 'ServicePrincipal',

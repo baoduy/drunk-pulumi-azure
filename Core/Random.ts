@@ -1,10 +1,8 @@
 import { Output } from '@pulumi/pulumi';
 import * as random from '@pulumi/random';
 
-import { getPasswordName, getSshName } from '../Common/Naming';
-import { SshKeyResource } from '../CustomProviders/SshKeyGenerator';
+import { getPasswordName } from '../Common/Naming';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { getSecret } from '../KeyVault/Helper';
 import { KeyVaultInfo } from '../types';
 
 interface RandomPassProps {

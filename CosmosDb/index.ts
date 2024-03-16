@@ -37,7 +37,7 @@ interface CosmosDbProps {
   //sqlDbContainers?: Array<string>;
 }
 
-export default async ({
+export default ({
   name,
   group,
   vaultInfo,
@@ -65,7 +65,7 @@ export default async ({
   //locationName?: pulumi.Input<string>;
   if (!locations) locations = [group.location!];
 
-  const { resource } = await ResourceCreator(documentdb.DatabaseAccount, {
+  const { resource } = ResourceCreator(documentdb.DatabaseAccount, {
     accountName: name,
     ...group,
     databaseAccountOfferType: documentdb.DatabaseAccountOfferType.Standard,

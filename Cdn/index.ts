@@ -15,7 +15,7 @@ interface Props {
   };
 }
 
-export default async ({
+export default ({
   name,
   group = global.groupInfo,
   vaultAccess,
@@ -35,7 +35,8 @@ export default async ({
     const n = `${name}-sp`;
 
     const sp = new azureAd.ServicePrincipal(n, {
-      applicationId: '205478c0-bd83-4e1b-a9d6-db63a3e1e1c8',
+      //applicationId: '205478c0-bd83-4e1b-a9d6-db63a3e1e1c8',
+      clientId: '205478c0-bd83-4e1b-a9d6-db63a3e1e1c8',
     });
 
     if (vaultAccess.enableRbacAccess) {
@@ -43,7 +44,7 @@ export default async ({
         name: n,
         objectId: sp.objectId,
         permission: 'ReadOnly',
-        applicationId: sp.applicationId,
+        applicationId: sp.clientId,
         principalType: 'ServicePrincipal',
         scope: vaultAccess.vaultInfo.id,
       });

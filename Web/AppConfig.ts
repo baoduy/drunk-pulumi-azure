@@ -10,7 +10,7 @@ interface Props {
   name: string;
   group: ResourceGroupInfo;
   disabledAccessKeys?: boolean;
-  enablePublicAccess?: boolean;
+  //enablePublicAccess?: boolean;
   privateLink?: PrivateLinkProps;
   vaultInfo?: KeyVaultInfo;
 }
@@ -20,7 +20,7 @@ export default ({
   name,
   vaultInfo,
   disabledAccessKeys,
-  enablePublicAccess,
+  //enablePublicAccess,
   privateLink,
 }: Props) => {
   name = getAppConfigName(name);

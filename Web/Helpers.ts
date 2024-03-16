@@ -36,8 +36,8 @@ export const getCertificateForDomain = async (domain: string) => {
   if (!cert) return undefined;
 
   return {
-    name: cert.name!,
+    name: cert.name,
     base64CertData: cert.value!,
-    thumbprint: cert.properties!.tags!['Thumbprint'],
+    thumbprint: cert.properties.tags!['Thumbprint'],
   };
 };

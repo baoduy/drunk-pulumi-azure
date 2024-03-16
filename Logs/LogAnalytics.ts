@@ -1,5 +1,5 @@
 import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { defaultTags } from '../Common/AzureEnv';
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getKeyName, getLogWpName } from '../Common/Naming';
 import { addCustomSecret } from '../KeyVault/CustomHelper';

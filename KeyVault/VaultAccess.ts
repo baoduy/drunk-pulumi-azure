@@ -1,9 +1,8 @@
-import { PermissionProps } from './VaultPermissions';
+
 import GroupRole from '../AzAd/Role';
 import { currentEnv } from '../Common/AzureEnv';
 import { getAdGroup } from '../AzAd/Group';
 import { EnvRoleNamesType } from '../AzAd/EnvRoles';
-import * as azuread from '@pulumi/azuread';
 
 export type VaultAccessType = {
   /** Grant permission of this group into Environment Roles groups*/
@@ -17,10 +16,10 @@ interface Props {
   auth: VaultAccessType;
 }
 
-export default async ({ name, auth }: Props) => {
+export default ({ name, auth }: Props) => {
   //Permission Groups
   const readOnlyGroup = auth.envRoleNames
-    ? await getAdGroup(auth.envRoleNames.readOnly)
+    ? getAdGroup(auth.envRoleNames.readOnly)
     : GroupRole({
         env: currentEnv,
         appName: `${name}-vault`,
@@ -29,7 +28,7 @@ export default async ({ name, auth }: Props) => {
       });
 
   const adminGroup = auth.envRoleNames
-    ? await getAdGroup(auth.envRoleNames.contributor)
+    ? getAdGroup(auth.envRoleNames.contributor)
     : GroupRole({
         env: currentEnv,
         appName: `${name}-vault`,

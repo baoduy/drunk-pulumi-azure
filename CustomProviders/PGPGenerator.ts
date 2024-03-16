@@ -51,6 +51,7 @@ interface PGPOutputs
 class PGPResourceProvider implements BaseProvider<PGPInputs, PGPOutputs> {
   constructor(private name: string) {}
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async diff(
     id: string,
     previousOutput: PGPOutputs,

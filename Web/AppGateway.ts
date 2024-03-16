@@ -9,10 +9,10 @@ interface Props extends DefaultResourceArgs, BasicResourceArgs {
   subnetId: Input<string>;
 }
 
-export default async ({ name, group, subnetId, publicIpAddressId }: Props) => {
+export default ({ name, group, subnetId, publicIpAddressId }: Props) => {
   name = getAppGatewayName(name);
 
-  const rs = await creator(network.ApplicationGateway, {
+  const rs = creator(network.ApplicationGateway, {
     applicationGatewayName: name,
     ...group,
     enableHttp2: true,

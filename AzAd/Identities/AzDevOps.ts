@@ -2,6 +2,7 @@ import { KeyVaultInfo } from '../../types';
 import Identity from '../Identity';
 import { getIdentity } from '../Helper';
 import { getGraphPermissions } from '../GraphDefinition';
+import {output} from "@pulumi/pulumi";
 
 export const defaultName = 'azure-devops';
 
@@ -13,10 +14,10 @@ interface Props {
 }
 
 /** Get Global  ADO Identity */
-export const getAdoIdentity = () => getIdentity(defaultName, true);
+export const getAdoIdentity = () => output(getIdentity(defaultName, true));
 
 /** Create Global ADO Identity */
-export default async ({
+export default ({
   name = defaultName,
   enableOwner,
   vaultInfo,
@@ -50,7 +51,7 @@ export default async ({
         { roleName: 'Data Factory Contributor' },
       ];
 
-  const ado = await Identity({
+  const ado = Identity({
     name,
     appType: 'web',
     createClientSecret: true,

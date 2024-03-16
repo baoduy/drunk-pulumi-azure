@@ -230,18 +230,18 @@ export default async ({
   //   : undefined;
 
   const serviceIdentity = featureFlags.createServicePrincipal
-    ? await aksIdentityCreator({
+    ? aksIdentityCreator({
         name: aksName,
         vaultInfo,
       })
     : undefined;
 
   const adminGroup = aksAccess?.envRoleNames
-    ? await getAdGroup(aksAccess.envRoleNames.admin)
+    ? getAdGroup(aksAccess.envRoleNames.admin)
     : undefined;
 
   const contributeGroup = aksAccess?.envRoleNames
-    ? await getAdGroup(aksAccess.envRoleNames.contributor)
+    ? getAdGroup(aksAccess.envRoleNames.contributor)
     : undefined;
 
   //const enableAzureRBAC = Boolean(aksAccess?.adminMembers && adminGroup);
@@ -666,7 +666,7 @@ export default async ({
   //Grant Permission for Identity
   pulumi
     .all([aks.identity, aks.identityProfile, network.subnetId])
-    .apply(async ([identity, identityProfile, sId]) => {
+    .apply(([identity, identityProfile, sId]) => {
       console.log('Grant RBAC for cluster:', name);
 
       //Already assigned when creating the service

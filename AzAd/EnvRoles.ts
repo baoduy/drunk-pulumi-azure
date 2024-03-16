@@ -34,29 +34,29 @@ export const getEnvRoleNames = (
   admin: getRoleName({ ...envRoleConfig.admin, includeOrganization }),
 });
 
-export default async (includeOrganization = true) => {
+export default (includeOrganization = true) => {
   //ReadOnly
-  await Role({
+   Role({
     ...envRoleConfig.readOnly,
     includeOrganization,
     permissions: [{ roleName: 'Reader', scope: defaultScope }],
   });
   //Contributor
-  await Role({
+   Role({
     ...envRoleConfig.contributor,
     includeOrganization,
     permissions: [{ roleName: 'Reader', scope: defaultScope }],
   });
   //Admin
-  const adminGroup = await Role({
+  const adminGroup =  Role({
     ...envRoleConfig.admin,
     includeOrganization,
     permissions: [{ roleName: 'Reader', scope: defaultScope }],
   });
 
   //Add Global ADO Identity as Admin
-  const ado = await getAdoIdentity();
-  await addUserToGroup({
+  const ado = getAdoIdentity();
+  addUserToGroup({
     name: 'ado-admin-role',
     groupObjectId: adminGroup.objectId,
     objectId: ado.principal.objectId,

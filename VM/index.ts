@@ -39,7 +39,7 @@ interface Props extends BasicResourceArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
-export default async ({
+export default ({
   name,
   group,
   subnetId,
@@ -54,7 +54,7 @@ export default async ({
   windows,
   linux,
 
-  vaultInfo,
+  //vaultInfo,
   lock = true,
   tags = {},
   dependsOn,

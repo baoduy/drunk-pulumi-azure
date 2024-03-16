@@ -10,9 +10,6 @@ import { BasicResourceArgs } from '../types';
 import { addCustomSecret } from './CustomHelper';
 import {
   grantVaultRbacPermission,
-  KeyVaultAdminPolicy,
-  KeyVaultReadOnlyPolicy,
-  PermissionProps,
 } from './VaultPermissions';
 import VaultAccess, { VaultAccessType } from './VaultAccess';
 import { addKey } from './Helper';
@@ -31,7 +28,7 @@ interface Props extends BasicResourceArgs {
   auth?: VaultAccessType;
 }
 
-export default async ({
+export default ({
   name,
   //nameConvention,
   group,
@@ -45,7 +42,7 @@ export default async ({
 }: Props) => {
   const vaultName = getKeyVaultName(name);
 
-  const { readOnlyGroup, adminGroup } = await VaultAccess({ name, auth });
+  const { readOnlyGroup, adminGroup } = VaultAccess({ name, auth });
 
   // const accessPolicies =
   //   new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();

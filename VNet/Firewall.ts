@@ -37,7 +37,7 @@ interface Props
   monitorConfig?: BasicMonitorArgs;
 }
 
-export default async ({
+export default ({
   name,
   group,
   //rules,
@@ -79,7 +79,7 @@ export default async ({
   outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
   if (management) dependsOn.push(management.publicIpAddress);
 
-  const { resource } = await ResourceCreator(network.AzureFirewall, {
+  const { resource } = ResourceCreator(network.AzureFirewall, {
     azureFirewallName: fwName,
     ...group,
     //...rules,

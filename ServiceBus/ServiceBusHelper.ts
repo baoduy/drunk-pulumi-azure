@@ -1,6 +1,4 @@
 import { getSecretName } from "../Common/Naming";
-import { getSecret } from "../KeyVault/Helper";
-import { KeyVaultInfo } from "../types";
 
 export enum BusConnectionTypes {
   Listen = "Listen",

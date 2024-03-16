@@ -13,7 +13,7 @@ interface Props extends DefaultResourceArgs {
   vaultInfo?: KeyVaultInfo;
 }
 
-export default async ({
+export default ({
   domain,
   productType = certificateregistration.CertificateProductType
     .StandardDomainValidatedWildCardSsl,
@@ -22,7 +22,7 @@ export default async ({
 }: Props) => {
   const n = getCertOrderName(domain);
 
-  const order = await creator(
+  const order = creator(
     certificateregistration.AppServiceCertificateOrder,
     {
       certificateOrderName: n,

@@ -497,7 +497,7 @@ interface Props
 }
 
 /** Azure Bus creator */
-export default async ({
+export default ({
   name,
   group,
   topics,
@@ -514,7 +514,7 @@ export default async ({
 }: Props) => {
   name = getServiceBusName(name);
 
-  const { resource, locker, diagnostic } = await creator(bus.Namespace, {
+  const { resource, locker, diagnostic } = creator(bus.Namespace, {
     namespaceName: name,
     ...group,
     sku: { name: sku, tier: sku },

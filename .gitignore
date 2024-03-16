@@ -73,7 +73,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
+#.env
 .env.development.local
 .env.test.local
 .env.production.local
@@ -102,7 +102,6 @@ dist
 
 # vuepress v2.x temp and cache directory
 .temp
-.cache
 
 # Docusaurus cache and generated files
 .docusaurus
@@ -130,10 +129,10 @@ dist
 .pnp.*
 
 #others
+.husky
 **/.DS_Store
 bin
 .out-bin
-.nyc_output
 .vscode
 .idea
 .fleet

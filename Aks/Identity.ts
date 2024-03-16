@@ -10,7 +10,7 @@ interface Props {
 }
 
 //** The AzAD app Identity for Azure Kubernetes for RBAC */
-export default async ({ name, vaultInfo }: Props) => {
+export default ({ name, vaultInfo }: Props) => {
   //AKS need this permission for AAD integration
   const graphAccess = getGraphPermissions(
     { name: 'User.Read', type: 'Scope' },

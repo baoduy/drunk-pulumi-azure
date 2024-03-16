@@ -29,7 +29,7 @@ interface Props extends DefaultResourceArgs {
 /** The Azure Container Registry will be created at the GLobal Group.
  * Follow ReadMe file to setup the cleaning tasks for this Registry
  */
-export default async ({
+export default ({
   name,
   group = global.groupInfo,
   sku = containerregistry.SkuName.Basic,
@@ -46,7 +46,7 @@ export default async ({
   const primaryPasswordKey = getPasswordName(name, 'primary');
   const secondaryPasswordKey = getPasswordName(name, 'secondary');
 
-  const { resource, diagnostic, locker } = await creator(
+  const { resource, diagnostic, locker } = creator(
     containerregistry.Registry,
     {
       registryName: name,

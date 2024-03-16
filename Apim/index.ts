@@ -24,7 +24,7 @@ interface Props
   };
 }
 
-export default async ({
+export default ({
   name,
   group,
   customDomain,
@@ -36,7 +36,7 @@ export default async ({
   ...others
 }: Props) => {
   const apimName = getApimName(name);
-  const { resource } = await Creator(apimanagement.ApiManagementService, {
+  const { resource } = Creator(apimanagement.ApiManagementService, {
     serviceName: apimName,
     ...group,
 
