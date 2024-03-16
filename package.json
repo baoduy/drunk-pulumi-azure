@@ -1,9 +1,9 @@
 {
-  "name": "drunk-pulumi",
+  "name": "@drunk-pulumi/azure",
   "version": "0.0.1",
   "pulumi": {
     "resource": true,
-    "name": "drunk-coding"
+    "name": "@drunk-pulumi/azure"
   },
   "scripts": {
     "build": "cross-env NODE_ENV=production npm run update-tsconfig && npx tsc && npm run copy-pkg",
