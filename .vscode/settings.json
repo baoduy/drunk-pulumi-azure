@@ -1,9 +1,0 @@
-{
-  "files.exclude": {
-    "**/.DS_Store": true,
-    "**/node_modules": true,
-    "**/._*": true,
-    "**/.nyc_output": true
-  },
-  "git.ignoreLimitWarning": true
-}
