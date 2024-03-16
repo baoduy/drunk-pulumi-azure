@@ -94,32 +94,32 @@ interface AksProps {
 // };
 
 /** Get AKS Provider from Key Vault*/
-export const createAksVaultProvider = async ({
-  aksName,
-  version,
-  secretName,
-  namespace,
-  base64Encoded,
-  vaultInfo,
-}: {
-  aksName: string;
-  secretName?: string;
-  version?: string;
-  vaultInfo: KeyVaultInfo;
-  base64Encoded?: boolean;
-  namespace?: string;
-}) => {
-  const value = await getAksVaultConfig({
-    name: secretName ?? aksName,
-    version,
-    formattedName: Boolean(secretName),
-    vaultInfo,
-  });
-
-  return createProvider({
-    name: aksName,
-    namespace,
-    ignoreChanges: true,
-    kubeconfig: base64Encoded ? Buffer.from(value, 'base64').toString() : value,
-  });
-};
+// export const createAksVaultProvider = async ({
+//   aksName,
+//   version,
+//   secretName,
+//   namespace,
+//   base64Encoded,
+//   vaultInfo,
+// }: {
+//   aksName: string;
+//   secretName?: string;
+//   version?: string;
+//   vaultInfo: KeyVaultInfo;
+//   base64Encoded?: boolean;
+//   namespace?: string;
+// }) => {
+//   const value = await getAksVaultConfig({
+//     name: secretName ?? aksName,
+//     version,
+//     formattedName: Boolean(secretName),
+//     vaultInfo,
+//   });
+//
+//   return createProvider({
+//     name: aksName,
+//     namespace,
+//     ignoreChanges: true,
+//     kubeconfig: base64Encoded ? Buffer.from(value, 'base64').toString() : value,
+//   });
+// };
