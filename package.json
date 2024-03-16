@@ -2,10 +2,10 @@
   "name": "@drunk-pulumi/azure",
   "version": "0.0.1",
   "author": "drunkcoding@outlook.com",
-  "description": "The custom dynamic providers for pulumi-azure",
+  "description": "The custom helpers pulumi-azure",
   "license": "MIT",
   "private": false,
-  "keywords": ["pulumi-azure","dynamic providers"],
+  "keywords": ["pulumi-azure"],
   "pulumi": {
     "resource": true,
     "name": "@drunk-pulumi/azure"
@@ -58,8 +58,6 @@
     "@drunk-pulumi/azure-providers": "^0.0.3",
     "@pulumi/azure-native": "^2.32.0",
     "@pulumi/azuread": "5.47.2",
-    "@pulumi/cloudflare": "^5.22.0",
-    "@pulumi/kubernetes": "^4.9.1",
     "@pulumi/pulumi": "^3.111.1",
     "@pulumi/random": "^4.16.0",
     "@pulumi/tls": "^5.0.1",
