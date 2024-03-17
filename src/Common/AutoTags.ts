@@ -7,6 +7,7 @@ const ignoredTags = [
   'servicePrincipal:ServicePrincipal',
   'servicePrincipalPassword:ServicePrincipalPassword',
   'kubernetes',
+  'cloudflare'
 ];
 
 export function registerAutoTags(autoTags: Record<string, string>): void {
