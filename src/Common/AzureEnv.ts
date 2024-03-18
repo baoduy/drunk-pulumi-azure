@@ -1,22 +1,27 @@
-import { all, interpolate } from '@pulumi/pulumi';
-import { registerAutoTags } from './AutoTags';
-import { KeyVaultInfo, ResourceGroupInfo } from '../types';
-import { getKeyVaultName, getResourceGroupName } from './Naming';
-import { ResourceInfoArg } from './ResourceEnv';
-import { organization, projectName, stack } from './StackEnv';
+import * as pulumi from "@pulumi/pulumi";
+import { authorization } from "@pulumi/azure-native";
+import { registerAutoTags } from "./AutoTags";
+import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { getKeyVaultName, getResourceGroupName } from "./Naming";
+import { ResourceInfoArg } from "./ResourceEnv";
+import { organization, projectName, stack } from "./StackEnv";
 
-const config = JSON.parse(process.env.PULUMI_CONFIG ?? '{}');
-export const tenantId = config['azure-native:config:tenantId'] as string;
-export const subscriptionId = config[
-  'azure-native:config:subscriptionId'
+const config = pulumi.output(authorization.getClientConfig());
+export const tenantId = config.apply((c) => c.tenantId);
+export const subscriptionId = config.apply((c) => c.subscriptionId);
+export const currentPrincipal = config.apply((c) => c.objectId);
+export const currentLocation = JSON.parse(process.env.PULUMI_CONFIG ?? "{}")[
+  "azure-native:config:location"
 ] as string;
-//export const currentServicePrincipal = config.objectId;
-export const currentLocation = config['azure-native:config:location'] as string;
-export const defaultScope = interpolate`/subscriptions/${subscriptionId}`;
+export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 //Print and Check
-all([subscriptionId, tenantId]).apply(([s, t]) => {
-  console.log(`Current Azure:`, { TenantId: t, SubscriptionId: s });
+pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
+  console.log(`Azure Environment:`, {
+    TenantId: t,
+    SubscriptionId: s,
+    currentLocation,
+  });
 });
 
 /** ======== Default Variables ================*/
@@ -24,17 +29,17 @@ all([subscriptionId, tenantId]).apply(([s, t]) => {
 export const defaultTags = {
   environment: stack,
   organization: organization,
-  'pulumi-project': projectName,
+  "pulumi-project": projectName,
 };
 
 registerAutoTags(defaultTags);
 
 export enum Environments {
-  Global = 'global',
-  Local = 'local',
-  Dev = 'dev',
-  Sandbox = 'sandbox',
-  Prd = 'prd',
+  Global = "global",
+  Local = "local",
+  Dev = "dev",
+  Sandbox = "sandbox",
+  Prd = "prd",
 }
 
 export const isEnv = (env: Environments) => stack.includes(env);
@@ -64,7 +69,7 @@ export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
   return {
     name: vaultName,
     group: { resourceGroupName: resourceGroupName, location: currentLocation },
-    id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
+    id: pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
   };
 };
 
@@ -74,11 +79,11 @@ export const getResourceIdFromInfo = ({
   provider,
 }: ResourceInfoArg) => {
   if (!name && !provider)
-    return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}`;
+    return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}`;
   else if (name && provider)
-    return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
+    return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
 
-  throw new Error('Resource Info is invalid.');
+  throw new Error("Resource Info is invalid.");
 };
 
 /**Get Resource Info from Resource ID. Sample ID is "/subscriptions/01af663e-76dd-45ac-9e57-9c8e0d3ee350/resourceGroups/sandbox-codehbd-group-hbd/providers/Microsoft.Network/virtualNetworks/sandbox-codehbd-vnet-hbd"*/
@@ -92,14 +97,14 @@ export interface ResourceInfo {
 export const getResourceInfoFromId = (id: string): ResourceInfo | undefined => {
   if (!id) return undefined;
 
-  const details = id.split('/');
-  let name = '';
-  let groupName = '';
-  let subscriptionId = '';
+  const details = id.split("/");
+  let name = "";
+  let groupName = "";
+  let subscriptionId = "";
 
   details.forEach((d, index) => {
-    if (d === 'subscriptions') subscriptionId = details[index + 1];
-    if (d === 'resourceGroups' || d === 'resourcegroups')
+    if (d === "subscriptions") subscriptionId = details[index + 1];
+    if (d === "resourceGroups" || d === "resourcegroups")
       groupName = details[index + 1];
     if (index === details.length - 1) name = d;
   });
