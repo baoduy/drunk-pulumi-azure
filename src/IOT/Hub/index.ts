@@ -1,7 +1,7 @@
 import { BasicResourceArgs, KeyVaultInfo } from '../../types';
 import { getIotHubName } from '../../Common/Naming';
 import * as devices from '@pulumi/azure-native/devices';
-import { defaultTags, subscriptionId } from '../../Common/AzureEnv';
+import {  subscriptionId } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import Locker from '../../Core/Locker';
 import { EnvRoleNamesType } from '../../AzAd/EnvRoles';
@@ -124,7 +124,6 @@ export default async ({
       ...group,
 
       sku,
-      tags: defaultTags,
 
       properties: {
         //authorizationPolicies: [{}],

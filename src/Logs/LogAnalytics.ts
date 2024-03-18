@@ -1,5 +1,4 @@
 import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
-import { defaultTags } from '../Common/AzureEnv';
 import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { getKeyName, getLogWpName } from '../Common/Naming';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -36,7 +35,7 @@ export default ({
     retentionInDays:
       sku === operationalinsights.WorkspaceSkuNameEnum.Free ? 7 : 30, //DO NOT changes this
     sku: { name: sku },
-    tags: defaultTags,
+
   });
 
   if (vaultInfo) {

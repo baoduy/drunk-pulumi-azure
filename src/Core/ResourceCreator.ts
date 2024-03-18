@@ -1,11 +1,11 @@
+/* eslint  @typescript-eslint/no-explicit-any: "off" */
+
 import * as authorization from '@pulumi/azure-native/authorization';
 import * as pulumi from '@pulumi/pulumi';
-
 import { DefaultResourceArgs } from '../types';
 import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
 import Locker from './Locker';
 import { createDiagnostic } from '../Logs/Helpers';
-import { defaultTags } from '../Common/AzureEnv';
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
   const rs = props as {
@@ -57,7 +57,7 @@ export default function <
 
   const resource = new Class(
     name,
-    { name, ...props, tags: defaultTags },
+    { name, ...props },
     { dependsOn, import: importUri, ignoreChanges, deleteBeforeReplace: true }
   );
 

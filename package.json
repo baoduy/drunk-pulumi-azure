@@ -33,7 +33,7 @@
     "test": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.test.ts'",
     "testcert": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register '**/*.ts'",
     "test-cover": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' nyc mocha --timeout 10000 -r ts-node/register 'z_tests/**/*.ts'",
-    "lint": "eslint **/*.ts --fix"
+    "lint": "eslint src/**/*.ts --fix"
   },
   "devDependencies": {
     "@types/chai": "^4.3.12",

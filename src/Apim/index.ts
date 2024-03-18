@@ -1,7 +1,5 @@
 import * as apimanagement from '@pulumi/azure-native/apimanagement';
 import { Input } from '@pulumi/pulumi';
-
-import { defaultTags } from '../Common/AzureEnv';
 import { getApimName } from '../Common/Naming';
 import { organization } from '../Common/StackEnv';
 import { randomUuId } from '../Core/Random';
@@ -125,7 +123,7 @@ export default ({
       "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11":
         "false",
     },
-    tags: defaultTags,
+
     lock,
     ...others,
     ignoreChanges: [],

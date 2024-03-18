@@ -1,7 +1,6 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
-
-import { defaultTags, isDev } from '../Common/AzureEnv';
+import {  isDev } from '../Common/AzureEnv';
 import { getPrivateEndpointName, getSignalRName } from '../Common/Naming';
 import { BasicResourceArgs, KeyVaultInfo, PrivateLinkProps } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -81,7 +80,7 @@ export default ({
         }
       : undefined,
     sku,
-    tags: defaultTags,
+
   });
 
   let privateEndpoint: native.network.PrivateEndpoint | undefined = undefined;

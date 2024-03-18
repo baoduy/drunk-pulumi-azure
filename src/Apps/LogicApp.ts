@@ -1,9 +1,6 @@
 import * as logic from '@pulumi/azure-native/logic';
-
 import { BasicResourceArgs, DefaultResourceArgs } from '../types';
-
 import creator from '../Core/ResourceCreator';
-import { defaultTags } from '../Common/AzureEnv';
 import { global } from '../Common';
 import { getCertOrderName } from '../Common/Naming';
 
@@ -17,7 +14,7 @@ export default ({ name, ...others }: Props) => {
     ...global.groupInfo,
     ...others,
     sku: '',
-    tags: defaultTags,
+
   } as logic.WorkflowArgs & DefaultResourceArgs);
 
   return order;

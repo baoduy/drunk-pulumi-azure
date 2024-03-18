@@ -2,7 +2,6 @@ import { Input, Resource } from "@pulumi/pulumi";
 import * as native from "@pulumi/azure-native";
 import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import { getNICName, getVMName } from "../Common/Naming";
-import { defaultTags } from "../Common/AzureEnv";
 import Locker from "../Core/Locker";
 
 interface Props extends BasicResourceArgs {
@@ -157,7 +156,7 @@ export default ({
       //   encryptionAtHost: false,
       //   //securityType: native.compute.SecurityTypes.TrustedLaunch,
       // },
-      tags: { ...defaultTags, ...tags },
+      tags,
     },
     {
       dependsOn,

@@ -1,5 +1,4 @@
 import * as AppConfiguration from '@pulumi/azure-native/appconfiguration';
-import { defaultTags } from '../Common/AzureEnv';
 import { getAppConfigName, getPrivateEndpointName } from '../Common/Naming';
 import { KeyVaultInfo, PrivateLinkProps, ResourceGroupInfo } from '../types';
 import { AppConfigDisableAccessKeysResource } from '@drunk-pulumi/azure-providers/AppConfigDisableAccessKeys';
@@ -41,7 +40,6 @@ export default ({
     //   ? AppConfiguration.PublicNetworkAccess.Enabled
     //   : AppConfiguration.PublicNetworkAccess.Disabled,
     sku: { name: 'Standard' },
-    tags: defaultTags,
   });
 
   //Access Keys

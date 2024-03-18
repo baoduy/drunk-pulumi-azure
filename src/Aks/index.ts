@@ -6,7 +6,6 @@ import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from '../types';
 import {
   currentEnv,
   defaultScope,
-  defaultTags,
   Environments,
   getResourceIdFromInfo,
   getResourceInfoFromId,
@@ -501,7 +500,6 @@ export default async ({
             : undefined,
       },
 
-      tags: defaultTags,
     },
     {
       protect: lock,

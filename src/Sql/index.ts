@@ -6,7 +6,6 @@ import { getAdGroup } from '../AzAd/Group';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import {
   currentEnv,
-  defaultTags,
   isPrd,
   subscriptionId,
   tenantId,
@@ -179,7 +178,6 @@ export default ({
         ? sql.ServerNetworkAccessFlag.Disabled
         : sql.ServerNetworkAccessFlag.Enabled,
 
-      tags: defaultTags,
     },
     {
       ignoreChanges,
@@ -339,7 +337,7 @@ export default ({
           vaultInfo,
           contentType: `Sql ${d.name} Connection String`,
           dependsOn: d.resource,
-          tags: defaultTags,
+
         });
       }
 

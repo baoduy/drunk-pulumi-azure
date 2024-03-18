@@ -1,7 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { isPrd } from '../Common/AzureEnv';
 import { getFirewallName } from '../Common/Naming';
 import ResourceCreator from '../Core/ResourceCreator';
 import {
@@ -121,7 +121,6 @@ export default ({
       ],
     },
 
-    tags: defaultTags,
     ...others,
     dependsOn,
   } as network.AzureFirewallArgs & DefaultResourceArgs);

@@ -2,7 +2,6 @@ import * as network from '@pulumi/azure-native/network';
 import { input as inputs, enums } from '@pulumi/azure-native/types';
 import { Input, Resource } from '@pulumi/pulumi';
 import { BasicResourceArgs, DefaultResourceArgs } from '../types';
-import { defaultTags } from '../Common/AzureEnv';
 import {
   getFirewallPolicyGroupName,
   getFirewallPolicyName,
@@ -174,7 +173,6 @@ export default ({
             },
           }
         : undefined,
-      tags: defaultTags,
     },
     { dependsOn }
   );

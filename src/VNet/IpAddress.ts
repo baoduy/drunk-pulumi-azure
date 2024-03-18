@@ -1,9 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
-
 import { Input } from '@pulumi/pulumi';
-
 import { BasicResourceArgs } from '../types';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { isPrd } from '../Common/AzureEnv';
 import { getIpAddressName } from '../Common/Naming';
 import Locker from '../Core/Locker';
 import { organization } from '../Common/StackEnv';
@@ -59,7 +57,6 @@ export default ({
           : undefined,
       sku,
       zones: isPrd ? ['1', '2', '3'] : undefined,
-      tags: defaultTags,
     },
     { dependsOn: publicIPPrefix }
   );
