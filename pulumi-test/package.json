@@ -5,8 +5,10 @@
         "@types/node": "^18"
     },
     "dependencies": {
+        "@azure/identity": "^4.0.1",
         "@drunk-pulumi/azure": "file:/../.out-bin",
         "@drunk-pulumi/azure-providers": "^0.0.3",
+        "@microsoft/microsoft-graph-client": "^3.0.7",
         "@pulumi/azure-native": "^2.0.0",
         "@pulumi/pulumi": "^3.0.0"
     }

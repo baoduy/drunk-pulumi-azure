@@ -1,18 +1,21 @@
-import * as native from '@pulumi/azure-native';
-import { enums } from '@pulumi/azure-native/types';
-import { Input } from '@pulumi/pulumi';
-import { defaultTags, subscriptionId, tenantId } from '../Common/AzureEnv';
-import { getKeyVaultName, getPrivateEndpointName } from '../Common/Naming';
-import { createDiagnostic } from '../Logs/Helpers';
-import { BasicMonitorArgs, PrivateLinkProps } from '../types';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { BasicResourceArgs } from '../types';
-import { addCustomSecret } from './CustomHelper';
+import * as native from "@pulumi/azure-native";
+import { enums } from "@pulumi/azure-native/types";
+import { Input } from "@pulumi/pulumi";
 import {
-  grantVaultRbacPermission,
-} from './VaultPermissions';
-import VaultAccess, { VaultAccessType } from './VaultAccess';
-import { addKey } from './Helper';
+  currentPrincipal,
+  defaultTags,
+  subscriptionId,
+  tenantId,
+} from "../Common/AzureEnv";
+import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
+import { createDiagnostic } from "../Logs/Helpers";
+import { BasicMonitorArgs, PrivateLinkProps } from "../types";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import { BasicResourceArgs } from "../types";
+import { addCustomSecret } from "./CustomHelper";
+import { grantVaultRbacPermission } from "./VaultPermissions";
+import VaultAccess, { VaultAccessType } from "./VaultAccess";
+import { addUserToGroup } from "../AzAd/Group";
 
 interface Props extends BasicResourceArgs {
   //nameConvention?: ConventionProps | false;
@@ -68,8 +71,8 @@ export default ({
 
     properties: {
       tenantId,
-      sku: { name: 'standard', family: 'A' },
-      createMode: 'default',
+      sku: { name: "standard", family: "A" },
+      createMode: "default",
 
       enableRbacAuthorization: true,
       accessPolicies: undefined,
@@ -83,7 +86,7 @@ export default ({
 
       networkAcls: network
         ? {
-            bypass: 'AzureServices',
+            bypass: "AzureServices",
             defaultAction: enums.keyvault.NetworkRuleAction.Deny,
 
             ipRules: network.ipAddresses
@@ -95,7 +98,7 @@ export default ({
               : undefined,
           }
         : {
-            bypass: 'AzureServices',
+            bypass: "AzureServices",
             defaultAction: enums.keyvault.NetworkRuleAction.Allow,
           },
     },
@@ -104,23 +107,28 @@ export default ({
   });
 
   //Grant RBAC permission
-  //if (auth?.enableRbac) {
   grantVaultRbacPermission({
     name: `${name}-ReadOnlyGroup`,
     scope: resource.id,
     objectId: readOnlyGroup.objectId,
-    permission: 'ReadOnly',
-    principalType: 'Group',
+    permission: "ReadOnly",
+    principalType: "Group",
   });
 
   grantVaultRbacPermission({
     name: `${name}-AdminGroup`,
     scope: resource.id,
     objectId: adminGroup.objectId,
-    permission: 'ReadWrite',
-    principalType: 'Group',
+    permission: "ReadWrite",
+    principalType: "Group",
   });
-  //}
+
+  //Add current principal to the admin group
+  addUserToGroup({
+    name: `${name}-current-principal-as-admin`,
+    objectId: currentPrincipal,
+    groupObjectId: adminGroup.objectId,
+  });
 
   //To Vault Info
   const toVaultInfo = () => ({ name: vaultName, group, id: resource.id });
@@ -131,7 +139,7 @@ export default ({
       name,
       targetResourceId: resource.id,
       ...logInfo,
-      logsCategories: ['AuditEvent'],
+      logsCategories: ["AuditEvent"],
     });
 
   // Create Private Link
@@ -141,32 +149,26 @@ export default ({
       group,
       ...props,
       resourceId: resource.id,
-      privateDnsZoneName: 'privatelink.vaultcore.azure.net',
-      linkServiceGroupIds: ['keyVault'],
+      privateDnsZoneName: "privatelink.vaultcore.azure.net",
+      linkServiceGroupIds: ["keyVault"],
     });
 
   if (createDefaultValues) {
     const vaultInfo = toVaultInfo();
 
     addCustomSecret({
-      name: 'tenant-id',
+      name: "tenant-id",
       value: tenantId,
       vaultInfo,
-      contentType: 'KeyVault Default Values',
+      contentType: "KeyVault Default Values",
       dependsOn: resource,
     });
 
     addCustomSecret({
-      name: 'subscription-id',
+      name: "subscription-id",
       value: subscriptionId,
       vaultInfo,
-      contentType: 'KeyVault Default Values',
-      dependsOn: resource,
-    });
-
-    addKey({
-      name: 'default-encryption-key',
-      vaultInfo,
+      contentType: "KeyVault Default Values",
       dependsOn: resource,
     });
   }

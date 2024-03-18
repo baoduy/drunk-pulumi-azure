@@ -1,11 +1,9 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as resources from "@pulumi/azure-native/resources";
-import * as storage from "@pulumi/azure-native/storage";
-import {DefaultAzureCredential} from '@azure/identity';
+import { authorization } from "@pulumi/azure-native";
 
-const rs = (async ()=> {
-    const credential = new DefaultAzureCredential();
-    credential.
+const rs = (async () => {
+  const config = await authorization.getClientConfig();
+  console.log(config);
 })();
 
-export default pulumi.output(rs)
+export default pulumi.output(rs);
