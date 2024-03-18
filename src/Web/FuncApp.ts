@@ -4,7 +4,6 @@ import { getFuncAppName } from '../Common/Naming';
 import Locker from '../Core/Locker';
 import * as pulumi from '@pulumi/pulumi';
 import { SiteConfigArgs } from './types';
-import { defaultTags } from '../Common/AzureEnv';
 
 interface Props extends BasicResourceArgs {
   kind: 'FunctionApp' | 'WebApp';
@@ -37,7 +36,6 @@ export default ({
       httpsOnly: true,
 
       siteConfig,
-      tags: defaultTags,
     },
     { deleteBeforeReplace: true }
   );

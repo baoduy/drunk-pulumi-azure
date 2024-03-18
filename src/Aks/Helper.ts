@@ -65,13 +65,13 @@ export const getAksIdentitySecrets = ({
   return getIdentitySecrets({ name, vaultInfo });
 };
 
-interface AksProps {
-  aksName: string;
-  formatedName?: boolean;
-  namespace?: string;
-  groupName: string;
-  localAccountDisabled?: boolean;
-}
+// interface AksProps {
+//   aksName: string;
+//   formatedName?: boolean;
+//   namespace?: string;
+//   groupName: string;
+//   localAccountDisabled?: boolean;
+// }
 
 // /** Get AKS Provider from Managed Cluster*/
 // export const createAksProvider = async ({

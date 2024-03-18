@@ -1,9 +1,6 @@
 import * as network from "@pulumi/azure-native/network";
-
 import { Input, output } from "@pulumi/pulumi";
-
 import { BasicResourceArgs, PrivateLinkProps } from "../types";
-import { defaultTags } from "../Common/AzureEnv";
 import { getVnetIdFromSubnetId } from "./Helper";
 import PrivateZone, { linkVnetToPrivateDns, addARecord } from "./PrivateDns";
 import { getResourceInfoFromId } from "../Common/AzureEnv";
@@ -35,7 +32,6 @@ export default ({
         privateLinkServiceId: resourceId,
       },
     ],
-    tags: defaultTags,
   });
 
   //Get IpAddress in

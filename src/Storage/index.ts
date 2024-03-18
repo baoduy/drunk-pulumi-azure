@@ -4,7 +4,7 @@ import { KeyVaultInfo, BasicResourceArgs } from '../types';
 import { Input, output } from '@pulumi/pulumi';
 import { createThreatProtection } from '../Logs/Helpers';
 import { getSecret } from '../KeyVault/Helper';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { isPrd } from '../Common/AzureEnv';
 import cdnCreator from './CdnEndpoint';
 
 import {
@@ -186,8 +186,6 @@ export default ({
             : undefined,
         }
       : { defaultAction: 'Allow' },
-
-    tags: defaultTags,
   });
 
   //Soft Delete

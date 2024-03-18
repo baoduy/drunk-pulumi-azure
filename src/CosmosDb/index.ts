@@ -2,7 +2,7 @@ import * as documentdb from '@pulumi/azure-native/documentdb';
 import { getCosmosDbName } from '../Common/Naming';
 import { DefaultResourceArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
 import ResourceCreator from '../Core/ResourceCreator';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import { isPrd} from '../Common/AzureEnv';
 import { createThreatProtection } from '../Logs/Helpers';
 import { Input } from '@pulumi/pulumi';
 
@@ -10,7 +10,7 @@ interface CosmosDbProps {
   name: string;
   group: ResourceGroupInfo;
   vaultInfo?: KeyVaultInfo;
-  locations?: Input<string>[];
+  locations?: Array<Input<string>>;
   enableMultipleWriteLocations?: boolean;
   capabilities?: Array<'EnableCassandra' | 'EnableTable' | 'EnableGremlin'>;
   kind?: documentdb.DatabaseAccountKind;
@@ -51,20 +51,6 @@ export default ({
 }: CosmosDbProps) => {
   name = getCosmosDbName(name);
 
-  /**
-   * The failover priority of the region. A failover priority of 0 indicates a write region. The maximum value for a failover priority = (total number of regions - 1). Failover priority values must be unique for each of the regions in which the database account exists.
-   */
-  //failoverPriority?: pulumi.Input<number>;
-  /**
-   * Flag to indicate whether or not this region is an AvailabilityZone region
-   */
-  //isZoneRedundant?: pulumi.Input<boolean>;
-  /**
-   * The name of the region.
-   */
-  //locationName?: pulumi.Input<string>;
-  if (!locations) locations = [group.location!];
-
   const { resource } = ResourceCreator(documentdb.DatabaseAccount, {
     accountName: name,
     ...group,
@@ -76,7 +62,7 @@ export default ({
       ? capabilities.map((n) => ({ name: n }))
       : undefined,
 
-    locations: locations?.map((n) => ({ locationName: n })),
+    locations:locations? locations.map((n) => ({ locationName: n })):[{locationName: group.location}],
 
     backupPolicy: isPrd
       ? {
@@ -137,7 +123,7 @@ export default ({
       ],
       metricsCategories: ['Requests'],
     },
-    tags: defaultTags,
+
   } as unknown as documentdb.DatabaseAccountArgs & DefaultResourceArgs);
 
   if (

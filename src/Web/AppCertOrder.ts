@@ -1,9 +1,6 @@
 import * as certificateregistration from "@pulumi/azure-native/certificateregistration";
-
 import { DefaultResourceArgs, KeyVaultInfo } from "../types";
-
 import creator from "../Core/ResourceCreator";
-import { defaultTags } from "../Common/AzureEnv";
 import { global } from "../Common";
 import { getCertOrderName } from "../Common/Naming";
 
@@ -33,7 +30,6 @@ export default ({
       distinguishedName: `CN=*.${domain}`,
       keySize: 2048,
       validityInYears: 1,
-      tags: defaultTags,
       ...others,
     } as certificateregistration.AppServiceCertificateOrderArgs &
       DefaultResourceArgs

@@ -3,7 +3,6 @@ import * as cdn from '@pulumi/azure-native/cdn';
 import * as azureAd from '@pulumi/azuread';
 import { getCdnProfileName } from '../Common/Naming';
 import { global } from '../Common';
-import { defaultTags } from '../Common/AzureEnv';
 import { grantVaultRbacPermission } from '../KeyVault/VaultPermissions';
 
 interface Props {
@@ -27,7 +26,7 @@ export default ({
     ...group,
     location: 'global',
     sku: { name: cdn.SkuName.Standard_Microsoft },
-    tags: defaultTags,
+
   });
 
   if (vaultAccess) {

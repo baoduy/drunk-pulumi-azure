@@ -25,14 +25,11 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
 });
 
 /** ======== Default Variables ================*/
-
-export const defaultTags = {
+registerAutoTags({
   environment: stack,
   organization: organization,
   "pulumi-project": projectName,
-};
-
-registerAutoTags(defaultTags);
+});
 
 export enum Environments {
   Global = "global",

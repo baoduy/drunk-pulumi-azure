@@ -3,7 +3,6 @@ import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
 import {
   currentPrincipal,
-  defaultTags,
   subscriptionId,
   tenantId,
 } from "../Common/AzureEnv";
@@ -103,7 +102,6 @@ export default ({
           },
     },
 
-    tags: defaultTags,
   });
 
   //Grant RBAC permission

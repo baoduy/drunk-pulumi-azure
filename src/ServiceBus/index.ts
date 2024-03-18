@@ -19,7 +19,7 @@ import {
   getTopicName,
   getTopicOrQueueVaultName,
 } from './ServiceBusHelper';
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import {  isPrd } from '../Common/AzureEnv';
 import creator from '../Core/ResourceCreator';
 import { getPrivateEndpointName, getServiceBusName } from '../Common/Naming';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -519,7 +519,6 @@ export default ({
     ...group,
     sku: { name: sku, tier: sku },
 
-    tags: defaultTags,
     ...others,
 
     monitoring: monitoring

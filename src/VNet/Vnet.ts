@@ -3,7 +3,6 @@ import * as pulumi from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/azure-native/types';
 import { output as outputs } from '@pulumi/azure-native/types';
 import { BasicResourceArgs } from '../types';
-import { defaultTags } from '../Common/AzureEnv';
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
@@ -190,8 +189,6 @@ export default ({
 
     enableDdosProtection: ddosId !== undefined,
     ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
-
-    tags: defaultTags,
   });
 
   const subnetResults: Record<

@@ -53,8 +53,9 @@ jobs:
 
       - run: npm ci
 
-#      - name: Run Lints
-#        run: npm run lint
+      - name: Run Lints
+        continue-on-error: true
+        run: npm run lint
 
       #Fix node_modules/openpgp/openpgp.d.ts:10:46 - error
 #      - name: Replace text in file

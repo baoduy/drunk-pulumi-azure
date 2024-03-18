@@ -3,7 +3,7 @@ import * as sql from '@pulumi/azure-native/sql';
 import { BasicResourceArgs, BasicResourceResultProps } from '../types';
 import { Input, Output, Resource } from '@pulumi/pulumi';
 
-import { defaultTags, isPrd } from '../Common/AzureEnv';
+import {  isPrd } from '../Common/AzureEnv';
 import { getSqlDbName } from '../Common/Naming';
 import Locker from '../Core/Locker';
 
@@ -59,7 +59,6 @@ export default ({
       //zoneRedundant: isPrd,
       requestedBackupStorageRedundancy: isPrd ? 'Zone' : 'Local',
 
-      tags: defaultTags,
     },
     { dependsOn }
   );

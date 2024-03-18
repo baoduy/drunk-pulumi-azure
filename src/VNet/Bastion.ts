@@ -3,7 +3,6 @@ import IpAddress from "./IpAddress";
 import * as network from "@pulumi/azure-native/network";
 import { Input, Resource } from "@pulumi/pulumi";
 import { getBastionName } from "../Common/Naming";
-import { defaultTags } from "../Common/AzureEnv";
 
 interface Props extends BasicResourceArgs {
   subnetId: Input<string>;
@@ -35,8 +34,6 @@ export default ({ name, group, subnetId, dependsOn }: Props) => {
           privateIPAllocationMethod: network.IPAllocationMethod.Dynamic,
         },
       ],
-
-      tags: defaultTags,
     },
     { dependsOn: dependsOn || ipAddress, deleteBeforeReplace: true }
   );
