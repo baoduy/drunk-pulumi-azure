@@ -136,6 +136,7 @@
     "z_tests",
     ".out-bin",
     ".tools",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "pulumi-test"
   ]
 }

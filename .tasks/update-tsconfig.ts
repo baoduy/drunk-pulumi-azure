@@ -8,6 +8,7 @@ const excludeFolders: string[] = [
   '.out-bin',
   'z_tests',
   '.tasks',
+  'pulumi-test'
 ]; // List of folder names to exclude
 
 // Function to recursively find .ts files, excluding specified folders
