@@ -61,7 +61,7 @@ const createElasticPool = ({
       minCapacity: 0,
       maxCapacity: sku.name === "Basic" ? 5 : sku.capacity,
     },
-
+    zoneRedundant: isPrd,
     //licenseType: sql.ElasticPoolLicenseType.BasePrice,
     //zoneRedundant: isPrd,
   });
@@ -322,9 +322,16 @@ export default ({
     new sql.ServerKey(`${sqlName}-serverKey`, {
       resourceGroupName: group.resourceGroupName,
       serverName: sqlName,
-      keyName: encryptKey.apply((c) => c!.name),
       serverKeyType: "AzureKeyVault",
+      keyName: encryptKey.apply((c) => c!.name),
       uri: encryptKey.apply((c) => `${c!.properties.vaultUrl}/keys/${c!.name}`),
+    });
+
+    new sql.EncryptionProtector(`${sqlName}-encryptionProtector`, {
+      resourceGroupName: group.resourceGroupName,
+      serverName: sqlName,
+      serverKeyType: "AzureKeyVault",
+      autoRotationEnabled: true,
     });
   }
 
