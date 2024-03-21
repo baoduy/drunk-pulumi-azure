@@ -1,11 +1,11 @@
-import * as keyvault from '@pulumi/azure-native/keyvault';
-import { Input, Resource } from '@pulumi/pulumi';
+import * as keyvault from "@pulumi/azure-native/keyvault";
+import { Input, output, Resource } from "@pulumi/pulumi";
 
-import { KeyVaultInfo } from '../types';
-import { getSecretName } from '../Common/Naming';
-import { replaceAll } from '../Common/Helpers';
+import { KeyVaultInfo } from "../types";
+import { getSecretName } from "../Common/Naming";
+import { replaceAll } from "../Common/Helpers";
 
-import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -34,11 +34,11 @@ export const addKey = ({
   vaultInfo,
   tags,
   dependsOn,
-}: Omit<SecretProps, 'value' | 'contentType'>) => {
+}: Omit<SecretProps, "value" | "contentType">) => {
   const n = getSecretName(name);
 
   return new keyvault.Key(
-    replaceAll(name, '.', '-'),
+    replaceAll(name, ".", "-"),
     {
       keyName: n,
       vaultName: vaultInfo.name,
@@ -46,21 +46,21 @@ export const addKey = ({
       //https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.keyvault.webkey?view=azure-dotnet-legacy
       properties: {
         keySize: 2048,
-        kty: 'RSA',
+        kty: "RSA",
         keyOps: [
-          'decrypt',
-          'encrypt',
-          'sign',
-          'verify',
-          'wrapKey',
-          'unwrapKey',
+          "decrypt",
+          "encrypt",
+          "sign",
+          "verify",
+          "wrapKey",
+          "unwrapKey",
         ],
         //curveName: 'P512',
         attributes: { enabled: true },
       },
       tags,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
@@ -74,6 +74,11 @@ export const getKey = async ({
   const n = nameFormatted ? name : getSecretName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getKey(n, version);
+};
+
+export const getEncryptionKey = (name: string, vaultInfo: KeyVaultInfo) => {
+  const n = `${name}-encrypt-key`;
+  return output(getKeyVaultBase(vaultInfo.name).getOrCreateKey(n));
 };
 
 /** Get Secret */
@@ -98,11 +103,11 @@ interface KeyResult {
 
 /** Convert VaultId to VaultInfo */
 export const parseKeyUrl = (keyUrl: string): KeyResult => {
-  const splits = keyUrl.split('/');
+  const splits = keyUrl.split("/");
   return {
     keyIdentityUrl: keyUrl,
     name: splits[4],
-    version: splits.length > 4 ? splits[5] : '',
+    version: splits.length > 4 ? splits[5] : "",
     vaultUrl: `https://${splits[2]}`,
   };
 };
