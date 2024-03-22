@@ -1,4 +1,4 @@
-import { currentEnv, defaultScope } from '../Common/AzureEnv';
+import { currentEnv } from '../Common/AzureEnv';
 import Role, { getRoleName, RoleNameType } from './Role';
 import { getAdoIdentity } from './Identities/AzDevOps';
 import { addUserToGroup } from './Group';
@@ -24,37 +24,32 @@ const envRoleConfig = {
 export type EnvRoleNamesType = { [k in keyof typeof envRoleConfig]: string };
 
 export const getEnvRoleNames = (
-  includeOrganization = true
 ): EnvRoleNamesType => ({
-  readOnly: getRoleName({ ...envRoleConfig.readOnly, includeOrganization }),
+  readOnly: getRoleName({ ...envRoleConfig.readOnly,  }),
   contributor: getRoleName({
-    ...envRoleConfig.contributor,
-    includeOrganization,
+    ...envRoleConfig.contributor
   }),
-  admin: getRoleName({ ...envRoleConfig.admin, includeOrganization }),
+  admin: getRoleName({ ...envRoleConfig.admin,  }),
 });
 
-export default (includeOrganization = true) => {
+export default () => {
   //Admin
   const adminGroup =  Role({
     ...envRoleConfig.admin,
-    includeOrganization,
-    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+    //permissions: [{ roleName: 'Reader', scope: defaultScope }],
   });
 
   //Contributor
  const contributor= Role({
     ...envRoleConfig.contributor,
-    includeOrganization,
-    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+    //permissions: [{ roleName: 'Reader', scope: defaultScope }],
     members:[adminGroup.objectId],
   });
 
   //ReadOnly
    Role({
     ...envRoleConfig.readOnly,
-    includeOrganization,
-    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+    //permissions: [{ roleName: 'Reader', scope: defaultScope }],
      members:[contributor.objectId],
   });
 
@@ -66,5 +61,5 @@ export default (includeOrganization = true) => {
     objectId: ado.principal.objectId,
   });
 
-  return getEnvRoleNames(includeOrganization);
+  return getEnvRoleNames();
 };

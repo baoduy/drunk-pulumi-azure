@@ -13,8 +13,6 @@ interface RoleProps {
   members?: Input<string>[];
   owners?: Input<Input<string>[]>;
   permissions?: Array<GroupPermissionProps>;
-
-  includeOrganization?: boolean;
 }
 
 export type RoleNameType = Pick<
@@ -24,7 +22,6 @@ export type RoleNameType = Pick<
   | 'appName'
   | 'moduleName'
   | 'roleName'
-  | 'includeOrganization'
 >;
 
 export const getRoleName = ({
