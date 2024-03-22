@@ -32,21 +32,17 @@ export const getRoleName = ({
   location = 'GLB',
   appName,
   moduleName,
-  roleName,
-  includeOrganization = true,
+  roleName
 }: RoleNameType) => {
-  const prefix = includeOrganization ? `${organization} ROL` : 'ROL';
-
-  const e = env === Environments.Prd ? 'prod' : 'staging';
+  const prefix = `${organization} ROL`;
 
   return moduleName
-    ? `${prefix} ${e} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
-    : `${prefix} ${e} ${location} ${appName} ${roleName}`.toUpperCase();
+    ? `${prefix} ${env} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
+    : `${prefix} ${env} ${location} ${appName} ${roleName}`.toUpperCase();
 };
 
 export default ({ members, owners, permissions, ...others }: RoleProps) => {
   const name = getRoleName(others);
-
   return output(
     adGroupCreator({
       name,

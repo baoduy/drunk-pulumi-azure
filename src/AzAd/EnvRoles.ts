@@ -35,23 +35,27 @@ export const getEnvRoleNames = (
 });
 
 export default (includeOrganization = true) => {
-  //ReadOnly
-   Role({
-    ...envRoleConfig.readOnly,
-    includeOrganization,
-    permissions: [{ roleName: 'Reader', scope: defaultScope }],
-  });
-  //Contributor
-   Role({
-    ...envRoleConfig.contributor,
-    includeOrganization,
-    permissions: [{ roleName: 'Reader', scope: defaultScope }],
-  });
   //Admin
   const adminGroup =  Role({
     ...envRoleConfig.admin,
     includeOrganization,
     permissions: [{ roleName: 'Reader', scope: defaultScope }],
+  });
+
+  //Contributor
+ const contributor= Role({
+    ...envRoleConfig.contributor,
+    includeOrganization,
+    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+    members:[adminGroup.objectId],
+  });
+
+  //ReadOnly
+   Role({
+    ...envRoleConfig.readOnly,
+    includeOrganization,
+    permissions: [{ roleName: 'Reader', scope: defaultScope }],
+     members:[contributor.objectId],
   });
 
   //Add Global ADO Identity as Admin

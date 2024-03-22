@@ -2,7 +2,6 @@ import * as native from "@pulumi/azure-native";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
 import {
-  currentPrincipal,
   subscriptionId,
   tenantId,
 } from "../Common/AzureEnv";
@@ -14,7 +13,6 @@ import { BasicResourceArgs } from "../types";
 import { addCustomSecret } from "./CustomHelper";
 import { grantVaultRbacPermission } from "./VaultPermissions";
 import VaultAccess, { VaultAccessType } from "./VaultAccess";
-import { addUserToGroup } from "../AzAd/Group";
 
 interface Props extends BasicResourceArgs {
   //nameConvention?: ConventionProps | false;
@@ -34,10 +32,7 @@ export default ({
   name,
   //nameConvention,
   group,
-  auth = {
-    includeOrganization: true,
-    //permissions: new Array<PermissionProps>(),
-  },
+  auth={},
   createDefaultValues,
   network,
   ...others
@@ -119,13 +114,6 @@ export default ({
     objectId: adminGroup.objectId,
     permission: "ReadWrite",
     principalType: "Group",
-  });
-
-  //Add current principal to the admin group
-  addUserToGroup({
-    name: `${name}-current-principal-as-admin`,
-    objectId: currentPrincipal,
-    groupObjectId: adminGroup.objectId,
   });
 
   //To Vault Info

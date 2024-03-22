@@ -7,8 +7,6 @@ import { EnvRoleNamesType } from '../AzAd/EnvRoles';
 export type VaultAccessType = {
   /** Grant permission of this group into Environment Roles groups*/
   envRoleNames?: EnvRoleNamesType;
-  //permissions?: Array<PermissionProps>;
-  includeOrganization?: boolean;
 };
 
 interface Props {
@@ -24,7 +22,6 @@ export default ({ name, auth }: Props) => {
         env: currentEnv,
         appName: `${name}-vault`,
         roleName: 'ReadOnly',
-        includeOrganization: auth.includeOrganization,
       });
 
   const adminGroup = auth.envRoleNames
@@ -33,31 +30,7 @@ export default ({ name, auth }: Props) => {
         env: currentEnv,
         appName: `${name}-vault`,
         roleName: 'Admin',
-        includeOrganization: auth.includeOrganization,
       });
-
-  //Add current service principal in
-  // if (auth.permissions == undefined) {
-  //   auth.permissions = [
-  //     // {
-  //     //   objectId: currentServicePrincipal,
-  //     //   permission: 'ReadWrite',
-  //     // },
-  //   ];
-  // }
-
-  //Add Permission to Groups
-  // auth.permissions.forEach(
-  //   ({ objectId, applicationId, permission, ...others }, index) =>
-  //     new azuread.GroupMember(`${name}-${permission}-${index}`, {
-  //       groupObjectId:
-  //         permission === 'ReadOnly'
-  //           ? readOnlyGroup.objectId
-  //           : adminGroup.objectId,
-  //       memberObjectId: objectId ?? applicationId,
-  //       ...others,
-  //     })
-  // );
 
   return { readOnlyGroup, adminGroup };
 };
