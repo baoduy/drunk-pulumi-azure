@@ -160,9 +160,7 @@ export default ({
 
       identity: { type: "SystemAssigned" },
       administratorLogin: auth?.adminLogin,
-      administratorLoginPassword: auth.azureAdOnlyAuthentication
-        ? undefined
-        : auth?.password,
+      administratorLoginPassword: auth?.password,
 
       administrators:
         auth?.enableAdAdministrator && adminGroup
