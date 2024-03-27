@@ -18,6 +18,7 @@ const rs = (async () => {
     name: "sql-server-code",
     group,
     vaultInfo: vault,
+    enableEncryption: true,
     auth: {
       azureAdOnlyAuthentication: true,
       adminLogin: "sql-admin",
