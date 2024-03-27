@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { authorization } from "@pulumi/azure-native";
 import RG from "@drunk-pulumi/azure/Core/ResourceGroup";
 import Vault from "@drunk-pulumi/azure/KeyVault";
-import SqlServer from "@drunk-pulumi/azure/Sql";
+import MySql from "@drunk-pulumi/azure/MySql";
 
 const rs = (async () => {
   const group = RG({
@@ -14,7 +14,7 @@ const rs = (async () => {
     group,
   }).toVaultInfo();
 
-  const sqlServer = SqlServer({
+  const sqlServer = MySql({
     name: "sql-server-code",
     group,
     vaultInfo: vault,

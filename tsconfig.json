@@ -44,6 +44,7 @@
     "src/AzAd/Role.ts",
     "src/AzAd/RoleAssignment.ts",
     "src/AzAd/RolesBuiltIn.ts",
+    "src/AzAd/UserIdentity.ts",
     "src/Cdn/index.ts",
     "src/Certificate/index.ts",
     "src/Certificate/p12.ts",
