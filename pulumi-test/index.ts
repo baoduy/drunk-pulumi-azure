@@ -14,18 +14,18 @@ const rs = (async () => {
     group,
   }).toVaultInfo();
 
-  const sqlServer = MySql({
-    name: "sql-server-code",
-    group,
-    vaultInfo: vault,
-    enableEncryption: true,
-    auth: {
-      azureAdOnlyAuthentication: true,
-      adminLogin: "sql-admin",
-      password: "L^]Ka>d]ddzrzUTi8t98",
-    },
-    databases: [{ name: "db-code-01", sku: "Basic" }],
-  });
+  // const sqlServer = MySql({
+  //   name: "sql-server-code",
+  //   group,
+  //   vaultInfo: vault,
+  //   enableEncryption: true,
+  //   auth: {
+  //     azureAdOnlyAuthentication: true,
+  //     adminLogin: "sql-admin",
+  //     password: "L^]Ka>d]ddzrzUTi8t98",
+  //   },
+  //   databases: [{ name: "db-code-01", sku: "Basic" }],
+  // });
 
   return group;
 })();
