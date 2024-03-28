@@ -12,6 +12,7 @@ import { EnvRoleNamesType } from "../AzAd/EnvRoles";
 import { getEncryptionKey } from "../KeyVault/Helper";
 import UserIdentity from "../AzAd/UserIdentity";
 import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
+import { RandomString } from "@pulumi/random";
 
 export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
@@ -58,7 +59,15 @@ export default ({
 }: MySqlProps) => {
   name = getMySqlName(name);
 
-  const username = auth?.adminLogin ?? `My${name}SqlUser`.toUpperCase();
+  const username =
+    auth?.adminLogin ||
+    new RandomString(name, {
+      special: false,
+      length: 5,
+      lower: true,
+      upper: false,
+    }).result.apply((r) => `mysql${r}`);
+
   const password =
     auth?.password ??
     randomPassword({

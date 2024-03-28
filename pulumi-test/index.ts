@@ -15,7 +15,7 @@ const rs = (async () => {
   }).toVaultInfo();
 
   const sqlServer = MySql({
-    name: "code",
+    name: "drunk",
     group,
     vaultInfo: vault,
     enableEncryption: true,
