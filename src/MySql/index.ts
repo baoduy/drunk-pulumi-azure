@@ -11,6 +11,7 @@ import Role from "../AzAd/Role";
 import { EnvRoleNamesType } from "../AzAd/EnvRoles";
 import { getEncryptionKey } from "../KeyVault/Helper";
 import UserIdentity from "../AzAd/UserIdentity";
+import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 
 export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
@@ -57,7 +58,7 @@ export default ({
 }: MySqlProps) => {
   name = getMySqlName(name);
 
-  const username = auth?.adminLogin ?? `${name}-MySqlAdmin`;
+  const username = auth?.adminLogin ?? `My${name}SqlUser`.toUpperCase();
   const password =
     auth?.password ??
     randomPassword({
@@ -74,6 +75,15 @@ export default ({
     ? UserIdentity({ name, group })
     : undefined;
 
+  if (userIdentity) {
+    //Allows to Read Key Vault
+    grantVaultAccessToIdentity({
+      name,
+      identity: userIdentity.principalId.apply((i) => ({ principalId: i })),
+      vaultInfo,
+    });
+  }
+
   const mySql = new dbformysql.Server(
     name,
     {
@@ -88,6 +98,7 @@ export default ({
       //     [userAssignedIdentityId]: {},
       //   },
       // },
+
       administratorLogin: username,
       administratorLoginPassword: password,
       dataEncryption: encryptKey

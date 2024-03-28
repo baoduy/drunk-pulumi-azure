@@ -19,6 +19,7 @@ import {
   DefaultManagementRules,
   ManagementRules,
 } from "./ManagementRules";
+import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 
 type ContainerProps = {
   name: string;
@@ -310,13 +311,8 @@ export default ({
   //Add Key to
   stg.id.apply(async (id) => {
     if (!id) return;
-
-    stg.identity.apply((i) =>
-      console.log(
-        "Add this ID into Key Vault ReadOnly Group to allows custom key encryption:",
-        i!.principalId,
-      ),
-    );
+    //Allows to Read Key Vault
+    grantVaultAccessToIdentity({ name, identity: stg.identity, vaultInfo });
 
     const keys = (
       await storage.listStorageAccountKeys({

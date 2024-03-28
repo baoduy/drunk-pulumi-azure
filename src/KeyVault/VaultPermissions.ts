@@ -5,6 +5,8 @@ import * as azuread from "@pulumi/azuread";
 import { addCustomSecret } from "./CustomHelper";
 import { KeyVaultInfo } from "../types";
 import { getAdoIdentity } from "../AzAd/Identities/AzDevOps";
+import { getVaultRoleNames } from "./Helper";
+import { addMemberToGroup, getAdGroup } from "../AzAd/Group";
 
 export interface PermissionProps {
   /** The object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. */
@@ -81,6 +83,25 @@ const grantVaultRbacPermission = ({
   }
 };
 
+export const grantVaultAccessToIdentity = ({
+  name,
+  identity,
+  vaultInfo,
+}: {
+  name: string;
+  identity: pulumi.Output<{ principalId: string } | undefined>;
+  vaultInfo: KeyVaultInfo;
+}) =>
+  identity.apply(async (i) => {
+    if (!i) return;
+    const vaultRole = await getVaultRoleNames(vaultInfo);
+    addMemberToGroup({
+      name: `${name}-identity-readAccess-${vaultInfo.name}`,
+      objectId: i.principalId,
+      groupObjectId: getAdGroup(vaultRole!.readOnly).objectId,
+    });
+  });
+
 export const grantVaultPermissionToRole = ({
   name,
   vaultInfo,
@@ -115,18 +136,18 @@ export const grantVaultPermissionToRole = ({
   grantVaultRbacPermission({
     name: `${name}-Admin-Ado`,
     scope: vaultInfo.id,
-    objectId: ado.objectId,
+    objectId: ado.principal.objectId,
     permission: "ReadWrite",
     principalType: "ServicePrincipal",
   });
 
   //Add RoleNames to vault
   addCustomSecret({
-    name: "_MyRoleNames",
+    name: "VaultRoleNames",
     value: pulumi
       .output({
-        adminGroup: roles.adminGroup.displayName,
-        readOnlyGroup: roles.readOnlyGroup.displayName,
+        admin: roles.adminGroup.displayName,
+        readOnly: roles.readOnlyGroup.displayName,
       })
       .apply((role) => JSON.stringify(role)),
     vaultInfo,

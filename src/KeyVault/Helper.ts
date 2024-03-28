@@ -1,11 +1,11 @@
 import * as keyvault from "@pulumi/azure-native/keyvault";
 import { Input, output, Resource } from "@pulumi/pulumi";
-
 import { KeyVaultInfo } from "../types";
 import { getSecretName } from "../Common/Naming";
 import { replaceAll } from "../Common/Helpers";
-
 import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
+import { getRoleName } from "../AzAd/Role";
+import * as VaultRole from "../AzAd/KeyVaultRoles";
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -110,4 +110,17 @@ export const parseKeyUrl = (keyUrl: string): KeyResult => {
     version: splits.length > 4 ? splits[5] : "",
     vaultUrl: `https://${splits[2]}`,
   };
+};
+
+export const getVaultRoleNames = async (nameOrInfo: string | KeyVaultInfo) => {
+  if (typeof nameOrInfo === "string") {
+    return VaultRole.getVaultRoleNames(nameOrInfo);
+  }
+  const value = await getSecret({
+    name: "VaultRoleNames",
+    vaultInfo: nameOrInfo,
+  });
+  return value
+    ? (JSON.parse(value.value!) as { readOnly: string; admin: string })
+    : undefined;
 };

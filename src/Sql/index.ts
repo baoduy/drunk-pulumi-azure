@@ -23,6 +23,7 @@ import privateEndpointCreator from "../VNet/PrivateEndpoint";
 import sqlDbCreator, { SqlDbProps } from "./SqlDb";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import Role from "../AzAd/Role";
+import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -186,6 +187,9 @@ export default ({
       protect: lock,
     },
   );
+
+  //Allows to Read Key Vault
+  grantVaultAccessToIdentity({ name, identity: sqlServer.identity, vaultInfo });
 
   if (lock) {
     Locker({ name: sqlName, resourceId: sqlServer.id, dependsOn: sqlServer });

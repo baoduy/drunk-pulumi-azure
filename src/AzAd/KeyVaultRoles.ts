@@ -1,7 +1,7 @@
 import { currentEnv } from "../Common/AzureEnv";
 import Role, { getRoleName, RoleNameType } from "./Role";
 import { getAdoIdentity } from "./Identities/AzDevOps";
-import { addUserToGroup } from "./Group";
+import { addMemberToGroup } from "./Group";
 
 const getConfig = (name: string) => ({
   readOnly: {
@@ -43,7 +43,7 @@ export const createVaultRoles = (name: string) => {
 
   //Add Global ADO Identity as Admin
   const ado = getAdoIdentity();
-  addUserToGroup({
+  addMemberToGroup({
     name: "ado-admin-role",
     groupObjectId: adminGroup.objectId,
     objectId: ado.principal.objectId,
