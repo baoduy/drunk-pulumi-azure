@@ -14,6 +14,8 @@ export interface ResourceGroupInfo {
 export interface ConventionProps {
   prefix?: string;
   suffix?: string;
+  /**Whether include the Azure Region name at the end of the name or not*/
+  includeRegion?: boolean;
   /**Whether include the organization name at the end of the name or not*/
   includeOrgName?: boolean;
 }

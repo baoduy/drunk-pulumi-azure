@@ -2,9 +2,11 @@ import { replaceAll } from './Helpers';
 import { ConventionProps, ResourceGroupInfo } from '../types';
 import { Input } from '@pulumi/pulumi';
 import { organization, stack } from './StackEnv';
+import {currentLocationCode} from "./AzureEnv";
 
-export const resourceConvention = {
+export const resourceConvention:ConventionProps = {
   prefix: stack,
+  includeRegion: true,
   suffix: undefined, //This may be specified by each resource name
 };
 
@@ -17,6 +19,10 @@ const getName = (name: string, convention: ConventionProps): string => {
   //Add prefix
   if (convention.prefix && !name.startsWith(convention.prefix))
     name = convention.prefix + '-' + name;
+
+  //Region
+  if (convention.includeRegion && currentLocationCode && !name.includes(currentLocationCode))
+    name = name + '-' + currentLocationCode;
 
   //Organization
   if (convention.includeOrgName && !name.includes(organization))

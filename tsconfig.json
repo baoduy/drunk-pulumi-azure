@@ -57,6 +57,7 @@
     "src/Common/Helpers.ts",
     "src/Common/Location.ts",
     "src/Common/LocationBuiltIn.ts",
+    "src/Common/Naming/AzureRegions.ts",
     "src/Common/Naming/index.ts",
     "src/Common/ResourceEnv.ts",
     "src/Common/StackEnv.ts",

@@ -100,7 +100,7 @@ export const grantVaultAccessToIdentity = ({
     addMemberToGroup({
       name: `${name}-identity-readAccess-${vaultInfo.name}`,
       objectId: i.principalId,
-      groupObjectId: getAdGroup(vaultRole!.readOnly).objectId,
+      groupObjectId: getAdGroup(vaultRole.readOnly).objectId,
     });
   });
 
