@@ -5,17 +5,18 @@ import Vault from "@drunk-pulumi/azure/KeyVault";
 import MySql from "@drunk-pulumi/azure/MySql";
 
 const rs = (async () => {
+  const suffix = 'codedx'
   const group = RG({
-    name: "sql-code",
+    name: `sql-${suffix}`,
   }).toGroupInfo();
 
   const vault = Vault({
-    name: "code",
+    name: suffix,
     group,
   }).toVaultInfo();
 
   const sqlServer = MySql({
-    name: "drunk",
+    name: suffix,
     group,
     vaultInfo: vault,
     enableEncryption: true,

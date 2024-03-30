@@ -95,6 +95,8 @@ export const grantVaultAccessToIdentity = ({
   identity.apply(async (i) => {
     if (!i) return;
     const vaultRole = await getVaultRoleNames(vaultInfo);
+    if(!vaultRole)return;
+
     addMemberToGroup({
       name: `${name}-identity-readAccess-${vaultInfo.name}`,
       objectId: i.principalId,
