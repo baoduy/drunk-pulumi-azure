@@ -16,17 +16,17 @@ const getName = (name: string, convention: ConventionProps): string => {
   if (!name) return name;
   name = replaceAll(name, ' ', '-');
 
-  //Add prefix
-  if (convention.prefix && !name.startsWith(convention.prefix))
-    name = convention.prefix + '-' + name;
+  //Organization
+  if (convention.includeOrgName && !name.includes(organization))
+    name = name + '-' + organization;
 
   //Region
   if (convention.includeRegion && currentLocationCode && !name.includes(currentLocationCode))
     name = name + '-' + currentLocationCode;
 
-  //Organization
-  if (convention.includeOrgName && !name.includes(organization))
-    name = name + '-' + organization;
+  //Add prefix
+  if (convention.prefix && !name.startsWith(convention.prefix))
+    name = convention.prefix + '-' + name;
 
   //Add the suffix
   if (convention.suffix && !name.endsWith(convention.suffix))
