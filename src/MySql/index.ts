@@ -102,7 +102,11 @@ export default ({
       serverName: name,
       ...group,
       version,
-      storage: { storageSizeGB },
+      storage: {
+        storageSizeGB,
+        autoGrow: isPrd ? "Enabled" : "Disabled",
+        autoIoScaling: isPrd ? "Enabled" : "Disabled",
+      },
 
       // identity: {
       //   type: dbformysql.ManagedServiceIdentityType.UserAssigned,
