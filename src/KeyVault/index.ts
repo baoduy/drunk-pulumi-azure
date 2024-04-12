@@ -1,6 +1,6 @@
 import * as native from "@pulumi/azure-native";
 import { enums } from "@pulumi/azure-native/types";
-import { Input, output } from "@pulumi/pulumi";
+import { Input } from "@pulumi/pulumi";
 import { subscriptionId, tenantId } from "../Common/AzureEnv";
 import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";

@@ -4,7 +4,6 @@ import { KeyVaultInfo } from "../types";
 import { getSecretName } from "../Common/Naming";
 import { replaceAll } from "../Common/Helpers";
 import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
-import { getRoleName } from "../AzAd/Role";
 import * as VaultRole from "../AzAd/KeyVaultRoles";
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
@@ -60,7 +59,7 @@ export const addKey = ({
       },
       tags,
     },
-    { dependsOn },
+    { dependsOn }
   );
 };
 

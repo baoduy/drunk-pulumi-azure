@@ -28,7 +28,7 @@ export default ({ name, group = global.groupInfo, vaultAccess }: Props) => {
     //https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
     const n = `${name}-sp`;
 
-    const sp = new azureAd.ServicePrincipal(n, {
+    new azureAd.ServicePrincipal(n, {
       //applicationId: '205478c0-bd83-4e1b-a9d6-db63a3e1e1c8',
       clientId: "205478c0-bd83-4e1b-a9d6-db63a3e1e1c8",
     });

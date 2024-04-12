@@ -7,6 +7,7 @@ import { randomPassword } from "../Core/Random";
 import * as inputs from "@pulumi/azure-native/types/input";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { RandomString } from "@pulumi/random";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
 
 export interface PostgresProps extends BasicResourceArgs {
   // auth: {
@@ -20,6 +21,9 @@ export interface PostgresProps extends BasicResourceArgs {
   databases?: Array<string>;
   network?: {
     allowsPublicAccess?: boolean;
+    privateLink?: {
+      subnetId: pulumi.Input<string>;
+    };
     firewallRules?: Array<{
       startIpAddress: string;
       endIpAddress: string;
@@ -89,7 +93,7 @@ export default ({
       dependsOn,
       protect: true,
       ignoreChanges: ["administratorLogin", "dataEncryption"],
-    },
+    }
   );
 
   if (network) {
@@ -101,7 +105,7 @@ export default ({
             serverName: postgres.name,
             ...group,
             ...f,
-          }),
+          })
       );
     }
 
@@ -113,6 +117,17 @@ export default ({
         startIpAddress: "0.0.0.0",
         endIpAddress: "255.255.255.255",
       });
+
+    if (network.privateLink) {
+      PrivateEndpoint({
+        name,
+        group,
+        resourceId: postgres.id,
+        privateDnsZoneName: "postgres.database.azure.com",
+        linkServiceGroupIds: ["postgresql"],
+        subnetId: network.privateLink.subnetId,
+      });
+    }
   }
 
   if (vaultInfo) {
@@ -140,8 +155,8 @@ export default ({
             databaseName: d,
             ...group,
           },
-          { dependsOn: postgres, protect: true },
-        ),
+          { dependsOn: postgres, protect: true }
+        )
     );
   }
 

@@ -13,6 +13,7 @@ import { getEncryptionKey } from "../KeyVault/Helper";
 import UserIdentity from "../AzAd/UserIdentity";
 import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 import { RandomString } from "@pulumi/random";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
 
 export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
@@ -25,12 +26,14 @@ export interface MySqlProps extends BasicResourceArgs {
     password?: pulumi.Input<string>;
   };
   sku?: pulumi.Input<inputs.dbformysql.SkuArgs>;
-
   version?: dbformysql.ServerVersion;
   storageSizeGB?: number;
   databases?: Array<string>;
   network?: {
     allowsPublicAccess?: boolean;
+    privateLink?: {
+      subnetId: pulumi.Input<string>;
+    };
     firewallRules?: Array<{
       startIpAddress: string;
       endIpAddress: string;
@@ -116,7 +119,9 @@ export default ({
             primaryUserAssignedIdentityId: userIdentity?.id,
             primaryKeyURI: encryptKey.apply(
               (c) =>
-                `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${c!.properties.version}`,
+                `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${
+                  c!.properties.version
+                }`
             ),
           }
         : { type: dbformysql.DataEncryptionType.SystemManaged },
@@ -131,13 +136,12 @@ export default ({
         standbyAvailabilityZone: "3",
       },
       availabilityZone: "1",
-      //network: {},
     },
     {
       dependsOn,
       protect: true,
       ignoreChanges: ["administratorLogin", "dataEncryption"],
-    },
+    }
   );
 
   if (auth?.enableAdAdministrator) {
@@ -164,7 +168,7 @@ export default ({
             serverName: mySql.name,
             ...group,
             ...f,
-          }),
+          })
       );
     }
 
@@ -176,6 +180,17 @@ export default ({
         startIpAddress: "0.0.0.0",
         endIpAddress: "255.255.255.255",
       });
+
+    if (network.privateLink) {
+      PrivateEndpoint({
+        name,
+        group,
+        resourceId: mySql.id,
+        privateDnsZoneName: "mysql.database.azure.com",
+        linkServiceGroupIds: ["mysql"],
+        subnetId: network.privateLink.subnetId,
+      });
+    }
   }
 
   if (vaultInfo) {
@@ -203,8 +218,8 @@ export default ({
             databaseName: d,
             ...group,
           },
-          { dependsOn: mySql, protect: true },
-        ),
+          { dependsOn: mySql, protect: true }
+        )
     );
   }
 

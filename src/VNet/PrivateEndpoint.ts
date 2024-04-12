@@ -4,6 +4,7 @@ import { BasicResourceArgs, PrivateLinkProps } from "../types";
 import { getVnetIdFromSubnetId } from "./Helper";
 import PrivateZone, { linkVnetToPrivateDns, addARecord } from "./PrivateDns";
 import { getResourceInfoFromId } from "../Common/AzureEnv";
+import { getPrivateEndpointName } from "../Common/Naming";
 
 interface Props extends BasicResourceArgs, PrivateLinkProps {
   resourceId: Input<string>;
@@ -20,6 +21,8 @@ export default ({
   useGlobalDnsZone,
   linkServiceGroupIds,
 }: Props) => {
+  name = getPrivateEndpointName(name);
+
   const endpoint = new network.PrivateEndpoint(name, {
     privateEndpointName: name,
     ...group,
