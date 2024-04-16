@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "@drunk-pulumi/azure-providers": "^0.0.5",
-    "@pulumi/azure-native": "^2.32.0",
+    "@pulumi/azure-native": "^2.33.0",
     "@pulumi/azuread": "5.47.2",
     "@pulumi/pulumi": "^3.111.1",
     "@pulumi/random": "^4.16.0",
