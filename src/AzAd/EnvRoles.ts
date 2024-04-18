@@ -24,9 +24,9 @@ const envRoleConfig = {
 export type EnvRoleNamesType = { [k in keyof typeof envRoleConfig]: string };
 
 export const getEnvRoleNames = ({
-  addAdoIdentity = true,
+  addAdoIdentityMember = true,
 }: {
-  addAdoIdentity: boolean;
+  addAdoIdentityMember?: boolean;
 }): EnvRoleNamesType => ({
   readOnly: getRoleName({ ...envRoleConfig.readOnly }),
   contributor: getRoleName({
@@ -56,7 +56,7 @@ export const createEnvRoles = () => {
     members: [contributorGroup.objectId],
   });
 
-  if (addAdoIdentity) {
+  if (addAdoIdentityMember) {
     //Add Global ADO Identity as Admin
     const ado = getAdoIdentity();
     addMemberToGroup({
