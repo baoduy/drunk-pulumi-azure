@@ -50,7 +50,7 @@ export default ({
   databases,
   vaultInfo,
   dependsOn,
-  lock:true,
+  lock = true,
 }: PostgresProps) => {
   name = getPostgresqlName(name);
 

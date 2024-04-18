@@ -1,10 +1,9 @@
-import * as authorization from '@pulumi/azure-native/authorization';
-import * as pulumi from '@pulumi/pulumi';
-import { Input, Resource } from '@pulumi/pulumi';
+import * as authorization from "@pulumi/azure-native/authorization";
+import { CustomResource } from "@pulumi/pulumi";
 
 interface Props {
   name: string;
-  resource: Input<Resource>;
+  resource: CustomResource;
   level?: authorization.LockLevel;
   protect?: boolean;
 }
@@ -12,7 +11,7 @@ interface Props {
 /** Lock Delete from Resource group level.*/
 export default ({
   name,
-  resourceId,
+  resource,
   level = authorization.LockLevel.CanNotDelete,
   protect = true,
 }: Props) => {
@@ -26,6 +25,6 @@ export default ({
       scope: resource.id,
       notes: `Lock ${name} from ${level}`,
     },
-    { dependsOn: resource, protect }
+    { dependsOn: resource, protect },
   );
 };

@@ -40,7 +40,7 @@ export interface MySqlProps extends BasicResourceArgs {
       endIpAddress: string;
     }>;
   };
-  lock?:boolean
+  lock?: boolean;
 }
 
 export default ({
@@ -61,7 +61,7 @@ export default ({
   databases,
   vaultInfo,
   dependsOn,
-  lock:true,
+  lock = true,
 }: MySqlProps) => {
   name = getMySqlName(name);
 
