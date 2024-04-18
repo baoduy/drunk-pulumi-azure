@@ -499,7 +499,6 @@ export default async ({
               }
             : undefined,
       },
-
     },
     {
       protect: lock,
@@ -513,7 +512,7 @@ export default async ({
   );
 
   if (lock) {
-    Locker({ name: aksName, resourceId: aks.id, dependsOn: aks });
+    Locker({ name: aksName, resource: aks });
   }
 
   if (nodePools) {

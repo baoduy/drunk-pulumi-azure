@@ -1,29 +1,29 @@
-import * as sql from "@pulumi/azure-native/sql";
-import { all, Input, interpolate, Output } from "@pulumi/pulumi";
-import { getEncryptionKey } from "../KeyVault/Helper";
-import { EnvRoleNamesType } from "../AzAd/EnvRoles";
-import { getAdGroup } from "../AzAd/Group";
-import { roleAssignment } from "../AzAd/RoleAssignment";
+import * as sql from '@pulumi/azure-native/sql';
+import { all, Input, interpolate, Output } from '@pulumi/pulumi';
+import { getEncryptionKey } from '../KeyVault/Helper';
+import { EnvRoleNamesType } from '../AzAd/EnvRoles';
+import { getAdGroup } from '../AzAd/Group';
+import { roleAssignment } from '../AzAd/RoleAssignment';
 import {
   currentEnv,
   isPrd,
   subscriptionId,
   tenantId,
-} from "../Common/AzureEnv";
-import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
-import Locker from "../Core/Locker";
+} from '../Common/AzureEnv';
+import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
+import Locker from '../Core/Locker';
 import {
   BasicResourceArgs,
   BasicResourceResultProps,
   KeyVaultInfo,
   PrivateLinkProps,
-} from "../types";
-import { convertToIpRange } from "../VNet/Helper";
-import privateEndpointCreator from "../VNet/PrivateEndpoint";
-import sqlDbCreator, { SqlDbProps } from "./SqlDb";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import Role from "../AzAd/Role";
-import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
+} from '../types';
+import { convertToIpRange } from '../VNet/Helper';
+import privateEndpointCreator from '../VNet/PrivateEndpoint';
+import sqlDbCreator, { SqlDbProps } from './SqlDb';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import Role from '../AzAd/Role';
+import { grantVaultAccessToIdentity } from '../KeyVault/VaultPermissions';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -31,7 +31,7 @@ interface ElasticPoolProps extends BasicResourceArgs {
   sqlName: Output<string>;
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
-  sku?: { name: "Standard" | "Basic"; capacity: ElasticPoolCapacityProps };
+  sku?: { name: 'Standard' | 'Basic'; capacity: ElasticPoolCapacityProps };
   lock?: boolean;
 }
 
@@ -41,7 +41,7 @@ const createElasticPool = ({
   sqlName,
   //Minimum is 50 GD
   maxSizeBytesGb = 50,
-  sku = { name: isPrd ? "Standard" : "Basic", capacity: 50 },
+  sku = { name: isPrd ? 'Standard' : 'Basic', capacity: 50 },
   lock = true,
 }: ElasticPoolProps): BasicResourceResultProps<sql.ElasticPool> => {
   //Create Sql Elastic
@@ -60,7 +60,7 @@ const createElasticPool = ({
     },
     perDatabaseSettings: {
       minCapacity: 0,
-      maxCapacity: sku.name === "Basic" ? 5 : sku.capacity,
+      maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
     },
     zoneRedundant: isPrd,
     //licenseType: sql.ElasticPoolLicenseType.BasePrice,
@@ -68,7 +68,7 @@ const createElasticPool = ({
   });
 
   if (lock) {
-    Locker({ name, resourceId: ep.id, dependsOn: ep });
+    Locker({ name, resource: ep });
   }
 
   return { name: elasticName, resource: ep };
@@ -89,12 +89,12 @@ interface Props extends BasicResourceArgs {
   };
 
   elasticPool?: {
-    name: "Standard" | "Basic";
+    name: 'Standard' | 'Basic';
     capacity: ElasticPoolCapacityProps;
   };
 
   databases: Array<
-    Omit<SqlDbProps, "sqlServerName" | "group" | "elasticPoolId" | "dependsOn">
+    Omit<SqlDbProps, 'sqlServerName' | 'group' | 'elasticPoolId' | 'dependsOn'>
   >;
 
   network?: {
@@ -103,7 +103,7 @@ interface Props extends BasicResourceArgs {
     subnetId?: Input<string>;
     ipAddresses?: Input<string>[];
     /** To enable Private Link need to ensure the subnetId is provided. */
-    privateLink?: Omit<PrivateLinkProps, "subnetId">;
+    privateLink?: Omit<PrivateLinkProps, 'subnetId'>;
   };
 
   vulnerabilityAssessment?: {
@@ -145,22 +145,22 @@ export default ({
     auth?.enableAdAdministrator || auth.azureAdOnlyAuthentication
       ? auth.envRoleNames
         ? getAdGroup(auth.envRoleNames.admin)
-        : Role({ env: currentEnv, roleName: "ADMIN", appName: "SQL" })
+        : Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
       : undefined;
 
-  const ignoreChanges = ["administratorLogin", "administrators"];
+  const ignoreChanges = ['administratorLogin', 'administrators'];
   if (auth.azureAdOnlyAuthentication)
-    ignoreChanges.push("administratorLoginPassword");
+    ignoreChanges.push('administratorLoginPassword');
 
   const sqlServer = new sql.Server(
     sqlName,
     {
       serverName: sqlName,
       ...group,
-      version: "12.0",
-      minimalTlsVersion: "1.2",
+      version: '12.0',
+      minimalTlsVersion: '1.2',
 
-      identity: { type: "SystemAssigned" },
+      identity: { type: 'SystemAssigned' },
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
 
@@ -185,14 +185,14 @@ export default ({
     {
       ignoreChanges,
       protect: lock,
-    },
+    }
   );
 
   //Allows to Read Key Vault
   grantVaultAccessToIdentity({ name, identity: sqlServer.identity, vaultInfo });
 
   if (lock) {
-    Locker({ name: sqlName, resourceId: sqlServer.id, dependsOn: sqlServer });
+    Locker({ name: sqlName, resource: sqlServer });
   }
 
   const ep = elasticPool
@@ -210,10 +210,10 @@ export default ({
         group,
         name,
         resourceId: sqlServer.id,
-        privateDnsZoneName: "privatelink.database.windows.net",
+        privateDnsZoneName: 'privatelink.database.windows.net',
         ...network.privateLink,
         subnetId: network.subnetId,
-        linkServiceGroupIds: ["sqlServer"],
+        linkServiceGroupIds: ['sqlServer'],
       });
     } else {
       //Link to Vnet
@@ -230,12 +230,12 @@ export default ({
 
   //Allow Public Ip Accessing
   if (network?.acceptAllInternetConnect) {
-    new sql.FirewallRule("accept-all-connection", {
-      firewallRuleName: "accept-all-connection",
+    new sql.FirewallRule('accept-all-connection', {
+      firewallRuleName: 'accept-all-connection',
       serverName: sqlServer.name,
       ...group,
-      startIpAddress: "0.0.0.0",
-      endIpAddress: "255.255.255.255",
+      startIpAddress: '0.0.0.0',
+      endIpAddress: '255.255.255.255',
     });
   } else if (network?.ipAddresses) {
     all(network.ipAddresses).apply((ips) =>
@@ -249,7 +249,7 @@ export default ({
           startIpAddress: ip.start,
           endIpAddress: ip.end,
         });
-      }),
+      })
     );
   }
 
@@ -258,9 +258,9 @@ export default ({
     if (vulnerabilityAssessment.logStorageId) {
       roleAssignment({
         name,
-        principalId: sqlServer.identity.apply((i) => i?.principalId || ""),
-        principalType: "ServicePrincipal",
-        roleName: "Storage Blob Data Contributor",
+        principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
+        principalType: 'ServicePrincipal',
+        roleName: 'Storage Blob Data Contributor',
         scope: vulnerabilityAssessment.logStorageId,
       });
     }
@@ -268,20 +268,20 @@ export default ({
     //Server Audit
     new sql.ExtendedServerBlobAuditingPolicy(name, {
       auditActionsAndGroups: [
-        "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
-        "FAILED_DATABASE_AUTHENTICATION_GROUP",
-        "BATCH_COMPLETED_GROUP",
+        'SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP',
+        'FAILED_DATABASE_AUTHENTICATION_GROUP',
+        'BATCH_COMPLETED_GROUP',
       ],
       serverName: sqlServer.name,
       ...group,
 
-      blobAuditingPolicyName: "default",
+      blobAuditingPolicyName: 'default',
       isAzureMonitorTargetEnabled: true,
       isStorageSecondaryKeyInUse: false,
       predicateExpression: "object_name = 'SensitiveData'",
       queueDelayMs: 4000,
       retentionDays: isPrd ? 30 : 6,
-      state: "Enabled",
+      state: 'Enabled',
       isDevopsAuditEnabled: true,
 
       storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
@@ -301,7 +301,7 @@ export default ({
 
       storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
       storageEndpoint: vulnerabilityAssessment.storageEndpoint,
-      state: "Enabled",
+      state: 'Enabled',
     });
 
     //ServerVulnerabilityAssessment
@@ -324,7 +324,7 @@ export default ({
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
     const keyName = encryptKey.apply(
-      (c) => `${vaultInfo.name}_${c!.name}_${c!.properties.version}`,
+      (c) => `${vaultInfo.name}_${c!.name}_${c!.properties.version}`
     );
 
     const serverKey = new sql.ServerKey(
@@ -332,27 +332,29 @@ export default ({
       {
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
-        serverKeyType: "AzureKeyVault",
+        serverKeyType: 'AzureKeyVault',
         keyName,
         uri: encryptKey.apply(
           (c) =>
-            `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${c!.properties.version}`,
+            `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${
+              c!.properties.version
+            }`
         ),
       },
-      { ignoreChanges: ["keyName", "uri"] },
+      { ignoreChanges: ['keyName', 'uri'] }
     );
 
     new sql.EncryptionProtector(
       `${sqlName}-encryptionProtector`,
       {
-        encryptionProtectorName: "current",
+        encryptionProtectorName: 'current',
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
-        serverKeyType: "AzureKeyVault",
+        serverKeyType: 'AzureKeyVault',
         serverKeyName: keyName,
         autoRotationEnabled: true,
       },
-      { dependsOn: serverKey },
+      { dependsOn: serverKey }
     );
   }
 

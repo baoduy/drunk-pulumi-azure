@@ -41,7 +41,7 @@ export default ({
   );
 
   if (lock) {
-    Locker({ name, resourceId: app.id, dependsOn: app });
+    Locker({ name, resource: app });
   }
   return app;
 };

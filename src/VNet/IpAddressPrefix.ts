@@ -44,8 +44,7 @@ export default ({
   if (lock) {
     Locker({
       name,
-      resourceId: addressPrefix.id,
-      dependsOn: addressPrefix,
+      resource: addressPrefix,
     });
   }
 

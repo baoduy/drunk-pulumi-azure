@@ -45,7 +45,7 @@ export default ({ name, group, location, displayName, lock }: Props) => {
   });
 
   if (lock) {
-    Locker({ name, resourceId: b2cTenant.id, dependsOn: b2cTenant });
+    Locker({ name, resource: b2cTenant });
   }
 
   return b2cTenant;

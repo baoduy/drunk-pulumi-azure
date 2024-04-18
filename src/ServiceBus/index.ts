@@ -19,7 +19,7 @@ import {
   getTopicName,
   getTopicOrQueueVaultName,
 } from './ServiceBusHelper';
-import {  isPrd } from '../Common/AzureEnv';
+import { isPrd } from '../Common/AzureEnv';
 import creator from '../Core/ResourceCreator';
 import { getPrivateEndpointName, getServiceBusName } from '../Common/Naming';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -244,7 +244,7 @@ const topicCreator = ({
   );
 
   if (lock) {
-    Locker({ name: topicName, resourceId: topic.id, dependsOn: topic });
+    Locker({ name: topicName, resource: topic });
   }
 
   let primaryConnectionKeys:
@@ -352,7 +352,7 @@ const subscriptionCreator = ({
   );
 
   if (lock) {
-    Locker({ name, resourceId: resource.id, dependsOn: resource });
+    Locker({ name, resource });
   }
 
   return {
@@ -417,7 +417,7 @@ const queueCreator = ({
   );
 
   if (lock) {
-    Locker({ name, resourceId: queue.id, dependsOn: queue });
+    Locker({ name, resource: queue });
   }
 
   let primaryConnectionKeys:

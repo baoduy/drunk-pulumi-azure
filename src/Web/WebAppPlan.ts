@@ -29,7 +29,7 @@ export default ({ name, group, kind, lock }: Props) => {
   });
 
   if (lock) {
-    Locker({ name, resourceId: appServicePlan.id, dependsOn: appServicePlan });
+    Locker({ name, resource: appServicePlan });
   }
   return appServicePlan;
 };

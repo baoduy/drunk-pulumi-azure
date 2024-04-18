@@ -4,10 +4,9 @@ import { Input, Resource } from '@pulumi/pulumi';
 
 interface Props {
   name: string;
-  resourceId: pulumi.Output<string>;
+  resource: Input<Resource>;
   level?: authorization.LockLevel;
   protect?: boolean;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 /** Lock Delete from Resource group level.*/
@@ -16,7 +15,6 @@ export default ({
   resourceId,
   level = authorization.LockLevel.CanNotDelete,
   protect = true,
-  dependsOn,
 }: Props) => {
   const n = `${name}-${level}`;
 
@@ -25,9 +23,9 @@ export default ({
     {
       lockName: n,
       level,
-      scope: resourceId,
+      scope: resource.id,
       notes: `Lock ${name} from ${level}`,
     },
-    { dependsOn, protect }
+    { dependsOn: resource, protect }
   );
 };

@@ -64,7 +64,7 @@ export default function <
   //Lock Azure Resource from Delete
   let locker: authorization.ManagementLockByScope | undefined = undefined;
   if (lock) {
-    locker = Locker({ name, resourceId: resource.id, dependsOn: resource });
+    locker = Locker({ name, resource });
   }
 
   //Azure DiagnosticSetting

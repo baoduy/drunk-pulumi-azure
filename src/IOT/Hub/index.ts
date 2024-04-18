@@ -1,7 +1,7 @@
 import { BasicResourceArgs, KeyVaultInfo } from '../../types';
 import { getIotHubName } from '../../Common/Naming';
 import * as devices from '@pulumi/azure-native/devices';
-import {  subscriptionId } from '../../Common/AzureEnv';
+import { subscriptionId } from '../../Common/AzureEnv';
 import { Input } from '@pulumi/pulumi';
 import Locker from '../../Core/Locker';
 import { EnvRoleNamesType } from '../../AzAd/EnvRoles';
@@ -215,7 +215,7 @@ export default async ({
   );
 
   if (lock) {
-    Locker({ name, resourceId: hub.id, dependsOn: hub });
+    Locker({ name, resource: hub });
   }
   //Connection Strings
   if (vaultInfo) {

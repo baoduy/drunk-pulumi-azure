@@ -62,7 +62,7 @@ export default ({
   );
 
   if (lock) {
-    Locker({ name, resourceId: ipAddress.id, dependsOn: ipAddress });
+    Locker({ name, resource: ipAddress });
   }
 
   return ipAddress;

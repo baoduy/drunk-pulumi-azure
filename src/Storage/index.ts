@@ -1,25 +1,25 @@
-import * as storage from "@pulumi/azure-native/storage";
+import * as storage from '@pulumi/azure-native/storage';
 
-import { KeyVaultInfo, BasicResourceArgs } from "../types";
-import { Input } from "@pulumi/pulumi";
-import { createThreatProtection } from "../Logs/Helpers";
-import { getSecret, getEncryptionKey } from "../KeyVault/Helper";
-import { isPrd } from "../Common/AzureEnv";
-import cdnCreator from "./CdnEndpoint";
+import { KeyVaultInfo, BasicResourceArgs } from '../types';
+import { Input } from '@pulumi/pulumi';
+import { createThreatProtection } from '../Logs/Helpers';
+import { getSecret, getEncryptionKey } from '../KeyVault/Helper';
+import { isPrd } from '../Common/AzureEnv';
+import cdnCreator from './CdnEndpoint';
 
 import {
   getConnectionName,
   getKeyName,
   getStorageName,
-} from "../Common/Naming";
-import { addCustomSecrets } from "../KeyVault/CustomHelper";
-import Locker from "../Core/Locker";
+} from '../Common/Naming';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import Locker from '../Core/Locker';
 import {
   createManagementRules,
   DefaultManagementRules,
   ManagementRules,
-} from "./ManagementRules";
-import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
+} from './ManagementRules';
+import { grantVaultAccessToIdentity } from '../KeyVault/VaultPermissions';
 
 type ContainerProps = {
   name: string;
@@ -93,10 +93,10 @@ export default ({
 }: StorageProps) => {
   name = getStorageName(name);
 
-  const primaryKeyName = getKeyName(name, "primary");
-  const secondaryKeyName = getKeyName(name, "secondary");
-  const primaryConnectionKeyName = getConnectionName(name, "primary");
-  const secondConnectionKeyName = getConnectionName(name, "secondary");
+  const primaryKeyName = getKeyName(name, 'primary');
+  const secondaryKeyName = getKeyName(name, 'secondary');
+  const primaryConnectionKeyName = getConnectionName(name, 'primary');
+  const secondConnectionKeyName = getConnectionName(name, 'secondary');
   const encryptionKey = featureFlags.enableKeyVaultEncryption
     ? getEncryptionKey(name, vaultInfo)
     : undefined;
@@ -112,14 +112,14 @@ export default ({
         ? storage.SkuName.Standard_ZRS //Zone redundant in PRD
         : storage.SkuName.Standard_LRS,
     },
-    accessTier: "Hot",
+    accessTier: 'Hot',
 
     isHnsEnabled: true,
     enableHttpsTrafficOnly: true,
     allowBlobPublicAccess: policies?.allowBlobPublicAccess,
     allowSharedKeyAccess: featureFlags.allowSharedKeyAccess,
-    identity: { type: "SystemAssigned" },
-    minimumTlsVersion: "TLS1_2",
+    identity: { type: 'SystemAssigned' },
+    minimumTlsVersion: 'TLS1_2',
 
     //1 Year Months
     keyPolicy: {
@@ -148,7 +148,7 @@ export default ({
 
     sasPolicy: {
       expirationAction: storage.ExpirationAction.Log,
-      sasExpirationPeriod: "00.00:30:00",
+      sasExpirationPeriod: '00.00:30:00',
     },
 
     customDomain:
@@ -166,8 +166,8 @@ export default ({
 
     networkRuleSet: network
       ? {
-          bypass: "Logging, Metrics",
-          defaultAction: "Allow",
+          bypass: 'Logging, Metrics',
+          defaultAction: 'Allow',
 
           virtualNetworkRules: network.subnetId
             ? [{ virtualNetworkResourceId: network.subnetId }]
@@ -176,11 +176,11 @@ export default ({
           ipRules: network.ipAddresses
             ? network.ipAddresses.map((i) => ({
                 iPAddressOrRange: i,
-                action: "Allow",
+                action: 'Allow',
               }))
             : undefined,
         }
-      : { defaultAction: "Allow" },
+      : { defaultAction: 'Allow' },
   });
 
   //Soft Delete
@@ -230,7 +230,7 @@ export default ({
   }
 
   if (lock) {
-    Locker({ name, resourceId: stg.id, dependsOn: stg });
+    Locker({ name, resource: stg });
   }
 
   //Enable Static Website for SPA
@@ -240,10 +240,10 @@ export default ({
       {
         accountName: stg.name,
         ...group,
-        indexDocument: "index.html",
-        error404Document: "index.html",
+        indexDocument: 'index.html',
+        error404Document: 'index.html',
       },
-      { dependsOn: stg },
+      { dependsOn: stg }
     );
 
     // if (appInsight && customDomain) {
@@ -275,7 +275,7 @@ export default ({
       ...group,
       accountName: stg.name,
       //denyEncryptionScopeOverride: true,
-      publicAccess: c.public ? "Blob" : "None",
+      publicAccess: c.public ? 'Blob' : 'None',
     });
 
     if (c.managementRules) {
@@ -329,7 +329,7 @@ export default ({
       //Keys
       addCustomSecrets({
         vaultInfo,
-        contentType: "Storage",
+        contentType: 'Storage',
         formattedName: true,
         items: [
           {
