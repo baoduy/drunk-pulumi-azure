@@ -61,7 +61,7 @@ export default async ({ name, permissions, members, owners }: AdGroupProps) => {
 export const getAdGroup = (displayName: string) => {
   if (isDryRun)
     return output({
-      displayName: "GroupDisplayName",
+      displayName,
       objectId: "00000000-0000-0000-0000-000000000000",
     } as GetGroupResult);
   return output(azuread.getGroup({ displayName }));
