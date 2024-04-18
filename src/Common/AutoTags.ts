@@ -14,7 +14,10 @@ const ignoredTags = [
 export function registerAutoTags(autoTags: Record<string, string>): void {
   runtime.registerStackTransformation((args) => {
     //Check and ignore tag
-    if (ignoredTags.find((t) => args.type.includes(t)))
+    if (
+      !args.type.includes('ResourceGroup') &&
+      ignoredTags.find((t) => args.type.includes(t))
+    )
       return { props: args.props, opts: args.opts };
 
     //Apply default tag
