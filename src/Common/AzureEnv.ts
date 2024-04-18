@@ -5,6 +5,7 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import { getKeyVaultName, getResourceGroupName } from "./Naming";
 import { ResourceInfoArg } from "./ResourceEnv";
 import { organization, projectName, stack } from "./StackEnv";
+import {azRegions} from './Naming/AzureRegions';
 
 const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);
@@ -13,6 +14,7 @@ export const currentPrincipal = config.apply((c) => c.objectId);
 export const currentLocation = JSON.parse(process.env.PULUMI_CONFIG ?? "{}")[
   "azure-native:config:location"
 ] as string;
+export const currentLocationCode = azRegions.find(l=>l.region.toLowerCase().includes(currentLocation.toLowerCase()))?.code??'';
 export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 //Print and Check
@@ -21,6 +23,7 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
     TenantId: t,
     SubscriptionId: s,
     currentLocation,
+    currentLocationCode
   });
 });
 
@@ -50,9 +53,7 @@ const getCurrentEnv = () => {
   if (isGlobal) return Environments.Global;
   if (isPrd) return Environments.Prd;
   if (isSandbox) return Environments.Sandbox;
-
   if (isDev) return Environments.Dev;
-
   return Environments.Local;
 };
 

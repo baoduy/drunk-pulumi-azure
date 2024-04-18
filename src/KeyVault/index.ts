@@ -1,64 +1,37 @@
 import * as native from "@pulumi/azure-native";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
-import {
-  subscriptionId,
-  tenantId,
-} from "../Common/AzureEnv";
+import { subscriptionId, tenantId } from "../Common/AzureEnv";
 import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
 import { BasicMonitorArgs, PrivateLinkProps } from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
 import { addCustomSecret } from "./CustomHelper";
-import { grantVaultRbacPermission } from "./VaultPermissions";
-import VaultAccess, { VaultAccessType } from "./VaultAccess";
+import { grantVaultPermissionToRole } from "./VaultPermissions";
+import { createVaultRoles } from "../AzAd/KeyVaultRoles";
 
 interface Props extends BasicResourceArgs {
-  //nameConvention?: ConventionProps | false;
   /**The default-encryption-key, tenant-id va subscription-id will be added to the secrets and keys*/
   createDefaultValues?: boolean;
-
   network?: {
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
   };
-
-  /** The permission and principals that allows to be access to this Key Vault */
-  auth?: VaultAccessType;
 }
 
 export default ({
   name,
   //nameConvention,
   group,
-  auth={},
   createDefaultValues,
   network,
   ...others
 }: Props) => {
   const vaultName = getKeyVaultName(name);
+  const roles = createVaultRoles(name);
 
-  const { readOnlyGroup, adminGroup } = VaultAccess({ name, auth });
-
-  // const accessPolicies =
-  //   new Array<native.types.input.keyvault.AccessPolicyEntryArgs>();
-
-  //Grant Access permission
-  // if (!auth?.enableRbac) {
-  //   accessPolicies.push({
-  //     objectId: readOnlyGroup.objectId,
-  //     tenantId,
-  //     permissions: KeyVaultReadOnlyPolicy,
-  //   });
-  //   accessPolicies.push({
-  //     objectId: adminGroup.objectId,
-  //     tenantId,
-  //     permissions: KeyVaultAdminPolicy,
-  //   });
-  // }
-
-  const resource = new native.keyvault.Vault(vaultName, {
+  const vault = new native.keyvault.Vault(vaultName, {
     vaultName,
     ...group,
     ...others,
@@ -96,34 +69,41 @@ export default ({
             defaultAction: enums.keyvault.NetworkRuleAction.Allow,
           },
     },
-
-  });
-
-  //Grant RBAC permission
-  grantVaultRbacPermission({
-    name: `${name}-ReadOnlyGroup`,
-    scope: resource.id,
-    objectId: readOnlyGroup.objectId,
-    permission: "ReadOnly",
-    principalType: "Group",
-  });
-
-  grantVaultRbacPermission({
-    name: `${name}-AdminGroup`,
-    scope: resource.id,
-    objectId: adminGroup.objectId,
-    permission: "ReadWrite",
-    principalType: "Group",
   });
 
   //To Vault Info
-  const toVaultInfo = () => ({ name: vaultName, group, id: resource.id });
+  const toVaultInfo = () => ({
+    name: vaultName,
+    group,
+    id: vault.id,
+  });
+  const vaultInfo = toVaultInfo();
+
+  grantVaultPermissionToRole({ name, vaultInfo, roles });
+
+  if (createDefaultValues) {
+    addCustomSecret({
+      name: "tenant-id",
+      value: tenantId,
+      vaultInfo,
+      contentType: "KeyVault Default Values",
+      dependsOn: vault,
+    });
+
+    addCustomSecret({
+      name: "subscription-id",
+      value: subscriptionId,
+      vaultInfo,
+      contentType: "KeyVault Default Values",
+      dependsOn: vault,
+    });
+  }
 
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>
     createDiagnostic({
       name,
-      targetResourceId: resource.id,
+      targetResourceId: vault.id,
       ...logInfo,
       logsCategories: ["AuditEvent"],
     });
@@ -134,36 +114,14 @@ export default ({
       name: getPrivateEndpointName(name),
       group,
       ...props,
-      resourceId: resource.id,
+      resourceId: vault.id,
       privateDnsZoneName: "privatelink.vaultcore.azure.net",
       linkServiceGroupIds: ["keyVault"],
     });
 
-  if (createDefaultValues) {
-    const vaultInfo = toVaultInfo();
-
-    addCustomSecret({
-      name: "tenant-id",
-      value: tenantId,
-      vaultInfo,
-      contentType: "KeyVault Default Values",
-      dependsOn: resource,
-    });
-
-    addCustomSecret({
-      name: "subscription-id",
-      value: subscriptionId,
-      vaultInfo,
-      contentType: "KeyVault Default Values",
-      dependsOn: resource,
-    });
-  }
-
   return {
     name: vaultName,
-    vault: resource,
-    readOnlyGroup,
-    adminGroup,
+    vault,
     toVaultInfo,
     addDiagnostic,
     createPrivateLink,

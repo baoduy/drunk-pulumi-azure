@@ -23,6 +23,7 @@ import privateEndpointCreator from "../VNet/PrivateEndpoint";
 import sqlDbCreator, { SqlDbProps } from "./SqlDb";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import Role from "../AzAd/Role";
+import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -140,11 +141,12 @@ export default ({
   //   };
   // }
 
-  const adminGroup = auth?.enableAdAdministrator
-    ? auth.envRoleNames
-      ? getAdGroup(auth.envRoleNames.admin)
-      : Role({ env: currentEnv, roleName: "ADMIN", appName: "SQL" })
-    : undefined;
+  const adminGroup =
+    auth?.enableAdAdministrator || auth.azureAdOnlyAuthentication
+      ? auth.envRoleNames
+        ? getAdGroup(auth.envRoleNames.admin)
+        : Role({ env: currentEnv, roleName: "ADMIN", appName: "SQL" })
+      : undefined;
 
   const ignoreChanges = ["administratorLogin", "administrators"];
   if (auth.azureAdOnlyAuthentication)
@@ -160,12 +162,11 @@ export default ({
 
       identity: { type: "SystemAssigned" },
       administratorLogin: auth?.adminLogin,
-      administratorLoginPassword: auth.azureAdOnlyAuthentication
-        ? undefined
-        : auth?.password,
+      administratorLoginPassword: auth?.password,
 
       administrators:
-        auth?.enableAdAdministrator && adminGroup
+        (auth?.enableAdAdministrator || auth.azureAdOnlyAuthentication) &&
+        adminGroup
           ? {
               administratorType: sql.AdministratorType.ActiveDirectory,
               azureADOnlyAuthentication: auth.azureAdOnlyAuthentication,
@@ -186,6 +187,9 @@ export default ({
       protect: lock,
     },
   );
+
+  //Allows to Read Key Vault
+  grantVaultAccessToIdentity({ name, identity: sqlServer.identity, vaultInfo });
 
   if (lock) {
     Locker({ name: sqlName, resourceId: sqlServer.id, dependsOn: sqlServer });
@@ -319,20 +323,37 @@ export default ({
 
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
-    new sql.ServerKey(`${sqlName}-serverKey`, {
-      resourceGroupName: group.resourceGroupName,
-      serverName: sqlName,
-      serverKeyType: "AzureKeyVault",
-      keyName: encryptKey.apply((c) => c!.name),
-      uri: encryptKey.apply((c) => `${c!.properties.vaultUrl}/keys/${c!.name}`),
-    });
+    const keyName = encryptKey.apply(
+      (c) => `${vaultInfo.name}_${c!.name}_${c!.properties.version}`,
+    );
 
-    new sql.EncryptionProtector(`${sqlName}-encryptionProtector`, {
-      resourceGroupName: group.resourceGroupName,
-      serverName: sqlName,
-      serverKeyType: "AzureKeyVault",
-      autoRotationEnabled: true,
-    });
+    const serverKey = new sql.ServerKey(
+      `${sqlName}-serverKey`,
+      {
+        resourceGroupName: group.resourceGroupName,
+        serverName: sqlName,
+        serverKeyType: "AzureKeyVault",
+        keyName,
+        uri: encryptKey.apply(
+          (c) =>
+            `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${c!.properties.version}`,
+        ),
+      },
+      { ignoreChanges: ["keyName", "uri"] },
+    );
+
+    new sql.EncryptionProtector(
+      `${sqlName}-encryptionProtector`,
+      {
+        encryptionProtectorName: "current",
+        resourceGroupName: group.resourceGroupName,
+        serverName: sqlName,
+        serverKeyType: "AzureKeyVault",
+        serverKeyName: keyName,
+        autoRotationEnabled: true,
+      },
+      { dependsOn: serverKey },
+    );
   }
 
   const dbs = databases?.map((db) => {
@@ -344,15 +365,15 @@ export default ({
       elasticPoolId: ep ? ep.resource.id : undefined,
     });
 
-    if (encryptKey) {
-      //Enable TransparentDataEncryption for each database
-      new sql.TransparentDataEncryption(`${sqlName}-${db.name}`, {
-        serverName: sqlName,
-        databaseName: db.name,
-        resourceGroupName: group.resourceGroupName,
-        state: "Enabled",
-      });
-    }
+    // if (encryptKey) {
+    //   //Enable TransparentDataEncryption for each database
+    //   new sql.TransparentDataEncryption(`${sqlName}-${db.name}`, {
+    //     serverName: sqlName,
+    //     databaseName: d.name,
+    //     resourceGroupName: group.resourceGroupName,
+    //     state: "Enabled",
+    //   });
+    // }
 
     if (vaultInfo) {
       const connectionString = auth?.adminLogin

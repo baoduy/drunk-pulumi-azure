@@ -1,7 +1,7 @@
-import adGroupCreator, { GroupPermissionProps } from './Group';
-import { Environments } from '../Common/AzureEnv';
-import { Input, output } from '@pulumi/pulumi';
-import { organization } from '../Common/StackEnv';
+import adGroupCreator, { GroupPermissionProps } from "./Group";
+import { Environments } from "../Common/AzureEnv";
+import { Input, output } from "@pulumi/pulumi";
+import { organization } from "../Common/StackEnv";
 
 interface RoleProps {
   env: Environments;
@@ -10,6 +10,7 @@ interface RoleProps {
   appName: string;
   moduleName?: string;
   roleName: string;
+
   members?: Input<string>[];
   owners?: Input<Input<string>[]>;
   permissions?: Array<GroupPermissionProps>;
@@ -17,25 +18,22 @@ interface RoleProps {
 
 export type RoleNameType = Pick<
   RoleProps,
-  | 'env'
-  | 'location'
-  | 'appName'
-  | 'moduleName'
-  | 'roleName'
+  "env" | "location" | "appName" | "moduleName" | "roleName"
 >;
 
 export const getRoleName = ({
   env,
-  location = 'GLB',
+  location,
   appName,
   moduleName,
-  roleName
+  roleName,
 }: RoleNameType) => {
-  const prefix = `${organization} ROL`;
-
-  return moduleName
-    ? `${prefix} ${env} ${location} ${appName}.${moduleName} ${roleName}`.toUpperCase()
-    : `${prefix} ${env} ${location} ${appName} ${roleName}`.toUpperCase();
+  const nameBuilder = [`${organization} ROL`, env];
+  if (location) nameBuilder.push(location);
+  if (moduleName) nameBuilder.push(`${appName}.${moduleName}`);
+  else nameBuilder.push(appName);
+  nameBuilder.push(roleName);
+  return nameBuilder.join(" ").toUpperCase();
 };
 
 export default ({ members, owners, permissions, ...others }: RoleProps) => {
@@ -46,6 +44,6 @@ export default ({ members, owners, permissions, ...others }: RoleProps) => {
       members,
       owners,
       permissions,
-    })
+    }),
   );
 };

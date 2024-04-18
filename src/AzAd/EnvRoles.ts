@@ -1,65 +1,64 @@
-import { currentEnv } from '../Common/AzureEnv';
-import Role, { getRoleName, RoleNameType } from './Role';
-import { getAdoIdentity } from './Identities/AzDevOps';
-import { addUserToGroup } from './Group';
+import { currentEnv } from "../Common/AzureEnv";
+import Role, { getRoleName, RoleNameType } from "./Role";
+import { getAdoIdentity } from "./Identities/AzDevOps";
+import { addMemberToGroup } from "./Group";
 
 const envRoleConfig = {
   readOnly: {
     env: currentEnv,
-    roleName: 'Readonly',
-    appName: 'Azure',
+    roleName: "Readonly",
+    appName: "Azure",
   } as RoleNameType,
   contributor: {
     env: currentEnv,
-    roleName: 'Contributor',
-    appName: 'Azure',
+    roleName: "Contributor",
+    appName: "Azure",
   } as RoleNameType,
   admin: {
     env: currentEnv,
-    roleName: 'Admin',
-    appName: 'Azure',
+    roleName: "Admin",
+    appName: "Azure",
   } as RoleNameType,
 };
 
 export type EnvRoleNamesType = { [k in keyof typeof envRoleConfig]: string };
 
-export const getEnvRoleNames = (
-): EnvRoleNamesType => ({
-  readOnly: getRoleName({ ...envRoleConfig.readOnly,  }),
+export const getEnvRoleNames = (): EnvRoleNamesType => ({
+  readOnly: getRoleName({ ...envRoleConfig.readOnly }),
   contributor: getRoleName({
-    ...envRoleConfig.contributor
+    ...envRoleConfig.contributor,
   }),
-  admin: getRoleName({ ...envRoleConfig.admin,  }),
+  admin: getRoleName({ ...envRoleConfig.admin }),
 });
 
-export default () => {
+export const createEnvRoles = () => {
   //Admin
-  const adminGroup =  Role({
+  const adminGroup = Role({
     ...envRoleConfig.admin,
     //permissions: [{ roleName: 'Reader', scope: defaultScope }],
   });
 
   //Contributor
- const contributor= Role({
+  const contributorGroup = Role({
     ...envRoleConfig.contributor,
     //permissions: [{ roleName: 'Reader', scope: defaultScope }],
-    members:[adminGroup.objectId],
+    members: [adminGroup.objectId],
   });
 
   //ReadOnly
-   Role({
+  const readOnlyGroup = Role({
     ...envRoleConfig.readOnly,
     //permissions: [{ roleName: 'Reader', scope: defaultScope }],
-     members:[contributor.objectId],
+    members: [contributorGroup.objectId],
   });
 
   //Add Global ADO Identity as Admin
   const ado = getAdoIdentity();
-  addUserToGroup({
-    name: 'ado-admin-role',
+  addMemberToGroup({
+    name: "ado-admin-role",
     groupObjectId: adminGroup.objectId,
     objectId: ado.principal.objectId,
   });
 
-  return getEnvRoleNames();
+  return { adminGroup, contributorGroup, readOnlyGroup };
 };

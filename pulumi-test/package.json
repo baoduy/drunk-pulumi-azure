@@ -1,15 +1,25 @@
 {
     "name": "drunk-pulumi-test",
     "main": "index.ts",
+    "scripts": {
+        "new-stack": "pulumi stack init --secrets-provider=passphrase",
+        "up": "pulumi up --yes --skip-preview",
+        "reup": "pulumi up --refresh --yes --skip-preview",
+        "destroy": "pulumi destroy --yes --skip-preview",
+        "update": "npx npm-check-updates -u --deprecated",
+        "check": "npx depcheck --detailed",
+        "export": "pulumi stack export --file state.json",
+        "import": "pulumi stack import --file state.json"
+    },
     "devDependencies": {
-        "@types/node": "^18"
+        "@types/node": "^20"
     },
     "dependencies": {
-        "@azure/identity": "^4.0.1",
+        "@azure/identity": "^4.1.0",
         "@drunk-pulumi/azure": "file:/../.out-bin",
-        "@drunk-pulumi/azure-providers": "^0.0.3",
+        "@drunk-pulumi/azure-providers": "^0.0.6",
         "@microsoft/microsoft-graph-client": "^3.0.7",
-        "@pulumi/azure-native": "^2.0.0",
-        "@pulumi/pulumi": "^3.0.0"
+        "@pulumi/azure-native": "^2.36.0",
+        "@pulumi/pulumi": "^3.112.0"
     }
 }

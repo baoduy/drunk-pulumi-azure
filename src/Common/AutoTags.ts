@@ -1,13 +1,14 @@
 import { runtime } from '@pulumi/pulumi';
 
 const ignoredTags = [
-  'group:Group',
-  'application:Application',
-  'applicationPassword:ApplicationPassword',
-  'servicePrincipal:ServicePrincipal',
-  'servicePrincipalPassword:ServicePrincipalPassword',
+  'Group',
+  'GroupMember',
+  'Application',
+  'ApplicationPassword',
+  'ServicePrincipal',
+  'ServicePrincipalPassword',
   'kubernetes',
-  'cloudflare'
+  'cloudflare',
 ];
 
 export function registerAutoTags(autoTags: Record<string, string>): void {
