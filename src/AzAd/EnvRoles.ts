@@ -23,11 +23,7 @@ const envRoleConfig = {
 
 export type EnvRoleNamesType = { [k in keyof typeof envRoleConfig]: string };
 
-export const getEnvRoleNames = ({
-  addAdoIdentityMember = true,
-}: {
-  addAdoIdentityMember?: boolean;
-}): EnvRoleNamesType => ({
+export const getEnvRoleNames = (): EnvRoleNamesType => ({
   readOnly: getRoleName({ ...envRoleConfig.readOnly }),
   contributor: getRoleName({
     ...envRoleConfig.contributor,
@@ -35,7 +31,11 @@ export const getEnvRoleNames = ({
   admin: getRoleName({ ...envRoleConfig.admin }),
 });
 
-export const createEnvRoles = () => {
+export const createEnvRoles = ({
+  addAdoIdentityMember = true,
+}: {
+  addAdoIdentityMember?: boolean;
+}) => {
   //Admin
   const adminGroup = Role({
     ...envRoleConfig.admin,
