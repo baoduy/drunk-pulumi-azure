@@ -142,12 +142,18 @@ export default ({
         mode: isPrd ? "ZoneRedundant" : "Disabled",
         standbyAvailabilityZone: "3",
       },
-      availabilityZone: "1",
+      availabilityZone: isPrd ? "3" : "1",
     },
     {
       dependsOn,
       protect: lock,
-      ignoreChanges: ["serverName", "administratorLogin", "dataEncryption"],
+      ignoreChanges: [
+        "serverName",
+        "highAvailability",
+        "availabilityZone",
+        "administratorLogin",
+        "dataEncryption",
+      ],
     },
   );
 

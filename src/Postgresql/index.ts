@@ -90,12 +90,18 @@ export default ({
         backupRetentionDays: 7,
       },
       highAvailability: { mode: isPrd ? "ZoneRedundant" : "Disabled" },
-      //availabilityZone: isPrd ? 3 : 1,
+      availabilityZone: isPrd ? "3" : "1",
     },
     {
       dependsOn,
       protect: lock,
-      ignoreChanges: ["serverName", "administratorLogin", "dataEncryption"],
+      ignoreChanges: [
+        "serverName",
+        "highAvailability",
+        "availabilityZone",
+        "administratorLogin",
+        "dataEncryption",
+      ],
     },
   );
 
