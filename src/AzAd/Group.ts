@@ -2,6 +2,8 @@ import * as azuread from "@pulumi/azuread";
 import { Input, Output, output } from "@pulumi/pulumi";
 import { defaultScope } from "../Common/AzureEnv";
 import { roleAssignment } from "./RoleAssignment";
+import { isDryRun } from "../Common/StackEnv";
+import { GetGroupResult } from "@pulumi/azuread/getGroup";
 
 export interface GroupPermissionProps {
   /** The name of the roles would like to assign to this group*/
@@ -56,8 +58,14 @@ export default async ({ name, permissions, members, owners }: AdGroupProps) => {
   return group;
 };
 
-export const getAdGroup = (displayName: string) =>
-  output(azuread.getGroup({ displayName }));
+export const getAdGroup = (displayName: string) => {
+  if (isDryRun)
+    return output({
+      displayName: "GroupDisplayName",
+      objectId: "00000000-0000-0000-0000-000000000000",
+    } as GetGroupResult);
+  return output(azuread.getGroup({ displayName }));
+};
 
 export const addMemberToGroup = ({
   name,
