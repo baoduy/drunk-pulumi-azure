@@ -1,28 +1,30 @@
-import { runtime } from '@pulumi/pulumi';
+import { runtime } from "@pulumi/pulumi";
 
 const ignoredTags = [
-  'Group',
-  'GroupMember',
-  'Application',
-  'ApplicationPassword',
-  'ServicePrincipal',
-  'ServicePrincipalPassword',
-  'kubernetes',
-  'cloudflare',
-  'providers'
+  "Group",
+  "GroupMember",
+  "Application",
+  "ApplicationPassword",
+  "ServicePrincipal",
+  "ServicePrincipalPassword",
+  "kubernetes",
+  "cloudflare",
+  "providers",
 ];
 
-export function registerAutoTags(autoTags: Record<string, string>): void {
-  runtime.registerStackTransformation((args) => {
+export const registerAutoTags = (autoTags: Record<string, string>) =>
+  runtime.registerStackTransformation((resource) => {
     //Check and ignore tag
     if (
-      !args.type.includes('ResourceGroup') &&
-      ignoredTags.find((t) => args.type.includes(t))
+      !resource.type.toLowerCase().includes("resourcegroup") &&
+      ignoredTags.find((t) =>
+        resource.type.toLowerCase().includes(t.toLowerCase())
+      )
     )
-      return { props: args.props, opts: args.opts };
+      return { props: resource.props, opts: resource.opts };
 
     //Apply default tag
-    args.props['tags'] = { ...args.props['tags'], ...autoTags };
-    return { props: args.props, opts: args.opts };
+    console.log("Apply tag for:", resource.type);
+    resource.props["tags"] = { ...resource.props["tags"], ...autoTags };
+    return { props: resource.props, opts: resource.opts };
   });
-}
