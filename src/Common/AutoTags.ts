@@ -24,7 +24,7 @@ export const registerAutoTags = (autoTags: Record<string, string>) =>
       return { props: resource.props, opts: resource.opts };
 
     //Apply default tag
-    console.log("Apply tag for:", resource.type);
+    //console.log("Apply tag for:", resource.type);
     resource.props["tags"] = { ...resource.props["tags"], ...autoTags };
     return { props: resource.props, opts: resource.opts };
   });

@@ -11,10 +11,10 @@ const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);
 export const subscriptionId = config.apply((c) => c.subscriptionId);
 export const currentPrincipal = config.apply((c) => c.objectId);
-export const currentLocation = JSON.parse(process.env.PULUMI_CONFIG ?? "{}")[
-  "azure-native:config:location"
-] as string;
-export const currentLocationCode = azRegions.find(l=>l.region.toLowerCase().includes(currentLocation.toLowerCase()))?.code??'';
+
+const env = JSON.parse(process.env.PULUMI_CONFIG ?? "{}");
+export const currentLocation = (env[  "azure-native:config:location"] ?? env[  "azure-native:location"] ?? "SoutheastAsia") as string;
+export const currentLocationCode = azRegions.find(l=> l.region.toLowerCase().includes(currentLocation.toLowerCase()))?.code??'';
 export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 //Print and Check
