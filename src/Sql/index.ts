@@ -112,6 +112,8 @@ interface Props extends BasicResourceArgs {
     storageAccessKey: Input<string>;
     storageEndpoint: Input<string>;
   };
+
+  ignoreChanges?:string[];
   lock?: boolean;
 }
 
@@ -126,6 +128,7 @@ export default ({
 
   network,
   vulnerabilityAssessment,
+                  ignoreChanges = ['administratorLogin', 'administrators.tenantId','administrators.sid'],
   lock = true,
 }: Props) => {
   const sqlName = getSqlServerName(name);
@@ -147,8 +150,7 @@ export default ({
         ? getAdGroup(auth.envRoleNames.admin)
         : Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
       : undefined;
-
-  const ignoreChanges = ['administratorLogin', 'administrators'];
+  
   if (auth.azureAdOnlyAuthentication)
     ignoreChanges.push('administratorLoginPassword');
 
