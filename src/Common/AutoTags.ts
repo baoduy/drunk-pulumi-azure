@@ -10,6 +10,7 @@ const ignoredTags = [
   "kubernetes",
   "cloudflare",
   "providers",
+    "dynamic:Resource"
 ];
 
 export const registerAutoTags = (autoTags: Record<string, string>) =>
