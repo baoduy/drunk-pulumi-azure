@@ -128,7 +128,7 @@ export default ({
 
   network,
   vulnerabilityAssessment,
-                  ignoreChanges = ['administratorLogin', 'administrators.tenantId','administrators.sid'],
+  ignoreChanges = ['administratorLogin', 'administrators.tenantId','administrators.sid'],
   lock = true,
 }: Props) => {
   const sqlName = getSqlServerName(name);
@@ -150,7 +150,7 @@ export default ({
         ? getAdGroup(auth.envRoleNames.admin)
         : Role({ env: currentEnv, roleName: 'ADMIN', appName: 'SQL' })
       : undefined;
-  
+
   if (auth.azureAdOnlyAuthentication)
     ignoreChanges.push('administratorLoginPassword');
 
