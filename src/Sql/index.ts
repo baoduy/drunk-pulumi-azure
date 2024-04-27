@@ -128,7 +128,7 @@ export default ({
 
   network,
   vulnerabilityAssessment,
-  ignoreChanges = ['administratorLogin'],
+  ignoreChanges = ['administratorLogin','administrators'],
   lock = true,
 }: Props) => {
   const sqlName = getSqlServerName(name);
