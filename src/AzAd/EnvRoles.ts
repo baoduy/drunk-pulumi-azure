@@ -1,21 +1,17 @@
-import { currentEnv } from '../Common/AzureEnv';
 import Role, { getRoleName, RoleNameType } from './Role';
 import { getAdoIdentity } from './Identities/AzDevOps';
 import { addMemberToGroup } from './Group';
 
 const envRoleConfig = {
   readOnly: {
-    env: currentEnv,
     roleName: 'Readonly',
     appName: 'Azure',
   } as RoleNameType,
   contributor: {
-    env: currentEnv,
     roleName: 'Contributor',
     appName: 'Azure',
   } as RoleNameType,
   admin: {
-    env: currentEnv,
     roleName: 'Admin',
     appName: 'Azure',
   } as RoleNameType,

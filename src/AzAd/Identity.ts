@@ -183,6 +183,7 @@ export default ({
         //Allow to access to application as the permission is manage by Group assignment.
         appRoleAssignmentRequired,
         clientId: app.clientId,
+
       },
       { ignoreChanges: ['clientId', 'applicationId'] }
     );

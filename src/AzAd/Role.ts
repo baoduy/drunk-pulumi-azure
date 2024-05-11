@@ -1,10 +1,10 @@
 import adGroupCreator, { GroupPermissionProps } from "./Group";
-import { Environments } from "../Common/AzureEnv";
+import { Environments,currentEnv } from "../Common/AzureEnv";
 import { Input, output } from "@pulumi/pulumi";
 import { organization } from "../Common/StackEnv";
 
 interface RoleProps {
-  env: Environments;
+  env?: Environments;
   /** The country code or GLB for Global*/
   location?: string;
   appName: string;
@@ -22,7 +22,7 @@ export type RoleNameType = Pick<
 >;
 
 export const getRoleName = ({
-  env,
+  env = currentEnv,
   location,
   appName,
   moduleName,
