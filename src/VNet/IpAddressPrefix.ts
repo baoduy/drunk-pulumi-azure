@@ -10,7 +10,7 @@ type AddressNameType = Array<{
   name: string;
 }>;
 
-interface Props extends BasicResourceArgs {
+export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
   prefixLength: number;
   config?: {
     version?: network.IPVersion;
@@ -21,6 +21,12 @@ interface Props extends BasicResourceArgs {
   ipAddresses: AddressNameType;
   lock?: boolean;
 }
+
+export type PublicIpAddressPrefixResult={
+  addresses: Record<string, PublicIPAddress>;
+  addressPrefix: network.PublicIPPrefix;
+}
+
 export default ({
   name,
   group,
@@ -31,7 +37,7 @@ export default ({
     allocationMethod: network.IPAllocationMethod.Static,
   },
   lock,
-}: Props) => {
+}: PublicIpAddressPrefixProps):PublicIpAddressPrefixResult => {
   const n = getIpAddressPrefixName(name);
 
   const addressPrefix = new network.PublicIPPrefix(n, {
