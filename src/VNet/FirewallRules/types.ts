@@ -10,10 +10,8 @@ export interface FirewallRuleProps {
 }
 
 export interface FirewallPolicyProps {
-  enabled: boolean;
   /**These props for create new policy*/
   parentPolicyId?: Output<string>;
-  priority?: number;
   rules?: Array<FirewallRuleProps>;
 }
 

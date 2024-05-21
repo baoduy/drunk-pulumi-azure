@@ -1,21 +1,21 @@
-import * as network from '@pulumi/azure-native/network';
-import { input as inputs } from '@pulumi/azure-native/types';
-import { Input, output, Resource } from '@pulumi/pulumi';
-import * as pulumi from '@pulumi/pulumi';
+import * as network from "@pulumi/azure-native/network";
+import { input as inputs } from "@pulumi/azure-native/types";
+import { Input, output, Resource } from "@pulumi/pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
-import { getResourceInfoFromId } from '../Common/AzureEnv';
-import { NetworkRouteResource } from '@drunk-pulumi/azure-providers/NetworkRuote';
+import { getResourceInfoFromId } from "../Common/AzureEnv";
+import { NetworkRouteResource } from "@drunk-pulumi/azure-providers/NetworkRuote";
 import {
   BasicMonitorArgs,
   BasicResourceArgs,
   DefaultResourceArgs,
   ResourceGroupInfo,
-} from '../types';
-import Firewall, { FirewallSkus, FwOutboundConfig } from './Firewall';
-import { FirewallPolicyProps } from './FirewallRules/types';
-import VnetPeering from './NetworkPeering';
-import { SubnetProps } from './Subnet';
-import Vnet from './Vnet';
+} from "../types";
+import Firewall, { FirewallSkus, FwOutboundConfig } from "./Firewall";
+import { FirewallPolicyProps } from "./FirewallRules/types";
+import VnetPeering from "./NetworkPeering";
+import { SubnetProps } from "./Subnet";
+import Vnet from "./Vnet";
 
 interface Props {
   name: string;
@@ -41,7 +41,7 @@ interface Props {
       sku?: FirewallSkus;
       publicManageIpAddress?: network.PublicIPAddress;
 
-      policy: Omit<FirewallPolicyProps, 'enabled'>;
+      policy: Omit<FirewallPolicyProps, "enabled">;
 
       /** set this is TRUE if want to create firewall subnet but not create firewall component */
       disabledFirewallCreation?: boolean;
@@ -92,16 +92,16 @@ export default ({
     } //Allow Internet to public IpAddress security group
     else if (features.securityGroup?.allowInboundInternetAccess)
       securities.push({
-        name: 'allow-inbound-internet-publicIpAddress',
-        sourceAddressPrefix: '*',
-        sourcePortRange: '*',
+        name: "allow-inbound-internet-publicIpAddress",
+        sourceAddressPrefix: "*",
+        sourcePortRange: "*",
         destinationAddressPrefix: publicIpAddress.ipAddress.apply(
-          (i) => `${i}/32`
+          (i) => `${i}/32`,
         ),
-        destinationPortRanges: ['443', '80'],
-        protocol: 'TCP',
-        access: 'Allow',
-        direction: 'Inbound',
+        destinationPortRanges: ["443", "80"],
+        protocol: "TCP",
+        access: "Allow",
+        direction: "Inbound",
         priority: 200 + securities.length + 1,
       });
   }
@@ -114,7 +114,7 @@ export default ({
         //Update route to firewall IpAddress
         routes.push({
           name: `vnet-to-firewall`,
-          addressPrefix: '0.0.0.0/0',
+          addressPrefix: "0.0.0.0/0",
           nextHopType: network.RouteNextHopType.VirtualAppliance,
           nextHopIpAddress: pp.firewallPrivateIpAddress,
         });
@@ -122,26 +122,26 @@ export default ({
         //Allow Vnet to Firewall
         securities.push({
           name: `allow-vnet-to-firewall`,
-          sourceAddressPrefix: '*',
-          sourcePortRange: '*',
+          sourceAddressPrefix: "*",
+          sourcePortRange: "*",
           destinationAddressPrefix: pp.firewallPrivateIpAddress,
-          destinationPortRange: '*',
-          protocol: '*',
-          access: 'Allow',
-          direction: 'Outbound',
+          destinationPortRange: "*",
+          protocol: "*",
+          access: "Allow",
+          direction: "Outbound",
           priority: 100,
         });
       }
 
       securities.push({
         name: `allow-vnet-to-vnet-${index}`,
-        sourceAddressPrefix: 'VirtualNetwork',
-        sourcePortRange: '*',
-        destinationAddressPrefix: 'VirtualNetwork',
-        destinationPortRange: '*',
-        protocol: '*',
-        access: 'Allow',
-        direction: 'Outbound',
+        sourceAddressPrefix: "VirtualNetwork",
+        sourcePortRange: "*",
+        destinationAddressPrefix: "VirtualNetwork",
+        destinationPortRange: "*",
+        protocol: "*",
+        access: "Allow",
+        direction: "Outbound",
         priority: 101,
       });
     });
@@ -167,7 +167,7 @@ export default ({
       appGatewaySubnet: features.enableAppGateway
         ? {
             addressPrefix: features.enableAppGateway.subnetPrefix,
-            version: 'v1',
+            version: "v1",
           }
         : undefined,
 
@@ -207,7 +207,6 @@ export default ({
       group,
 
       policy: {
-        enabled: true,
         ...features.enableFirewall.policy,
       },
 
@@ -257,16 +256,16 @@ export default ({
         new NetworkRouteResource(
           `${name}-vnet-to-firewall`,
           {
-            routeName: 'vnet-to-firewall',
+            routeName: "vnet-to-firewall",
             ...group,
             routeTableName: vnet.routeTable.name,
-            addressPrefix: '0.0.0.0/0',
+            addressPrefix: "0.0.0.0/0",
             nextHopType: network.RouteNextHopType.VirtualAppliance,
             nextHopIpAddress: pp.firewallPrivateIpAddress,
           },
           {
             dependsOn: vnet.routeTable,
-          }
+          },
         );
       }
     });
@@ -278,7 +277,7 @@ export default ({
 
 interface FirewallProps
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, 'monitoring'> {
+    Omit<DefaultResourceArgs, "monitoring"> {
   sku?: FirewallSkus;
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
@@ -311,15 +310,15 @@ const createFirewall = ({
         routeName: `vnet-to-firewall`,
         ...group,
         routeTableName: routeTableName,
-        addressPrefix: '0.0.0.0/0',
+        addressPrefix: "0.0.0.0/0",
         nextHopType: network.RouteNextHopType.VirtualAppliance,
         nextHopIpAddress: rs.firewall.ipConfigurations.apply((c) =>
-          c ? c[0].privateIPAddress : ''
+          c ? c[0].privateIPAddress : "",
         ),
       },
       {
         dependsOn: [...dependsOn, rs.firewall],
-      }
+      },
     );
   }
 

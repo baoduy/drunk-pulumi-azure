@@ -1,25 +1,24 @@
-import * as network from '@pulumi/azure-native/network';
-import * as pulumi from '@pulumi/pulumi';
-import { input as inputs } from '@pulumi/azure-native/types';
-import { output as outputs } from '@pulumi/azure-native/types';
-import { BasicResourceArgs } from '../types';
+import * as network from "@pulumi/azure-native/network";
+import * as pulumi from "@pulumi/pulumi";
+import { input as inputs } from "@pulumi/azure-native/types";
+import { output as outputs } from "@pulumi/azure-native/types";
+import { BasicResourceArgs } from "../types";
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
   azFirewallManagementSubnet,
   azFirewallSubnet,
   gatewaySubnetName,
-} from './Helper';
-import { getVnetName } from '../Common/Naming';
-import Bastion from './Bastion';
-import CreateSubnet, { SubnetProps } from './Subnet';
-import { Lifted, OutputInstance } from '@pulumi/pulumi';
+} from "./Helper";
+import { getVnetName } from "../Common/Naming";
+import Bastion from "./Bastion";
+import CreateSubnet, { SubnetProps } from "./Subnet";
 
 export type DelegateServices =
-  | 'Microsoft.ContainerInstance/containerGroups'
-  | 'Microsoft.Web/serverFarms';
+  | "Microsoft.ContainerInstance/containerGroups"
+  | "Microsoft.Web/serverFarms";
 
-interface VnetProps extends BasicResourceArgs {
+export interface VnetProps extends BasicResourceArgs {
   ddosId?: pulumi.Input<string>;
   /** the prefix space of vnet: ex [192.168.0.0/16]. If not provided it will collect from subnet */
   addressSpaces?: Array<pulumi.Input<string>>;
@@ -42,7 +41,7 @@ interface VnetProps extends BasicResourceArgs {
 
     appGatewaySubnet?: {
       addressPrefix: string;
-      version: 'v1' | 'v2';
+      version: "v1" | "v2";
     };
 
     firewall?: {
@@ -50,6 +49,7 @@ interface VnetProps extends BasicResourceArgs {
       addressPrefix: string;
       managementAddressPrefix?: string;
     };
+
     //Enable Bastion host for Remove desktop via a web browser without open RDP port.
     bastion?: {
       /** Subnet address Prefix */
@@ -60,6 +60,20 @@ interface VnetProps extends BasicResourceArgs {
   };
 }
 
+export type VnetResult = {
+  vnet: network.VirtualNetwork;
+  appGatewaySubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
+  firewallManageSubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
+  routeTable: network.RouteTable;
+  firewallSubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
+  subnets: Record<
+    string,
+    pulumi.OutputInstance<outputs.network.SubnetResponse>
+  >;
+  bastionSubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
+  securityGroup: undefined | network.NetworkSecurityGroup;
+};
+
 export default ({
   name,
   group,
@@ -68,7 +82,7 @@ export default ({
   subnets = [],
   dnsServers,
   features = {},
-}: VnetProps) => {
+}: VnetProps): VnetResult => {
   const vName = getVnetName(name);
   const securityRules =
     features.securityGroup?.rules ||
@@ -93,14 +107,14 @@ export default ({
     });
 
     securityRules.push({
-      name: 'allow-internet-bastion',
-      sourceAddressPrefix: '*',
-      sourcePortRange: '*',
+      name: "allow-internet-bastion",
+      sourceAddressPrefix: "*",
+      sourcePortRange: "*",
       destinationAddressPrefix: features.bastion.addressPrefix,
-      destinationPortRange: '443',
-      protocol: 'TCP',
-      access: 'Allow',
-      direction: 'Inbound',
+      destinationPortRange: "443",
+      protocol: "TCP",
+      access: "Allow",
+      direction: "Inbound",
       priority: 3000,
     });
   }
@@ -127,14 +141,14 @@ export default ({
     //Allow outbound internet
     if (!features.securityGroup.allowOutboundInternetAccess) {
       securityRules.push({
-        name: 'deny-internet',
-        sourceAddressPrefix: '*',
-        sourcePortRange: '*',
-        destinationAddressPrefix: 'Internet',
-        destinationPortRange: '*',
-        protocol: '*',
-        access: 'Deny',
-        direction: 'Outbound',
+        name: "deny-internet",
+        sourceAddressPrefix: "*",
+        sourcePortRange: "*",
+        destinationAddressPrefix: "Internet",
+        destinationPortRange: "*",
+        protocol: "*",
+        access: "Deny",
+        direction: "Outbound",
         priority: 4096, //The last rule in the list;
       });
     }
@@ -172,7 +186,7 @@ export default ({
         securityGroup:
           s.enableSecurityGroup === false ||
           [azFirewallSubnet, azBastionSubnetName, gatewaySubnetName].includes(
-            s.name
+            s.name,
           )
             ? undefined
             : securityGroup,
@@ -184,7 +198,7 @@ export default ({
         ].includes(s.name)
           ? undefined
           : routeTable,
-      })
+      }),
     ),
 
     enableDdosProtection: ddosId !== undefined,
@@ -193,8 +207,7 @@ export default ({
 
   const subnetResults: Record<
     string,
-    OutputInstance<outputs.network.SubnetResponse> &
-      Lifted<outputs.network.SubnetResponse>
+    pulumi.OutputInstance<outputs.network.SubnetResponse>
   > = {};
 
   const findSubnet = (name: string) =>
@@ -237,53 +250,53 @@ const getAppGatewayRules = ({
   version,
 }: {
   addressPrefix: string;
-  version: 'v1' | 'v2';
+  version: "v1" | "v2";
 }): pulumi.Input<inputs.network.SecurityRuleArgs>[] => {
   let start = 100;
 
   return [
     //Add inbound rule for app gateway subnet
     {
-      name: 'allow_internet_in_gateway_health',
-      description: 'Allow Health check access from internet to Gateway',
+      name: "allow_internet_in_gateway_health",
+      description: "Allow Health check access from internet to Gateway",
       priority: 200 + start++,
-      protocol: 'Tcp',
-      access: 'Allow',
-      direction: 'Inbound',
+      protocol: "Tcp",
+      access: "Allow",
+      direction: "Inbound",
 
-      sourceAddressPrefix: 'Internet',
-      sourcePortRange: '*',
+      sourceAddressPrefix: "Internet",
+      sourcePortRange: "*",
       destinationAddressPrefix: addressPrefix,
       destinationPortRanges:
-        version === 'v1' ? ['65503-65534'] : ['65200-65535'],
+        version === "v1" ? ["65503-65534"] : ["65200-65535"],
     },
 
     {
-      name: 'allow_https_internet_in_gateway',
-      description: 'Allow HTTPS access from internet to Gateway',
+      name: "allow_https_internet_in_gateway",
+      description: "Allow HTTPS access from internet to Gateway",
       priority: 200 + start++,
-      protocol: 'Tcp',
-      access: 'Allow',
-      direction: 'Inbound',
+      protocol: "Tcp",
+      access: "Allow",
+      direction: "Inbound",
 
-      sourceAddressPrefix: 'Internet',
-      sourcePortRange: '*',
+      sourceAddressPrefix: "Internet",
+      sourcePortRange: "*",
       destinationAddressPrefix: addressPrefix,
-      destinationPortRange: '443',
+      destinationPortRange: "443",
     },
 
     {
-      name: 'allow_loadbalancer_in_gateway',
-      description: 'Allow Load balancer to Gateway',
+      name: "allow_loadbalancer_in_gateway",
+      description: "Allow Load balancer to Gateway",
       priority: 200 + start++,
-      protocol: 'Tcp',
-      access: 'Allow',
-      direction: 'Inbound',
+      protocol: "Tcp",
+      access: "Allow",
+      direction: "Inbound",
 
-      sourceAddressPrefix: 'AzureLoadBalancer',
-      sourcePortRange: '*',
+      sourceAddressPrefix: "AzureLoadBalancer",
+      sourcePortRange: "*",
       destinationAddressPrefix: addressPrefix,
-      destinationPortRange: '*',
+      destinationPortRange: "*",
     },
 
     //Denied others

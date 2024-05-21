@@ -12,29 +12,28 @@ interface Props extends BasicResourceArgs {
 export default ({ name, group, subnetId, dependsOn }: Props) => {
   name = getBastionName(name);
 
-  const ipAddress = IpAddress({
+  const ipAddressId = IpAddress({
     name,
     group,
     sku: { name: "Standard", tier: "Regional" },
     lock: false,
-  });
+  }).id;
 
   return new network.BastionHost(
     name,
     {
       bastionHostName: name,
       ...group,
-      //dnsName: name,
 
       ipConfigurations: [
         {
           name: "IpConfig",
-          publicIPAddress: { id: ipAddress.id },
+          publicIPAddress: { id: ipAddressId },
           subnet: { id: subnetId },
           privateIPAllocationMethod: network.IPAllocationMethod.Dynamic,
         },
       ],
     },
-    { dependsOn: dependsOn || ipAddress, deleteBeforeReplace: true }
+    { dependsOn: dependsOn, deleteBeforeReplace: true },
   );
 };

@@ -1,10 +1,10 @@
-import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
-import { BasicResourceArgs } from '../types';
-import { isPrd } from '../Common/AzureEnv';
-import { getIpAddressName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import { organization } from '../Common/StackEnv';
+import * as network from "@pulumi/azure-native/network";
+import { Input } from "@pulumi/pulumi";
+import { BasicResourceArgs } from "../types";
+import { isPrd } from "../Common/AzureEnv";
+import { getIpAddressName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { organization } from "../Common/StackEnv";
 
 interface Props extends BasicResourceArgs {
   version?: network.IPVersion;
@@ -13,8 +13,8 @@ interface Props extends BasicResourceArgs {
   ddosCustomPolicyId?: Input<string>;
   allocationMethod?: network.IPAllocationMethod;
   sku?: {
-    name?: network.PublicIPAddressSkuName;
-    tier?: network.PublicIPAddressSkuTier;
+    name?: network.PublicIPAddressSkuName | string;
+    tier?: network.PublicIPAddressSkuTier | string;
   };
   lock?: boolean;
 }
@@ -51,14 +51,14 @@ export default ({
         ddosCustomPolicyId &&
         sku.name === network.PublicIPAddressSkuName.Standard
           ? {
-              protectionMode: enableDdos ? 'Enabled' : 'Disabled',
+              protectionMode: enableDdos ? "Enabled" : "Disabled",
               ddosProtectionPlan: { id: ddosCustomPolicyId },
             }
           : undefined,
       sku,
-      zones: isPrd ? ['1', '2', '3'] : undefined,
+      zones: isPrd ? ["1", "2", "3"] : undefined,
     },
-    { dependsOn: publicIPPrefix }
+    { dependsOn: publicIPPrefix },
   );
 
   if (lock) {

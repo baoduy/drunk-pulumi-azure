@@ -1,16 +1,16 @@
-import * as network from '@pulumi/azure-native/network';
-import * as pulumi from '@pulumi/pulumi';
+import * as network from "@pulumi/azure-native/network";
+import * as pulumi from "@pulumi/pulumi";
 
-import { isPrd } from '../Common/AzureEnv';
-import { getFirewallName } from '../Common/Naming';
-import ResourceCreator from '../Core/ResourceCreator';
+import { isPrd } from "../Common/AzureEnv";
+import { getFirewallName } from "../Common/Naming";
+import ResourceCreator from "../Core/ResourceCreator";
 import {
   BasicMonitorArgs,
   BasicResourceArgs,
   DefaultResourceArgs,
-} from '../types';
-import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
-import { FirewallPolicyProps } from './FirewallRules/types';
+} from "../types";
+import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
+import { FirewallPolicyProps } from "./FirewallRules/types";
 
 export interface FwOutboundConfig {
   name?: string;
@@ -23,9 +23,9 @@ export type FirewallSkus = {
   tier: network.AzureFirewallSkuTier;
 };
 
-interface Props
+export interface FirewallProps
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, 'monitoring'> {
+    Omit<DefaultResourceArgs, "monitoring"> {
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic */
   management?: FwOutboundConfig;
@@ -33,9 +33,13 @@ interface Props
   policy: FirewallPolicyProps;
   enableDnsProxy?: boolean;
   sku?: FirewallSkus;
-
   monitorConfig?: BasicMonitorArgs;
 }
+
+export type FirewallResult = {
+  firewall: network.AzureFirewall;
+  policy: network.FirewallPolicy | undefined;
+};
 
 export default ({
   name,
@@ -51,21 +55,16 @@ export default ({
     tier: network.AzureFirewallSkuTier.Basic,
   },
   ...others
-}: Props) => {
+}: FirewallProps): FirewallResult => {
   if (sku.tier === network.AzureFirewallSkuTier.Basic && !management) {
     throw new Error(
-      'Management Public Ip Address is required for Firewall Basic tier.'
+      "Management Public Ip Address is required for Firewall Basic tier.",
     );
   }
 
   const fwName = getFirewallName(name);
 
-  // if (rules?.applicationRuleCollections) {
-  //   //Add Denied other rules
-  //   rules.applicationRuleCollections.push(deniedOthersRule);
-  // }
-
-  const fwPolicy = policy.enabled
+  const fwPolicy = policy
     ? FirewallPolicy({
         name,
         group,
@@ -85,7 +84,7 @@ export default ({
     //...rules,
     firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
 
-    zones: isPrd ? ['1', '2', '3'] : undefined,
+    zones: isPrd ? ["1", "2", "3"] : undefined,
     threatIntelMode: network.AzureFirewallThreatIntelMode.Deny,
     sku,
 
@@ -108,16 +107,16 @@ export default ({
     additionalProperties:
       enableDnsProxy && sku.tier !== network.AzureFirewallSkuTier.Basic
         ? {
-            'Network.DNS.EnableProxy': 'true',
+            "Network.DNS.EnableProxy": "true",
           }
         : undefined,
 
     monitoring: {
       ...monitorConfig,
       logsCategories: [
-        'AzureFirewallApplicationRule',
-        'AzureFirewallNetworkRule',
-        'AzureFirewallDnsProxy',
+        "AzureFirewallApplicationRule",
+        "AzureFirewallNetworkRule",
+        "AzureFirewallDnsProxy",
       ],
     },
 
@@ -130,7 +129,7 @@ export default ({
     linkRulesToPolicy({
       name: `${name}-policies`,
       group,
-      priority: policy.priority,
+      //priority: policy.priority,
       firewallPolicyName: fwPolicy.name,
       rules: policy.rules,
       dependsOn: [fwPolicy, resource],

@@ -16,17 +16,17 @@ const defaultServicesEndpoints = [
 ];
 
 export interface SubnetProps {
-  name: string;
   /** The index of prefixSpaces*/
   addressPrefix: string;
-  /** Enable this to allow to link private endpoint network policies */
-  enablePrivateEndpoint?: boolean;
-  /** Enable this to allow to link private link service network policies*/
-  enablePrivateLinkService?: boolean;
-  enableSecurityGroup?: boolean;
-  enableRouteTable?: boolean;
   allowedServiceEndpoints?: boolean | string[];
   delegateServices?: DelegateServices[];
+  /** Enable this to allow linking private endpoint network policies */
+  enablePrivateEndpoint?: boolean;
+  /** Enable this to allow linking private link service network policies*/
+  enablePrivateLinkService?: boolean;
+  enableRouteTable?: boolean;
+  enableSecurityGroup?: boolean;
+  name: string;
 }
 
 interface Props {
@@ -47,8 +47,8 @@ export default ({
   const serviceEndpoints = Array.isArray(subnet.allowedServiceEndpoints)
     ? subnet.allowedServiceEndpoints
     : subnet.allowedServiceEndpoints === true
-    ? defaultServicesEndpoints
-    : undefined;
+      ? defaultServicesEndpoints
+      : undefined;
 
   return {
     name: subnet.name,
