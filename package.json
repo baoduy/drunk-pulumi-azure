@@ -17,7 +17,7 @@
     "url": "https://github.com/baoduy/drunk-pulumi-azure.git"
   },
   "scripts": {
-    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=8192 npm run fix-issue && npm run update-tsconfig && npx tsc && npm run copy-pkg",
+    "build": "cross-env NODE_ENV=production npm run fix-issue && npm run update-tsconfig && npx tsc && npm run copy-pkg",
     "copy-pkg": "ts-node ./.tasks/npm-package.ts && cpy ReadMe.md .out-bin/",
     "fix-issue": "ts-node ./.tasks/fix-issues.ts",
     "update-tsconfig": "ts-node ./.tasks/update-tsconfig.ts",
