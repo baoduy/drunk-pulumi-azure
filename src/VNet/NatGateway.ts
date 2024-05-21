@@ -30,6 +30,7 @@ export default ({
       natGatewayName: name,
       publicIpAddresses: publicIpAddresses.map((id) => ({ id })),
       publicIpPrefixes: publicIpPrefixes?.map((id) => ({ id })),
+      subnets: subnets?.map((id) => ({ id })),
       zones: isPrd ? ["1", "2", "3"] : undefined,
       sku: {
         name: network.NatGatewaySkuName.Standard,
