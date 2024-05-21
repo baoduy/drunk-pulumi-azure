@@ -33,7 +33,7 @@ interface IFireWallBuilder {
 }
 
 interface IGatewayFireWallBuilder extends IFireWallBuilder {
-  withNatGateway: (props: PublicIpAddressPrefixProps) => IFireWallBuilder;
+  withNatGateway: () => IFireWallBuilder;
 }
 
 interface IVnetBuilder {
@@ -50,6 +50,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private readonly _commonProps: VnetBuilderCommonProps;
   private _gatewayProps: undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
+  private _natGatewayEnabled?: boolean = false;
 
   // private _ipAddressProps: CommonOmit<PublicIpAddressPrefixProps> | undefined =
   //   undefined;
@@ -72,9 +73,8 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this._commonProps = commonProps;
   }
 
-  public withNatGateway(
-    props: CommonOmit<PublicIpAddressPrefixProps>,
-  ): IFireWallBuilder {
+  public withNatGateway(): IFireWallBuilder {
+    this._natGatewayEnabled = true;
     return this;
   }
 
@@ -169,8 +169,8 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   }
 
   public build(): VnetBuilderResults {
-    this.buildIpAddress();
     this.buildVnet();
+    this.buildIpAddress();
     this.buildFirewall();
 
     return {
