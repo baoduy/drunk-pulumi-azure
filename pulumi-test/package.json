@@ -15,11 +15,11 @@
         "@types/node": "^20"
     },
     "dependencies": {
-        "@azure/identity": "^4.1.0",
+        "@azure/identity": "^4.2.0",
         "@drunk-pulumi/azure": "file:/../.out-bin",
-        "@drunk-pulumi/azure-providers": "^0.0.6",
+        "@drunk-pulumi/azure-providers": "^0.0.7",
         "@microsoft/microsoft-graph-client": "^3.0.7",
-        "@pulumi/azure-native": "^2.36.0",
-        "@pulumi/pulumi": "^3.112.0"
+        "@pulumi/azure-native": "^2.42.0",
+        "@pulumi/pulumi": "^3.116.1"
     }
 }

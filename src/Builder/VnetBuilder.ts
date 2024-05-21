@@ -2,10 +2,15 @@ import IpAddressPrefix, {
   PublicIpAddressPrefixProps,
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
+import * as network from "@pulumi/azure-native/network";
 import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import Firewall, { FirewallProps, FirewallResult } from "../VNet/Firewall";
 import Vnet, { VnetProps, VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
+import NatGateway from "../VNet/NatGateway";
+import IpAddress from "../VNet/IpAddress";
+import * as pulumi from "@pulumi/pulumi";
+import { input as inputs } from "@pulumi/azure-native/types";
 
 //Vnet builder type
 type VnetBuilderCommonProps = {
@@ -28,17 +33,24 @@ type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
 } & CommonOmit<Omit<FirewallProps, "outbound" | "management">>;
 
-interface IFireWallBuilder {
+interface IFireWallOrVnetBuilder {
   withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
+  build: () => VnetBuilderResults;
 }
 
-interface IGatewayFireWallBuilder extends IFireWallBuilder {
-  withNatGateway: () => IFireWallBuilder;
+interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
+  withNatGateway: () => IFireWallOrVnetBuilder;
 }
 
 interface IVnetBuilder {
   build: () => VnetBuilderResults;
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
+  withSecurityRules: (
+    ...rules: pulumi.Input<inputs.network.SecurityRuleArgs>[]
+  ) => IVnetBuilder;
+  withRouteRules: (
+    ...rules: pulumi.Input<inputs.network.RouteArgs>[]
+  ) => IVnetBuilder;
 }
 
 type VnetBuilderResults = {};
@@ -51,6 +63,11 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private _gatewayProps: undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
+  private _securityRules:
+    | pulumi.Input<inputs.network.SecurityRuleArgs>[]
+    | undefined = undefined;
+  private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
+    undefined;
 
   // private _ipAddressProps: CommonOmit<PublicIpAddressPrefixProps> | undefined =
   //   undefined;
@@ -61,6 +78,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     undefined;
   private _firewallInstance: FirewallResult | undefined = undefined;
   private _vnetInstance: VnetResult | undefined = undefined;
+  private _natGatewayInstance: network.NatGateway | undefined = undefined;
 
   constructor({
     subnets,
@@ -73,7 +91,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this._commonProps = commonProps;
   }
 
-  public withNatGateway(): IFireWallBuilder {
+  public withNatGateway(): IFireWallOrVnetBuilder {
     this._natGatewayEnabled = true;
     return this;
   }
@@ -83,8 +101,22 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     return this;
   }
 
-  public withBastion(props: BastionCreationProps): VnetBuilder {
+  public withBastion(props: BastionCreationProps): IVnetBuilder {
     this._bastionProps = props;
+    return this;
+  }
+
+  public withSecurityRules(
+    ...rules: pulumi.Input<inputs.network.SecurityRuleArgs>[]
+  ): IVnetBuilder {
+    this._securityRules = rules;
+    return this;
+  }
+
+  public withRouteRules(
+    ...rules: pulumi.Input<inputs.network.RouteArgs>[]
+  ): IVnetBuilder {
+    this._routeRules = rules;
     return this;
   }
 
@@ -107,11 +139,28 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     });
   }
 
+  private buildNatGateway() {
+    if (!this._natGatewayEnabled || !this._ipAddressInstance) return;
+    const publicIpAddress = this._ipAddressInstance.addresses["outbound"];
+    if (!publicIpAddress) return;
+    this._natGatewayInstance = NatGateway({
+      ...this._commonProps,
+      publicIpAddresses: [publicIpAddress.id],
+      publicIpPrefixes: this._ipAddressInstance.addressPrefix
+        ? [this._ipAddressInstance.addressPrefix.id]
+        : undefined,
+    });
+  }
+
   private buildVnet() {
     const subnets = Object.keys(this._subnetProps).map(
       (k) =>
         ({
           name: k,
+          //Link all subnets to nate gateway if available without a firewall.
+          enableNatGateway:
+            this._natGatewayEnabled && !Boolean(this._firewallInstance),
+          //However, till able to overwrite from outside.
           ...this._subnetProps[k],
         }) as SubnetProps,
     );
@@ -120,17 +169,28 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       ...this._commonProps,
       ...this._vnetProps,
       subnets,
+      natGateway: this._natGatewayInstance,
+
       features: {
         securityGroup: {
-          allowOutboundInternetAccess: !Boolean(this._ipAddressInstance),
+          allowOutboundInternetAccess:
+            !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
+          rules: this._securityRules,
         },
-        routeTable: {},
+        routeTable: { rules: this._routeRules },
 
-        firewall: this._firewallProps?.subnet,
+        firewall: this._firewallProps
+          ? {
+              ...this._firewallProps.subnet,
+              enableNatGateway: this._natGatewayEnabled,
+            }
+          : undefined,
+
         bastion: this._bastionProps?.subnet,
       },
     });
   }
+
   private buildFirewall() {
     if (!this._firewallProps) return;
 
@@ -150,13 +210,16 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       ...this._commonProps,
       ...this._firewallProps,
 
-      outbound: [
-        {
-          name: "outbound",
-          subnetId: firewallSubnetIp,
-          publicIpAddress,
-        },
-      ],
+      //Using Force Tunneling mode if Nat gateway is enabled.
+      outbound: this._natGatewayEnabled
+        ? undefined
+        : [
+            {
+              name: "outbound",
+              subnetId: firewallSubnetIp,
+              publicIpAddress,
+            },
+          ],
       management:
         managementIpAddress && manageSubnetIp
           ? {
@@ -169,8 +232,11 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   }
 
   public build(): VnetBuilderResults {
-    this.buildVnet();
     this.buildIpAddress();
+    this.buildNatGateway();
+
+    this.buildVnet();
+
     this.buildFirewall();
 
     return {

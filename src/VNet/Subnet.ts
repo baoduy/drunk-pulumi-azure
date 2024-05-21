@@ -26,6 +26,7 @@ export interface SubnetProps {
   enablePrivateLinkService?: boolean;
   enableRouteTable?: boolean;
   enableSecurityGroup?: boolean;
+  enableNatGateway?: boolean;
   name: string;
 }
 
@@ -35,6 +36,7 @@ interface Props {
   group: ResourceGroupInfo;
   securityGroup?: network.NetworkSecurityGroup;
   routeTable?: network.RouteTable;
+  natGateway?: network.NatGateway;
 }
 
 export default ({
@@ -42,6 +44,7 @@ export default ({
   subnet,
   vnetName,
   routeTable,
+  natGateway,
   securityGroup,
 }: Props): network.SubnetArgs => {
   const serviceEndpoints = Array.isArray(subnet.allowedServiceEndpoints)
@@ -61,7 +64,10 @@ export default ({
       subnet.enableRouteTable !== false && routeTable
         ? { id: routeTable.id }
         : undefined,
+
     networkSecurityGroup: securityGroup ? { id: securityGroup.id } : undefined,
+
+    natGateway: natGateway ? { id: natGateway.id } : undefined,
 
     privateLinkServiceNetworkPolicies: subnet.enablePrivateLinkService
       ? network.VirtualNetworkPrivateLinkServiceNetworkPolicies.Enabled

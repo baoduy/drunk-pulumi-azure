@@ -24,14 +24,13 @@ export interface VnetProps extends BasicResourceArgs {
   addressSpaces?: Array<pulumi.Input<string>>;
   subnets?: SubnetProps[];
   dnsServers?: pulumi.Input<pulumi.Input<string>[]>;
+  natGateway?: network.NatGateway;
 
   /** The list of IP address that will allow public internet to go in*/
   //publicIpAddress?: pulumi.Output<string | undefined>;
 
   features?: {
     securityGroup?: {
-      /**Add Security rule to block/allow inbound internet if it is TRUE*/
-      //allowInboundInternetAccess?: boolean;
       /**Add Security rule to block/allow internet if it is TRUE*/
       allowOutboundInternetAccess?: boolean;
       rules?: pulumi.Input<inputs.network.SecurityRuleArgs>[];
@@ -47,6 +46,7 @@ export interface VnetProps extends BasicResourceArgs {
     firewall?: {
       /** Subnet address Prefix */
       addressPrefix: string;
+      enableNatGateway?: boolean;
       managementAddressPrefix?: string;
     };
 
@@ -80,6 +80,7 @@ export default ({
   ddosId,
   addressSpaces,
   subnets = [],
+  natGateway,
   dnsServers,
   features = {},
 }: VnetProps): VnetResult => {
@@ -125,6 +126,7 @@ export default ({
       name: azFirewallSubnet,
       addressPrefix: features.firewall.addressPrefix,
       allowedServiceEndpoints: false,
+      enableNatGateway: features.firewall.enableNatGateway,
     });
 
     if (features.firewall.managementAddressPrefix)
@@ -182,6 +184,8 @@ export default ({
         subnet: s,
         vnetName: name,
         group,
+
+        natGateway: s.enableNatGateway ? natGateway : undefined,
 
         securityGroup:
           s.enableSecurityGroup === false ||

@@ -11,6 +11,7 @@ import {
 } from "../types";
 import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
 import { FirewallPolicyProps } from "./FirewallRules/types";
+import { Input } from "@pulumi/pulumi";
 
 export interface FwOutboundConfig {
   name?: string;
@@ -26,9 +27,16 @@ export type FirewallSkus = {
 export interface FirewallProps
   extends BasicResourceArgs,
     Omit<DefaultResourceArgs, "monitoring"> {
-  outbound: Array<FwOutboundConfig>;
-  /** This must be provided if sku is Basic */
+  /** The public outbound IP address ignores this property if want to enable the Force Tunneling mode */
+  outbound?: Array<FwOutboundConfig>;
+
+  /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
   management?: FwOutboundConfig;
+  snat?: {
+    privateRanges?: Input<string>;
+    autoLearnPrivateRanges?: boolean;
+    routeServerId?: Input<string>;
+  };
   //rules?: FirewallRuleResults;
   policy: FirewallPolicyProps;
   enableDnsProxy?: boolean;
@@ -45,6 +53,7 @@ export default ({
   name,
   group,
   //rules,
+  snat,
   policy,
   outbound,
   management,
@@ -56,6 +65,11 @@ export default ({
   },
   ...others
 }: FirewallProps): FirewallResult => {
+  if (!outbound && !management) {
+    throw new Error(
+      "Management Public Ip Address is required for the Force Tunneling mode.",
+    );
+  }
   if (sku.tier === network.AzureFirewallSkuTier.Basic && !management) {
     throw new Error(
       "Management Public Ip Address is required for Firewall Basic tier.",
@@ -75,8 +89,22 @@ export default ({
     : undefined;
 
   const dependsOn = new Array<pulumi.Resource>();
-  outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
+  if (outbound) outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
   if (management) dependsOn.push(management.publicIpAddress);
+
+  const additionalProperties: Record<string, Input<string>> = {};
+  if (enableDnsProxy && sku.tier !== network.AzureFirewallSkuTier.Basic) {
+    additionalProperties["Network.DNS.EnableProxy"] = "Enabled";
+  }
+  if (snat) {
+    if (snat.privateRanges)
+      additionalProperties.privateRanges = snat.privateRanges;
+    if (snat.autoLearnPrivateRanges)
+      additionalProperties.autoLearnPrivateRanges = "Enabled";
+    if (snat.routeServerId)
+      additionalProperties["Network.RouteServerInfo.RouteServerID"] =
+        snat.routeServerId;
+  }
 
   const { resource } = ResourceCreator(network.AzureFirewall, {
     azureFirewallName: fwName,
@@ -96,20 +124,17 @@ export default ({
         }
       : undefined,
 
-    ipConfigurations: outbound.map((o, i) => ({
-      name: o.name || `outbound-${i}`,
-      publicIPAddress: o.publicIpAddress.id
-        ? { id: o.publicIpAddress.id }
-        : undefined,
-      subnet: { id: o.subnetId },
-    })),
+    ipConfigurations: outbound
+      ? outbound.map((o, i) => ({
+          name: o.name || `outbound-${i}`,
+          publicIPAddress: o.publicIpAddress.id
+            ? { id: o.publicIpAddress.id }
+            : undefined,
+          subnet: { id: o.subnetId },
+        }))
+      : undefined,
 
-    additionalProperties:
-      enableDnsProxy && sku.tier !== network.AzureFirewallSkuTier.Basic
-        ? {
-            "Network.DNS.EnableProxy": "true",
-          }
-        : undefined,
+    additionalProperties,
 
     monitoring: {
       ...monitorConfig,
