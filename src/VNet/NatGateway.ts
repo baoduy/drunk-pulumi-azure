@@ -26,7 +26,8 @@ export default ({
       natGatewayName: name,
       publicIpAddresses: publicIpAddresses.map((id) => ({ id })),
       publicIpPrefixes: publicIpPrefixes?.map((id) => ({ id })),
-      zones: isPrd ? ["1", "2", "3"] : undefined,
+      //refer this https://learn.microsoft.com/en-us/azure/nat-gateway/nat-availability-zones
+      //zones: isPrd ? ["1", "2", "3"] : undefined,
       sku: {
         name: network.NatGatewaySkuName.Standard,
       },
