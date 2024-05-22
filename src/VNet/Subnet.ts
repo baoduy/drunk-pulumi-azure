@@ -60,15 +60,13 @@ export default ({
     ...group,
     addressPrefix: subnet.addressPrefix,
     virtualNetworkName: vnetName,
+    networkSecurityGroup: securityGroup ? { id: securityGroup.id } : undefined,
+    natGateway: natGateway ? { id: natGateway.id } : undefined,
 
     routeTable:
       subnet.enableRouteTable !== false && routeTable
         ? { id: routeTable.id }
         : undefined,
-
-    networkSecurityGroup: securityGroup ? { id: securityGroup.id } : undefined,
-
-    natGateway: natGateway ? { id: natGateway.id } : undefined,
 
     privateLinkServiceNetworkPolicies: subnet.enablePrivateLinkService
       ? network.VirtualNetworkPrivateLinkServiceNetworkPolicies.Enabled

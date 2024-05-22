@@ -123,7 +123,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (this._firewallProps) {
       if (!this._firewallProps.sku)
         this._firewallProps.sku = this._natGatewayEnabled
-          ? { tier: "Standard", name: "AZFW_VNet" }
+          ? { tier: "Standard", name: "AZFW_Hub" }
           : { tier: "Basic", name: "AZFW_VNet" };
 
       if (this._natGatewayEnabled && this._firewallProps.sku.tier === "Basic")

@@ -125,7 +125,7 @@ export default ({
     zones: isPrd ? ["1", "2", "3"] : undefined,
 
     threatIntelMode:
-      sku.tier !== network.AzureFirewallSkuTier.Basic
+      sku.tier !== network.AzureFirewallSkuTier.Basic && sku.name !== "AZFW_Hub"
         ? network.AzureFirewallThreatIntelMode.Deny
         : undefined,
 
