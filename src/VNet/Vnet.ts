@@ -168,13 +168,14 @@ export default ({
 
   //Route Table
   const routeRules = features.routeTable?.rules || [];
-  if (features?.firewall?.managementAddressPrefix) {
-    routeRules.push({
-      name: "route-to-internet",
-      addressPrefix: "0.0.0.0/0",
-      nextHopType: network.RouteNextHopType.Internet,
-    });
-  }
+  // if (features?.firewall?.managementAddressPrefix) {
+  //   routeRules.push({
+  //     name: "route-to-internet",
+  //     addressPrefix: "0.0.0.0/0",
+  //     nextHopType: network.RouteNextHopType.Internet,
+  //   });
+  // }
+
   const routeTable = new network.RouteTable(`${vName}-route`, {
     routeTableName: `${vName}-route`,
     ...group,

@@ -6,7 +6,7 @@ import {
   getFirewallPolicyGroupName,
   getFirewallPolicyName,
 } from "../Common/Naming";
-import { FirewallRuleProps } from "./FirewallRules/types";
+import { FirewallPolicyResults } from "./FirewallRules/types";
 
 export const denyOtherAppRule: inputs.network.ApplicationRuleArgs = {
   name: "deny-others-websites",
@@ -24,7 +24,7 @@ export const denyOtherAppRule: inputs.network.ApplicationRuleArgs = {
 interface PolicyRulesProps extends BasicResourceArgs {
   firewallPolicyName: Input<string>;
   priority?: number;
-  rules: Array<FirewallRuleProps>;
+  rules: Array<FirewallPolicyResults>;
   enableDenyOtherAppRule?: boolean;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
@@ -45,8 +45,10 @@ export const linkRulesToPolicy = ({
     >
   >();
 
+  //Collect the rules
   let p = 200;
   rules.forEach((r, i) => {
+    // DNAT rules
     if (r.dnatRules && r.dnatRules.length > 0) {
       ruleCollections.push({
         name: `${r.name}-dnat`,
@@ -59,7 +61,8 @@ export const linkRulesToPolicy = ({
       });
     }
 
-    if (r.networkRules && r.networkRules.length > 0) {
+    // Network rules
+    if (r.netRules && r.netRules.length > 0) {
       ruleCollections.push({
         name: `${r.name}-net`,
         priority: i + p++,
@@ -68,11 +71,12 @@ export const linkRulesToPolicy = ({
             .Allow,
         },
         ruleCollectionType: "FirewallPolicyFilterRuleCollection",
-        rules: r.networkRules,
+        rules: r.netRules,
       });
     }
 
-    if (r.applicationRules && r.applicationRules.length > 0) {
+    // Application Rules
+    if (r.appRules && r.appRules.length > 0) {
       ruleCollections.push({
         name: `${r.name}-app`,
         priority: i + 200 + p++,
@@ -81,7 +85,7 @@ export const linkRulesToPolicy = ({
             .Allow,
         },
         ruleCollectionType: "FirewallPolicyFilterRuleCollection",
-        rules: r.applicationRules,
+        rules: r.appRules,
       });
     }
   });

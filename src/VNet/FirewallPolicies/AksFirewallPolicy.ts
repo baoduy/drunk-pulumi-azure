@@ -1,6 +1,6 @@
 import { Input, interpolate } from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
-import { FirewallRuleProps } from "../FirewallRules/types";
+import { FirewallPolicyResults } from "../FirewallRules/types";
 import { getLocation } from "../../Common/Location";
 import { currentLocation } from "../../Common/AzureEnv";
 
@@ -12,12 +12,12 @@ interface Props {
   /** Allows access to Docker and Kubenetes registries */
   allowAccessPublicRegistries?: boolean;
 
-  dNATs: [
+  dNATs?: [
     {
       name: string;
       allowHttp?: boolean;
       publicIpAddresses: Input<string>[];
-      /** Default is '*' to allows all requests */
+      /** Default value is '*' and it will allows all incoming requests */
       sourceIpAddress?: Input<string>;
       internalIpAddress: Input<string>;
     },
@@ -30,7 +30,7 @@ export default ({
   allowAccessPublicRegistries,
   vnetAddressSpace,
   dNATs,
-}: Props): FirewallRuleProps => {
+}: Props): FirewallPolicyResults => {
   const location = getLocation(currentLocation);
 
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
@@ -263,144 +263,7 @@ export default ({
   return {
     name,
     dnatRules,
-    networkRules: [
-      ...netRules,
-      // {
-      //   name: 'aks-vpn',
-      //   description:
-      //     'For OPEN VPN tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia',
-      //   protocols: ['UDP'],
-      //   sourceAddresses: vnetAddressSpace,
-      //   destinationAddresses: [`AzureCloud.${location}`],
-      //   destinationPorts: ['1194'],
-      // },
-      {
-        ruleType: "NetworkRule",
-        name: "aks-time",
-        description:
-          "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
-        ipProtocols: ["UDP"],
-        sourceAddresses: vnetAddressSpace,
-        destinationFqdns: ["ntp.ubuntu.com"],
-        destinationPorts: ["123"],
-      },
-      {
-        ruleType: "NetworkRule",
-        name: "aks-time_others",
-        description:
-          "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
-        ipProtocols: ["UDP"],
-        sourceAddresses: vnetAddressSpace,
-        destinationAddresses: ["*"],
-        destinationPorts: ["123"],
-      },
-      // {
-      //   name: 'aks-control-server',
-      //   description:
-      //     'Required if running pods/deployments that access the API Server, those pods/deployments would use the API IP.',
-      //   protocols: ['TCP'],
-      //   sourceAddresses: vnetAddressSpace,
-      //   destinationAddresses: ['10.0.0.0/16'],//Ask default is '10.0.0.0/16'
-      //   destinationPorts: ['443', '10250', '10251'],
-      // },
-      {
-        ruleType: "NetworkRule",
-        name: "azure-services-tags",
-        description: "Allows internal services to connect to Azure Resources.",
-        ipProtocols: ["TCP"],
-        sourceAddresses: vnetAddressSpace,
-        destinationAddresses: [
-          interpolate`AzureContainerRegistry.${location}`,
-          interpolate`MicrosoftContainerRegistry.${location}`,
-          "AzureActiveDirectory",
-          interpolate`AzureMonitor.${location}`,
-          "AppConfiguration",
-        ],
-        destinationPorts: ["443"],
-      },
-      // {
-      //   name: 'azure-dns',
-      //   description: 'Azure DNS.',
-      //   protocols: ['TCP', 'UDP'],
-      //   sourceAddresses: vnetAddressSpace,
-      //   destinationFqdns: [
-      //     'ns1-01.azure-dns.com',
-      //     'ns2-01.azure-dns.net',
-      //     'ns3-01.azure-dns.org',
-      //     'ns4-01.azure-dns.info',
-      //   ],
-      //   destinationPorts: ['53'],
-      // },
-      {
-        ruleType: "NetworkRule",
-        name: "others-dns",
-        description: "Others DNS.",
-        ipProtocols: ["TCP", "UDP"],
-        sourceAddresses: vnetAddressSpace,
-        destinationAddresses: ["*"],
-        destinationPorts: ["53"],
-      },
-    ],
-    applicationRules: [
-      ...appRules,
-      {
-        ruleType: "ApplicationRule",
-        name: "aks-fqdn",
-        description: "Azure Global required FQDN",
-        sourceAddresses: vnetAddressSpace,
-        targetFqdns: [
-          //Microsoft Container Registry
-          "mcr.microsoft.com",
-          "data.mcr.microsoft.com",
-          "*.data.mcr.microsoft.com",
-          //Azure management
-          "management.azure.com",
-          "login.microsoftonline.com",
-          //Microsoft trusted package repository
-          "packages.microsoft.com",
-          //Azure CDN
-          "acs-mirror.azureedge.net",
-          //CosmosDb
-          "*.documents.azure.com",
-        ],
-        protocols: [{ protocolType: "Https", port: 443 }],
-      },
-      {
-        ruleType: "ApplicationRule",
-        name: "azure-monitors",
-        sourceAddresses: vnetAddressSpace,
-        targetFqdns: [
-          "dc.services.visualstudio.com",
-          "*.ods.opinsights.azure.com",
-          "*.oms.opinsights.azure.com",
-          "*.monitoring.azure.com",
-          "*.services.visualstudio.com",
-        ],
-        protocols: [{ protocolType: "Https", port: 443 }],
-      },
-      {
-        ruleType: "ApplicationRule",
-        name: "azure-policy",
-        sourceAddresses: vnetAddressSpace,
-        targetFqdns: [
-          "*.policy.core.windows.net",
-          "gov-prod-policy-data.trafficmanager.net",
-          "raw.githubusercontent.com",
-          "dc.services.visualstudio.com",
-        ],
-        protocols: [{ protocolType: "Https", port: 443 }],
-      },
-      {
-        ruleType: "ApplicationRule",
-        name: "ubuntu-services",
-        sourceAddresses: vnetAddressSpace,
-        targetFqdns: [
-          "security.ubuntu.com",
-          "azure.archive.ubuntu.com",
-          "changelogs.ubuntu.com",
-        ],
-        protocols: [{ protocolType: "Https", port: 443 }],
-      },
-    ],
+    netRules,
+    appRules,
   };
 };
