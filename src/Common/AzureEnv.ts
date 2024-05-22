@@ -5,7 +5,7 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import { getKeyVaultName, getResourceGroupName } from "./Naming";
 import { ResourceInfoArg } from "./ResourceEnv";
 import { organization, projectName, stack } from "./StackEnv";
-import {azRegions} from './Naming/AzureRegions';
+import { getCountryCode } from "./Location";
 
 const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);
@@ -13,8 +13,9 @@ export const subscriptionId = config.apply((c) => c.subscriptionId);
 export const currentPrincipal = config.apply((c) => c.objectId);
 
 const env = JSON.parse(process.env.PULUMI_CONFIG ?? "{}");
-export const currentLocation = (env[  "azure-native:config:location"] ?? env[  "azure-native:location"] ?? "SoutheastAsia") as string;
-export const currentLocationCode = azRegions.find(l=> l.region.toLowerCase().includes(currentLocation.toLowerCase()))?.code??'';
+export const currentLocation = (env["azure-native:config:location"] ??
+  "SoutheastAsia") as string;
+export const currentLocationCode = getCountryCode(currentLocation);
 export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 //Print and Check
@@ -23,7 +24,7 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
     TenantId: t,
     SubscriptionId: s,
     currentLocation,
-    currentLocationCode
+    currentLocationCode,
   });
 });
 

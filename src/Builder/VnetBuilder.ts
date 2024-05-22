@@ -52,7 +52,12 @@ interface IVnetBuilder {
   ) => IVnetBuilder;
 }
 
-type VnetBuilderResults = {};
+type VnetBuilderResults = {
+  publicIpAddress: PublicIpAddressPrefixResult | undefined;
+  firewall: FirewallResult | undefined;
+  vnet: VnetResult | undefined;
+  natGateway: network.NatGateway | undefined;
+};
 
 const outboundIpName = "outbound";
 
@@ -123,7 +128,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (this._firewallProps) {
       if (!this._firewallProps.sku)
         this._firewallProps.sku = this._natGatewayEnabled
-          ? { tier: "Standard", name: "AZFW_Hub" }
+          ? { tier: "Standard", name: "AZFW_VNet" }
           : { tier: "Basic", name: "AZFW_VNet" };
 
       if (this._natGatewayEnabled && this._firewallProps.sku.tier === "Basic")
@@ -193,11 +198,15 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       natGateway: this._natGatewayInstance,
 
       features: {
-        securityGroup: {
-          allowOutboundInternetAccess:
-            !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
-          rules: this._securityRules,
-        },
+        //Only create Security group when firewall is not there
+        securityGroup: !this._firewallProps
+          ? {
+              allowOutboundInternetAccess:
+                !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
+              rules: this._securityRules,
+            }
+          : undefined,
+
         routeTable: { rules: this._routeRules },
 
         firewall: this._firewallProps
@@ -233,15 +242,15 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       ...this._commonProps,
       ...this._firewallProps,
 
-      //Using Force Tunneling mode if Nat gateway is enabled.
-      outbound: this._natGatewayEnabled
-        ? undefined
-        : [
-            {
-              subnetId: firewallSubnetId!,
-              publicIpAddress: publicIpAddress!,
-            },
-          ],
+      outbound: [
+        {
+          subnetId: firewallSubnetId!,
+          //Using Force Tunneling mode if Nat gateway is enabled.
+          publicIpAddress: this._natGatewayEnabled
+            ? undefined
+            : publicIpAddress!,
+        },
+      ],
       //This is required for Force Tunneling mode
       management: manageSubnetId
         ? {
@@ -261,9 +270,10 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this.buildFirewall();
 
     return {
-      ipAddress: this._ipAddressInstance,
+      publicIpAddress: this._ipAddressInstance,
       firewall: this._firewallInstance,
       vnet: this._vnetInstance,
+      natGateway: this._natGatewayInstance,
     };
   }
 }

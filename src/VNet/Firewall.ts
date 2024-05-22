@@ -17,7 +17,7 @@ import { isDryRun } from "../Common/StackEnv";
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
-  publicIpAddress: network.PublicIPAddress;
+  publicIpAddress?: network.PublicIPAddress;
 }
 
 export type FirewallSkus = {
@@ -29,9 +29,9 @@ export interface FirewallProps
   extends BasicResourceArgs,
     Omit<DefaultResourceArgs, "monitoring"> {
   /** The public outbound IP address ignores this property if want to enable the Force Tunneling mode */
-  outbound?: Array<FwOutboundConfig>;
+  outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
-  management?: Pick<FwOutboundConfig, "subnetId">;
+  management?: FwOutboundConfig;
 
   snat?: {
     privateRanges?: Input<string>;
@@ -78,12 +78,10 @@ export default ({
 
   const fwName = getFirewallName(name);
 
-  const dependsOn = new Array<pulumi.Resource>();
-  if (outbound) outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
-
   //Create Public IpAddress for Management
-  const manageIpAddress = management?.subnetId
-    ? IpAddress({
+  const manageIpAddress = management
+    ? management.publicIpAddress ??
+      IpAddress({
         name,
         group,
         sku: { name: "Standard", tier: "Regional" },
@@ -141,7 +139,7 @@ export default ({
     ipConfigurations: outbound
       ? outbound.map((o, i) => ({
           name: `outbound-${i}`,
-          publicIPAddress: o.publicIpAddress.id
+          publicIPAddress: o.publicIpAddress
             ? { id: o.publicIpAddress.id }
             : undefined,
           subnet: { id: o.subnetId },
@@ -160,7 +158,6 @@ export default ({
     },
 
     ...others,
-    dependsOn,
   } as network.AzureFirewallArgs & DefaultResourceArgs);
 
   //Link Rule to Policy
