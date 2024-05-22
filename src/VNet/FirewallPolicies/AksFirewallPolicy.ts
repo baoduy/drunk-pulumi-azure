@@ -26,13 +26,12 @@ interface Props {
 
 export default ({
   name = "aks-firewall-policy",
-  location = currentLocation,
   privateCluster,
   allowAccessPublicRegistries,
   vnetAddressSpace,
   natRule,
 }: Props): FirewallRuleProps => {
-  location = getLocation(location);
+  const location = getLocation(currentLocation);
 
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
   const netRules = new Array<Input<inputs.network.NetworkRuleArgs>>();
