@@ -125,7 +125,6 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
 
     this._ipAddressInstance = IpAddressPrefix({
       ...this._commonProps,
-      prefixLength: ipNames.length + 2, //Reserved 2 more IpAddress
       ipAddresses: ipNames.map((n) => ({ name: n })),
       config: { version: "IPv4", allocationMethod: "Static" },
     });
@@ -141,6 +140,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       publicIpPrefixes: this._ipAddressInstance.addressPrefix
         ? [this._ipAddressInstance.addressPrefix.id]
         : undefined,
+      dependsOn: this._ipAddressInstance.addressPrefix,
     });
   }
 
@@ -182,6 +182,12 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
 
         bastion: this._bastionProps?.subnet,
       },
+
+      dependsOn: this._firewallInstance?.firewall
+        ? this._firewallInstance?.firewall
+        : this._natGatewayInstance
+          ? this._natGatewayInstance
+          : undefined,
     });
   }
 
@@ -217,6 +223,8 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
             subnetId: manageSubnetIp,
           }
         : undefined,
+
+      dependsOn: this._ipAddressInstance?.addressPrefix,
     });
   }
 

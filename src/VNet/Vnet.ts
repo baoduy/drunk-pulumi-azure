@@ -2,7 +2,7 @@ import * as network from "@pulumi/azure-native/network";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { output as outputs } from "@pulumi/azure-native/types";
-import { BasicResourceArgs } from "../types";
+import { BasicResourceArgs, RouteArgs, SecurityRuleArgs } from "../types";
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
@@ -33,10 +33,10 @@ export interface VnetProps extends BasicResourceArgs {
     securityGroup?: {
       /**Add Security rule to block/allow internet if it is TRUE*/
       allowOutboundInternetAccess?: boolean;
-      rules?: pulumi.Input<inputs.network.SecurityRuleArgs>[];
+      rules?: pulumi.Input<SecurityRuleArgs>[];
     };
 
-    routeTable?: { rules?: pulumi.Input<inputs.network.RouteArgs>[] };
+    routeTable?: { rules?: pulumi.Input<RouteArgs>[] };
 
     appGatewaySubnet?: {
       addressPrefix: string;
@@ -87,7 +87,7 @@ export default ({
   const vName = getVnetName(name);
   const securityRules =
     features.securityGroup?.rules ||
-    new Array<pulumi.Input<inputs.network.SecurityRuleArgs>>();
+    new Array<pulumi.Input<SecurityRuleArgs>>();
 
   //AppGateway
   if (features.appGatewaySubnet) {
@@ -126,6 +126,7 @@ export default ({
       name: azFirewallSubnet,
       addressPrefix: features.firewall.addressPrefix,
       allowedServiceEndpoints: false,
+      enableSecurityGroup: false,
       enableNatGateway: features.firewall.enableNatGateway,
     });
 
@@ -134,6 +135,7 @@ export default ({
         name: azFirewallManagementSubnet,
         addressPrefix: features.firewall.managementAddressPrefix,
         allowedServiceEndpoints: false,
+        enableSecurityGroup: false,
       });
   }
 
@@ -163,10 +165,18 @@ export default ({
   }
 
   //Route Table
+  const routeRules = features.routeTable?.rules || [];
+  if (features?.firewall?.managementAddressPrefix) {
+    routeRules.push({
+      name: "route-to-internet",
+      addressPrefix: "0.0.0.0/0",
+      nextHopType: network.RouteNextHopType.Internet,
+    });
+  }
   const routeTable = new network.RouteTable(`${vName}-route`, {
     routeTableName: `${vName}-route`,
     ...group,
-    routes: features.routeTable?.rules || [],
+    routes: routeRules,
   });
 
   //Create VNet

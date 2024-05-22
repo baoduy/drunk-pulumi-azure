@@ -11,7 +11,7 @@ type AddressNameType = Array<{
 }>;
 
 export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
-  prefixLength: number;
+  prefixLength?: 28 | 29 | 30 | 31;
   createPrefix?: boolean;
   config?: {
     version?: network.IPVersion;
@@ -31,7 +31,7 @@ export type PublicIpAddressPrefixResult = {
 export default ({
   name,
   group,
-  prefixLength,
+  prefixLength = 30,
   createPrefix = true,
   ipAddresses,
   config = {
