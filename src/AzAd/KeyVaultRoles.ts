@@ -26,7 +26,10 @@ export const getVaultRoleNames = (name: string) => {
   };
 };
 
-export const createVaultRoles = (name: string) => {
+export const createVaultRoles = (
+  name: string,
+  addGlobalADOIdentity?: boolean,
+) => {
   const vaultRoleConfig = getConfig(name);
   //Admin
   const adminGroup = Role({
@@ -42,12 +45,14 @@ export const createVaultRoles = (name: string) => {
   });
 
   //Add Global ADO Identity as Admin
-  const ado = getAdoIdentity();
-  addMemberToGroup({
-    name: "ado-admin-role",
-    groupObjectId: adminGroup.objectId,
-    objectId: ado.principal.objectId,
-  });
+  if (addGlobalADOIdentity) {
+    const ado = getAdoIdentity();
+    addMemberToGroup({
+      name: "ado-admin-role",
+      groupObjectId: adminGroup.objectId,
+      objectId: ado.principal.objectId,
+    });
+  }
 
-  return { adminGroup, readOnlyGroup };
+  return { adminGroup, readOnlyGroup, addGlobalADOIdentity };
 };

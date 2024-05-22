@@ -20,7 +20,7 @@ type VnetBuilderCommonProps = {
 };
 
 type VnetBuilderProps = VnetBuilderCommonProps & {
-  subnets: SubnetCreationProps;
+  subnets?: SubnetCreationProps;
 } & Pick<VnetProps, "addressSpaces" | "dnsServers">;
 
 // Generic Omit type excluding specified keys
@@ -57,9 +57,10 @@ type VnetBuilderResults = {};
 
 export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   /** The Props */
-  private readonly _subnetProps: SubnetCreationProps;
+  private readonly _subnetProps: SubnetCreationProps | undefined = undefined;
   private readonly _vnetProps: Partial<VnetBuilderProps>;
   private readonly _commonProps: VnetBuilderCommonProps;
+  private _firewallProps: FirewallCreationProps | undefined = undefined;
   private _gatewayProps: undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
@@ -68,10 +69,6 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
-
-  // private _ipAddressProps: CommonOmit<PublicIpAddressPrefixProps> | undefined =
-  //   undefined;
-  private _firewallProps: FirewallCreationProps | undefined = undefined;
 
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
@@ -153,17 +150,19 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   }
 
   private buildVnet() {
-    const subnets = Object.keys(this._subnetProps).map(
-      (k) =>
-        ({
-          name: k,
-          //Link all subnets to nate gateway if available without a firewall.
-          enableNatGateway:
-            this._natGatewayEnabled && !Boolean(this._firewallInstance),
-          //However, till able to overwrite from outside.
-          ...this._subnetProps[k],
-        }) as SubnetProps,
-    );
+    const subnets = this._subnetProps
+      ? Object.keys(this._subnetProps!).map(
+          (k) =>
+            ({
+              name: k,
+              //Link all subnets to nate gateway if available without a firewall.
+              enableNatGateway:
+                this._natGatewayEnabled && !Boolean(this._firewallInstance),
+              //However, till able to overwrite from outside.
+              ...this._subnetProps![k],
+            }) as SubnetProps,
+        )
+      : [];
 
     this._vnetInstance = Vnet({
       ...this._commonProps,
@@ -234,9 +233,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   public build(): VnetBuilderResults {
     this.buildIpAddress();
     this.buildNatGateway();
-
     this.buildVnet();
-
     this.buildFirewall();
 
     return {

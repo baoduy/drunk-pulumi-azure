@@ -95,7 +95,7 @@ export const grantVaultAccessToIdentity = ({
   identity.apply(async (i) => {
     if (!i) return;
     const vaultRole = await getVaultRoleNames(vaultInfo);
-    if(!vaultRole)return;
+    if (!vaultRole) return;
 
     addMemberToGroup({
       name: `${name}-identity-readAccess-${vaultInfo.name}`,
@@ -114,6 +114,7 @@ export const grantVaultPermissionToRole = ({
   roles: {
     adminGroup: pulumi.Output<azuread.Group>;
     readOnlyGroup: pulumi.Output<azuread.Group>;
+    addGlobalADOIdentity?: boolean;
   };
 }) => {
   //Grant RBAC permission to Group
@@ -133,15 +134,17 @@ export const grantVaultPermissionToRole = ({
     principalType: "Group",
   });
 
-  //Grant Admin RBAC permission current ADO Identity as the Group will be take time to be effective
-  const ado = getAdoIdentity();
-  grantVaultRbacPermission({
-    name: `${name}-Admin-Ado`,
-    scope: vaultInfo.id,
-    objectId: ado.principal.objectId,
-    permission: "ReadWrite",
-    principalType: "ServicePrincipal",
-  });
+  if (roles.addGlobalADOIdentity) {
+    //Grant Admin RBAC permission current ADO Identity as the Group will be take time to be effective
+    const ado = getAdoIdentity();
+    grantVaultRbacPermission({
+      name: `${name}-Admin-Ado`,
+      scope: vaultInfo.id,
+      objectId: ado.principal.objectId,
+      permission: "ReadWrite",
+      principalType: "ServicePrincipal",
+    });
+  }
 
   //Add RoleNames to vault
   addCustomSecret({

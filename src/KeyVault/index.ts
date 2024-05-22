@@ -14,6 +14,7 @@ import { createVaultRoles } from "../AzAd/KeyVaultRoles";
 interface Props extends BasicResourceArgs {
   /**The default-encryption-key, tenant-id va subscription-id will be added to the secrets and keys*/
   createDefaultValues?: boolean;
+  addGlobalADOIdentity?: boolean;
   network?: {
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
@@ -25,11 +26,12 @@ export default ({
   //nameConvention,
   group,
   createDefaultValues,
+  addGlobalADOIdentity = true,
   network,
   ...others
 }: Props) => {
   const vaultName = getKeyVaultName(name);
-  const roles = createVaultRoles(name);
+  const roles = createVaultRoles(name, addGlobalADOIdentity);
 
   const vault = new native.keyvault.Vault(vaultName, {
     vaultName,
