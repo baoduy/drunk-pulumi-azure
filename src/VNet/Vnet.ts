@@ -136,6 +136,8 @@ export default ({
         addressPrefix: features.firewall.managementAddressPrefix,
         allowedServiceEndpoints: false,
         enableSecurityGroup: false,
+        enableNatGateway: false,
+        enableRouteTable: false,
       });
   }
 

@@ -78,16 +78,6 @@ export default ({
 
   const fwName = getFirewallName(name);
 
-  const fwPolicy = policy
-    ? FirewallPolicy({
-        name,
-        group,
-        basePolicyId: policy.parentPolicyId,
-        sku: sku.tier,
-        dnsSettings: { enableProxy: true },
-      })
-    : undefined;
-
   const dependsOn = new Array<pulumi.Resource>();
   if (outbound) outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
 
@@ -115,15 +105,29 @@ export default ({
         snat.routeServerId;
   }
 
+  const fwPolicy = policy
+    ? FirewallPolicy({
+        name,
+        group,
+        basePolicyId: policy.parentPolicyId,
+        sku: sku.tier,
+        dnsSettings: {
+          enableProxy: true,
+        },
+      })
+    : undefined;
+
   const { resource } = ResourceCreator(network.AzureFirewall, {
     azureFirewallName: fwName,
     ...group,
-    //...rules,
-    firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
-
-    zones: isPrd ? ["1", "2", "3"] : undefined,
-    threatIntelMode: network.AzureFirewallThreatIntelMode.Deny,
     sku,
+    firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
+    zones: isPrd ? ["1", "2", "3"] : undefined,
+
+    threatIntelMode:
+      sku.tier !== network.AzureFirewallSkuTier.Basic
+        ? network.AzureFirewallThreatIntelMode.Deny
+        : undefined,
 
     managementIpConfiguration:
       management && manageIpAddress
@@ -164,7 +168,7 @@ export default ({
     linkRulesToPolicy({
       name: `${name}-policies`,
       group,
-      //priority: policy.priority,
+      priority: 201,
       firewallPolicyName: fwPolicy.name,
       rules: policy.rules,
       dependsOn: [fwPolicy, resource],

@@ -1,23 +1,23 @@
-import * as network from '@pulumi/azure-native/network';
-import { input as inputs, enums } from '@pulumi/azure-native/types';
-import { Input, Resource } from '@pulumi/pulumi';
-import { BasicResourceArgs, DefaultResourceArgs } from '../types';
+import * as network from "@pulumi/azure-native/network";
+import { enums, input as inputs } from "@pulumi/azure-native/types";
+import { Input, Resource } from "@pulumi/pulumi";
+import { BasicResourceArgs, DefaultResourceArgs } from "../types";
 import {
   getFirewallPolicyGroupName,
   getFirewallPolicyName,
-} from '../Common/Naming';
-import { FirewallRuleProps } from './FirewallRules/types';
+} from "../Common/Naming";
+import { FirewallRuleProps } from "./FirewallRules/types";
 
 export const denyOtherAppRule: inputs.network.ApplicationRuleArgs = {
-  name: 'deny-others-websites',
-  ruleType: 'ApplicationRule',
-  description: 'Deny All Others websites',
-  sourceAddresses: ['*'],
-  targetFqdns: ['*'],
+  name: "deny-others-websites",
+  ruleType: "ApplicationRule",
+  description: "Deny All Others websites",
+  sourceAddresses: ["*"],
+  targetFqdns: ["*"],
   protocols: [
-    { protocolType: 'Http', port: 80 },
-    { protocolType: 'Https', port: 443 },
-    { protocolType: 'Mssql', port: 1433 },
+    { protocolType: "Http", port: 80 },
+    { protocolType: "Https", port: 443 },
+    { protocolType: "Mssql", port: 1433 },
   ],
 };
 
@@ -54,7 +54,7 @@ export const linkRulesToPolicy = ({
         action: {
           type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
         },
-        ruleCollectionType: 'FirewallPolicyNatRuleCollection',
+        ruleCollectionType: "FirewallPolicyNatRuleCollection",
         rules: r.dnatRules,
       });
     }
@@ -67,7 +67,7 @@ export const linkRulesToPolicy = ({
           type: enums.network.FirewallPolicyFilterRuleCollectionActionType
             .Allow,
         },
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
+        ruleCollectionType: "FirewallPolicyFilterRuleCollection",
         rules: r.networkRules,
       });
     }
@@ -80,7 +80,7 @@ export const linkRulesToPolicy = ({
           type: enums.network.FirewallPolicyFilterRuleCollectionActionType
             .Allow,
         },
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
+        ruleCollectionType: "FirewallPolicyFilterRuleCollection",
         rules: r.applicationRules,
       });
     }
@@ -94,7 +94,7 @@ export const linkRulesToPolicy = ({
       action: {
         type: enums.network.FirewallPolicyFilterRuleCollectionActionType.Allow,
       },
-      ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
       rules: [denyOtherAppRule],
     });
   }
@@ -109,14 +109,14 @@ export const linkRulesToPolicy = ({
       priority,
       ruleCollections,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, 'monitoring'>,
-    Omit<PolicyRulesProps, 'firewallPolicyName' | 'rules'> {
+    Omit<DefaultResourceArgs, "monitoring">,
+    Omit<PolicyRulesProps, "firewallPolicyName" | "rules"> {
   basePolicyId?: Input<string>;
 
   dnsSettings?: Input<inputs.network.DnsSettingsArgs>;
@@ -145,8 +145,7 @@ export default ({
   dependsOn,
 }: Props) => {
   name = getFirewallPolicyName(name);
-
-  const policy = new network.FirewallPolicy(
+  return new network.FirewallPolicy(
     name,
     {
       firewallPolicyName: name,
@@ -154,12 +153,20 @@ export default ({
       sku: { tier: sku },
 
       basePolicy: basePolicyId ? { id: basePolicyId } : undefined,
-      dnsSettings,
+      dnsSettings:
+        sku !== enums.network.FirewallPolicySkuTier.Basic
+          ? dnsSettings
+          : undefined,
 
-      threatIntelMode: enums.network.AzureFirewallThreatIntelMode.Deny,
-      transportSecurity: transportSecurityCA
-        ? { certificateAuthority: transportSecurityCA }
-        : undefined,
+      threatIntelMode:
+        sku !== enums.network.FirewallPolicySkuTier.Basic
+          ? enums.network.AzureFirewallThreatIntelMode.Deny
+          : undefined,
+
+      transportSecurity:
+        sku !== enums.network.FirewallPolicySkuTier.Basic && transportSecurityCA
+          ? { certificateAuthority: transportSecurityCA }
+          : undefined,
 
       insights: insights
         ? {
@@ -174,8 +181,6 @@ export default ({
           }
         : undefined,
     },
-    { dependsOn }
+    { dependsOn },
   );
-
-  return policy;
 };

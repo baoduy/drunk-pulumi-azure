@@ -1,6 +1,6 @@
-import { input as inputs, enums } from '@pulumi/azure-native/types';
-import { Input } from '@pulumi/pulumi';
-import { FirewallRuleResults } from './types';
+import { input as inputs, enums } from "@pulumi/azure-native/types";
+import { Input } from "@pulumi/pulumi";
+import { FirewallRuleResults } from "./types";
 
 interface BasicRuleProps {
   startPriority: number;
@@ -12,9 +12,10 @@ interface NatRuleProps extends BasicRuleProps {
     {
       name: string;
       allowHttp?: boolean;
-      externalIpAddress: Input<string>;
+      /** Default is '*' to allows all requests */
+      sourceIpAddress?: Input<string>;
       internalIpAddress: Input<string>;
-    }
+    },
   ];
 }
 
@@ -26,7 +27,7 @@ const getDnatRules = ({
   const rules = new Array<inputs.network.AzureFirewallNatRuleCollectionArgs>();
 
   rules.push({
-    name: 'dnat-rules',
+    name: "dnat-rules",
     action: { type: enums.network.AzureFirewallNatRCActionType.Dnat },
     priority: ++startPriority,
 
@@ -34,23 +35,23 @@ const getDnatRules = ({
       const httpsRule = {
         name: `${nat.name}-inbound-443`,
         description: `Forward port 443 external IpAddress of ${nat.name} to internal IpAddress`,
-        sourceAddresses: [nat.externalIpAddress],
+        sourceAddresses: [nat.sourceIpAddress ?? "*"],
         destinationAddresses: publicIpAddresses,
-        destinationPorts: ['443'],
-        protocols: ['TCP'],
+        destinationPorts: ["443"],
+        protocols: ["TCP"],
         translatedAddress: nat.internalIpAddress,
-        translatedPort: '443',
+        translatedPort: "443",
       };
 
       const httpRule = {
         name: `${nat.name}-inbound-80`,
         description: `Forward port 80 external IpAddress of ${nat.name} to internal IpAddress`,
-        sourceAddresses: [nat.externalIpAddress],
+        sourceAddresses: [nat.sourceIpAddress ?? "*"],
         destinationAddresses: publicIpAddresses,
-        destinationPorts: ['80'],
-        protocols: ['TCP'],
+        destinationPorts: ["80"],
+        protocols: ["TCP"],
         translatedAddress: nat.internalIpAddress,
-        translatedPort: '80',
+        translatedPort: "80",
       };
       return nat.allowHttp ? [httpsRule, httpRule] : [httpsRule];
     }),
@@ -67,7 +68,7 @@ interface AksNetProps extends BasicRuleProps {
 
 const getAksNetRules = ({
   startPriority,
-  location = 'SoutheastAsia',
+  location = "SoutheastAsia",
   vnetAddressSpace,
 }: AksNetProps): inputs.network.AzureFirewallNetworkRuleCollectionArgs[] => {
   location = location.toLowerCase();
@@ -78,7 +79,7 @@ const getAksNetRules = ({
   //https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic
 
   rules.push({
-    name: 'aks-net-rules',
+    name: "aks-net-rules",
     action: { type: enums.network.AzureFirewallRCActionType.Allow },
     priority: ++startPriority,
     rules: [
@@ -92,32 +93,32 @@ const getAksNetRules = ({
       //   destinationPorts: ['1194'],
       // },
       {
-        name: 'aks-tcp',
+        name: "aks-tcp",
         description:
-          'For tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia',
-        protocols: ['TCP'],
+          "For tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
+        protocols: ["TCP"],
         sourceAddresses: vnetAddressSpace,
         destinationAddresses: [`AzureCloud.${location}`],
-        destinationPorts: ['443', '9000'],
+        destinationPorts: ["443", "9000"],
       },
       {
-        name: 'aks-time',
+        name: "aks-time",
         description:
-          'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
-        protocols: ['UDP'],
+          "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
+        protocols: ["UDP"],
         sourceAddresses: vnetAddressSpace,
-        destinationFqdns: ['ntp.ubuntu.com'],
-        destinationPorts: ['123'],
+        destinationFqdns: ["ntp.ubuntu.com"],
+        destinationPorts: ["123"],
       },
-      {
-        name: 'aks-time_others',
-        description:
-          'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
-        protocols: ['UDP'],
-        sourceAddresses: vnetAddressSpace,
-        destinationAddresses: ['*'],
-        destinationPorts: ['123'],
-      },
+      // {
+      //   name: "aks-time_others",
+      //   description:
+      //     "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
+      //   protocols: ["UDP"],
+      //   sourceAddresses: vnetAddressSpace,
+      //   destinationAddresses: ["*"],
+      //   destinationPorts: ["123"],
+      // },
       // {
       //   name: 'aks-control-server',
       //   description:
@@ -128,33 +129,33 @@ const getAksNetRules = ({
       //   destinationPorts: ['443', '10250', '10251'],
       // },
       {
-        name: 'azure-services-tags',
-        description: 'Allows internal services to connect to Azure Resources.',
-        protocols: ['TCP'],
+        name: "azure-services-tags",
+        description: "Allows internal services to connect to Azure Resources.",
+        protocols: ["TCP"],
         sourceAddresses: vnetAddressSpace,
         destinationAddresses: [
-          'AzureContainerRegistry.SoutheastAsia',
-          'MicrosoftContainerRegistry.SoutheastAsia',
-          'AzureActiveDirectory',
-          'AzureMonitor.SoutheastAsia',
-          'AppConfiguration',
-          'AzureKeyVault.SoutheastAsia',
+          "AzureContainerRegistry.SoutheastAsia",
+          "MicrosoftContainerRegistry.SoutheastAsia",
+          "AzureActiveDirectory",
+          "AzureMonitor.SoutheastAsia",
+          "AppConfiguration",
+          "AzureKeyVault.SoutheastAsia",
           //'AzureSignalR', This already using private endpoint
           //'DataFactory.SoutheastAsia',
           //'EventHub.SoutheastAsia',
-          'ServiceBus.SoutheastAsia',
+          "ServiceBus.SoutheastAsia",
           //'Sql.SoutheastAsia', This already using private endpoint
-          'Storage.SoutheastAsia',
+          "Storage.SoutheastAsia",
         ],
-        destinationPorts: ['443'],
+        destinationPorts: ["443"],
       },
       {
-        name: 'others-dns',
-        description: 'Others DNS.',
-        protocols: ['TCP', 'UDP'],
+        name: "others-dns",
+        description: "Others DNS.",
+        protocols: ["TCP", "UDP"],
         sourceAddresses: vnetAddressSpace,
-        destinationAddresses: ['*'],
-        destinationPorts: ['53'],
+        destinationAddresses: ["*"],
+        destinationPorts: ["53"],
       },
     ],
   });
@@ -175,104 +176,104 @@ const getAksAppRules = ({
 
   //AzureKubernetesService
   rules.push({
-    name: 'aks-services-fqdn-rules',
+    name: "aks-services-fqdn-rules",
     action: { type: enums.network.AzureFirewallRCActionType.Allow },
     priority: ++startPriority,
     rules: [
       {
-        name: 'aks-services',
-        description: 'Allows pods to access AzureKubernetesService',
+        name: "aks-services",
+        description: "Allows pods to access AzureKubernetesService",
         sourceAddresses: vnetAddressSpace,
         //AzureKubernetesService is allow to access google.com
-        fqdnTags: ['AzureKubernetesService'],
+        fqdnTags: ["AzureKubernetesService"],
       },
       {
-        name: 'aks-fqdn',
-        description: 'Azure Global required FQDN',
+        name: "aks-fqdn",
+        description: "Azure Global required FQDN",
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
           //AKS mater
-          '*.hcp.southeastasia.azmk8s.io',
+          "*.hcp.southeastasia.azmk8s.io",
           //Microsoft Container Registry
-          'mcr.microsoft.com',
-          'data.mcr.microsoft.com',
-          '*.data.mcr.microsoft.com',
+          "mcr.microsoft.com",
+          "data.mcr.microsoft.com",
+          "*.data.mcr.microsoft.com",
           //Azure management
-          'management.azure.com',
-          'login.microsoftonline.com',
+          "management.azure.com",
+          "login.microsoftonline.com",
           //Microsoft trusted package repository
-          'packages.microsoft.com',
+          "packages.microsoft.com",
           //Azure CDN
-          'acs-mirror.azureedge.net',
+          "acs-mirror.azureedge.net",
           //CosmosDb
-          '*.documents.azure.com',
+          "*.documents.azure.com",
         ],
-        protocols: [{ protocolType: 'Https', port: 443 }],
+        protocols: [{ protocolType: "Https", port: 443 }],
       },
       {
-        name: 'azure-monitors',
+        name: "azure-monitors",
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
-          'dc.services.visualstudio.com',
-          '*.ods.opinsights.azure.com',
-          '*.oms.opinsights.azure.com',
-          '*.monitoring.azure.com',
-          '*.services.visualstudio.com',
+          "dc.services.visualstudio.com",
+          "*.ods.opinsights.azure.com",
+          "*.oms.opinsights.azure.com",
+          "*.monitoring.azure.com",
+          "*.services.visualstudio.com",
         ],
-        protocols: [{ protocolType: 'Https', port: 443 }],
+        protocols: [{ protocolType: "Https", port: 443 }],
       },
       {
-        name: 'azure-policy',
+        name: "azure-policy",
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
-          '*.policy.core.windows.net',
-          'gov-prod-policy-data.trafficmanager.net',
-          'raw.githubusercontent.com',
-          'dc.services.visualstudio.com',
+          "*.policy.core.windows.net",
+          "gov-prod-policy-data.trafficmanager.net",
+          "raw.githubusercontent.com",
+          "dc.services.visualstudio.com",
         ],
-        protocols: [{ protocolType: 'Https', port: 443 }],
+        protocols: [{ protocolType: "Https", port: 443 }],
       },
       {
         //TODO Allow Docker Access is potential risk once we have budget and able to upload external images to ACR then remove docker.
-        name: 'docker-services',
+        name: "docker-services",
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
-          'quay.io', //For Cert Manager
-          '*.quay.io',
-          'auth.docker.io',
-          '*.auth.docker.io',
-          '*.cloudflare.docker.io',
-          'docker.io',
-          'cloudflare.docker.io',
-          'cloudflare.docker.com',
-          '*.cloudflare.docker.com',
-          '*.registry-1.docker.io',
-          'registry-1.docker.io',
+          "quay.io", //For Cert Manager
+          "*.quay.io",
+          "auth.docker.io",
+          "*.auth.docker.io",
+          "*.cloudflare.docker.io",
+          "docker.io",
+          "cloudflare.docker.io",
+          "cloudflare.docker.com",
+          "*.cloudflare.docker.com",
+          "*.registry-1.docker.io",
+          "registry-1.docker.io",
         ],
-        protocols: [{ protocolType: 'Https', port: 443 }],
+        protocols: [{ protocolType: "Https", port: 443 }],
       },
       {
         //TODO Allow external registry is potential risk once we have budget and able to upload external images to ACR then remove docker.
-        name: 'k8s-services',
+        name: "k8s-services",
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
-          'k8s.gcr.io', //nginx images
-          '*.k8s.io',
-          'asia-east1-docker.pkg.dev',
-          '*.gcr.io',
-          '*.googleapis.com',
+          "k8s.gcr.io", //nginx images
+          "*.k8s.io",
+          "asia-east1-docker.pkg.dev",
+          "*.gcr.io",
+          "*.googleapis.com",
         ],
-        protocols: [{ protocolType: 'Https', port: 443 }],
+        protocols: [{ protocolType: "Https", port: 443 }],
       },
       {
-        name: 'ubuntu-services',
+        name: "ubuntu-services",
         sourceAddresses: vnetAddressSpace,
         targetFqdns: [
-          'security.ubuntu.com',
-          'azure.archive.ubuntu.com',
-          'changelogs.ubuntu.com',
+          "security.ubuntu.com",
+          "azure.archive.ubuntu.com",
+          "changelogs.ubuntu.com",
         ],
-        protocols: [{ protocolType: 'Https', port: 443 }],
+        protocols: [{ protocolType: "Https", port: 443 }],
       },
     ],
   });

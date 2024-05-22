@@ -26,6 +26,7 @@ export interface SubnetProps {
   enablePrivateLinkService?: boolean;
   enableRouteTable?: boolean;
   enableSecurityGroup?: boolean;
+  /** link Nat gateway into this subnet */
   enableNatGateway?: boolean;
   name: string;
 }
