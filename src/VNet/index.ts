@@ -5,13 +5,8 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { getResourceInfoFromId } from "../Common/AzureEnv";
 import { NetworkRouteResource } from "@drunk-pulumi/azure-providers/NetworkRuote";
-import {
-  BasicMonitorArgs,
-  BasicResourceArgs,
-  DefaultResourceArgs,
-  ResourceGroupInfo,
-} from "../types";
-import Firewall, { FirewallSkus, FwOutboundConfig } from "./Firewall";
+import { BasicMonitorArgs, ResourceGroupInfo } from "../types";
+import Firewall, { FirewallSkus, FirewallProps } from "./Firewall";
 import { FirewallPolicyProps } from "./FirewallRules/types";
 import VnetPeering from "./NetworkPeering";
 import { SubnetProps } from "./Subnet";
@@ -39,8 +34,6 @@ interface Props {
       /** Only required if Firewall is Basic tier */
       managementSubnetPrefix?: string;
       sku?: FirewallSkus;
-      publicManageIpAddress?: network.PublicIPAddress;
-
       policy: Omit<FirewallPolicyProps, "enabled">;
 
       /** set this is TRUE if want to create firewall subnet but not create firewall component */
@@ -212,20 +205,17 @@ export default ({
 
       outbound: [
         {
-          name: `${name}-outbound`,
           publicIpAddress: publicIpAddress!,
           subnetId: vnet.firewallSubnet.apply((c) => c.id!),
         },
       ],
-      management: features.enableFirewall.publicManageIpAddress
+      management: features?.enableFirewall.managementSubnetPrefix
         ? {
-            name: `${name}-management`,
-            publicIpAddress: features.enableFirewall.publicManageIpAddress,
             subnetId: vnet.firewallManageSubnet.apply((c) => c.id!),
           }
         : undefined,
-      sku: features.enableFirewall.sku,
 
+      sku: features.enableFirewall.sku,
       routeTableName: vnet.routeTable.name,
       monitorConfig,
       dependsOn: [vnet.routeTable, vnet.vnet],
@@ -275,26 +265,13 @@ export default ({
   return { publicIpAddress, ...vnet, firewall };
 };
 
-interface FirewallProps
-  extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, "monitoring"> {
-  sku?: FirewallSkus;
-  outbound: Array<FwOutboundConfig>;
-  /** This must be provided if sku is Basic */
-  management?: FwOutboundConfig;
-  routeTableName?: Input<string>;
-  policy: FirewallPolicyProps;
-  monitorConfig?: BasicMonitorArgs;
-  dependsOn?: Input<Resource>[];
-}
-
 const createFirewall = ({
   name,
   group,
   routeTableName,
   dependsOn = [],
   ...others
-}: FirewallProps) => {
+}: FirewallProps & { routeTableName: Input<string> }) => {
   const rs = Firewall({
     name,
     group,
@@ -317,7 +294,7 @@ const createFirewall = ({
         ),
       },
       {
-        dependsOn: [...dependsOn, rs.firewall],
+        dependsOn: [rs.firewall],
       },
     );
   }

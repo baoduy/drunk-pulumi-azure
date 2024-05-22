@@ -12,9 +12,10 @@ import {
 import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
 import { FirewallPolicyProps } from "./FirewallRules/types";
 import { Input } from "@pulumi/pulumi";
+import IpAddress from "./IpAddress";
+import { isDryRun } from "../Common/StackEnv";
 
 export interface FwOutboundConfig {
-  name?: string;
   subnetId: pulumi.Input<string>;
   publicIpAddress: network.PublicIPAddress;
 }
@@ -29,9 +30,9 @@ export interface FirewallProps
     Omit<DefaultResourceArgs, "monitoring"> {
   /** The public outbound IP address ignores this property if want to enable the Force Tunneling mode */
   outbound?: Array<FwOutboundConfig>;
-
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
-  management?: FwOutboundConfig;
+  management?: Pick<FwOutboundConfig, "subnetId">;
+
   snat?: {
     privateRanges?: Input<string>;
     autoLearnPrivateRanges?: boolean;
@@ -52,7 +53,6 @@ export type FirewallResult = {
 export default ({
   name,
   group,
-  //rules,
   snat,
   policy,
   outbound,
@@ -65,15 +65,15 @@ export default ({
   },
   ...others
 }: FirewallProps): FirewallResult => {
-  if (!outbound && !management) {
-    throw new Error(
-      "Management Public Ip Address is required for the Force Tunneling mode.",
-    );
-  }
-  if (sku.tier === network.AzureFirewallSkuTier.Basic && !management) {
-    throw new Error(
-      "Management Public Ip Address is required for Firewall Basic tier.",
-    );
+  // Validation
+  if (!isDryRun) {
+    if (!outbound && !management)
+      throw new Error(
+        "Management Public Ip Address is required for the Force Tunneling mode.",
+      );
+
+    if (sku.tier === network.AzureFirewallSkuTier.Basic && !management)
+      throw new Error("Management Subnet is required for Firewall Basic tier.");
   }
 
   const fwName = getFirewallName(name);
@@ -90,7 +90,16 @@ export default ({
 
   const dependsOn = new Array<pulumi.Resource>();
   if (outbound) outbound.forEach((o) => dependsOn.push(o.publicIpAddress));
-  if (management) dependsOn.push(management.publicIpAddress);
+
+  //Create Public IpAddress for Management
+  const manageIpAddress = management?.subnetId
+    ? IpAddress({
+        name,
+        group,
+        sku: { name: "Standard", tier: "Regional" },
+        lock: false,
+      })
+    : undefined;
 
   const additionalProperties: Record<string, Input<string>> = {};
   if (enableDnsProxy && sku.tier !== network.AzureFirewallSkuTier.Basic) {
@@ -116,17 +125,18 @@ export default ({
     threatIntelMode: network.AzureFirewallThreatIntelMode.Deny,
     sku,
 
-    managementIpConfiguration: management
-      ? {
-          name: management.name,
-          publicIPAddress: { id: management.publicIpAddress.id },
-          subnet: { id: management.subnetId },
-        }
-      : undefined,
+    managementIpConfiguration:
+      management && manageIpAddress
+        ? {
+            name: "management",
+            publicIPAddress: { id: manageIpAddress.id },
+            subnet: { id: management.subnetId },
+          }
+        : undefined,
 
     ipConfigurations: outbound
       ? outbound.map((o, i) => ({
-          name: o.name || `outbound-${i}`,
+          name: `outbound-${i}`,
           publicIPAddress: o.publicIpAddress.id
             ? { id: o.publicIpAddress.id }
             : undefined,

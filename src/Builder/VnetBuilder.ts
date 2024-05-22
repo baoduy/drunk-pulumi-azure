@@ -1,5 +1,4 @@
 import IpAddressPrefix, {
-  PublicIpAddressPrefixProps,
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
@@ -8,7 +7,6 @@ import Firewall, { FirewallProps, FirewallResult } from "../VNet/Firewall";
 import Vnet, { VnetProps, VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
 import NatGateway from "../VNet/NatGateway";
-import IpAddress from "../VNet/IpAddress";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 
@@ -124,9 +122,6 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (this._gatewayProps || this._firewallProps) {
       ipNames.push("outbound");
     }
-    if (this._firewallProps && this._firewallProps.sku?.tier == "Basic") {
-      ipNames.push("fw-management");
-    }
 
     this._ipAddressInstance = IpAddressPrefix({
       ...this._commonProps,
@@ -194,8 +189,6 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (!this._firewallProps) return;
 
     const publicIpAddress = this._ipAddressInstance?.addresses["outbound"];
-    const managementIpAddress =
-      this._ipAddressInstance?.addresses["fw-management"];
     const firewallSubnetIp = this._vnetInstance?.firewallSubnet.apply(
       (s) => s.id!,
     );
@@ -214,19 +207,16 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
         ? undefined
         : [
             {
-              name: "outbound",
+              //name: "outbound",
               subnetId: firewallSubnetIp,
               publicIpAddress,
             },
           ],
-      management:
-        managementIpAddress && manageSubnetIp
-          ? {
-              name: "management",
-              publicIpAddress: managementIpAddress,
-              subnetId: manageSubnetIp,
-            }
-          : undefined,
+      management: manageSubnetIp
+        ? {
+            subnetId: manageSubnetIp,
+          }
+        : undefined,
     });
   }
 
