@@ -19,7 +19,7 @@ export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
     ddosCustomPolicyId?: Input<string>;
     allocationMethod?: network.IPAllocationMethod;
   };
-  ipAddresses: AddressNameType;
+  ipAddresses?: AddressNameType;
   lock?: boolean;
 }
 

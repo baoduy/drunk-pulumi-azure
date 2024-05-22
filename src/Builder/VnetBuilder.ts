@@ -9,6 +9,7 @@ import { SubnetProps } from "../VNet/Subnet";
 import NatGateway from "../VNet/NatGateway";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
+import { isDryRun } from "../Common/StackEnv";
 
 //Vnet builder type
 type VnetBuilderCommonProps = {
@@ -53,13 +54,15 @@ interface IVnetBuilder {
 
 type VnetBuilderResults = {};
 
+const outboundIpName = "outbound";
+
 export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   /** The Props */
   private readonly _subnetProps: SubnetCreationProps | undefined = undefined;
   private readonly _vnetProps: Partial<VnetBuilderProps>;
   private readonly _commonProps: VnetBuilderCommonProps;
   private _firewallProps: FirewallCreationProps | undefined = undefined;
-  private _gatewayProps: undefined = undefined;
+  //private _gatewayProps: undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
   private _securityRules:
@@ -116,11 +119,26 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   }
 
   /** Builders methods */
+  private validate() {
+    if (this._firewallProps) {
+      if (!this._firewallProps.sku)
+        this._firewallProps.sku = this._natGatewayEnabled
+          ? { tier: "Standard", name: "AZFW_VNet" }
+          : { tier: "Basic", name: "AZFW_VNet" };
+
+      if (this._natGatewayEnabled && this._firewallProps.sku.tier === "Basic")
+        throw new Error(
+          'The Firewall tier "Basic" is not support Nat Gateway.',
+        );
+    }
+  }
+
   private buildIpAddress() {
     const ipNames = [];
 
-    if (this._gatewayProps || this._firewallProps) {
-      ipNames.push("outbound");
+    if (!this._natGatewayEnabled && this._firewallProps) {
+      console.log(`${this._commonProps.name}: outbound ip will be created.`);
+      ipNames.push(outboundIpName);
     }
 
     this._ipAddressInstance = IpAddressPrefix({
@@ -132,15 +150,24 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
 
   private buildNatGateway() {
     if (!this._natGatewayEnabled || !this._ipAddressInstance) return;
-    const publicIpAddress = this._ipAddressInstance.addresses["outbound"];
-    if (!publicIpAddress) return;
+
+    // const publicIpAddress = this._ipAddressInstance.addresses["outbound"];
+    // if (!publicIpAddress) return;
+
     this._natGatewayInstance = NatGateway({
       ...this._commonProps,
-      publicIpAddresses: [publicIpAddress.id],
-      publicIpPrefixes: this._ipAddressInstance.addressPrefix
-        ? [this._ipAddressInstance.addressPrefix.id]
+
+      publicIpAddresses: this._ipAddressInstance.addresses
+        ? Object.keys(this._ipAddressInstance.addresses).map(
+            (k) => this._ipAddressInstance!.addresses![k].id,
+          )
         : undefined,
-      dependsOn: this._ipAddressInstance.addressPrefix,
+
+      publicIpPrefixes:
+        !this._ipAddressInstance.addresses &&
+        this._ipAddressInstance.addressPrefix
+          ? [this._ipAddressInstance.addressPrefix.id]
+          : undefined,
     });
   }
 
@@ -194,15 +221,13 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private buildFirewall() {
     if (!this._firewallProps) return;
 
-    const publicIpAddress = this._ipAddressInstance?.addresses["outbound"];
-    const firewallSubnetIp = this._vnetInstance?.firewallSubnet.apply(
+    const publicIpAddress = this._ipAddressInstance?.addresses[outboundIpName];
+    const firewallSubnetId = this._vnetInstance?.firewallSubnet.apply(
       (s) => s.id!,
     );
-    const manageSubnetIp = this._vnetInstance?.firewallManageSubnet?.apply(
+    const manageSubnetId = this._vnetInstance?.firewallManageSubnet?.apply(
       (s) => s.id!,
     );
-
-    if (!firewallSubnetIp || !publicIpAddress) return;
 
     this._firewallInstance = Firewall({
       ...this._commonProps,
@@ -213,14 +238,14 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
         ? undefined
         : [
             {
-              //name: "outbound",
-              subnetId: firewallSubnetIp,
-              publicIpAddress,
+              subnetId: firewallSubnetId!,
+              publicIpAddress: publicIpAddress!,
             },
           ],
-      management: manageSubnetIp
+      //This is required for Force Tunneling mode
+      management: manageSubnetId
         ? {
-            subnetId: manageSubnetIp,
+            subnetId: manageSubnetId,
           }
         : undefined,
 
@@ -229,6 +254,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   }
 
   public build(): VnetBuilderResults {
+    this.validate();
     this.buildIpAddress();
     this.buildNatGateway();
     this.buildVnet();
