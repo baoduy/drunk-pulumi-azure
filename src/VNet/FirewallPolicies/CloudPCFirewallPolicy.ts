@@ -5,7 +5,6 @@ import { input as inputs } from "@pulumi/azure-native/types";
 interface Props {
   name: string;
   vnetAddressSpace: Array<Input<string>>;
-  location: Input<string>;
   allowFullOutboundAddress?: Array<Input<string>>;
   allowIpCheckApi?: boolean;
   enableCloudPcRules?: boolean;
@@ -15,7 +14,6 @@ interface Props {
 
 export default ({
   name,
-  location,
   vnetAddressSpace,
   enableCloudPcRules = true,
   enableDeveloperResources = true,
