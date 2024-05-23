@@ -3,7 +3,7 @@ import { FirewallPolicyResults } from "../FirewallRules/types";
 import { input as inputs } from "@pulumi/azure-native/types";
 
 interface Props {
-  name: string;
+  name?: string;
   vnetAddressSpace: Array<Input<string>>;
   allowFullOutboundAddress?: Array<Input<string>>;
   allowIpCheckApi?: boolean;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default ({
-  name,
+  name = "cloud-pc-firewall-policy",
   vnetAddressSpace,
   enableCloudPcRules = true,
   enableDeveloperResources = true,

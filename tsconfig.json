@@ -102,6 +102,7 @@
     "src/VNet/Firewall.ts",
     "src/VNet/FirewallPolicies/AksFirewallPolicy.ts",
     "src/VNet/FirewallPolicies/CloudPCFirewallPolicy.ts",
+    "src/VNet/FirewallPolicies/index.ts",
     "src/VNet/FirewallPolicy.ts",
     "src/VNet/FirewallRules/AksFirewallRules.ts",
     "src/VNet/FirewallRules/DefaultRules.ts",
