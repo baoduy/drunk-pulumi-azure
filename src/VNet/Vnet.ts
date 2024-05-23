@@ -95,6 +95,8 @@ export default ({
       name: appGatewaySubnetName,
       addressPrefix: features.appGatewaySubnet.addressPrefix,
       allowedServiceEndpoints: false,
+      enableSecurityGroup: false,
+      enableRouteTable: false,
     });
     //Add Security Rules for App Gateway
     securityRules.push(...getAppGatewayRules(features.appGatewaySubnet));
@@ -105,6 +107,8 @@ export default ({
       name: azBastionSubnetName,
       addressPrefix: features.bastion.addressPrefix,
       allowedServiceEndpoints: false,
+      enableSecurityGroup: true,
+      enableRouteTable: false,
     });
 
     securityRules.push({
@@ -200,22 +204,9 @@ export default ({
         group,
 
         natGateway: s.enableNatGateway ? natGateway : undefined,
-
         securityGroup:
-          s.enableSecurityGroup === false ||
-          [azFirewallSubnet, azBastionSubnetName, gatewaySubnetName].includes(
-            s.name,
-          )
-            ? undefined
-            : securityGroup,
-
-        routeTable: [
-          azBastionSubnetName,
-          azFirewallSubnet,
-          gatewaySubnetName,
-        ].includes(s.name)
-          ? undefined
-          : routeTable,
+          s.enableSecurityGroup === false ? undefined : securityGroup,
+        routeTable: s.enableRouteTable === false ? undefined : routeTable,
       }),
     ),
 
