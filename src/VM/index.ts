@@ -1,26 +1,25 @@
-import { Input, Resource } from '@pulumi/pulumi';
-import * as native from '@pulumi/azure-native';
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
-import { getNICName, getVMName } from '../Common/Naming';
-import Locker from '../Core/Locker';
+import { Input, Resource } from "@pulumi/pulumi";
+import * as native from "@pulumi/azure-native";
+import { BasicResourceArgs, KeyVaultInfo } from "../types";
+import { getNICName, getVMName } from "../Common/Naming";
+import Locker from "../Core/Locker";
 
 interface Props extends BasicResourceArgs {
   subnetId: Input<string>;
   storageAccountType?: native.compute.StorageAccountTypes;
   vmSize?: Input<string>;
-
   login: { userName: Input<string>; password?: Input<string> };
 
   windows?: {
-    offer: 'WindowsServer';
-    publisher: 'MicrosoftWindowsServer';
-    sku: '2019-Datacenter';
+    offer: "WindowsServer";
+    publisher: "MicrosoftWindowsServer";
+    sku: "2019-Datacenter";
   };
 
   linux?: {
-    offer: 'UbuntuServer';
-    publisher: 'Canonical';
-    sku: '18.04-LTS';
+    offer: "UbuntuServer";
+    publisher: "Canonical";
+    sku: "18.04-LTS";
   };
 
   vaultInfo?: KeyVaultInfo;
@@ -42,8 +41,8 @@ export default ({
   name,
   group,
   subnetId,
-  vmSize = 'Standard_B2s',
-  timeZone = 'Singapore Standard Time',
+  vmSize = "Standard_B2s",
+  timeZone = "Singapore Standard Time",
   //licenseType = 'None',
   storageAccountType = native.compute.StorageAccountTypes.Premium_LRS,
   osDiskSizeGB = 128,
@@ -66,7 +65,7 @@ export default ({
     networkInterfaceName: nicName,
     ...group,
     ipConfigurations: [
-      { name: 'ipconfig', subnet: { id: subnetId }, primary: true },
+      { name: "ipconfig", subnet: { id: subnetId }, primary: true },
     ],
     nicType: native.network.NetworkInterfaceNicType.Standard,
   });
@@ -79,8 +78,8 @@ export default ({
       ...others,
 
       hardwareProfile: { vmSize },
-      identity: { type: 'SystemAssigned' },
-      licenseType: 'None',
+      identity: { type: "SystemAssigned" },
+      licenseType: "None",
 
       networkProfile: {
         networkInterfaces: [{ id: nic.id, primary: true }],
@@ -101,7 +100,7 @@ export default ({
               provisionVMAgent: true,
               patchSettings: {
                 //assessmentMode: "AutomaticByPlatform",
-                patchMode: 'AutomaticByPlatform',
+                patchMode: "AutomaticByPlatform",
               },
             }
           : undefined,
@@ -115,7 +114,7 @@ export default ({
                 enableHotpatching: false,
                 //Need to be enabled at subscription level
                 //assessmentMode: 'AutomaticByPlatform',
-                patchMode: 'AutomaticByPlatform',
+                patchMode: "AutomaticByPlatform",
               },
             }
           : undefined,
@@ -124,14 +123,14 @@ export default ({
       storageProfile: {
         imageReference: {
           ...(windows || linux),
-          version: 'latest',
+          version: "latest",
         },
         osDisk: {
           name: `${name}osdisk`,
           diskSizeGB: osDiskSizeGB,
-          caching: 'ReadWrite',
-          createOption: 'FromImage',
-          osType: windows ? 'Windows' : 'Linux',
+          caching: "ReadWrite",
+          createOption: "FromImage",
+          osType: windows ? "Windows" : "Linux",
           managedDisk: {
             //Changes storage account type need to be done manually through portal.
             storageAccountType,
@@ -161,10 +160,10 @@ export default ({
     {
       dependsOn,
       ignoreChanges: [
-        'storageProfile.osDisk.managedDisk.storageAccountType',
-        'storageProfile.osDisk.managedDisk.id',
+        "storageProfile.osDisk.managedDisk.storageAccountType",
+        "storageProfile.osDisk.managedDisk.id",
       ],
-    }
+    },
   );
 
   if (lock) {
@@ -179,18 +178,18 @@ export default ({
         ...group,
         dailyRecurrence: { time: schedule.autoShutdownTime },
         timeZoneId: timeZone,
-        status: 'Enabled',
+        status: "Enabled",
         targetResourceId: vm.id,
-        taskType: 'ComputeVmShutdownTask',
+        taskType: "ComputeVmShutdownTask",
         notificationSettings: {
-          status: 'Disabled',
-          emailRecipient: '',
-          notificationLocale: 'en',
+          status: "Disabled",
+          emailRecipient: "",
+          notificationLocale: "en",
           timeInMinutes: 30,
-          webhookUrl: '',
+          webhookUrl: "",
         },
       },
-      { dependsOn: vm }
+      { dependsOn: vm },
     );
 
     // if (schedule.autoStartupTime) {
