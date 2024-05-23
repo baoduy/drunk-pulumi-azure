@@ -122,7 +122,7 @@ export default ({
                   enableHotpatching: false,
                   //Need to be enabled at subscription level
                   //assessmentMode: 'AutomaticByPlatform',
-                  patchMode: "AutomaticByPlatform",
+                  //patchMode: "AutomaticByPlatform",
                 },
               }
             : undefined,

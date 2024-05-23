@@ -100,7 +100,6 @@ export default ({
         description: "Allows Azure",
         ipProtocols: ["TCP"],
         sourceAddresses: vnetAddressSpace,
-
         destinationAddresses: [
           `ApiManagement.SoutheastAsia`,
           `AzureCloud.SoutheastAsia`,

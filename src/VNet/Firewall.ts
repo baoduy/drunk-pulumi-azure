@@ -108,9 +108,12 @@ export default ({
         group,
         basePolicyId: policy.parentPolicyId,
         sku: sku.tier,
-        dnsSettings: {
-          enableProxy: true,
-        },
+        dnsSettings:
+          sku?.tier !== "Basic"
+            ? {
+                enableProxy: true,
+              }
+            : undefined,
       })
     : undefined;
 
