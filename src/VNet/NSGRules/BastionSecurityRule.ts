@@ -5,6 +5,7 @@ interface Props {
 }
 
 /** The Security group rules for Bastion */
+// https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
 export default ({ startPriority = 200 }: Props) => {
   const rs = new Array<CustomSecurityRuleArgs>();
   //Inbound
