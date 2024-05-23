@@ -127,6 +127,7 @@ export default ({
       addressPrefix: features.firewall.addressPrefix,
       allowedServiceEndpoints: false,
       enableSecurityGroup: false,
+      enableRouteTable: true,
       enableNatGateway: features.firewall.enableNatGateway,
     });
 
