@@ -10,6 +10,9 @@ import NatGateway from "../VNet/NatGateway";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { isDryRun } from "../Common/StackEnv";
+import { Input } from "@pulumi/pulumi";
+import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
+import group from "../AzAd/Group";
 
 //Vnet builder type
 type VnetBuilderCommonProps = {
@@ -24,10 +27,10 @@ type VnetBuilderProps = VnetBuilderCommonProps & {
 
 // Generic Omit type excluding specified keys
 type CommonOmit<T> = Omit<T, keyof VnetBuilderCommonProps>;
-
 type SubnetCreationProps = Record<string, Omit<SubnetProps, "name">>;
 type SubnetPrefixCreationProps = { addressPrefix: string };
 type BastionCreationProps = { subnet: SubnetPrefixCreationProps };
+type PeeringProps = { vnetName: Input<string>; group: ResourceGroupInfo };
 type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
 } & CommonOmit<Omit<FirewallProps, "outbound" | "management">>;
@@ -44,6 +47,7 @@ interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
 interface IVnetBuilder {
   build: () => VnetBuilderResults;
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
+  peeringTo: (props: PeeringProps) => IVnetBuilder;
   withSecurityRules: (
     ...rules: pulumi.Input<inputs.network.SecurityRuleArgs>[]
   ) => IVnetBuilder;
@@ -75,6 +79,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
+  private _peeringProps: PeeringProps | undefined = undefined;
 
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
@@ -82,6 +87,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private _firewallInstance: FirewallResult | undefined = undefined;
   private _vnetInstance: VnetResult | undefined = undefined;
   private _natGatewayInstance: network.NatGateway | undefined = undefined;
+  private _peeringInstance: NetworkPeeringResults | undefined = undefined;
 
   constructor({
     subnets,
@@ -123,6 +129,10 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     return this;
   }
 
+  public peeringTo(props: PeeringProps): IVnetBuilder {
+    this._peeringProps = props;
+    return this;
+  }
   /** Builders methods */
   private validate() {
     if (this._firewallProps) {
@@ -262,12 +272,25 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     });
   }
 
+  private buildPeering() {
+    if (!this._peeringProps || !this._vnetInstance) return;
+
+    this._peeringInstance = NetworkPeering({
+      name: this._commonProps.name,
+      firstVNetName: this._vnetInstance.vnet.name,
+      firstVNetResourceGroupName: this._commonProps.group.resourceGroupName,
+      secondVNetName: this._peeringProps.vnetName,
+      secondVNetResourceGroupName: this._peeringProps.group.resourceGroupName,
+    });
+  }
+
   public build(): VnetBuilderResults {
     this.validate();
     this.buildIpAddress();
     this.buildNatGateway();
     this.buildVnet();
     this.buildFirewall();
+    this.buildPeering();
 
     return {
       publicIpAddress: this._ipAddressInstance,

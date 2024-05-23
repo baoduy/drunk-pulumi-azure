@@ -5,7 +5,6 @@ import { getLocation } from "../../Common/Location";
 import { currentLocation } from "../../Common/AzureEnv";
 
 interface Props {
-  name?: string;
   vnetAddressSpace: Array<Input<string>>;
   location?: Input<string>;
   //privateCluster?: boolean;
@@ -25,14 +24,12 @@ interface Props {
 }
 
 export default ({
-  name = "aks-firewall-policy",
   //privateCluster,
   allowAccessPublicRegistries,
   vnetAddressSpace,
   dNATs,
 }: Props): FirewallPolicyResults => {
   const location = getLocation(currentLocation);
-
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
   const netRules = new Array<Input<inputs.network.NetworkRuleArgs>>();
   const appRules = new Array<Input<inputs.network.ApplicationRuleArgs>>();
@@ -261,7 +258,7 @@ export default ({
   }
 
   return {
-    name,
+    name: "aks-firewall-policy",
     dnatRules,
     netRules,
     appRules,

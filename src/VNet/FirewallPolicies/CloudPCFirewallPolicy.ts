@@ -3,7 +3,6 @@ import { FirewallPolicyResults } from "../FirewallRules/types";
 import { input as inputs } from "@pulumi/azure-native/types";
 
 interface Props {
-  name?: string;
   vnetAddressSpace: Array<Input<string>>;
   allowFullOutboundAddress?: Array<Input<string>>;
   allowIpCheckApi?: boolean;
@@ -13,14 +12,13 @@ interface Props {
 }
 
 export default ({
-  name = "cloud-pc-firewall-policy",
   vnetAddressSpace,
   enableCloudPcRules = true,
   enableDeveloperResources = true,
   enableAzureResources = true,
   allowIpCheckApi = true,
   allowFullOutboundAddress,
-}: Props): Array<FirewallPolicyResults> => {
+}: Props): FirewallPolicyResults => {
   const netRules = new Array<Input<inputs.network.NetworkRuleArgs>>();
   const appRules = new Array<Input<inputs.network.ApplicationRuleArgs>>();
 
@@ -132,14 +130,14 @@ export default ({
         ruleType: "ApplicationRule",
         name: "allow-AVD-vvd",
         description: "WindowsVirtualDesktop traffic",
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         fqdnTags: ["WindowsVirtualDesktop"],
       },
       {
         ruleType: "ApplicationRule",
         name: "allow-AVD-Diagnostics",
         description: "WindowsVirtualDesktop Diagnostics",
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         //protocols: [{ protocolType: 'Https', port: 443 }],
         fqdnTags: ["WindowsDiagnostics"],
       },
@@ -147,7 +145,7 @@ export default ({
         ruleType: "ApplicationRule",
         name: "allow-AVD-Update",
         description: "WindowsVirtualDesktop Update",
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         //protocols: [{ protocolType: 'Https', port: 443 }],
         fqdnTags: ["WindowsUpdate"],
       },
@@ -156,7 +154,7 @@ export default ({
         name: "allow-AVD-times",
         description: "Allow ADV Times",
         protocols: [{ protocolType: "Https", port: 443 }],
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         targetFqdns: ["*.core.windows.net", "*.servicebus.windows.net"],
       },
     );
@@ -169,7 +167,7 @@ export default ({
         name: "allow-others-https",
         description: "Allow others HTTPs",
         protocols: [{ protocolType: "Https", port: 443 }],
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         targetFqdns: [
           "*.digicert.com",
 
@@ -189,7 +187,7 @@ export default ({
         name: "allow-others-http",
         description: "Allow others HTTP",
         protocols: [{ protocolType: "Http", port: 80 }],
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         targetFqdns: ["*.digicert.com"],
       },
       {
@@ -200,7 +198,7 @@ export default ({
           { protocolType: "Http", port: 80 },
           { protocolType: "Https", port: 443 },
         ],
-        sourceAddresses: allowFullOutboundAddress,
+        sourceAddresses: vnetAddressSpace,
         targetFqdns: ["*.chocolatey.org", "chocolatey.org"],
       },
     );
@@ -212,7 +210,7 @@ export default ({
       name: "allow-azure-resources",
       description: "Allows Azure Resources",
       protocols: [{ protocolType: "Https", port: 443 }],
-      sourceAddresses: allowFullOutboundAddress,
+      sourceAddresses: vnetAddressSpace,
       targetFqdns: [
         //AKS
         "*.hcp.southeastasia.azmk8s.io",
@@ -336,16 +334,14 @@ export default ({
       name: "allow-ip-checks",
       description: "Allows Ip Checks",
       protocols: [{ protocolType: "Https", port: 443 }],
-      sourceAddresses: allowFullOutboundAddress,
+      sourceAddresses: vnetAddressSpace,
       targetFqdns: ["*.ipify.org", "*.myip.com", "ip.me"],
     });
   }
 
-  return [
-    {
-      name,
-      netRules,
-      appRules,
-    },
-  ];
+  return {
+    name: "cloud-pc-firewall-policy",
+    netRules,
+    appRules,
+  };
 };

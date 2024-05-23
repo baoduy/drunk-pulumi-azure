@@ -3,13 +3,14 @@ import { input as inputs } from "@pulumi/azure-native/types";
 import { interpolate, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
 
-import { subscriptionId } from "../Common/AzureEnv";
+import { currentLocation, subscriptionId } from "../Common/AzureEnv";
 import {
   getIpAddressName,
   getResourceGroupName,
   getVnetName,
 } from "../Common/Naming";
 import { FirewallRuleResults } from "./FirewallRules/types";
+import { ResourceGroupInfo } from "../types";
 
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
@@ -25,7 +26,7 @@ export const getIpsRange = (prefix: string) => {
 
 /** Convert IP address and IP address group into range */
 export const convertToIpRange = (
-  ipAddress: string[]
+  ipAddress: string[],
 ): Array<{ start: string; end: string }> =>
   ipAddress.map((ip) => {
     if (ip.includes("/")) {
@@ -45,7 +46,7 @@ export const getVnetIdFromSubnetId = (subnetId: string) => {
 /**Merge Firewall Rules Policies with starting priority*/
 export const mergeFirewallRules = (
   rules: Array<FirewallRuleResults>,
-  startPriority: number = 200
+  startPriority: number = 200,
 ): FirewallRuleResults => {
   const applicationRuleCollections =
     new Array<inputs.network.AzureFirewallApplicationRuleCollectionArgs>();
@@ -69,7 +70,7 @@ export const mergeFirewallRules = (
 
   //Update Priority
   applicationRuleCollections.forEach(
-    (a, i) => (a.priority = startPriority + i)
+    (a, i) => (a.priority = startPriority + i),
   );
   natRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
   networkRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
@@ -123,4 +124,16 @@ export const getIpAddressResource = ({
     publicIpAddressName: n,
     resourceGroupName: group,
   });
+};
+
+export const getVnetInfo = (
+  groupName: string,
+): { vnetName: string; group: ResourceGroupInfo } => {
+  const vnetName = getVnetName(groupName);
+  const rsName = getResourceGroupName(groupName);
+
+  return {
+    vnetName,
+    group: { resourceGroupName: rsName, location: currentLocation },
+  };
 };
