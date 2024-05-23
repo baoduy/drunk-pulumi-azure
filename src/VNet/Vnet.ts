@@ -2,7 +2,7 @@ import * as network from "@pulumi/azure-native/network";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { output as outputs } from "@pulumi/azure-native/types";
-import { BasicResourceArgs, RouteArgs, SecurityRuleArgs } from "../types";
+import { BasicResourceArgs, RouteArgs, CustomSecurityRuleArgs } from "../types";
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
@@ -13,6 +13,8 @@ import {
 import { getVnetName } from "../Common/Naming";
 import Bastion from "./Bastion";
 import CreateSubnet, { SubnetProps } from "./Subnet";
+import SecurityGroup from "./SecurityGroup";
+import RouteTable from "./RouteTable";
 
 export type DelegateServices =
   | "Microsoft.ContainerInstance/containerGroups"
@@ -33,7 +35,7 @@ export interface VnetProps extends BasicResourceArgs {
     securityGroup?: {
       /**Add Security rule to block/allow internet if it is TRUE*/
       allowOutboundInternetAccess?: boolean;
-      rules?: pulumi.Input<SecurityRuleArgs>[];
+      rules?: pulumi.Input<CustomSecurityRuleArgs>[];
     };
 
     routeTable?: { rules?: pulumi.Input<RouteArgs>[] };
@@ -62,15 +64,22 @@ export interface VnetProps extends BasicResourceArgs {
 
 export type VnetResult = {
   vnet: network.VirtualNetwork;
-  appGatewaySubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
-  firewallManageSubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
-  routeTable: network.RouteTable;
-  firewallSubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
-  subnets: Record<
-    string,
-    pulumi.OutputInstance<outputs.network.SubnetResponse>
+  appGatewaySubnet: pulumi.OutputInstance<
+    outputs.network.SubnetResponse | undefined
   >;
-  bastionSubnet: pulumi.OutputInstance<outputs.network.SubnetResponse>;
+  firewallManageSubnet: pulumi.OutputInstance<
+    outputs.network.SubnetResponse | undefined
+  >;
+  routeTable: network.RouteTable;
+  firewallSubnet: pulumi.OutputInstance<
+    outputs.network.SubnetResponse | undefined
+  >;
+  bastionSubnet: pulumi.OutputInstance<
+    outputs.network.SubnetResponse | undefined
+  >;
+  findSubnet: (
+    name: string,
+  ) => pulumi.OutputInstance<outputs.network.SubnetResponse | undefined>;
   securityGroup: undefined | network.NetworkSecurityGroup;
 };
 
@@ -87,7 +96,7 @@ export default ({
   const vName = getVnetName(name);
   const securityRules =
     features.securityGroup?.rules ||
-    new Array<pulumi.Input<SecurityRuleArgs>>();
+    new Array<pulumi.Input<CustomSecurityRuleArgs>>();
 
   //AppGateway
   if (features.appGatewaySubnet) {
@@ -164,9 +173,9 @@ export default ({
       });
     }
 
-    securityGroup = new network.NetworkSecurityGroup(`${vName}-sg`, {
-      networkSecurityGroupName: `${vName}-sg`,
-      ...group,
+    securityGroup = SecurityGroup({
+      name: vName,
+      group,
       securityRules,
     });
   }
@@ -181,9 +190,9 @@ export default ({
   //   });
   // }
 
-  const routeTable = new network.RouteTable(`${vName}-route`, {
-    routeTableName: `${vName}-route`,
-    ...group,
+  const routeTable = RouteTable({
+    name: vName,
+    group,
     routes: routeRules,
   });
 
@@ -214,26 +223,17 @@ export default ({
     ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
   });
 
-  const subnetResults: Record<
-    string,
-    pulumi.OutputInstance<outputs.network.SubnetResponse>
-  > = {};
-
   const findSubnet = (name: string) =>
     vnet.subnets.apply((ss) => ss!.find((s) => s.name === name));
 
-  subnets?.forEach((s) => {
-    subnetResults[s.name] = findSubnet(s.name).apply((s) => s!);
-  });
-
-  const bastionSubnet = subnetResults[azBastionSubnetName];
+  const bastionSubnet = findSubnet(azBastionSubnetName);
 
   //Create Bastion
   if (features.bastion && !features.bastion.disableBastionHostCreation) {
     Bastion({
       name,
       group,
-      subnetId: bastionSubnet.apply((s) => s.id!),
+      subnetId: bastionSubnet.apply((s) => s!.id!),
       dependsOn: [vnet],
     });
   }
@@ -242,12 +242,11 @@ export default ({
   return {
     vnet,
 
-    firewallSubnet: subnetResults[azFirewallSubnet],
-    firewallManageSubnet: subnetResults[azFirewallManagementSubnet],
-    appGatewaySubnet: subnetResults[appGatewaySubnetName],
-
+    firewallSubnet: findSubnet(azFirewallSubnet),
+    firewallManageSubnet: findSubnet(azFirewallManagementSubnet),
+    appGatewaySubnet: findSubnet(appGatewaySubnetName),
     bastionSubnet,
-    subnets: subnetResults,
+    findSubnet,
 
     securityGroup,
     routeTable,

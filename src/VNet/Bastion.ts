@@ -15,7 +15,6 @@ export default ({ name, group, subnetId, dependsOn }: Props) => {
   const ipAddressId = IpAddress({
     name,
     group,
-    sku: { name: "Standard", tier: "Regional" },
     lock: false,
   }).id;
 

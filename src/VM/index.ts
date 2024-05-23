@@ -3,26 +3,29 @@ import * as native from "@pulumi/azure-native";
 import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import { getNICName, getVMName } from "../Common/Naming";
 import Locker from "../Core/Locker";
+import { getEncryptionKey } from "../KeyVault/Helper";
 
+//https://az-vm-image.info/
+// az vm image list --output table
+// az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
 interface Props extends BasicResourceArgs {
   subnetId: Input<string>;
   storageAccountType?: native.compute.StorageAccountTypes;
   vmSize?: Input<string>;
   login: { userName: Input<string>; password?: Input<string> };
-
-  windows?: {
-    offer: "WindowsServer";
-    publisher: "MicrosoftWindowsServer";
-    sku: "2019-Datacenter";
+  osType?: "Windows" | "Linux";
+  image: {
+    offer: "WindowsServer" | "CentOS" | "Windows-10" | "windows-11" | string;
+    publisher:
+      | "MicrosoftWindowsServer"
+      | "MicrosoftWindowsDesktop"
+      | "Canonical"
+      | string;
+    sku: "2019-Datacenter" | "21h1-pro" | "win11-23h2-pro" | string;
   };
 
-  linux?: {
-    offer: "UbuntuServer";
-    publisher: "Canonical";
-    sku: "18.04-LTS";
-  };
-
-  vaultInfo?: KeyVaultInfo;
+  enableEncryption?: boolean;
+  vaultInfo: KeyVaultInfo;
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   /**The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c*/
   timeZone?: Input<string>;
@@ -41,18 +44,17 @@ export default ({
   name,
   group,
   subnetId,
+  osType = "Windows",
   vmSize = "Standard_B2s",
   timeZone = "Singapore Standard Time",
-  //licenseType = 'None',
   storageAccountType = native.compute.StorageAccountTypes.Premium_LRS,
   osDiskSizeGB = 128,
   dataDiskSizeGB,
+  enableEncryption,
+  vaultInfo,
   schedule,
   login,
-  windows,
-  linux,
-
-  //vaultInfo,
+  image,
   lock = true,
   tags = {},
   dependsOn,
@@ -69,6 +71,10 @@ export default ({
     ],
     nicType: native.network.NetworkInterfaceNicType.Standard,
   });
+
+  const encryptKey = enableEncryption
+    ? getEncryptionKey(`${name}-storage-encryption`, vaultInfo)
+    : undefined;
 
   const vm = new native.compute.VirtualMachine(
     vmName,
@@ -93,36 +99,38 @@ export default ({
         allowExtensionOperations: true,
         //Need to be enabled at subscription level
         //requireGuestProvisionSignal: true,
-        linuxConfiguration: linux
-          ? {
-              //ssh: { publicKeys: [{ keyData: linux.sshPublicKey! }] },
-              disablePasswordAuthentication: false,
-              provisionVMAgent: true,
-              patchSettings: {
-                //assessmentMode: "AutomaticByPlatform",
-                patchMode: "AutomaticByPlatform",
-              },
-            }
-          : undefined,
+        linuxConfiguration:
+          osType === "Linux"
+            ? {
+                //ssh: { publicKeys: [{ keyData: linux.sshPublicKey! }] },
+                disablePasswordAuthentication: false,
+                provisionVMAgent: true,
+                patchSettings: {
+                  //assessmentMode: "AutomaticByPlatform",
+                  patchMode: "AutomaticByPlatform",
+                },
+              }
+            : undefined,
 
-        windowsConfiguration: windows
-          ? {
-              enableAutomaticUpdates: true,
-              provisionVMAgent: true,
-              timeZone,
-              patchSettings: {
-                enableHotpatching: false,
-                //Need to be enabled at subscription level
-                //assessmentMode: 'AutomaticByPlatform',
-                patchMode: "AutomaticByPlatform",
-              },
-            }
-          : undefined,
+        windowsConfiguration:
+          osType === "Windows"
+            ? {
+                enableAutomaticUpdates: true,
+                provisionVMAgent: true,
+                timeZone,
+                patchSettings: {
+                  enableHotpatching: false,
+                  //Need to be enabled at subscription level
+                  //assessmentMode: 'AutomaticByPlatform',
+                  patchMode: "AutomaticByPlatform",
+                },
+              }
+            : undefined,
       },
 
       storageProfile: {
         imageReference: {
-          ...(windows || linux),
+          ...image,
           version: "latest",
         },
         osDisk: {
@@ -130,7 +138,16 @@ export default ({
           diskSizeGB: osDiskSizeGB,
           caching: "ReadWrite",
           createOption: "FromImage",
-          osType: windows ? "Windows" : "Linux",
+          osType,
+          // encryptionSettings: enableEncryption
+          //   ? {
+          //       diskEncryptionKey: {},
+          //       keyEncryptionKey: encryptKey?.apply(k=>({
+          //           k.
+          //       })),
+          //       enabled: true,
+          //     }
+          //   : undefined,
           managedDisk: {
             //Changes storage account type need to be done manually through portal.
             storageAccountType,
@@ -151,9 +168,10 @@ export default ({
 
       diagnosticsProfile: { bootDiagnostics: { enabled: true } },
       // securityProfile: {
-      //   //Need to be enabled at subscription level
-      //   encryptionAtHost: false,
-      //   //securityType: native.compute.SecurityTypes.TrustedLaunch,
+      //
+      //     uefiSettings: {
+      //         secureBootEnabled: true,
+      //     },
       // },
       tags,
     },

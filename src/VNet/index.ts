@@ -206,12 +206,12 @@ export default ({
       outbound: [
         {
           publicIpAddress: publicIpAddress!,
-          subnetId: vnet.firewallSubnet.apply((c) => c.id!),
+          subnetId: vnet.firewallSubnet.apply((c) => c!.id!),
         },
       ],
       management: features?.enableFirewall.managementSubnetPrefix
         ? {
-            subnetId: vnet.firewallManageSubnet.apply((c) => c.id!),
+            subnetId: vnet.firewallManageSubnet.apply((c) => c!.id!),
           }
         : undefined,
 

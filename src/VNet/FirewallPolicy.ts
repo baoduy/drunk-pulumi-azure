@@ -157,10 +157,11 @@ export default ({
       sku: { tier: sku },
 
       basePolicy: basePolicyId ? { id: basePolicyId } : undefined,
-      dnsSettings:
-        sku !== enums.network.FirewallPolicySkuTier.Basic
-          ? dnsSettings
-          : undefined,
+      dnsSettings,
+      // dnsSettings:
+      //   sku !== enums.network.FirewallPolicySkuTier.Basic
+      //     ? dnsSettings
+      //     : undefined,
 
       threatIntelMode:
         sku !== enums.network.FirewallPolicySkuTier.Basic

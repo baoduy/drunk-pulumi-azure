@@ -2,17 +2,20 @@ import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import {
+  CustomSecurityRuleArgs,
+  KeyVaultInfo,
+  ResourceGroupInfo,
+  RouteArgs,
+} from "../types";
 import Firewall, { FirewallProps, FirewallResult } from "../VNet/Firewall";
 import Vnet, { VnetProps, VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
 import NatGateway from "../VNet/NatGateway";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
-import { isDryRun } from "../Common/StackEnv";
 import { Input } from "@pulumi/pulumi";
 import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
-import group from "../AzAd/Group";
 
 //Vnet builder type
 type VnetBuilderCommonProps = {
@@ -48,12 +51,8 @@ interface IVnetBuilder {
   build: () => VnetBuilderResults;
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
   peeringTo: (props: PeeringProps) => IVnetBuilder;
-  withSecurityRules: (
-    ...rules: pulumi.Input<inputs.network.SecurityRuleArgs>[]
-  ) => IVnetBuilder;
-  withRouteRules: (
-    ...rules: pulumi.Input<inputs.network.RouteArgs>[]
-  ) => IVnetBuilder;
+  withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
+  withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
 }
 
 type VnetBuilderResults = {
@@ -74,9 +73,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   //private _gatewayProps: undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
-  private _securityRules:
-    | pulumi.Input<inputs.network.SecurityRuleArgs>[]
-    | undefined = undefined;
+  private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
   private _peeringProps: PeeringProps | undefined = undefined;
@@ -115,17 +112,15 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     return this;
   }
 
-  public withSecurityRules(
-    ...rules: pulumi.Input<inputs.network.SecurityRuleArgs>[]
-  ): IVnetBuilder {
-    this._securityRules = rules;
+  public withSecurityRules(rules: CustomSecurityRuleArgs[]): IVnetBuilder {
+    if (!this._securityRules) this._securityRules = rules;
+    else this._securityRules.push(...rules);
     return this;
   }
 
-  public withRouteRules(
-    ...rules: pulumi.Input<inputs.network.RouteArgs>[]
-  ): IVnetBuilder {
-    this._routeRules = rules;
+  public withRouteRules(rules: RouteArgs[]): IVnetBuilder {
+    if (!this._routeRules) this._routeRules = rules;
+    else this._routeRules.push(...rules);
     return this;
   }
 
@@ -134,19 +129,19 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     return this;
   }
   /** Builders methods */
-  private validate() {
-    if (this._firewallProps) {
-      if (!this._firewallProps.sku)
-        this._firewallProps.sku = this._natGatewayEnabled
-          ? { tier: "Standard", name: "AZFW_VNet" }
-          : { tier: "Basic", name: "AZFW_VNet" };
-
-      if (this._natGatewayEnabled && this._firewallProps.sku.tier === "Basic")
-        throw new Error(
-          'The Firewall tier "Basic" is not support Nat Gateway.',
-        );
-    }
-  }
+  // private validate() {
+  //   if (this._firewallProps) {
+  //     if (!this._firewallProps.sku)
+  //       this._firewallProps.sku = this._natGatewayEnabled
+  //         ? { tier: "Basic", name: "AZFW_VNet" }
+  //         : { tier: "Basic", name: "AZFW_VNet" };
+  //
+  //     // if (this._natGatewayEnabled && this._firewallProps.sku.tier === "Basic")
+  //     //   throw new Error(
+  //     //     'The Firewall tier "Basic" is not support Nat Gateway.',
+  //     //   );
+  //   }
+  // }
 
   private buildIpAddress() {
     const ipNames = [];
@@ -241,11 +236,11 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (!this._firewallProps) return;
 
     const publicIpAddress = this._ipAddressInstance?.addresses[outboundIpName];
-    const firewallSubnetId = this._vnetInstance?.firewallSubnet.apply(
-      (s) => s.id!,
+    const firewallSubnetId = this._vnetInstance?.firewallSubnet?.apply(
+      (s) => s?.id!,
     );
     const manageSubnetId = this._vnetInstance?.firewallManageSubnet?.apply(
-      (s) => s.id!,
+      (s) => s?.id!,
     );
 
     this._firewallInstance = Firewall({
@@ -285,7 +280,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   }
 
   public build(): VnetBuilderResults {
-    this.validate();
+    //this.validate();
     this.buildIpAddress();
     this.buildNatGateway();
     this.buildVnet();
@@ -295,7 +290,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     return {
       publicIpAddress: this._ipAddressInstance,
       firewall: this._firewallInstance,
-      vnet: this._vnetInstance,
+      vnet: this._vnetInstance!,
       natGateway: this._natGatewayInstance,
     };
   }

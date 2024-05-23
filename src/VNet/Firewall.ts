@@ -84,7 +84,6 @@ export default ({
       IpAddress({
         name,
         group,
-        sku: { name: "Standard", tier: "Regional" },
         lock: false,
       })
     : undefined;

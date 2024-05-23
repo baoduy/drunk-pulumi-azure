@@ -89,44 +89,34 @@ export interface AppInsightInfo extends ResourceInfo {
   instrumentationKey: Input<string>;
 }
 
-/**
- * Route resource
- */
 export interface RouteArgs {
   /**
    * The destination CIDR to which the route applies.
    */
   addressPrefix?: pulumi.Input<string>;
   /**
-   * A unique read-only string that changes whenever the resource is updated.
+   * A value indicating whether this route overrides overlapping BGP routes regardless of LPM.
    */
-  etag?: pulumi.Input<string>;
-  /**
-   * Resource ID.
-   */
-  id?: pulumi.Input<string>;
-  /**
-   * The name of the resource that is unique within a resource group. This name can be used to access the resource.
-   */
-  name?: pulumi.Input<string>;
+  hasBgpOverride?: pulumi.Input<boolean>;
   /**
    * The IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VirtualAppliance.
    */
   nextHopIpAddress?: pulumi.Input<string>;
   /**
-   * The type of Azure hop the packet should be sent to. Possible values are: 'VirtualNetworkGateway', 'VnetLocal', 'Internet', 'VirtualAppliance', and 'None'
+   * The type of Azure hop the packet should be sent to.
    */
-  nextHopType: pulumi.Input<string | enums.network.v20180601.RouteNextHopType>;
+  nextHopType: pulumi.Input<string | enums.network.RouteNextHopType>;
+
   /**
-   * The provisioning state of the resource. Possible values are: 'Updating', 'Deleting', and 'Failed'.
+   * The type of the resource.
    */
-  provisioningState?: pulumi.Input<string>;
+  type?: pulumi.Input<string>;
 }
 
 /**
  * Network security rule.
  */
-export interface SecurityRuleArgs {
+export interface CustomSecurityRuleArgs {
   /**
    * The network traffic is allowed or denied.
    */
@@ -162,14 +152,6 @@ export interface SecurityRuleArgs {
    */
   direction: pulumi.Input<string | enums.network.SecurityRuleDirection>;
   /**
-   * A unique read-only string that changes whenever the resource is updated.
-   */
-  etag?: pulumi.Input<string>;
-  /**
-   * Resource ID.
-   */
-  id?: pulumi.Input<string>;
-  /**
    * The name of the resource that is unique within a resource group. This name can be used to access the resource.
    */
   name?: pulumi.Input<string>;
@@ -181,10 +163,6 @@ export interface SecurityRuleArgs {
    * Network protocol this rule applies to.
    */
   protocol: pulumi.Input<string | enums.network.SecurityRuleProtocol>;
-  /**
-   * The provisioning state of the public IP resource. Possible values are: 'Updating', 'Deleting', and 'Failed'.
-   */
-  provisioningState?: pulumi.Input<string>;
   /**
    * The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used. If this is an ingress rule, specifies where network traffic originates from.
    */

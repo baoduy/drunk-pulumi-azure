@@ -12,10 +12,7 @@ interface Props extends BasicResourceArgs {
   enableDdos?: boolean;
   ddosCustomPolicyId?: Input<string>;
   allocationMethod?: network.IPAllocationMethod;
-  sku?: {
-    name?: network.PublicIPAddressSkuName | string;
-    tier?: network.PublicIPAddressSkuTier | string;
-  };
+  tier?: network.PublicIPAddressSkuTier | string;
   lock?: boolean;
 }
 
@@ -29,14 +26,10 @@ export default ({
   enableDdos,
   ddosCustomPolicyId,
   allocationMethod = network.IPAllocationMethod.Static,
-  sku = {
-    name: network.PublicIPAddressSkuName.Basic,
-    tier: network.PublicIPAddressSkuTier.Regional,
-  },
+  tier = network.PublicIPAddressSkuTier.Regional,
   lock = true,
 }: Props) => {
   name = getIpName(name);
-
   const ipAddress = new network.PublicIPAddress(
     name,
     {
@@ -47,15 +40,13 @@ export default ({
       publicIPAllocationMethod: allocationMethod,
       publicIPPrefix: publicIPPrefix ? { id: publicIPPrefix.id } : undefined,
       ddosSettings:
-        enableDdos &&
-        ddosCustomPolicyId &&
-        sku.name === network.PublicIPAddressSkuName.Standard
+        enableDdos && ddosCustomPolicyId
           ? {
               protectionMode: enableDdos ? "Enabled" : "Disabled",
               ddosProtectionPlan: { id: ddosCustomPolicyId },
             }
           : undefined,
-      sku,
+      sku: { name: "Standard", tier },
       zones: isPrd ? ["1", "2", "3"] : undefined,
     },
     { dependsOn: publicIPPrefix },

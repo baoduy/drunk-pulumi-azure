@@ -1,10 +1,11 @@
 import * as network from "@pulumi/azure-native/network";
 import { input as inputs } from "@pulumi/azure-native/types";
-import { interpolate, Output } from "@pulumi/pulumi";
+import { interpolate, output, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
 
 import { currentLocation, subscriptionId } from "../Common/AzureEnv";
 import {
+  getFirewallName,
   getIpAddressName,
   getResourceGroupName,
   getVnetName,
@@ -19,9 +20,8 @@ export const azFirewallManagementSubnet = "AzureFirewallManagementSubnet";
 export const azBastionSubnetName = "AzureBastionSubnet";
 
 export const getIpsRange = (prefix: string) => {
-  const block = new netmask.Netmask(prefix);
   //console.debug('getIpsRange', block);
-  return block;
+  return new netmask.Netmask(prefix);
 };
 
 /** Convert IP address and IP address group into range */
@@ -38,49 +38,47 @@ export const convertToIpRange = (
 
 export const getVnetIdFromSubnetId = (subnetId: string) => {
   //The sample SubnetId is /subscriptions/63a31b41-eb5d-4160-9fc9-d30fc00286c9/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-vnet-trans/subnets/aks-main-nodes
-  const id = subnetId.split("/subnets")[0];
-  //console.log(id);
-  return id;
+  return subnetId.split("/subnets")[0];
 };
 
 /**Merge Firewall Rules Policies with starting priority*/
-export const mergeFirewallRules = (
-  rules: Array<FirewallRuleResults>,
-  startPriority: number = 200,
-): FirewallRuleResults => {
-  const applicationRuleCollections =
-    new Array<inputs.network.AzureFirewallApplicationRuleCollectionArgs>();
-  const natRuleCollections =
-    new Array<inputs.network.AzureFirewallNatRuleCollectionArgs>();
-  const networkRuleCollections =
-    new Array<inputs.network.AzureFirewallNetworkRuleCollectionArgs>();
-
-  //Combined Rules
-  rules.forEach((r) => {
-    if (r.applicationRuleCollections) {
-      applicationRuleCollections.push(...r.applicationRuleCollections);
-    }
-    if (r.natRuleCollections) {
-      natRuleCollections.push(...r.natRuleCollections);
-    }
-    if (r.networkRuleCollections) {
-      networkRuleCollections.push(...r.networkRuleCollections);
-    }
-  });
-
-  //Update Priority
-  applicationRuleCollections.forEach(
-    (a, i) => (a.priority = startPriority + i),
-  );
-  natRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
-  networkRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
-
-  return {
-    applicationRuleCollections,
-    natRuleCollections,
-    networkRuleCollections,
-  };
-};
+// export const mergeFirewallRules = (
+//   rules: Array<FirewallRuleResults>,
+//   startPriority: number = 200,
+// ): FirewallRuleResults => {
+//   const applicationRuleCollections =
+//     new Array<inputs.network.AzureFirewallApplicationRuleCollectionArgs>();
+//   const natRuleCollections =
+//     new Array<inputs.network.AzureFirewallNatRuleCollectionArgs>();
+//   const networkRuleCollections =
+//     new Array<inputs.network.AzureFirewallNetworkRuleCollectionArgs>();
+//
+//   //Combined Rules
+//   rules.forEach((r) => {
+//     if (r.applicationRuleCollections) {
+//       applicationRuleCollections.push(...r.applicationRuleCollections);
+//     }
+//     if (r.natRuleCollections) {
+//       natRuleCollections.push(...r.natRuleCollections);
+//     }
+//     if (r.networkRuleCollections) {
+//       networkRuleCollections.push(...r.networkRuleCollections);
+//     }
+//   });
+//
+//   //Update Priority
+//   applicationRuleCollections.forEach(
+//     (a, i) => (a.priority = startPriority + i),
+//   );
+//   natRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
+//   networkRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
+//
+//   return {
+//     applicationRuleCollections,
+//     natRuleCollections,
+//     networkRuleCollections,
+//   };
+// };
 
 interface SubnetProps {
   subnetName: string;
@@ -136,4 +134,22 @@ export const getVnetInfo = (
     vnetName,
     group: { resourceGroupName: rsName, location: currentLocation },
   };
+};
+
+export const getFirewallIpAddress = (
+  name: string,
+  group: ResourceGroupInfo,
+) => {
+  const firewall = network.getAzureFirewallOutput({
+    azureFirewallName: name,
+    ...group,
+  });
+
+  return firewall.ipConfigurations!.apply((cf) => cf![0]!.privateIPAddress!);
+};
+
+export const getFirewallIpAddressByGroupName = (groupName: string) => {
+  const fireWallName = getFirewallName(groupName);
+  const rsName = getResourceGroupName(groupName);
+  return getFirewallIpAddress(fireWallName, { resourceGroupName: rsName });
 };

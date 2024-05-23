@@ -73,7 +73,6 @@ export default ({
         name: n,
         group,
         publicIPPrefix: addressPrefix,
-        sku,
         lock,
       });
     });
