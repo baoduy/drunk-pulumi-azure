@@ -110,6 +110,7 @@ export default ({
     //Add Security Rules for App Gateway
     securityRules.push(...getAppGatewayRules(features.appGatewaySubnet));
   }
+
   //Bastion Host
   if (features.bastion) {
     subnets.push({
@@ -120,17 +121,17 @@ export default ({
       enableRouteTable: false,
     });
 
-    securityRules.push({
-      name: "allow-internet-bastion",
-      sourceAddressPrefix: "*",
-      sourcePortRange: "*",
-      destinationAddressPrefix: features.bastion.addressPrefix,
-      destinationPortRange: "443",
-      protocol: "TCP",
-      access: "Allow",
-      direction: "Inbound",
-      priority: 3000,
-    });
+    // securityRules.push({
+    //   name: "allow-internet-bastion",
+    //   sourceAddressPrefix: "*",
+    //   sourcePortRange: "*",
+    //   destinationAddressPrefix: features.bastion.addressPrefix,
+    //   destinationPortRange: "443",
+    //   protocol: "TCP",
+    //   access: "Allow",
+    //   direction: "Inbound",
+    //   priority: 3000,
+    // });
   }
 
   //Firewall Subnet
@@ -161,7 +162,7 @@ export default ({
     //Allow outbound internet
     if (!features.securityGroup.allowOutboundInternetAccess) {
       securityRules.push({
-        name: "deny-internet",
+        name: "DefaultDeniedInternetOutbound",
         sourceAddressPrefix: "*",
         sourcePortRange: "*",
         destinationAddressPrefix: "Internet",

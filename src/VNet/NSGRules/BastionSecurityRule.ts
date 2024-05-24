@@ -1,21 +1,27 @@
 import { CustomSecurityRuleArgs } from "../../types";
 
 interface Props {
-  startPriority: number;
+  bastionAddressPrefix: string;
+  vmAddressPrefixes: string[];
+  startPriority?: number;
 }
 
 /** The Security group rules for Bastion */
 // https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
-export default ({ startPriority = 200 }: Props) => {
+export default ({
+  bastionAddressPrefix,
+  vmAddressPrefixes,
+  startPriority = 3000,
+}: Props) => {
   const rs = new Array<CustomSecurityRuleArgs>();
   //Inbound
   rs.push(
     {
       name: "BastionAllowsHttpsInbound",
       sourceAddressPrefix: "Internet",
-      sourcePortRange: "443",
-      destinationAddressPrefix: "*",
-      destinationPortRange: "*",
+      sourcePortRange: "*",
+      destinationAddressPrefix: bastionAddressPrefix,
+      destinationPortRange: "443",
       protocol: "Tcp",
       access: "Allow",
       direction: "Inbound",
@@ -24,9 +30,9 @@ export default ({ startPriority = 200 }: Props) => {
     {
       name: "BastionAllowsGatewayManagerInbound",
       sourceAddressPrefix: "GatewayManager",
-      sourcePortRange: "443",
+      sourcePortRange: "*",
       destinationAddressPrefix: "*",
-      destinationPortRange: "*",
+      destinationPortRange: "443",
       protocol: "Tcp",
       access: "Allow",
       direction: "Inbound",
@@ -35,9 +41,9 @@ export default ({ startPriority = 200 }: Props) => {
     {
       name: "BastionAllowsAzureBalancerInbound",
       sourceAddressPrefix: "AzureLoadBalancer",
-      sourcePortRange: "443",
+      sourcePortRange: "*",
       destinationAddressPrefix: "*",
-      destinationPortRange: "*",
+      destinationPortRange: "443",
       protocol: "Tcp",
       access: "Allow",
       direction: "Inbound",
@@ -46,9 +52,20 @@ export default ({ startPriority = 200 }: Props) => {
     {
       name: "BastionAllowsHostCommunicationInbound",
       sourceAddressPrefix: "VirtualNetwork",
-      sourcePortRanges: ["8080", "5710"],
+      sourcePortRange: "*",
       destinationAddressPrefix: "VirtualNetwork",
-      destinationPortRange: "*",
+      destinationPortRanges: ["8080", "5710"],
+      protocol: "*",
+      access: "Allow",
+      direction: "Inbound",
+      priority: startPriority++,
+    },
+    {
+      name: "BastionAllowsVmSshRdpInbound",
+      sourceAddressPrefix: bastionAddressPrefix,
+      sourcePortRange: "*",
+      destinationAddressPrefix: "VirtualNetwork",
+      destinationPortRanges: ["22", "3389"],
       protocol: "*",
       access: "Allow",
       direction: "Inbound",
@@ -61,9 +78,9 @@ export default ({ startPriority = 200 }: Props) => {
     {
       name: "BastionAllowsSshRdpOutbound",
       sourceAddressPrefix: "*",
-      sourcePortRanges: ["22", "3389"],
+      sourcePortRange: "*",
       destinationAddressPrefix: "VirtualNetwork",
-      destinationPortRange: "*",
+      destinationPortRanges: ["22", "3389"],
       protocol: "*",
       access: "Allow",
       direction: "Outbound",
@@ -72,9 +89,9 @@ export default ({ startPriority = 200 }: Props) => {
     {
       name: "BastionAllowsAzureCloudOutbound",
       sourceAddressPrefix: "*",
-      sourcePortRange: "443",
+      sourcePortRange: "*",
       destinationAddressPrefix: "AzureCloud",
-      destinationPortRange: "*",
+      destinationPortRange: "443",
       protocol: "Tcp",
       access: "Allow",
       direction: "Outbound",
@@ -83,25 +100,25 @@ export default ({ startPriority = 200 }: Props) => {
     {
       name: "BastionAllowsCommunicationOutbound",
       sourceAddressPrefix: "VirtualNetwork",
-      sourcePortRanges: ["8080", "5710"],
+      sourcePortRange: "*",
       destinationAddressPrefix: "VirtualNetwork",
-      destinationPortRange: "*",
+      destinationPortRanges: ["8080", "5710"],
       protocol: "Tcp",
       access: "Allow",
       direction: "Outbound",
       priority: startPriority++,
     },
-    {
-      name: "BastionAllowsHttpOutbound",
-      sourceAddressPrefix: "*",
-      sourcePortRange: "80",
-      destinationAddressPrefix: "Internet",
-      destinationPortRange: "*",
-      protocol: "*",
-      access: "Allow",
-      direction: "Outbound",
-      priority: startPriority++,
-    },
+    // {
+    //   name: "BastionAllowsHttpOutbound",
+    //   sourceAddressPrefix: "*",
+    //   sourcePortRange: "*",
+    //   destinationAddressPrefix: "Internet",
+    //   destinationPortRanges: ["80", "443"],
+    //   protocol: "*",
+    //   access: "Allow",
+    //   direction: "Outbound",
+    //   priority: startPriority++,
+    // },
   );
   return rs;
 };

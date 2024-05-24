@@ -90,6 +90,7 @@ export interface AppInsightInfo extends ResourceInfo {
 }
 
 export interface RouteArgs {
+  name: Input<string>;
   /**
    * The destination CIDR to which the route applies.
    */
@@ -110,7 +111,7 @@ export interface RouteArgs {
   /**
    * The type of the resource.
    */
-  type?: pulumi.Input<string>;
+  //type?: pulumi.Input<string>;
 }
 
 /**
