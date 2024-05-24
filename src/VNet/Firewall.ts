@@ -42,7 +42,7 @@ export interface FirewallProps
   policy: FirewallPolicyProps;
   enableDnsProxy?: boolean;
   sku?: FirewallSkus;
-  monitorConfig?: BasicMonitorArgs;
+  monitorConfig?: Omit<BasicMonitorArgs, "dependsOn">;
 }
 
 export type FirewallResult = {
@@ -82,7 +82,7 @@ export default ({
   const manageIpAddress = management
     ? management.publicIpAddress ??
       IpAddress({
-        name,
+        name: `${name}-mag`,
         group,
         lock: false,
       })
@@ -104,7 +104,7 @@ export default ({
 
   const fwPolicy = policy
     ? FirewallPolicy({
-        name: `${name}-mag`,
+        name,
         group,
         basePolicyId: policy.parentPolicyId,
         sku: sku.tier,

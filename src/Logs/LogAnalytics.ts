@@ -27,7 +27,7 @@ export default ({
     workspaceName: name,
     ...group,
 
-    publicNetworkAccessForIngestion: "Disabled",
+    publicNetworkAccessForIngestion: "Enabled",
     publicNetworkAccessForQuery: "Enabled",
     features: {
       //clusterResourceId?: pulumi.Input<string>;

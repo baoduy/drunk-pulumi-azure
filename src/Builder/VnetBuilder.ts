@@ -16,6 +16,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
 import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
+import { LogInfoResults } from "../Logs/Helpers";
 
 //Vnet builder type
 type VnetBuilderCommonProps = {
@@ -53,6 +54,7 @@ interface IVnetBuilder {
   peeringTo: (props: PeeringProps) => IVnetBuilder;
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
   withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
+  withLogInfo: (info: LogInfoResults) => IVnetBuilder;
 }
 
 type VnetBuilderResults = {
@@ -70,13 +72,13 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private readonly _vnetProps: Partial<VnetBuilderProps>;
   private readonly _commonProps: VnetBuilderCommonProps;
   private _firewallProps: FirewallCreationProps | undefined = undefined;
-  //private _gatewayProps: undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
   private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
   private _peeringProps: PeeringProps | undefined = undefined;
+  private _logInfo: LogInfoResults | undefined = undefined;
 
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
@@ -128,6 +130,12 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this._peeringProps = props;
     return this;
   }
+
+  public withLogInfo(info: LogInfoResults): IVnetBuilder {
+    this._logInfo = info;
+    return this;
+  }
+
   /** Builders methods */
   // private validate() {
   //   if (this._firewallProps) {
@@ -264,6 +272,12 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       management: manageSubnetId
         ? {
             subnetId: manageSubnetId,
+          }
+        : undefined,
+
+      monitorConfig: this._logInfo
+        ? {
+            logWpId: this._logInfo.logWp.id,
           }
         : undefined,
 
