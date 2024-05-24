@@ -104,7 +104,7 @@ export default ({
 
   const fwPolicy = policy
     ? FirewallPolicy({
-        name,
+        name: `${name}-mag`,
         group,
         basePolicyId: policy.parentPolicyId,
         sku: sku.tier,

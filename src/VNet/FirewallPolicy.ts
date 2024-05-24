@@ -158,7 +158,7 @@ export default ({
       dnsSettings,
       snat: {
         //Auto learn need a Route Server
-        autoLearnPrivateRanges: "Disabled",
+        autoLearnPrivateRanges: "Enabled",
         privateRanges: ["IANAPrivateRanges"],
       },
       sql: {

@@ -1,26 +1,26 @@
-import * as native from '@pulumi/azure-native';
-import { Input, interpolate } from '@pulumi/pulumi';
+import * as native from "@pulumi/azure-native";
+import { Input, interpolate } from "@pulumi/pulumi";
 
-import { getResourceInfoFromId, subscriptionId } from '../Common/AzureEnv';
-import { logGroupInfo } from '../Common/GlobalEnv';
-import { getKeyName, getLogWpName, getStorageName } from '../Common/Naming';
-import { getSecret } from '../KeyVault/Helper';
-import { getStorageSecrets } from '../Storage/Helper';
-import { DiagnosticProps, KeyVaultInfo } from '../types';
+import { getResourceInfoFromId, subscriptionId } from "../Common/AzureEnv";
+import { logGroupInfo } from "../Common/GlobalEnv";
+import { getKeyName, getLogWpName, getStorageName } from "../Common/Naming";
+import { getSecret } from "../KeyVault/Helper";
+import { getStorageSecrets } from "../Storage/Helper";
+import { DiagnosticProps, KeyVaultInfo } from "../types";
 
 export const createDiagnostic = ({
   name,
   targetResourceId,
   logWpId,
   logStorageId,
-  metricsCategories = ['AllMetrics'],
+  metricsCategories = ["AllMetrics"],
   logsCategories,
   dependsOn,
 }: DiagnosticProps) => {
   //Ensure logWpId or logStorageId is provided
   if (!logWpId && !logStorageId) {
     console.error(
-      `Diagnostic for "${name}" must have either a "logWpId" or "logStorageId".`
+      `Diagnostic for "${name}" must have either a "logWpId" or "logStorageId".`,
     );
     return undefined;
   }
@@ -37,7 +37,7 @@ export const createDiagnostic = ({
     {
       name: n,
       resourceUri: targetResourceId,
-      logAnalyticsDestinationType: 'AzureDiagnostics',
+      logAnalyticsDestinationType: "AzureDiagnostics",
 
       workspaceId: logWpId,
       storageAccountId: logWpId ? undefined : logStorageId,
@@ -59,7 +59,7 @@ export const createDiagnostic = ({
           }))
         : undefined,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
@@ -75,6 +75,7 @@ export const createThreatProtection = ({
   new native.security.AdvancedThreatProtection(name, {
     isEnabled: true,
     resourceId: targetResourceId,
+    settingName: "current",
   });
 
 export const getLogWpSecrets = async ({
@@ -87,8 +88,8 @@ export const getLogWpSecrets = async ({
   vaultInfo: KeyVaultInfo;
 }) => {
   const workspaceIdKeyName = `${fullName}-Id`;
-  const primaryKeyName = getKeyName(fullName, 'primary');
-  const secondaryKeyName = getKeyName(fullName, 'secondary');
+  const primaryKeyName = getKeyName(fullName, "primary");
+  const secondaryKeyName = getKeyName(fullName, "secondary");
 
   const [wpId, primaryKey, secondaryKey] = await Promise.all([
     getSecret({ name: workspaceIdKeyName, vaultInfo }),

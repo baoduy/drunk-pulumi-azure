@@ -2,6 +2,7 @@ import { stack } from "../Common/StackEnv";
 import * as network from "@pulumi/azure-native/network";
 import { subscriptionId } from "../Common/AzureEnv";
 import { Input, interpolate } from "@pulumi/pulumi";
+import { VirtualNetworkPeeringArgs } from "@pulumi/azure-native/network/virtualNetworkPeering";
 
 export interface VNetPeeringProps {
   name: string;
@@ -25,14 +26,20 @@ export default ({
   secondVNetName,
   secondVNetResourceGroupName,
 }: VNetPeeringProps): NetworkPeeringResults => {
+  const commonProps: Partial<VirtualNetworkPeeringArgs> = {
+    allowForwardedTraffic: true,
+    allowVirtualNetworkAccess: true,
+    allowGatewayTransit: true,
+    //useRemoteGateways: true,
+  };
+
   const firstPeering = new network.VirtualNetworkPeering(
     `${stack}-${name}-first-vlk`,
     {
+      ...commonProps,
       virtualNetworkPeeringName: `${stack}-${name}-first-vlk`,
       virtualNetworkName: firstVNetName,
       resourceGroupName: firstVNetResourceGroupName,
-      allowForwardedTraffic: true,
-      allowVirtualNetworkAccess: true,
       remoteVirtualNetwork: {
         id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${secondVNetResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${secondVNetName}`,
       },
@@ -42,11 +49,10 @@ export default ({
   const secondPeering = new network.VirtualNetworkPeering(
     `${stack}-${name}-second-vlk`,
     {
+      ...commonProps,
       virtualNetworkPeeringName: `${stack}-${name}-second-vlk`,
       virtualNetworkName: secondVNetName,
       resourceGroupName: secondVNetResourceGroupName,
-      allowForwardedTraffic: true,
-      allowVirtualNetworkAccess: true,
       remoteVirtualNetwork: {
         id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${firstVNetResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${firstVNetName}`,
       },
