@@ -139,10 +139,8 @@ interface Props
 export default ({
   name,
   group,
-
   basePolicyId,
   dnsSettings,
-
   transportSecurityCA,
   insights,
   sku = enums.network.FirewallPolicySkuTier.Basic,
@@ -158,10 +156,14 @@ export default ({
 
       basePolicy: basePolicyId ? { id: basePolicyId } : undefined,
       dnsSettings,
-      // dnsSettings:
-      //   sku !== enums.network.FirewallPolicySkuTier.Basic
-      //     ? dnsSettings
-      //     : undefined,
+      snat: {
+        //Auto learn need a Route Server
+        autoLearnPrivateRanges: "Disabled",
+        privateRanges: ["IANAPrivateRanges"],
+      },
+      sql: {
+        allowSqlRedirect: true,
+      },
 
       threatIntelMode:
         sku !== enums.network.FirewallPolicySkuTier.Basic

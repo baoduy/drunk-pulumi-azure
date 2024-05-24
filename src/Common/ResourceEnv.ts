@@ -1,10 +1,10 @@
-import { replaceAll } from './Helpers';
-import { ConventionProps, ResourceGroupInfo } from '../types';
-import { Input } from '@pulumi/pulumi';
-import { organization, stack } from './StackEnv';
-import {currentLocationCode} from "./AzureEnv";
+import { replaceAll } from "./Helpers";
+import { ConventionProps, ResourceGroupInfo } from "../types";
+import { Input } from "@pulumi/pulumi";
+import { organization, stack } from "./StackEnv";
+import { currentLocationCode } from "./AzureEnv";
 
-export const resourceConvention:ConventionProps = {
+export const resourceConvention: ConventionProps = {
   prefix: stack,
   includeRegion: true,
   suffix: undefined, //This may be specified by each resource name
@@ -14,23 +14,26 @@ export const resourceConvention:ConventionProps = {
 
 const getName = (name: string, convention: ConventionProps): string => {
   if (!name) return name;
-  name = replaceAll(name, ' ', '-');
+  name = replaceAll(name, " ", "-");
 
   //Organization
-  if (convention.includeOrgName && !name.includes(organization))
-    name = name + '-' + organization;
+  if (convention.includeOrgName && !name.includes(organization.toLowerCase()))
+    name = name + "-" + organization;
 
   //Region
-  if (convention.includeRegion && currentLocationCode && !name.includes(currentLocationCode))
-    name = name + '-' + currentLocationCode;
+  if (
+    convention.includeRegion &&
+    !name.includes(currentLocationCode.toLowerCase())
+  )
+    name = name + "-" + currentLocationCode;
 
   //Add prefix
-  if (convention.prefix && !name.startsWith(convention.prefix))
-    name = convention.prefix + '-' + name;
+  if (convention.prefix && !name.startsWith(convention.prefix.toLowerCase()))
+    name = convention.prefix + "-" + name;
 
   //Add the suffix
-  if (convention.suffix && !name.endsWith(convention.suffix))
-    name = name + '-' + convention.suffix;
+  if (convention.suffix && !name.endsWith(convention.suffix.toLowerCase()))
+    name = name + "-" + convention.suffix;
 
   return name.toLowerCase();
 };
@@ -38,7 +41,7 @@ const getName = (name: string, convention: ConventionProps): string => {
 /** The method to get Resource Name. This is not applicable for Azure Storage Account and CosmosDb*/
 export const getResourceName = (
   name: string,
-  convention?: ConventionProps
+  convention?: ConventionProps,
 ): string => getName(name, { ...resourceConvention, ...convention });
 
 export interface ResourceInfoArg {

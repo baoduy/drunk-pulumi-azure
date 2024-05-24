@@ -16,7 +16,7 @@ export default ({ name, group, routes }: Props) => {
   });
 };
 
-interface RouteItemsProps extends BasicResourceArgs, RouteArgs {
+interface RouteItemsProps extends BasicResourceArgs, Omit<RouteArgs, "name"> {
   routeTableName: Input<string>;
 }
 

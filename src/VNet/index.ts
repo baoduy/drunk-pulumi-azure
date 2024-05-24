@@ -216,9 +216,9 @@ export default ({
         : undefined,
 
       sku: features.enableFirewall.sku,
-      routeTableName: vnet.routeTable.name,
+      routeTableName: vnet.routeTable?.name,
       monitorConfig,
-      dependsOn: [vnet.routeTable, vnet.vnet],
+      dependsOn: [vnet.vnet],
     });
   }
 
@@ -242,7 +242,7 @@ export default ({
       });
 
       //Update route to firewall IpAddress
-      if (pp.firewallPrivateIpAddress) {
+      if (pp.firewallPrivateIpAddress && vnet.routeTable) {
         new NetworkRouteResource(
           `${name}-vnet-to-firewall`,
           {
@@ -271,7 +271,7 @@ const createFirewall = ({
   routeTableName,
   dependsOn = [],
   ...others
-}: FirewallProps & { routeTableName: Input<string> }) => {
+}: FirewallProps & { routeTableName?: Input<string> }) => {
   const rs = Firewall({
     name,
     group,

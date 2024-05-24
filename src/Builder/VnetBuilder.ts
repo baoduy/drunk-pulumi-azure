@@ -146,11 +146,16 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private buildIpAddress() {
     const ipNames = [];
 
+    //No gateway and no firewall then Do nothing
+    if (!this._natGatewayEnabled && !this._firewallProps) return;
+
+    //Add outbound Ipaddress for Firewall alone
     if (!this._natGatewayEnabled && this._firewallProps) {
       console.log(`${this._commonProps.name}: outbound ip will be created.`);
       ipNames.push(outboundIpName);
     }
 
+    //Create IpPrefix
     this._ipAddressInstance = IpAddressPrefix({
       ...this._commonProps,
       ipAddresses: ipNames.map((n) => ({ name: n })),
@@ -161,21 +166,18 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private buildNatGateway() {
     if (!this._natGatewayEnabled || !this._ipAddressInstance) return;
 
-    // const publicIpAddress = this._ipAddressInstance.addresses["outbound"];
-    // if (!publicIpAddress) return;
+    const addressNames = Object.keys(this._ipAddressInstance.addresses);
 
     this._natGatewayInstance = NatGateway({
       ...this._commonProps,
 
-      publicIpAddresses: this._ipAddressInstance.addresses
-        ? Object.keys(this._ipAddressInstance.addresses).map(
-            (k) => this._ipAddressInstance!.addresses![k].id,
-          )
-        : undefined,
+      publicIpAddresses:
+        addressNames.length > 0
+          ? addressNames.map((k) => this._ipAddressInstance!.addresses![k].id)
+          : undefined,
 
       publicIpPrefixes:
-        !this._ipAddressInstance.addresses &&
-        this._ipAddressInstance.addressPrefix
+        addressNames.length <= 0 && this._ipAddressInstance.addressPrefix
           ? [this._ipAddressInstance.addressPrefix.id]
           : undefined,
     });
@@ -204,23 +206,25 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
 
       features: {
         //Only create Security group when firewall is not there
-        securityGroup: !this._firewallProps
-          ? {
-              allowOutboundInternetAccess:
-                !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
-              rules: this._securityRules,
-            }
-          : undefined,
-
-        routeTable: { rules: this._routeRules },
-
+        securityGroup: {
+          enabled: !this._firewallProps,
+          allowOutboundInternetAccess:
+            !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
+          rules: this._securityRules,
+        },
+        //Route tables
+        routeTable: {
+          enabled: this._routeRules && this._routeRules.length > 0,
+          rules: this._routeRules,
+        },
+        //Firewall
         firewall: this._firewallProps
           ? {
               ...this._firewallProps.subnet,
               enableNatGateway: this._natGatewayEnabled,
             }
           : undefined,
-
+        //Bastion
         bastion: this._bastionProps?.subnet,
       },
 

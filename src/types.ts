@@ -90,7 +90,7 @@ export interface AppInsightInfo extends ResourceInfo {
 }
 
 export interface RouteArgs {
-  name: Input<string>;
+  name?: Input<string>;
   /**
    * The destination CIDR to which the route applies.
    */

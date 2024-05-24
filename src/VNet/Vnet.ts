@@ -33,12 +33,13 @@ export interface VnetProps extends BasicResourceArgs {
 
   features?: {
     securityGroup?: {
+      enabled?: boolean;
       /**Add Security rule to block/allow internet if it is TRUE*/
       allowOutboundInternetAccess?: boolean;
       rules?: pulumi.Input<CustomSecurityRuleArgs>[];
     };
 
-    routeTable?: { rules?: pulumi.Input<RouteArgs>[] };
+    routeTable?: { enabled?: boolean; rules?: pulumi.Input<RouteArgs>[] };
 
     appGatewaySubnet?: {
       addressPrefix: string;
@@ -70,7 +71,7 @@ export type VnetResult = {
   firewallManageSubnet: pulumi.OutputInstance<
     outputs.network.SubnetResponse | undefined
   >;
-  routeTable: network.RouteTable;
+  routeTable?: network.RouteTable;
   firewallSubnet: pulumi.OutputInstance<
     outputs.network.SubnetResponse | undefined
   >;
@@ -94,9 +95,7 @@ export default ({
   features = {},
 }: VnetProps): VnetResult => {
   const vName = getVnetName(name);
-  const securityRules =
-    features.securityGroup?.rules ||
-    new Array<pulumi.Input<CustomSecurityRuleArgs>>();
+  const securityRules = features.securityGroup?.rules || [];
 
   //AppGateway
   if (features.appGatewaySubnet) {
@@ -158,7 +157,7 @@ export default ({
 
   //NetworkSecurityGroup
   let securityGroup: network.NetworkSecurityGroup | undefined = undefined;
-  if (features.securityGroup) {
+  if (features.securityGroup?.enabled) {
     //Allow outbound internet
     if (!features.securityGroup.allowOutboundInternetAccess) {
       securityRules.push({
@@ -191,11 +190,13 @@ export default ({
   //   });
   // }
 
-  const routeTable = RouteTable({
-    name: vName,
-    group,
-    routes: routeRules,
-  });
+  const routeTable = features.routeTable?.enabled
+    ? RouteTable({
+        name: vName,
+        group,
+        routes: routeRules,
+      })
+    : undefined;
 
   //Create VNet
   const vnet = new network.VirtualNetwork(vName, {
