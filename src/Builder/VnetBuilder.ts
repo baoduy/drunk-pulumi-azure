@@ -45,6 +45,9 @@ interface IFireWallOrVnetBuilder {
 }
 
 interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
+  withPublicIpAddress: (
+    type: "prefix" | "individual",
+  ) => IGatewayFireWallBuilder;
   withNatGateway: () => IFireWallOrVnetBuilder;
 }
 
@@ -60,8 +63,9 @@ interface IVnetBuilder {
 type VnetBuilderResults = {
   publicIpAddress: PublicIpAddressPrefixResult | undefined;
   firewall: FirewallResult | undefined;
-  vnet: VnetResult | undefined;
+  vnet: VnetResult;
   natGateway: network.NatGateway | undefined;
+  peering: NetworkPeeringResults | undefined;
 };
 
 const outboundIpName = "outbound";
@@ -79,6 +83,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     undefined;
   private _peeringProps: PeeringProps | undefined = undefined;
   private _logInfo: LogInfoResults | undefined = undefined;
+  private _ipType: "prefix" | "individual" = "prefix";
 
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
@@ -97,6 +102,13 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this._subnetProps = subnets;
     this._vnetProps = { dnsServers, addressSpaces };
     this._commonProps = commonProps;
+  }
+
+  public withPublicIpAddress(
+    type: "prefix" | "individual",
+  ): IGatewayFireWallBuilder {
+    this._ipType = type;
+    return this;
   }
 
   public withNatGateway(): IFireWallOrVnetBuilder {
@@ -167,6 +179,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this._ipAddressInstance = IpAddressPrefix({
       ...this._commonProps,
       ipAddresses: ipNames.map((n) => ({ name: n })),
+      createPrefix: this._ipType === "prefix",
       config: { version: "IPv4", allocationMethod: "Static" },
     });
   }
@@ -174,19 +187,19 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private buildNatGateway() {
     if (!this._natGatewayEnabled || !this._ipAddressInstance) return;
 
-    const addressNames = Object.keys(this._ipAddressInstance.addresses);
-
     this._natGatewayInstance = NatGateway({
       ...this._commonProps,
 
       publicIpAddresses:
-        addressNames.length > 0
-          ? addressNames.map((k) => this._ipAddressInstance!.addresses![k].id)
+        this._ipType === "individual"
+          ? Object.keys(this._ipAddressInstance.addresses).map(
+              (k) => this._ipAddressInstance!.addresses![k].id,
+            )
           : undefined,
 
       publicIpPrefixes:
-        addressNames.length <= 0 && this._ipAddressInstance.addressPrefix
-          ? [this._ipAddressInstance.addressPrefix.id]
+        this._ipType === "prefix"
+          ? [this._ipAddressInstance.addressPrefix!.id]
           : undefined,
     });
   }
@@ -310,6 +323,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       firewall: this._firewallInstance,
       vnet: this._vnetInstance!,
       natGateway: this._natGatewayInstance,
+      peering: this._peeringInstance,
     };
   }
 }
