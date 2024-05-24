@@ -14,6 +14,7 @@ import {
 import { getSecret } from "../KeyVault/Helper";
 import { getStorageSecrets, StorageConnectionInfo } from "../Storage/Helper";
 import { DiagnosticProps, KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { getResourceName } from "../Common/ResourceEnv";
 
 export const createDiagnostic = ({
   name,
@@ -189,14 +190,16 @@ export const getLogInfo = (
   vaultInfo: KeyVaultInfo | undefined = undefined,
 ): LogInfoResults => {
   const rgName = getResourceGroupName(groupName);
+  const name = getResourceName(groupName, { suffix: "logs" });
+
   const logWp = getLogWpInfo({
-    logWpName: groupName,
+    logWpName: name,
     vaultInfo,
     group: { resourceGroupName: rgName, location: currentLocation },
   });
 
   const logStorage = getLogStorageInfo({
-    storageName: groupName,
+    storageName: name,
     vaultInfo,
     group: { resourceGroupName: rgName, location: currentLocation },
   });
