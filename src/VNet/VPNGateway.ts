@@ -42,7 +42,7 @@ export default ({
     vpnType: "RouteBased",
     enableBgp: false,
     activeActive: false,
-    enableDnsForwarding: true,
+    enableDnsForwarding: false,
     allowRemoteVnetTraffic: true,
 
     ipConfigurations: [
