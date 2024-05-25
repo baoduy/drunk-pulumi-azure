@@ -1,8 +1,11 @@
 import { Input } from "@pulumi/pulumi";
-import { input as inputs } from "@pulumi/azure-native/types";
 import { currentRegionCode } from "../../Common/AzureEnv";
 import { convertPolicyToGroup } from "../Helper";
-import { FirewallPolicyRuleCollectionResults } from "../types";
+import {
+  ApplicationRuleArgs,
+  FirewallPolicyRuleCollectionResults,
+  NetworkRuleArgs,
+} from "../types";
 
 interface Props {
   priority: number;
@@ -25,13 +28,13 @@ export default ({
   allowIpCheckApi,
   allowAllOutbound,
 }: Props): FirewallPolicyRuleCollectionResults => {
-  const netRules = new Array<Input<inputs.network.NetworkRuleArgs>>();
-  const appRules = new Array<Input<inputs.network.ApplicationRuleArgs>>();
+  const netRules = new Array<Input<NetworkRuleArgs>>();
+  const appRules = new Array<Input<ApplicationRuleArgs>>();
 
   if (allowAllOutbound) {
     netRules.push({
       ruleType: "NetworkRule",
-      name: "cloudpc-allow-all-outbound",
+      name: "cloudpc-net-allow-all-outbound",
       description: "CloudPc allows all outbound",
       ipProtocols: ["TCP"],
       sourceAddresses: vnetAddressSpace,
@@ -175,6 +178,15 @@ export default ({
   }
 
   if (allowsAzure) {
+    netRules.push({
+      ruleType: "NetworkRule",
+      name: "cloudpc-net-allows-azure",
+      description: "Allows Cloud PC to access to Azure Portal.",
+      ipProtocols: ["TCP"],
+      sourceAddresses: vnetAddressSpace,
+      destinationAddresses: [`AzureCloud.${currentRegionCode}`],
+      destinationPorts: ["443"],
+    });
     // appRules.push({
     //   ruleType: "ApplicationRule",
     //   name: "cloudpc-allow-azure-resources",
@@ -296,24 +308,24 @@ export default ({
     //     "*.dc.services.visualstudio.com",
     //   ],
     // });
-    appRules.push({
-      ruleType: "ApplicationRule",
-      name: "cloudpc-allow-ip-checks",
-      description: "Allows Ip Checks",
-      protocols: [{ protocolType: "Https", port: 443 }],
-      sourceAddresses: vnetAddressSpace,
-      destinationAddresses: [`AzureCloud.${currentRegionCode}`],
-    });
+    // appRules.push({
+    //   ruleType: "ApplicationRule",
+    //   name: "cloudpc-app-allow-access-azure",
+    //   description: "Allows Ip Checks",
+    //   sourceAddresses: vnetAddressSpace,
+    //   fqdnTags: [`AzureCloud.${currentRegionCode}`],
+    //   protocols: [{ protocolType: "Https", port: 443 }],
+    // });
   }
 
   if (allowIpCheckApi) {
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-allow-ip-checks",
+      name: "cloudpc-app-allow-ip-checks",
       description: "Allows Ip Checks",
-      protocols: [{ protocolType: "Https", port: 443 }],
       sourceAddresses: vnetAddressSpace,
       targetFqdns: ["*.ipify.org", "*.myip.com", "ip.me", "*.ipconfig.me"],
+      protocols: [{ protocolType: "Https", port: 443 }],
     });
   }
 

@@ -2,7 +2,11 @@ import { Input } from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { currentRegionCode } from "../../Common/AzureEnv";
 import { convertPolicyToGroup } from "../Helper";
-import { FirewallPolicyRuleCollectionResults } from "../types";
+import {
+  ApplicationRuleArgs,
+  FirewallPolicyRuleCollectionResults,
+  NetworkRuleArgs,
+} from "../types";
 
 interface AzureFirewallPolicyProps {
   priority: number;
@@ -30,8 +34,8 @@ export default ({
   dNATs,
 }: AzureFirewallPolicyProps): FirewallPolicyRuleCollectionResults => {
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
-  const netRules = new Array<Input<inputs.network.NetworkRuleArgs>>();
-  const appRules = new Array<Input<inputs.network.ApplicationRuleArgs>>();
+  const netRules = new Array<Input<NetworkRuleArgs>>();
+  const appRules = new Array<Input<ApplicationRuleArgs>>();
 
   if (dNATs) {
     dNATs.forEach((nat) => {
