@@ -165,9 +165,8 @@ export default ({
   //Link Rule to Policy
   if (fwPolicy && policy?.rules) {
     linkRulesToPolicy({
-      name: `${name}-policies`,
       group,
-      priority: 201,
+      //priority: 201,
       firewallPolicyName: fwPolicy.name,
       rules: policy.rules,
       dependsOn: [fwPolicy, resource],

@@ -1,7 +1,7 @@
 import * as native from "@pulumi/azure-native";
 import { Input, interpolate, Output, output } from "@pulumi/pulumi";
 import {
-  currentLocation,
+  currentRegionName,
   getResourceInfoFromId,
   subscriptionId,
 } from "../Common/AzureEnv";
@@ -195,13 +195,13 @@ export const getLogInfo = (
   const logWp = getLogWpInfo({
     logWpName: name,
     vaultInfo,
-    group: { resourceGroupName: rgName, location: currentLocation },
+    group: { resourceGroupName: rgName, location: currentRegionName },
   });
 
   const logStorage = getLogStorageInfo({
     storageName: name,
     vaultInfo,
-    group: { resourceGroupName: rgName, location: currentLocation },
+    group: { resourceGroupName: rgName, location: currentRegionName },
   });
 
   return { logWp, logStorage };

@@ -1,14 +1,14 @@
-import { Input, interpolate } from "@pulumi/pulumi";
+import { Input } from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
-import { FirewallPolicyResults } from "../FirewallRules/types";
-import { getLocation } from "../../Common/Location";
-import { currentLocation } from "../../Common/AzureEnv";
+import { currentRegionCode } from "../../Common/AzureEnv";
+import { convertPolicyToGroup } from "../Helper";
+import { FirewallPolicyRuleCollectionResults } from "../types";
 
-interface Props {
+interface AzureFirewallPolicyProps {
+  priority: number;
+
   vnetAddressSpace: Array<Input<string>>;
-  location?: Input<string>;
-  //privateCluster?: boolean;
-  /** Allows access to Docker and Kubenetes registries */
+  /** Allows access to Docker and Kubernetes registries */
   allowAccessPublicRegistries?: boolean;
 
   dNATs?: [
@@ -24,12 +24,11 @@ interface Props {
 }
 
 export default ({
-  //privateCluster,
+  priority,
   allowAccessPublicRegistries,
   vnetAddressSpace,
   dNATs,
-}: Props): FirewallPolicyResults => {
-  const location = getLocation(currentLocation);
+}: AzureFirewallPolicyProps): FirewallPolicyRuleCollectionResults => {
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
   const netRules = new Array<Input<inputs.network.NetworkRuleArgs>>();
   const appRules = new Array<Input<inputs.network.ApplicationRuleArgs>>();
@@ -72,7 +71,7 @@ export default ({
         "For OPEN VPN tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
       ipProtocols: ["UDP"],
       sourceAddresses: vnetAddressSpace,
-      destinationAddresses: [interpolate`AzureCloud.${location}`],
+      destinationAddresses: [`AzureCloud.${currentRegionCode}`],
       destinationPorts: ["1194"],
     },
     {
@@ -82,7 +81,7 @@ export default ({
         "For tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
       ipProtocols: ["TCP"],
       sourceAddresses: vnetAddressSpace,
-      destinationAddresses: [interpolate`AzureCloud.${location}`],
+      destinationAddresses: [`AzureCloud.${currentRegionCode}`],
       destinationPorts: ["443", "9000"],
     },
     {
@@ -257,10 +256,9 @@ export default ({
     );
   }
 
-  return {
-    name: "aks-firewall-policy",
-    dnatRules,
-    netRules,
-    appRules,
-  };
+  return convertPolicyToGroup({
+    policy: { name: "aks-firewall-policy", dnatRules, netRules, appRules },
+    priority,
+    action: "Allow",
+  });
 };

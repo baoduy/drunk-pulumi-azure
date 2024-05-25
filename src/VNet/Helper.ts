@@ -1,23 +1,86 @@
 import * as network from "@pulumi/azure-native/network";
-import { input as inputs } from "@pulumi/azure-native/types";
-import { interpolate, output, Output } from "@pulumi/pulumi";
+import { Input, interpolate, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
-
-import { currentLocation, subscriptionId } from "../Common/AzureEnv";
+import { currentRegionName, subscriptionId } from "../Common/AzureEnv";
 import {
   getFirewallName,
   getIpAddressName,
   getResourceGroupName,
   getVnetName,
 } from "../Common/Naming";
-import { FirewallRuleResults } from "./FirewallRules/types";
 import { ResourceGroupInfo } from "../types";
+import { enums, input as inputs } from "@pulumi/azure-native/types";
+import { FirewallPolicyResults } from "./FirewallRules/types";
+import { FirewallPolicyRuleCollectionResults } from "./types";
 
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
 export const azFirewallSubnet = "AzureFirewallSubnet";
 export const azFirewallManagementSubnet = "AzureFirewallManagementSubnet";
 export const azBastionSubnetName = "AzureBastionSubnet";
+
+export const convertPolicyToGroup = ({
+  policy,
+  priority,
+  action = enums.network.FirewallPolicyFilterRuleCollectionActionType.Allow,
+}: {
+  policy: FirewallPolicyResults;
+  priority: number;
+  action?: enums.network.FirewallPolicyFilterRuleCollectionActionType;
+}): FirewallPolicyRuleCollectionResults => {
+  const policyCollections = new Array<
+    Input<
+      | inputs.network.FirewallPolicyFilterRuleCollectionArgs
+      | inputs.network.FirewallPolicyNatRuleCollectionArgs
+    >
+  >();
+
+  // DNAT rules
+  let pStart = priority + 1;
+  if (policy.dnatRules && policy.dnatRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-dnat`,
+      priority: pStart++,
+      action: {
+        type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
+      },
+      ruleCollectionType: "FirewallPolicyNatRuleCollection",
+      rules: policy.dnatRules,
+    });
+  }
+
+  // Network rules
+  if (policy.netRules && policy.netRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-net`,
+      priority: pStart++,
+      action: {
+        type: action,
+      },
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      rules: policy.netRules,
+    });
+  }
+
+  // Apps rules
+  if (policy.appRules && policy.appRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-app`,
+      priority: pStart++,
+      action: {
+        type: action,
+      },
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      rules: policy.appRules,
+    });
+  }
+
+  return {
+    name: `${policy.name}-grp`,
+    priority,
+    ruleCollections: policyCollections,
+  };
+};
 
 export const getIpsRange = (prefix: string) => {
   //console.debug('getIpsRange', block);
@@ -40,45 +103,6 @@ export const getVnetIdFromSubnetId = (subnetId: string) => {
   //The sample SubnetId is /subscriptions/63a31b41-eb5d-4160-9fc9-d30fc00286c9/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-vnet-trans/subnets/aks-main-nodes
   return subnetId.split("/subnets")[0];
 };
-
-/**Merge Firewall Rules Policies with starting priority*/
-// export const mergeFirewallRules = (
-//   rules: Array<FirewallRuleResults>,
-//   startPriority: number = 200,
-// ): FirewallRuleResults => {
-//   const applicationRuleCollections =
-//     new Array<inputs.network.AzureFirewallApplicationRuleCollectionArgs>();
-//   const natRuleCollections =
-//     new Array<inputs.network.AzureFirewallNatRuleCollectionArgs>();
-//   const networkRuleCollections =
-//     new Array<inputs.network.AzureFirewallNetworkRuleCollectionArgs>();
-//
-//   //Combined Rules
-//   rules.forEach((r) => {
-//     if (r.applicationRuleCollections) {
-//       applicationRuleCollections.push(...r.applicationRuleCollections);
-//     }
-//     if (r.natRuleCollections) {
-//       natRuleCollections.push(...r.natRuleCollections);
-//     }
-//     if (r.networkRuleCollections) {
-//       networkRuleCollections.push(...r.networkRuleCollections);
-//     }
-//   });
-//
-//   //Update Priority
-//   applicationRuleCollections.forEach(
-//     (a, i) => (a.priority = startPriority + i),
-//   );
-//   natRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
-//   networkRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
-//
-//   return {
-//     applicationRuleCollections,
-//     natRuleCollections,
-//     networkRuleCollections,
-//   };
-// };
 
 interface SubnetProps {
   subnetName: string;
@@ -132,7 +156,7 @@ export const getVnetInfo = (
 
   return {
     vnetName,
-    group: { resourceGroupName: rsName, location: currentLocation },
+    group: { resourceGroupName: rsName, location: currentRegionName },
   };
 };
 

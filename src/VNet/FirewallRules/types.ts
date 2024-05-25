@@ -1,6 +1,6 @@
 import { input as inputs, enums } from "@pulumi/azure-native/types";
-import * as network from "@pulumi/azure-native/network";
 import { Input, Output } from "@pulumi/pulumi";
+import { FirewallPolicyRuleCollectionResults } from "../types";
 
 export type FirewallPolicyResults = {
   name: string;
@@ -12,7 +12,7 @@ export type FirewallPolicyResults = {
 export interface FirewallPolicyProps {
   /**These props for create new policy*/
   parentPolicyId?: Output<string>;
-  rules?: Array<FirewallPolicyResults>;
+  rules?: FirewallPolicyRuleCollectionResults[];
 }
 
 export interface FirewallRuleResults {

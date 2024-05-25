@@ -5,7 +5,7 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import { getKeyVaultName, getResourceGroupName } from "./Naming";
 import { ResourceInfoArg } from "./ResourceEnv";
 import { organization, projectName, stack } from "./StackEnv";
-import { getCountryCode } from "./Location";
+import { getCountryCode, getRegionCode } from "./Location";
 
 const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);
@@ -13,9 +13,10 @@ export const subscriptionId = config.apply((c) => c.subscriptionId);
 export const currentPrincipal = config.apply((c) => c.objectId);
 
 const env = JSON.parse(process.env.PULUMI_CONFIG ?? "{}");
-export const currentLocation = (env["azure-native:config:location"] ??
+export const currentRegionName = (env["azure-native:config:location"] ??
   "SoutheastAsia") as string;
-export const currentLocationCode = getCountryCode(currentLocation);
+export const currentRegionCode = getRegionCode(currentRegionName);
+export const currentCountryCode = getCountryCode(currentRegionName);
 export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 //Print and Check
@@ -23,8 +24,9 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
   console.log(`Azure Environment:`, {
     TenantId: t,
     SubscriptionId: s,
-    currentLocation,
-    currentLocationCode,
+    currentRegionCode,
+    currentRegionName,
+    currentCountryCode,
   });
 });
 
@@ -67,7 +69,10 @@ export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
 
   return {
     name: vaultName,
-    group: { resourceGroupName: resourceGroupName, location: currentLocation },
+    group: {
+      resourceGroupName: resourceGroupName,
+      location: currentRegionName,
+    },
     id: pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
   };
 };
@@ -111,7 +116,7 @@ export const getResourceInfoFromId = (id: string): ResourceInfo | undefined => {
   return {
     name,
     id,
-    group: { resourceGroupName: groupName, location: currentLocation },
+    group: { resourceGroupName: groupName, location: currentRegionName },
     subscriptionId,
   };
 };
