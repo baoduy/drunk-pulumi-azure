@@ -322,13 +322,13 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (!this._vpnGatewayProps) return;
 
     const subnetId = this._vnetInstance!.gatewaySubnet?.apply((s) => s?.id!);
-
     if (!subnetId) return;
 
     this._vnpGatewayInstance = VPNGateway({
       ...this._commonProps,
       ...this._vpnGatewayProps,
       subnetId,
+      dependsOn: this._vnetInstance!.vnet,
     });
   }
 
