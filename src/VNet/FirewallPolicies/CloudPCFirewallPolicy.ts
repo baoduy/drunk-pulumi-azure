@@ -113,7 +113,7 @@ export default ({
       name: "cloudpc-app-allow-k8s-lens",
       description: "Allows K8s Lens",
       sourceAddresses: subnetSpaces,
-      targetFqdns: ["*.k8slens.dev", "github.com"],
+      targetFqdns: ["*.k8slens.dev", "github.com", "*.githubassets.com"],
       protocols: [{ protocolType: "Https", port: 443 }],
     });
   }

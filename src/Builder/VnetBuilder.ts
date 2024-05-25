@@ -17,6 +17,7 @@ import { input as inputs } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
 import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
 import { LogInfoResults } from "../Logs/Helpers";
+import VPNGateway, { VpnGatewayProps } from "../VNet/VPNGateway";
 
 //Vnet builder type
 type VnetBuilderCommonProps = {
@@ -38,6 +39,10 @@ type PeeringProps = { vnetName: Input<string>; group: ResourceGroupInfo };
 type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
 } & CommonOmit<Omit<FirewallProps, "outbound" | "management">>;
+type VpnGatewayCreationProps = Pick<
+  VpnGatewayProps,
+  "sku" | "vpnClientAddressPools"
+> & { subnetName: string };
 
 interface IFireWallOrVnetBuilder {
   withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
@@ -58,6 +63,7 @@ interface IVnetBuilder {
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
   withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
   withLogInfo: (info: LogInfoResults) => IVnetBuilder;
+  withVpnGateway: (props: VpnGatewayCreationProps) => IVnetBuilder;
 }
 
 type VnetBuilderResults = {
@@ -66,6 +72,7 @@ type VnetBuilderResults = {
   vnet: VnetResult;
   natGateway: network.NatGateway | undefined;
   peering: NetworkPeeringResults | undefined;
+  vnpGateway: network.VirtualNetworkGateway | undefined;
 };
 
 const outboundIpName = "outbound";
@@ -78,6 +85,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private _firewallProps: FirewallCreationProps | undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
+  private _vpnGatewayProps: VpnGatewayCreationProps | undefined = undefined;
   private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
@@ -92,6 +100,8 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private _vnetInstance: VnetResult | undefined = undefined;
   private _natGatewayInstance: network.NatGateway | undefined = undefined;
   private _peeringInstance: NetworkPeeringResults | undefined = undefined;
+  private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
+    undefined;
 
   constructor({
     subnets,
@@ -113,6 +123,11 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
 
   public withNatGateway(): IFireWallOrVnetBuilder {
     this._natGatewayEnabled = true;
+    return this;
+  }
+
+  public withVpnGateway(props: VpnGatewayCreationProps): IVnetBuilder {
+    this._vpnGatewayProps = props;
     return this;
   }
 
@@ -298,6 +313,22 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     });
   }
 
+  private buildVpnGateway() {
+    if (!this._vpnGatewayProps) return;
+
+    const subnetId = this._vnetInstance
+      ?.findSubnet(this._vpnGatewayProps.subnetName)
+      ?.apply((s) => s?.id!);
+
+    if (!subnetId) return;
+
+    this._vnpGatewayInstance = VPNGateway({
+      ...this._commonProps,
+      ...this._vpnGatewayProps,
+      subnetId,
+    });
+  }
+
   private buildPeering() {
     if (!this._peeringProps || !this._vnetInstance) return;
 
@@ -316,6 +347,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     this.buildNatGateway();
     this.buildVnet();
     this.buildFirewall();
+    this.buildVpnGateway();
     this.buildPeering();
 
     return {
@@ -324,6 +356,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       vnet: this._vnetInstance!,
       natGateway: this._natGatewayInstance,
       peering: this._peeringInstance,
+      vnpGateway: this._vnpGatewayInstance,
     };
   }
 }
