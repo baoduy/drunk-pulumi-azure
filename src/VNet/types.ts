@@ -18,7 +18,7 @@ export interface NetworkRuleArgs {
 
 export interface ApplicationRuleArgs {
   description?: pulumi.Input<string>;
-  destinationAddresses?: pulumi.Input<pulumi.Input<string>[]>;
+  //destinationAddresses?: pulumi.Input<pulumi.Input<string>[]>;
   fqdnTags?: pulumi.Input<pulumi.Input<string>[]>;
   httpHeadersToInsert?: pulumi.Input<
     pulumi.Input<inputs.network.FirewallPolicyHttpHeaderToInsertArgs>[]

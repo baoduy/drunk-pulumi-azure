@@ -38,6 +38,11 @@ $ pulumi config set azure-native:clientSecret <clientSecret> --secret
 $ pulumi config set azure-native:tenantId <tenantID>
 $ pulumi config set azure-native:subscriptionId <subscriptionId>
 
-# optional default location, otherwise set in code
+## optional default location, otherwise set in code
 
 $ pulumi config set azure-native:location SoutheastAsia
+
+# Azure Resources
+
+-List All Azure Firewall FQDN Tags
+https://learn.microsoft.com/en-us/rest/api/firewall/azure-firewall-fqdn-tags/list-all?view=rest-firewall-2023-09-01&tabs=HTTP#code-try-0

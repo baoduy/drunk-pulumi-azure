@@ -30,6 +30,7 @@ export default ({
     allowForwardedTraffic: true,
     allowVirtualNetworkAccess: true,
     allowGatewayTransit: true,
+    //syncRemoteAddressSpace: true,
     //useRemoteGateways: true,
   };
 
