@@ -9,8 +9,8 @@ export interface VpnGatewayProps extends BasicResourceArgs {
   subnetId: Input<string>;
   vpnClientAddressPools?: string[];
   sku?: {
-    name: network.VirtualNetworkGatewaySkuName;
-    tier: network.VirtualNetworkGatewaySkuName;
+    name?: network.VirtualNetworkGatewaySkuName;
+    tier?: network.VirtualNetworkGatewaySkuTier;
   };
 }
 
@@ -19,25 +19,32 @@ export default ({
   name,
   group,
   subnetId,
-  vpnClientAddressPools,
+  vpnClientAddressPools = ["172.16.100.0/24"],
   sku = {
-    name: network.VirtualNetworkGatewaySkuName.Basic,
-    tier: network.VirtualNetworkGatewaySkuName.Basic,
+    name: network.VirtualNetworkGatewaySkuName.VpnGw1,
+    tier: network.VirtualNetworkGatewaySkuTier.VpnGw1,
   },
 }: VpnGatewayProps) => {
   name = getVpnName(name);
   const ipAddress = IpAddress({
-    name: `${name}-vpn`,
+    name,
     group,
+    enableZone: false,
     lock: false,
   });
 
   return new network.VirtualNetworkGateway(name, {
+    virtualNetworkGatewayName: name,
     ...group,
     sku,
+
     gatewayType: "Vpn",
     vpnType: "RouteBased",
     enableBgp: false,
+    activeActive: false,
+    enableDnsForwarding: true,
+    allowRemoteVnetTraffic: true,
+
     ipConfigurations: [
       {
         name: "vnetGatewayConfig",
@@ -49,9 +56,6 @@ export default ({
         },
       },
     ],
-    activeActive: false,
-    enableDnsForwarding: true,
-    allowRemoteVnetTraffic: true,
 
     vpnClientConfiguration: {
       // aadAudience?: pulumi.Input<string>;
@@ -80,7 +84,7 @@ export default ({
       radiusServerSecret: "",
 
       vpnAuthenticationTypes: [network.VpnAuthenticationType.AAD],
-      aadTenant: tenantId,
+      aadTenant: interpolate`https://login.microsoftonline.com/${tenantId}`,
       aadAudience: "41b23e61-6c1e-4545-b367-cd054e0ed4b4",
       aadIssuer: interpolate`https://sts.windows.net/${tenantId}/`,
     },

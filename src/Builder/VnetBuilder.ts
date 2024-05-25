@@ -42,7 +42,7 @@ type FirewallCreationProps = {
 type VpnGatewayCreationProps = Pick<
   VpnGatewayProps,
   "sku" | "vpnClientAddressPools"
-> & { subnetName: string };
+> & { subnetSpace: string };
 
 interface IFireWallOrVnetBuilder {
   withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
@@ -262,6 +262,11 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
           : undefined,
         //Bastion
         bastion: this._bastionProps?.subnet,
+
+        //Gateway
+        gatewaySubnet: this._vpnGatewayProps
+          ? { addressPrefix: this._vpnGatewayProps.subnetSpace }
+          : undefined,
       },
 
       dependsOn: this._firewallInstance?.firewall
@@ -316,9 +321,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
   private buildVpnGateway() {
     if (!this._vpnGatewayProps) return;
 
-    const subnetId = this._vnetInstance
-      ?.findSubnet(this._vpnGatewayProps.subnetName)
-      ?.apply((s) => s?.id!);
+    const subnetId = this._vnetInstance!.gatewaySubnet?.apply((s) => s?.id!);
 
     if (!subnetId) return;
 

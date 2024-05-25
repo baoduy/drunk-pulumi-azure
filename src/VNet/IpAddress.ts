@@ -13,6 +13,7 @@ interface Props extends BasicResourceArgs {
   ddosCustomPolicyId?: Input<string>;
   allocationMethod?: network.IPAllocationMethod;
   tier?: network.PublicIPAddressSkuTier | string;
+  enableZone?: boolean;
   lock?: boolean;
 }
 
@@ -25,6 +26,7 @@ export default ({
   publicIPPrefix,
   enableDdos,
   ddosCustomPolicyId,
+  enableZone = isPrd,
   allocationMethod = network.IPAllocationMethod.Static,
   tier = network.PublicIPAddressSkuTier.Regional,
   lock = true,
@@ -47,7 +49,7 @@ export default ({
             }
           : undefined,
       sku: { name: "Standard", tier },
-      zones: isPrd ? ["1", "2", "3"] : undefined,
+      zones: enableZone ? ["1", "2", "3"] : undefined,
     },
     { dependsOn: publicIPPrefix },
   );

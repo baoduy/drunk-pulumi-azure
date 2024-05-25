@@ -22,8 +22,8 @@ export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`
 //Print and Check
 pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
   console.log(`Azure Environment:`, {
-    TenantId: t,
-    SubscriptionId: s,
+    tenantId: t,
+    subscriptionId: s,
     currentRegionCode,
     currentRegionName,
     currentCountryCode,

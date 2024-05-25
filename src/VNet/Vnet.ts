@@ -15,6 +15,7 @@ import Bastion from "./Bastion";
 import CreateSubnet, { SubnetProps } from "./Subnet";
 import SecurityGroup from "./SecurityGroup";
 import RouteTable from "./RouteTable";
+import AppGatewaySecurityRule from "./NSGRules/AppGatewaySecurityRule";
 
 export type DelegateServices =
   | "Microsoft.ContainerInstance/containerGroups"
@@ -46,6 +47,10 @@ export interface VnetProps extends BasicResourceArgs {
       version: "v1" | "v2";
     };
 
+    gatewaySubnet?: {
+      addressPrefix: string;
+    };
+
     firewall?: {
       /** Subnet address Prefix */
       addressPrefix: string;
@@ -66,6 +71,9 @@ export interface VnetProps extends BasicResourceArgs {
 export type VnetResult = {
   vnet: network.VirtualNetwork;
   appGatewaySubnet: pulumi.OutputInstance<
+    outputs.network.SubnetResponse | undefined
+  >;
+  gatewaySubnet: pulumi.OutputInstance<
     outputs.network.SubnetResponse | undefined
   >;
   firewallManageSubnet: pulumi.OutputInstance<
@@ -106,8 +114,20 @@ export default ({
       enableSecurityGroup: false,
       enableRouteTable: false,
     });
-    //Add Security Rules for App Gateway
-    securityRules.push(...getAppGatewayRules(features.appGatewaySubnet));
+
+    //TODO: Move this to vnetBuilder instead. Add Security Rules for App Gateway
+    securityRules.push(...AppGatewaySecurityRule(features.appGatewaySubnet));
+  }
+
+  //Gateway Subnet
+  if (features?.gatewaySubnet) {
+    subnets.push({
+      name: gatewaySubnetName,
+      addressPrefix: features.gatewaySubnet.addressPrefix,
+      allowedServiceEndpoints: false,
+      enableSecurityGroup: false,
+      enableRouteTable: false,
+    });
   }
 
   //Bastion Host
@@ -119,18 +139,6 @@ export default ({
       enableSecurityGroup: true,
       enableRouteTable: false,
     });
-
-    // securityRules.push({
-    //   name: "allow-internet-bastion",
-    //   sourceAddressPrefix: "*",
-    //   sourcePortRange: "*",
-    //   destinationAddressPrefix: features.bastion.addressPrefix,
-    //   destinationPortRange: "443",
-    //   protocol: "TCP",
-    //   access: "Allow",
-    //   direction: "Inbound",
-    //   priority: 3000,
-    // });
   }
 
   //Firewall Subnet
@@ -182,14 +190,6 @@ export default ({
 
   //Route Table
   const routeRules = features.routeTable?.rules || [];
-  // if (features?.firewall?.managementAddressPrefix) {
-  //   routeRules.push({
-  //     name: "route-to-internet",
-  //     addressPrefix: "0.0.0.0/0",
-  //     nextHopType: network.RouteNextHopType.Internet,
-  //   });
-  // }
-
   const routeTable = features.routeTable?.enabled
     ? RouteTable({
         name: vName,
@@ -247,81 +247,11 @@ export default ({
     firewallSubnet: findSubnet(azFirewallSubnet),
     firewallManageSubnet: findSubnet(azFirewallManagementSubnet),
     appGatewaySubnet: findSubnet(appGatewaySubnetName),
+    gatewaySubnet: findSubnet(gatewaySubnetName),
     bastionSubnet,
     findSubnet,
 
     securityGroup,
     routeTable,
   };
-};
-
-const getAppGatewayRules = ({
-  addressPrefix,
-  version,
-}: {
-  addressPrefix: string;
-  version: "v1" | "v2";
-}): pulumi.Input<inputs.network.SecurityRuleArgs>[] => {
-  let start = 100;
-
-  return [
-    //Add inbound rule for app gateway subnet
-    {
-      name: "allow_internet_in_gateway_health",
-      description: "Allow Health check access from internet to Gateway",
-      priority: 200 + start++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Inbound",
-
-      sourceAddressPrefix: "Internet",
-      sourcePortRange: "*",
-      destinationAddressPrefix: addressPrefix,
-      destinationPortRanges:
-        version === "v1" ? ["65503-65534"] : ["65200-65535"],
-    },
-
-    {
-      name: "allow_https_internet_in_gateway",
-      description: "Allow HTTPS access from internet to Gateway",
-      priority: 200 + start++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Inbound",
-
-      sourceAddressPrefix: "Internet",
-      sourcePortRange: "*",
-      destinationAddressPrefix: addressPrefix,
-      destinationPortRange: "443",
-    },
-
-    {
-      name: "allow_loadbalancer_in_gateway",
-      description: "Allow Load balancer to Gateway",
-      priority: 200 + start++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Inbound",
-
-      sourceAddressPrefix: "AzureLoadBalancer",
-      sourcePortRange: "*",
-      destinationAddressPrefix: addressPrefix,
-      destinationPortRange: "*",
-    },
-
-    //Denied others
-    // {
-    //   name: 'denied_others_in_gateway',
-    //   description: 'Denied others to Gateway',
-    //   priority: 3000 + start++,
-    //   protocol: 'Tcp',
-    //   access: 'Deny',
-    //   direction: 'Inbound',
-
-    //   sourceAddressPrefix: '*',
-    //   sourcePortRange: '*',
-    //   destinationAddressPrefix: addressPrefix,
-    //   destinationPortRange: '*',
-    // },
-  ];
 };
