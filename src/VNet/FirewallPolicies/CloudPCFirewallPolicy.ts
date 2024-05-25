@@ -10,7 +10,7 @@ import {
 interface Props {
   priority: number;
 
-  vnetAddressSpace: Array<Input<string>>;
+  subnetSpaces: Array<Input<string>>;
   allowAllOutbound?: boolean;
   allowIpCheckApi?: boolean;
   enableCloudPcRules?: boolean;
@@ -21,7 +21,7 @@ interface Props {
 export default ({
   priority,
 
-  vnetAddressSpace,
+  subnetSpaces,
   enableCloudPcRules,
   enableDeveloperResources,
   allowsAzure,
@@ -37,7 +37,7 @@ export default ({
       name: "cloudpc-net-allow-all-outbound",
       description: "CloudPc allows all outbound",
       ipProtocols: ["TCP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: ["*"],
       destinationPorts: ["443"],
     });
@@ -51,7 +51,7 @@ export default ({
       //   name: "allow-AVD-traffic",
       //   description: "AVD traffic",
       //   ipProtocols: ["TCP"],
-      //   sourceAddresses: vnetAddressSpace,
+      //   sourceAddresses: subnetSpaces,
       //   destinationAddresses: ["169.254.169.254", "168.63.129.16"],
       //   destinationPorts: ["80"],
       // },
@@ -60,7 +60,7 @@ export default ({
       //   name: "allow-AVD-WA",
       //   description: "AVD WA",
       //   ipProtocols: ["TCP"],
-      //   sourceAddresses: vnetAddressSpace,
+      //   sourceAddresses: subnetSpaces,
       //   destinationAddresses: ["23.102.135.246"],
       //   destinationPorts: ["1688"],
       // },
@@ -69,7 +69,7 @@ export default ({
       //   name: "allow-time-sync",
       //   description: "Win time sync",
       //   ipProtocols: ["UDP"],
-      //   sourceAddresses: vnetAddressSpace,
+      //   sourceAddresses: subnetSpaces,
       //   destinationAddresses: ["time.windows.com"],
       //   destinationPorts: ["123"],
       // },
@@ -78,7 +78,7 @@ export default ({
       //   name: "allow-AzureDevOps",
       //   description: "AzureDevOps",
       //   ipProtocols: ["TCP"],
-      //   sourceAddresses: vnetAddressSpace,
+      //   sourceAddresses: subnetSpaces,
       //   destinationAddresses: [
       //     "13.107.6.0/24",
       //     "13.107.9.0/24",
@@ -92,7 +92,7 @@ export default ({
       //   name: "allow-Azure-Db",
       //   description: "Allows Azure Sql",
       //   ipProtocols: ["TCP"],
-      //   sourceAddresses: vnetAddressSpace,
+      //   sourceAddresses: subnetSpaces,
       //   destinationAddresses: [`Sql.SoutheastAsia`],
       //   destinationPorts: ["1433", "1434", "11000-11999", "14000-14999"],
       // },
@@ -103,14 +103,14 @@ export default ({
     //     ruleType: "ApplicationRule",
     //     name: "allow-AVD-vvd",
     //     description: "WindowsVirtualDesktop traffic",
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     fqdnTags: ["WindowsVirtualDesktop"],
     //   },
     //   {
     //     ruleType: "ApplicationRule",
     //     name: "allow-AVD-Diagnostics",
     //     description: "WindowsVirtualDesktop Diagnostics",
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     //protocols: [{ protocolType: 'Https', port: 443 }],
     //     fqdnTags: ["WindowsDiagnostics"],
     //   },
@@ -118,7 +118,7 @@ export default ({
     //     ruleType: "ApplicationRule",
     //     name: "allow-AVD-Update",
     //     description: "WindowsVirtualDesktop Update",
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     //protocols: [{ protocolType: 'Https', port: 443 }],
     //     fqdnTags: ["WindowsUpdate"],
     //   },
@@ -127,7 +127,7 @@ export default ({
     //     name: "allow-AVD-times",
     //     description: "Allow ADV Times",
     //     protocols: [{ protocolType: "Https", port: 443 }],
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     targetFqdns: ["*.core.windows.net", "*.servicebus.windows.net"],
     //   },
     // );
@@ -140,7 +140,7 @@ export default ({
     //     name: "allow-others-https",
     //     description: "Allow others HTTPs",
     //     protocols: [{ protocolType: "Https", port: 443 }],
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     targetFqdns: [
     //       "*.digicert.com",
     //
@@ -160,7 +160,7 @@ export default ({
     //     name: "allow-others-http",
     //     description: "Allow others HTTP",
     //     protocols: [{ protocolType: "Http", port: 80 }],
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     targetFqdns: ["*.digicert.com"],
     //   },
     //   {
@@ -171,7 +171,7 @@ export default ({
     //       { protocolType: "Http", port: 80 },
     //       { protocolType: "Https", port: 443 },
     //     ],
-    //     sourceAddresses: vnetAddressSpace,
+    //     sourceAddresses: subnetSpaces,
     //     targetFqdns: ["*.chocolatey.org", "chocolatey.org"],
     //   },
     // );
@@ -183,7 +183,7 @@ export default ({
       name: "cloudpc-net-allows-azure",
       description: "Allows Cloud PC to access to Azure Portal.",
       ipProtocols: ["TCP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud.${currentRegionCode}`],
       destinationPorts: ["443"],
     });
@@ -192,7 +192,7 @@ export default ({
     //   name: "cloudpc-allow-azure-resources",
     //   description: "Allows Azure Resources",
     //   protocols: [{ protocolType: "Https", port: 443 }],
-    //   sourceAddresses: vnetAddressSpace,
+    //   sourceAddresses: subnetSpaces,
     //   targetFqdns: [
     //     //AKS
     //     "*.hcp.southeastasia.azmk8s.io",
@@ -308,14 +308,14 @@ export default ({
     //     "*.dc.services.visualstudio.com",
     //   ],
     // });
-    // appRules.push({
-    //   ruleType: "ApplicationRule",
-    //   name: "cloudpc-app-allow-access-azure",
-    //   description: "Allows Ip Checks",
-    //   sourceAddresses: vnetAddressSpace,
-    //   fqdnTags: [`AzureCloud.${currentRegionCode}`],
-    //   protocols: [{ protocolType: "Https", port: 443 }],
-    // });
+    appRules.push({
+      ruleType: "ApplicationRule",
+      name: "cloudpc-app-allow-access-azure",
+      description: "Allows Ip Checks",
+      sourceAddresses: subnetSpaces,
+      fqdnTags: [`AzureCloud.${currentRegionCode}`],
+      protocols: [{ protocolType: "Https", port: 443 }],
+    });
   }
 
   if (allowIpCheckApi) {
@@ -323,7 +323,7 @@ export default ({
       ruleType: "ApplicationRule",
       name: "cloudpc-app-allow-ip-checks",
       description: "Allows Ip Checks",
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       targetFqdns: ["*.ipify.org", "*.myip.com", "ip.me", "*.ipconfig.me"],
       protocols: [{ protocolType: "Https", port: 443 }],
     });

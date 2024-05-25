@@ -11,7 +11,7 @@ import {
 interface AzureFirewallPolicyProps {
   priority: number;
 
-  vnetAddressSpace: Array<Input<string>>;
+  subnetSpaces: Array<Input<string>>;
   /** Allows access to Docker and Kubernetes registries */
   allowAccessPublicRegistries?: boolean;
 
@@ -30,7 +30,7 @@ interface AzureFirewallPolicyProps {
 export default ({
   priority,
   allowAccessPublicRegistries,
-  vnetAddressSpace,
+  subnetSpaces,
   dNATs,
 }: AzureFirewallPolicyProps): FirewallPolicyRuleCollectionResults => {
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
@@ -74,7 +74,7 @@ export default ({
       description:
         "For OPEN VPN tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
       ipProtocols: ["UDP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud.${currentRegionCode}`],
       destinationPorts: ["1194"],
     },
@@ -84,7 +84,7 @@ export default ({
       description:
         "For tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
       ipProtocols: ["TCP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud.${currentRegionCode}`],
       destinationPorts: ["443", "9000"],
     },
@@ -94,7 +94,7 @@ export default ({
       description:
         "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
       ipProtocols: ["UDP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: ["ntp.ubuntu.com"],
       destinationPorts: ["123"],
     },
@@ -105,7 +105,7 @@ export default ({
       description:
         "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
       ipProtocols: ["UDP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: ["*"],
       destinationPorts: ["123"],
     },
@@ -114,7 +114,7 @@ export default ({
       name: "azure-services-tags",
       description: "Allows internal services to connect to Azure Resources.",
       ipProtocols: ["TCP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: [
         "AzureContainerRegistry.SoutheastAsia",
         "MicrosoftContainerRegistry.SoutheastAsia",
@@ -137,7 +137,7 @@ export default ({
       name: "others-dns",
       description: "Others DNS.",
       ipProtocols: ["TCP", "UDP"],
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       destinationAddresses: ["*"],
       destinationPorts: ["53"],
     },
@@ -149,7 +149,7 @@ export default ({
       ruleType: "ApplicationRule",
       name: "aks-services-fqdnTags",
       description: "Allows pods to access AzureKubernetesService",
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       fqdnTags: ["AzureKubernetesService"],
       protocols: [{ protocolType: "Https", port: 443 }],
     },
@@ -157,7 +157,7 @@ export default ({
       ruleType: "ApplicationRule",
       name: "aks-fqdn",
       description: "Azure Global required FQDN",
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       targetFqdns: [
         //AKS mater
         "*.hcp.southeastasia.azmk8s.io",
@@ -181,7 +181,7 @@ export default ({
       ruleType: "ApplicationRule",
       name: "azure-monitors",
       description: "Azure AKS Monitoring",
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       targetFqdns: [
         "dc.services.visualstudio.com",
         "*.ods.opinsights.azure.com",
@@ -195,7 +195,7 @@ export default ({
       ruleType: "ApplicationRule",
       name: "azure-policy",
       description: "Azure AKS Policy Management",
-      sourceAddresses: vnetAddressSpace,
+      sourceAddresses: subnetSpaces,
       targetFqdns: [
         "*.policy.core.windows.net",
         "gov-prod-policy-data.trafficmanager.net",
@@ -212,7 +212,7 @@ export default ({
         ruleType: "ApplicationRule",
         //TODO Allow Docker Access is potential risk once we have budget and able to upload external images to ACR then remove docker.
         name: "docker-services",
-        sourceAddresses: vnetAddressSpace,
+        sourceAddresses: subnetSpaces,
         targetFqdns: [
           "quay.io", //For Cert Manager
           "registry.k8s.io",
@@ -234,7 +234,7 @@ export default ({
         ruleType: "ApplicationRule",
         //TODO Allow external registry is potential risk once we have budget and able to upload external images to ACR then remove docker.
         name: "k8s-services",
-        sourceAddresses: vnetAddressSpace,
+        sourceAddresses: subnetSpaces,
         targetFqdns: [
           "k8s.gcr.io", //nginx images
           "*.k8s.io",
@@ -249,7 +249,7 @@ export default ({
         ruleType: "ApplicationRule",
         //TODO Allow external registry is potential risk once we have budget and able to upload external images to ACR then remove docker.
         name: "ubuntu-services",
-        sourceAddresses: vnetAddressSpace,
+        sourceAddresses: subnetSpaces,
         targetFqdns: [
           "security.ubuntu.com",
           "azure.archive.ubuntu.com",
