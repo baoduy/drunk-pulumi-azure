@@ -10,8 +10,10 @@ import {
 } from "../Common/Naming";
 import { ResourceGroupInfo } from "../types";
 import { enums, input as inputs } from "@pulumi/azure-native/types";
-import { FirewallPolicyResults } from "./FirewallRules/types";
-import { FirewallPolicyRuleCollectionResults } from "./types";
+import {
+  FirewallPolicyRuleCollectionResults,
+  FirewallPolicyResults,
+} from "./types";
 
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";

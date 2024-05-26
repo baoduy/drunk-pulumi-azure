@@ -103,13 +103,18 @@ export const generatePGP = ({
     name,
     pgp: rs,
     lists: {
-      getPublicKey: async () =>
-        (await getSecret({ name: `${name}-publicKey`, vaultInfo }))?.value,
-      getPrivateKey: async () =>
-        (await getSecret({ name: `${name}-privateKey`, vaultInfo }))?.value,
-      getRevocationCertificate: async () =>
-        (await getSecret({ name: `${name}-revocationCertificate`, vaultInfo }))
-          ?.value,
+      getPublicKey: () =>
+        output(getSecret({ name: `${name}-publicKey`, vaultInfo })).apply(
+          (i) => i!.value!,
+        ),
+      getPrivateKey: () =>
+        output(getSecret({ name: `${name}-privateKey`, vaultInfo })).apply(
+          (i) => i!.value!,
+        ),
+      getRevocationCertificate: () =>
+        output(
+          getSecret({ name: `${name}-revocationCertificate`, vaultInfo }),
+        ).apply((i) => i!.value!),
     },
   };
 };

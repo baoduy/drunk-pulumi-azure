@@ -10,7 +10,7 @@ import {
   DefaultResourceArgs,
 } from "../types";
 import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
-import { FirewallPolicyProps } from "./FirewallRules/types";
+import { FirewallPolicyProps } from "./types";
 import { Input } from "@pulumi/pulumi";
 import IpAddress from "./IpAddress";
 import { isDryRun } from "../Common/StackEnv";

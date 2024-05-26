@@ -1,14 +1,14 @@
-import { BasicResourceArgs, DefaultResourceArgs } from '../types';
-import * as network from '@pulumi/azure-native/network';
-import { getHubName, getWanName } from '../Common/Naming';
-import { Input } from '@pulumi/pulumi';
-import { input as inputs } from '@pulumi/azure-native/types';
-import Firewall from './Firewall';
-import { FirewallPolicyProps } from './FirewallRules/types';
+import { BasicResourceArgs, DefaultResourceArgs } from "../types";
+import * as network from "@pulumi/azure-native/network";
+import { getHubName, getWanName } from "../Common/Naming";
+import { Input } from "@pulumi/pulumi";
+import { input as inputs } from "@pulumi/azure-native/types";
+import Firewall from "./Firewall";
+import { FirewallPolicyProps } from "./types";
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, 'monitoring'> {
+    Omit<DefaultResourceArgs, "monitoring"> {
   /** The hub Address space */
   hubAddressPrefix: Input<string>;
   hubRoutes?: Input<Input<inputs.network.VirtualHubRouteTableV2Args>[]>;
@@ -35,7 +35,7 @@ export default ({
     virtualWANName: wanName,
     allowVnetToVnetTraffic: true,
     allowBranchToBranchTraffic: false,
-    type: 'Standard',
+    type: "Standard",
   });
 
   const azFirewall = firewall?.create
@@ -64,7 +64,7 @@ export default ({
       virtualHubRouteTableV2s: hubRoutes,
       azureFirewall: azFirewall && { id: azFirewall.firewall.id },
     },
-    { dependsOn: azFirewall ? [azFirewall.firewall, wan] : wan }
+    { dependsOn: azFirewall ? [azFirewall.firewall, wan] : wan },
   );
 
   return { wan, hub, firewall: azFirewall };

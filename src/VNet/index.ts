@@ -1,13 +1,13 @@
 import * as network from "@pulumi/azure-native/network";
 import { input as inputs } from "@pulumi/azure-native/types";
-import { Input, output, Resource } from "@pulumi/pulumi";
+import { Input, output } from "@pulumi/pulumi";
 import * as pulumi from "@pulumi/pulumi";
 
 import { getResourceInfoFromId } from "../Common/AzureEnv";
 import { NetworkRouteResource } from "@drunk-pulumi/azure-providers/NetworkRuote";
 import { BasicMonitorArgs, ResourceGroupInfo } from "../types";
 import Firewall, { FirewallSkus, FirewallProps } from "./Firewall";
-import { FirewallPolicyProps } from "./FirewallRules/types";
+import { FirewallPolicyProps } from "./types";
 import VnetPeering from "./NetworkPeering";
 import { SubnetProps } from "./Subnet";
 import Vnet from "./Vnet";
