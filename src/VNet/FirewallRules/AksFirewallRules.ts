@@ -1,6 +1,6 @@
 import { input as inputs, enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
-import { FirewallRuleResults } from "./types";
+import { FirewallRuleResults } from "../types";
 
 interface BasicRuleProps {
   startPriority: number;

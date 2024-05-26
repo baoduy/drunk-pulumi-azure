@@ -1,8 +1,8 @@
-import * as native from '@pulumi/azure-native';
-import * as pulumi from '@pulumi/pulumi';
-import { Input, output } from '@pulumi/pulumi';
-import vmsDiagnostic from './VmSetMonitor';
-import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from '../types';
+import * as native from "@pulumi/azure-native";
+import * as pulumi from "@pulumi/pulumi";
+import { Input, output } from "@pulumi/pulumi";
+import vmsDiagnostic from "./VmSetMonitor";
+import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from "../types";
 import {
   currentEnv,
   defaultScope,
@@ -11,21 +11,21 @@ import {
   getResourceInfoFromId,
   isPrd,
   tenantId,
-} from '../Common/AzureEnv';
-import Locker from '../Core/Locker';
-import aksIdentityCreator from './Identity';
-import { stack } from '../Common/StackEnv';
-import { createDiagnostic } from '../Logs/Helpers';
-import { getAksName } from '../Common/Naming';
-import PrivateDns from '../VNet/PrivateDns';
-import { getVnetIdFromSubnetId } from '../VNet/Helper';
-import { roleAssignment } from '../AzAd/RoleAssignment';
-import { getAdGroup } from '../AzAd/Group';
-import { EnvRoleNamesType } from '../AzAd/EnvRoles';
-import { getAksConfig } from './Helper';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import * as inputs from '@pulumi/azure-native/types/input';
-import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+} from "../Common/AzureEnv";
+import Locker from "../Core/Locker";
+import aksIdentityCreator from "./Identity";
+import { stack } from "../Common/StackEnv";
+import { createDiagnostic } from "../Logs/Helpers";
+import { getAksName, getResourceGroupName } from "../Common/Naming";
+import PrivateDns from "../VNet/PrivateDns";
+import { getVnetIdFromSubnetId } from "../VNet/Helper";
+import { roleAssignment } from "../AzAd/RoleAssignment";
+import { getAdGroup } from "../AzAd/Group";
+import { EnvRoleNamesType } from "../AzAd/EnvRoles";
+import { getAksConfig } from "./Helper";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import * as inputs from "@pulumi/azure-native/types/input";
+import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -33,7 +33,7 @@ const autoScaleFor = ({
   env,
 }: {
   env: Environments;
-  nodeType: 'Default' | 'System' | 'User';
+  nodeType: "Default" | "System" | "User";
   enableAutoScaling?: boolean;
 }) => {
   const nodeCount = 1;
@@ -42,12 +42,12 @@ const autoScaleFor = ({
 
   if (env === Environments.Prd) {
     switch (nodeType) {
-      case 'User':
+      case "User":
         maxCount = 5;
         break;
 
-      case 'Default':
-      case 'System':
+      case "Default":
+      case "System":
       default:
         maxCount = 3;
         break;
@@ -63,9 +63,9 @@ const autoScaleFor = ({
 };
 
 const defaultNodePoolProps = {
-  availabilityZones: isPrd ? ['1', '2', '3'] : undefined,
+  availabilityZones: isPrd ? ["1", "2", "3"] : undefined,
   type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
-  vmSize: 'Standard_B2s',
+  vmSize: "Standard_B2s",
 
   maxPods: 50,
   enableFIPS: false,
@@ -79,34 +79,30 @@ const defaultNodePoolProps = {
     environment: currentEnv,
     stack,
   },
-
-  tags: {
-    environment: currentEnv,
-  },
 };
 
 export enum VmSizes {
   /** 32G RAM - 4CPU - $221.92 */
-  Standard_E4as_v4_221 = 'Standard_E4as_v4',
+  Standard_E4as_v4_221 = "Standard_E4as_v4",
   /** 8G RAM - 2CPU - $77.38 */
-  Standard_B2ms_77 = 'Standard_B2ms',
+  Standard_B2ms_77 = "Standard_B2ms",
   /** 16G RAM - 4CPU - $154.03 */
-  Standard_B4ms_154 = 'Standard_B4ms',
+  Standard_B4ms_154 = "Standard_B4ms",
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2as_v4_87 = 'Standard_D2as_v4',
+  Standard_D2as_v4_87 = "Standard_D2as_v4",
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2s_v3_87 = 'Standard_D2s_v3',
+  Standard_D2s_v3_87 = "Standard_D2s_v3",
   /** 16G RAM - 4CPU - $175.20 */
-  Standard_D4as_v4_175 = 'Standard_D4as_v4',
+  Standard_D4as_v4_175 = "Standard_D4as_v4",
   /** 4G RAM - 2CPU - $69.35 */
-  Standard_A2_v2_69 = 'Standard_A2_v2',
+  Standard_A2_v2_69 = "Standard_A2_v2",
   /** 8G RAM - 4CPU - $144.54 */
-  Standard_A4_v2_144 = 'Standard_A4_v2',
+  Standard_A4_v2_144 = "Standard_A4_v2",
   /** 32G RAM - 4CPU - $205.13 */
-  Standard_A4m_v2_205 = 'Standard_A4m_v2',
+  Standard_A4m_v2_205 = "Standard_A4m_v2",
 }
 
-interface NodePoolProps
+export interface NodePoolProps
   extends Partial<inputs.containerservice.ManagedClusterAgentPoolProfileArgs> {
   name: string;
   mode: native.containerservice.AgentPoolMode;
@@ -116,59 +112,59 @@ interface NodePoolProps
   enableEncryptionAtHost?: boolean;
 }
 
-interface AksProps extends BasicResourceArgs {
+export type AskAddonProps = {
+  enableAzureKeyVault?: boolean;
+  enableAzurePolicy?: boolean;
+  enableKubeDashboard?: boolean;
+  enableVirtualHost?: boolean;
+  applicationGateway?: { gatewaySubnetId: pulumi.Input<string> };
+};
+
+export type AskFeatureProps = {
+  enablePrivateCluster?: boolean;
+  enableAutoScale?: boolean;
+  enablePodIdentity?: boolean;
+  enableDiagnosticSetting?: boolean;
+};
+
+export type AksAccessProps = {
+  envRoleNames: EnvRoleNamesType;
+  adminMembers?: Array<{ objectId: Input<string> }>;
+  authorizedIPRanges?: Input<string>[];
+};
+
+export type AksNetworkProps = {
+  subnetId: pulumi.Input<string>;
+  virtualHostSubnetName?: pulumi.Input<string>;
+  outboundIpAddress?: {
+    ipAddressId?: pulumi.Input<string>;
+    ipAddressPrefixId?: pulumi.Input<string>;
+  };
+};
+
+export type AksNodePoolProps = Omit<NodePoolProps, "subnetId" | "aksId">;
+
+export interface AksProps extends BasicResourceArgs {
   nodeResourceGroup?: string;
   tier?: native.containerservice.ManagedClusterSKUTier;
 
-  addon?: {
-    enableAzureKeyVault?: boolean;
-    enableAzurePolicy?: boolean;
-    enableKubeDashboard?: boolean;
-    enableVirtualHost?: boolean;
-    applicationGateway?: { gatewaySubnetId: pulumi.Input<string> };
-  };
-
-  linux?: {
-    adminUsername: Input<string>;
-    sshKeys: Array<pulumi.Input<string>>;
-  };
-
-  //kubernetesVersion?: Input<string>;
-  defaultNodePool: Omit<NodePoolProps, 'subnetId' | 'aksId'>;
-  nodePools?: Array<Omit<NodePoolProps, 'subnetId' | 'aksId'>>;
-  enableAutoScale?: boolean;
-
-  featureFlags?: {
-    createServicePrincipal?: boolean;
-    enablePodIdentity?: boolean;
-    enableDiagnosticSetting?: boolean;
-  };
+  addon?: AskAddonProps;
+  features?: AskFeatureProps;
+  aksAccess?: AksAccessProps;
 
   //Azure Registry Container
   acr?: { enable: boolean; id?: Input<string> };
-  aksAccess?: {
-    //Only disable local accounts one downloaded and connected to ADO
-    //disableLocalAccounts?: boolean;
-    envRoleNames: EnvRoleNamesType;
-    adminMembers?: Array<{ objectId: Input<string> }>;
-
-    enablePrivateCluster?: boolean;
-    authorizedIPRanges?: Input<string>[];
-    //privateDNSName?: string;
+  defaultNodePool: AksNodePoolProps;
+  network: AksNetworkProps;
+  linux: {
+    adminUsername: Input<string>;
+    sshKeys: Array<pulumi.Input<string>>;
   };
-
-  network: {
-    subnetId?: pulumi.Input<string>;
-    virtualHostSubnetName?: pulumi.Input<string>;
-    enableFirewall?: boolean;
-    outboundIpAddress?: {
-      ipAddressId: pulumi.Input<string>;
-      ipAddressPrefixId?: pulumi.Input<string>;
-    };
-  };
+  //kubernetesVersion?: Input<string>;
+  nodePools?: Array<AksNodePoolProps>;
 
   vaultInfo: KeyVaultInfo;
-  log?: Pick<BasicMonitorArgs, 'logWpId'>;
+  logWpId?: Input<string>;
   /**Lock resource from delete*/
   lock?: boolean;
   dependsOn?: pulumi.Input<pulumi.Resource>[];
@@ -181,16 +177,14 @@ export default async ({
   nodeResourceGroup,
   name,
   linux,
-  //kubernetesVersion,
   defaultNodePool,
   nodePools,
-  enableAutoScale,
   network,
-  log,
+  logWpId,
   acr,
   aksAccess,
   vaultInfo,
-  featureFlags = { enableDiagnosticSetting: true },
+  features = { enableDiagnosticSetting: true },
   addon = {
     enableAzurePolicy: true,
     enableAzureKeyVault: true,
@@ -204,11 +198,13 @@ export default async ({
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
+  nodeResourceGroup =
+    nodeResourceGroup || getResourceGroupName(`${aksName}-nodes`);
+
   const disableLocalAccounts = vaultInfo
     ? await getKeyVaultBase(vaultInfo.name).checkSecretExist(secretName)
     : false;
   console.log(name, { disableLocalAccounts });
-  nodeResourceGroup = nodeResourceGroup || `${aksName}-nodes`;
 
   // const appGateway =
   //   addon.applicationGateway && network.outboundIpAddress
@@ -228,12 +224,10 @@ export default async ({
   //     })
   //   : undefined;
 
-  const serviceIdentity = featureFlags.createServicePrincipal
-    ? aksIdentityCreator({
-        name: aksName,
-        vaultInfo,
-      })
-    : undefined;
+  const serviceIdentity = aksIdentityCreator({
+    name: aksName,
+    vaultInfo,
+  });
 
   const adminGroup = aksAccess?.envRoleNames
     ? getAdGroup(aksAccess.envRoleNames.admin)
@@ -243,22 +237,16 @@ export default async ({
     ? getAdGroup(aksAccess.envRoleNames.contributor)
     : undefined;
 
-  //const enableAzureRBAC = Boolean(aksAccess?.adminMembers && adminGroup);
-
   //=================Validate ===================================/
-  if (!network?.subnetId) {
-    console.error('Aks subnetId is required:', name);
-    return undefined;
-  }
   if (!linux?.sshKeys || !linux.sshKeys[0]) {
-    console.error('Aks sshKeys is required:', name);
+    console.error("Aks sshKeys is required:", name);
     return undefined;
   }
 
   //Private DNS Zone for Private CLuster
-  const privateZone = aksAccess?.enablePrivateCluster
+  const privateZone = features?.enablePrivateCluster
     ? PrivateDns({
-        name: 'privatelink.southeastasia.azmk8s.io',
+        name: "privatelink.southeastasia.azmk8s.io",
         group,
         vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
       })
@@ -275,11 +263,11 @@ export default async ({
       //kubernetesVersion,
 
       apiServerAccessProfile: {
-        authorizedIPRanges: aksAccess?.enablePrivateCluster
+        authorizedIPRanges: features?.enablePrivateCluster
           ? []
           : aksAccess?.authorizedIPRanges || [],
         disableRunCommand: true,
-        enablePrivateCluster: aksAccess?.enablePrivateCluster,
+        enablePrivateCluster: features?.enablePrivateCluster,
         privateDNSZone: privateZone?.id,
       },
       //fqdnSubdomain: '',
@@ -288,7 +276,7 @@ export default async ({
         azureKeyvaultSecretsProvider: {
           config: addon.enableAzureKeyVault
             ? {
-                enableSecretRotation: 'true',
+                enableSecretRotation: "true",
               }
             : undefined,
           enabled: Boolean(addon.enableAzureKeyVault),
@@ -300,9 +288,7 @@ export default async ({
         //TO enable HTTPS support need to create a cluster with a public IP address.
         httpApplicationRouting: {
           enabled:
-            !network.outboundIpAddress?.ipAddressId &&
-            !network.enableFirewall &&
-            !aksAccess?.enablePrivateCluster,
+            !network.outboundIpAddress && !features?.enablePrivateCluster,
         },
 
         aciConnectorLinux: {
@@ -323,10 +309,10 @@ export default async ({
         },
 
         omsAgent: {
-          enabled: Boolean(log?.logWpId),
-          config: log
+          enabled: Boolean(logWpId),
+          config: logWpId
             ? {
-                logAnalyticsWorkspaceResourceID: log.logWpId!,
+                logAnalyticsWorkspaceResourceID: logWpId,
               }
             : undefined,
         },
@@ -345,21 +331,15 @@ export default async ({
           ...autoScaleFor({
             env: currentEnv,
             nodeType: defaultNodePool.mode,
-            enableAutoScaling: enableAutoScale,
+            enableAutoScaling: features?.enableAutoScale,
           }),
 
-          count: defaultNodePool.mode === 'System' ? 1 : 0,
+          count: defaultNodePool.mode === "System" ? 1 : 0,
           //orchestratorVersion: kubernetesVersion,
           vnetSubnetID: network.subnetId,
-          kubeletDiskType: 'OS',
-          osSKU: 'Ubuntu',
-          osType: 'Linux',
-
-          //upgradeSettings: {},
-          tags: {
-            ...defaultNodePoolProps.tags,
-            mode: defaultNodePool.mode,
-          },
+          kubeletDiskType: "OS",
+          osSKU: "Ubuntu",
+          osType: "Linux",
         },
       ],
 
@@ -371,23 +351,23 @@ export default async ({
         : undefined,
 
       autoScalerProfile: {
-        balanceSimilarNodeGroups: 'true',
-        expander: 'random',
-        maxEmptyBulkDelete: '10',
-        maxGracefulTerminationSec: '600',
-        maxNodeProvisionTime: '15m',
-        maxTotalUnreadyPercentage: '45',
-        newPodScaleUpDelay: '0s',
-        okTotalUnreadyCount: '3',
-        scaleDownDelayAfterAdd: '30m',
-        scaleDownDelayAfterDelete: '60s',
-        scaleDownDelayAfterFailure: '10m',
-        scaleDownUnneededTime: '10m',
-        scaleDownUnreadyTime: '20m',
-        scaleDownUtilizationThreshold: '0.5',
-        scanInterval: '60s',
-        skipNodesWithLocalStorage: 'false',
-        skipNodesWithSystemPods: 'true',
+        balanceSimilarNodeGroups: "true",
+        expander: "random",
+        maxEmptyBulkDelete: "10",
+        maxGracefulTerminationSec: "600",
+        maxNodeProvisionTime: "15m",
+        maxTotalUnreadyPercentage: "45",
+        newPodScaleUpDelay: "0s",
+        okTotalUnreadyCount: "3",
+        scaleDownDelayAfterAdd: "30m",
+        scaleDownDelayAfterDelete: "60s",
+        scaleDownDelayAfterFailure: "10m",
+        scaleDownUnneededTime: "10m",
+        scaleDownUnreadyTime: "20m",
+        scaleDownUtilizationThreshold: "0.5",
+        scanInterval: "60s",
+        skipNodesWithLocalStorage: "false",
+        skipNodesWithSystemPods: "true",
       },
 
       //Still under preview
@@ -395,20 +375,18 @@ export default async ({
       //   ? { keda: { enabled: true } }
       //   : undefined,
 
-      servicePrincipalProfile: serviceIdentity
-        ? {
-            clientId: serviceIdentity.clientId,
-            secret: serviceIdentity.clientSecret,
-          }
-        : undefined,
-
+      servicePrincipalProfile: {
+        clientId: serviceIdentity.clientId,
+        secret: serviceIdentity.clientSecret,
+      },
       securityProfile: {
-        defender: isPrd
-          ? {
-              logAnalyticsWorkspaceResourceId: log?.logWpId,
-              securityMonitoring: { enabled: true },
-            }
-          : undefined,
+        defender:
+          logWpId && isPrd
+            ? {
+                logAnalyticsWorkspaceResourceId: logWpId,
+                securityMonitoring: { enabled: true },
+              }
+            : undefined,
         imageCleaner: { enabled: true, intervalHours: 24 },
         workloadIdentity: { enabled: false },
       },
@@ -416,9 +394,9 @@ export default async ({
       //azureMonitorProfile: { metrics: { enabled } },
       //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
       enablePodSecurityPolicy: false,
-      podIdentityProfile: featureFlags.enablePodIdentity
+      podIdentityProfile: features.enablePodIdentity
         ? {
-            enabled: featureFlags.enablePodIdentity,
+            enabled: features.enablePodIdentity,
             //Not allow pod to use kublet command
             allowNetworkPluginKubenet: false,
           }
@@ -471,44 +449,36 @@ export default async ({
         //serviceCidr: '10.0.0.0/16',
 
         outboundType:
-          network.enableFirewall || aksAccess?.enablePrivateCluster
+          features?.enablePrivateCluster || !network.outboundIpAddress
             ? native.containerservice.OutboundType.UserDefinedRouting
             : native.containerservice.OutboundType.LoadBalancer,
 
-        loadBalancerSku:
-          network.outboundIpAddress?.ipAddressId ||
-          network.enableFirewall ||
-          aksAccess?.enablePrivateCluster
-            ? 'Standard'
-            : 'Basic',
-
-        loadBalancerProfile:
-          network.outboundIpAddress &&
-          !(network.enableFirewall || aksAccess?.enablePrivateCluster)
-            ? {
-                outboundIPs: {
-                  publicIPs: [{ id: network.outboundIpAddress.ipAddressId }],
-                },
-                outboundIPPrefixes: network.outboundIpAddress.ipAddressPrefixId
-                  ? {
-                      publicIPPrefixes: [
-                        { id: network.outboundIpAddress.ipAddressPrefixId },
-                      ],
-                    }
-                  : undefined,
-              }
-            : undefined,
+        loadBalancerSku: "Standard",
+        loadBalancerProfile: network.outboundIpAddress
+          ? {
+              outboundIPs: network.outboundIpAddress.ipAddressId
+                ? {
+                    publicIPs: [{ id: network.outboundIpAddress.ipAddressId }],
+                  }
+                : undefined,
+              outboundIPPrefixes: network.outboundIpAddress.ipAddressPrefixId
+                ? {
+                    publicIPPrefixes: [
+                      { id: network.outboundIpAddress.ipAddressPrefixId },
+                    ],
+                  }
+                : undefined,
+            }
+          : undefined,
       },
     },
     {
       protect: lock,
-      dependsOn: serviceIdentity
-        ? [...dependsOn, serviceIdentity.resource]
-        : dependsOn,
+      dependsOn: [...dependsOn, serviceIdentity.resource],
       import: importFrom,
       deleteBeforeReplace: true,
-      ignoreChanges: ['privateLinkResources', 'networkProfile', 'linuxProfile'],
-    }
+      ignoreChanges: ["privateLinkResources", "networkProfile", "linuxProfile"],
+    },
   );
 
   if (lock) {
@@ -529,24 +499,19 @@ export default async ({
           ...autoScaleFor({
             env: currentEnv,
             nodeType: p.mode,
-            enableAutoScaling: enableAutoScale,
+            enableAutoScaling: features.enableAutoScale,
           }),
 
-          count: p.mode === 'System' ? 1 : 0,
+          count: p.mode === "System" ? 1 : 0,
           //orchestratorVersion: kubernetesVersion,
           vnetSubnetID: network.subnetId,
-          kubeletDiskType: 'OS',
-          osSKU: 'Ubuntu',
-          osType: 'Linux',
-
-          //upgradeSettings: {},
-          tags: {
-            ...defaultNodePoolProps.tags,
-            mode: p.mode,
-          },
-        })
+          kubeletDiskType: "OS",
+          osSKU: "Ubuntu",
+          osType: "Linux",
+        }),
     );
   }
+
   if (vaultInfo) {
     aks.id.apply(async (id) => {
       if (!id) return;
@@ -579,34 +544,34 @@ export default async ({
       await Promise.all(
         [
           {
-            shortName: 'Admin-Contributor-Role',
-            name: 'Azure Kubernetes Service Contributor Role',
+            shortName: "Admin-Contributor-Role",
+            name: "Azure Kubernetes Service Contributor Role",
           },
           {
-            shortName: 'Admin-RBAC-Cluster-Admin',
-            name: 'Azure Kubernetes Service RBAC Cluster Admin',
+            shortName: "Admin-RBAC-Cluster-Admin",
+            name: "Azure Kubernetes Service RBAC Cluster Admin",
           },
           {
-            shortName: 'Admin-Cluster-Admin-Role',
-            name: 'Azure Kubernetes Service Cluster Admin Role',
+            shortName: "Admin-Cluster-Admin-Role",
+            name: "Azure Kubernetes Service Cluster Admin Role",
           },
           {
-            shortName: 'Admin-Cluster-Monitoring-User',
-            name: 'Azure Kubernetes Service Cluster Monitoring User',
+            shortName: "Admin-Cluster-Monitoring-User",
+            name: "Azure Kubernetes Service Cluster Monitoring User",
           },
           {
-            shortName: 'Admin-Cluster-User-Role',
-            name: 'Azure Kubernetes Service Cluster User Role',
+            shortName: "Admin-Cluster-User-Role",
+            name: "Azure Kubernetes Service Cluster User Role",
           },
         ].map((r) =>
           roleAssignment({
             name: `${name}-${r.shortName}`,
             principalId: adminGroup.objectId,
-            principalType: 'Group',
+            principalType: "Group",
             roleName: r.name,
             scope: id,
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -615,128 +580,108 @@ export default async ({
       await Promise.all(
         [
           {
-            shortName: 'Contributor-Contributor-Role',
-            name: 'Azure Kubernetes Service Contributor Role',
+            shortName: "Contributor-Contributor-Role",
+            name: "Azure Kubernetes Service Contributor Role",
           },
           {
-            shortName: 'Contributor-RBAC-Admin',
-            name: 'Azure Kubernetes Service RBAC Admin',
+            shortName: "Contributor-RBAC-Admin",
+            name: "Azure Kubernetes Service RBAC Admin",
           },
           {
-            shortName: 'Contributor-RBAC-Reader',
-            name: 'Azure Kubernetes Service RBAC Reader',
+            shortName: "Contributor-RBAC-Reader",
+            name: "Azure Kubernetes Service RBAC Reader",
           },
           {
-            shortName: 'Contributor-RBAC-Writer',
-            name: 'Azure Kubernetes Service RBAC Writer',
+            shortName: "Contributor-RBAC-Writer",
+            name: "Azure Kubernetes Service RBAC Writer",
           },
         ].map((r) =>
           roleAssignment({
             name: `${name}-${r.shortName}`,
             principalId: contributeGroup.objectId,
-            principalType: 'Group',
+            principalType: "Group",
             roleName: r.name,
             scope: id,
-          })
-        )
+          }),
+        ),
       );
     }
 
+    //Grant Permission for Identity
+    pulumi
+      .all([aks.identity, aks.identityProfile, network.subnetId])
+      .apply(([identity, identityProfile, sId]) => {
+        console.log("Grant RBAC for cluster:", name);
+
+        if (acrScope && identityProfile && identityProfile["kubeletidentity"]) {
+          roleAssignment({
+            name: `${name}-aks-identity-profile-pull`,
+            principalId: identityProfile["kubeletidentity"].objectId!,
+            principalType: "ServicePrincipal",
+            roleName: "AcrPull",
+            scope: acrScope,
+          });
+
+          if (vaultInfo) {
+            addCustomSecret({
+              name: `${name}-identity-clientId`,
+              value: identityProfile["kubeletidentity"].clientId!,
+              dependsOn: aks,
+              contentType: name,
+              vaultInfo,
+            });
+          }
+        }
+
+        if (network.subnetId && identity) {
+          roleAssignment({
+            name: `${name}-system-net`,
+            principalId: identity.principalId,
+            roleName: "Contributor",
+            principalType: "ServicePrincipal",
+            scope: getResourceIdFromInfo({
+              group: getResourceInfoFromId(sId)!.group,
+            }),
+          });
+        }
+
+        if (privateZone && identity) {
+          roleAssignment({
+            name: `${name}-private-dns`,
+            principalId: identity.principalId,
+            roleName: "Private DNS Zone Contributor",
+            principalType: "ServicePrincipal",
+            scope: privateZone.id,
+          });
+        }
+      });
+
     //Diagnostic
-    if (featureFlags.enableDiagnosticSetting) {
+    if (features.enableDiagnosticSetting && logWpId) {
       createDiagnostic({
         name,
         targetResourceId: id,
-        ...log,
+        logWpId,
         logsCategories: [
-          'guard',
-          'kube-controller-manager',
-          'kube-audit-admin',
-          'kube-audit',
-          'kube-scheduler',
-          'cluster-autoscaler',
+          "guard",
+          "kube-controller-manager",
+          "kube-audit-admin",
+          "kube-audit",
+          "kube-scheduler",
+          "cluster-autoscaler",
         ],
+        dependsOn: aks,
+      });
+
+      //Apply monitoring for VMScale Sets
+      vmsDiagnostic({
+        group: { resourceGroupName: nodeResourceGroup },
+        logWpId,
+        vaultInfo,
+        dependsOn: aks,
       });
     }
   });
 
-  //Grant Permission for Identity
-  pulumi
-    .all([aks.identity, aks.identityProfile, network.subnetId])
-    .apply(([identity, identityProfile, sId]) => {
-      console.log('Grant RBAC for cluster:', name);
-
-      //Already assigned when creating the service
-      // if (serviceIdentity?.principalId) {
-      //   await roleAssignment({
-      //     name: `${name}-aks-identity-acr-pull`,
-      //     principalId: serviceIdentity?.principalId,
-      //     principalType: 'ServicePrincipal',
-      //     roleName: 'AcrPull',
-      //     scope: defaultScope,
-      //   });
-      // }
-
-      if (acrScope && identityProfile && identityProfile['kubeletidentity']) {
-        roleAssignment({
-          name: `${name}-aks-identity-profile-pull`,
-          principalId: identityProfile['kubeletidentity'].objectId!,
-          principalType: 'ServicePrincipal',
-          roleName: 'AcrPull',
-          scope: acrScope,
-        });
-
-        if (vaultInfo) {
-          addCustomSecret({
-            name: `${name}-identity-clientId`,
-            value: identityProfile['kubeletidentity'].clientId!,
-            dependsOn: aks,
-            contentType: name,
-            vaultInfo,
-          });
-        }
-      }
-
-      // if (identity?.principalId) {
-      //   await roleAssignment({
-      //     name: `${name}-system-acr-pull`,
-      //     principalId: identity.principalId,
-      //     principalType: 'ServicePrincipal',
-      //     roleName: 'AcrPull',
-      //     scope: defaultScope,
-      //   });
-      // }
-
-      if (network.subnetId && identity) {
-        roleAssignment({
-          name: `${name}-system-net`,
-          principalId: identity.principalId,
-          roleName: 'Contributor',
-          principalType: 'ServicePrincipal',
-          scope: getResourceIdFromInfo({
-            group: getResourceInfoFromId(sId)!.group,
-          }),
-        });
-      }
-
-      if (privateZone && identity) {
-        roleAssignment({
-          name: `${name}-private-dns`,
-          principalId: identity.principalId,
-          roleName: 'Private DNS Zone Contributor',
-          principalType: 'ServicePrincipal',
-          scope: privateZone.id,
-        });
-      }
-    });
-
-  //Apply monitoring for VMScale Sets
-  vmsDiagnostic({
-    group: { resourceGroupName: nodeResourceGroup },
-    ...log,
-    vaultInfo,
-    dependsOn: aks,
-  });
-
-  return { aks, serviceIdentity, adminGroup, privateZone };
+  return { aks, serviceIdentity, privateZone };
 };

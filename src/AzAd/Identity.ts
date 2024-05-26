@@ -1,19 +1,19 @@
-import * as azureAD from '@pulumi/azuread';
-import { ServicePrincipal } from '@pulumi/azuread';
-import * as pulumi from '@pulumi/pulumi';
-import { Input, Output } from '@pulumi/pulumi';
-import { getIdentityName } from '../Common/Naming';
+import * as azureAD from "@pulumi/azuread";
+import { ServicePrincipal } from "@pulumi/azuread";
+import * as pulumi from "@pulumi/pulumi";
+import { Input, Output } from "@pulumi/pulumi";
+import { getIdentityName } from "../Common/Naming";
 import {
   ApplicationApiOauth2PermissionScope,
   ApplicationAppRole,
   ApplicationRequiredResourceAccess,
   ApplicationOptionalClaims,
-} from '@pulumi/azuread/types/input';
+} from "@pulumi/azuread/types/input";
 
-import { KeyVaultInfo } from '../types';
-import { roleAssignment } from './RoleAssignment';
-import { defaultScope } from '../Common/AzureEnv';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { KeyVaultInfo } from "../types";
+import { roleAssignment } from "./RoleAssignment";
+import { defaultScope } from "../Common/AzureEnv";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 type PreAuthApplicationProps = {
   appId: string;
@@ -29,7 +29,7 @@ type IdentityProps = {
   publicClient?: boolean;
   createPrincipal?: boolean;
   replyUrls?: pulumi.Input<pulumi.Input<string>[]>;
-  appType?: 'spa' | 'web' | 'api';
+  appType?: "spa" | "web" | "api";
   allowMultiOrg?: boolean;
   appRoles?: pulumi.Input<pulumi.Input<ApplicationAppRole>[]>;
   oauth2Permissions?: pulumi.Input<
@@ -65,7 +65,7 @@ export default ({
   createClientSecret = false,
   createPrincipal = false,
   replyUrls,
-  appType = 'spa',
+  appType = "spa",
   allowMultiOrg = false,
   appRoles,
   appRoleAssignmentRequired,
@@ -75,14 +75,7 @@ export default ({
   principalRoles,
   optionalClaims,
   vaultInfo,
-}: IdentityProps): IdentityResult & {
-  vaultNames: {
-    clientIdKeyName: string;
-    clientSecretKeyName: string;
-    principalIdKeyName: string;
-    principalSecretKeyName: string;
-  };
-} => {
+}: IdentityProps): IdentityResult => {
   // Azure AD Application no need suffix
   name = getIdentityName(name);
 
@@ -101,21 +94,21 @@ export default ({
 
     owners,
     appRoles,
-    signInAudience: allowMultiOrg ? 'AzureADMultipleOrgs' : 'AzureADMyOrg',
-    groupMembershipClaims: ['SecurityGroup'],
+    signInAudience: allowMultiOrg ? "AzureADMultipleOrgs" : "AzureADMyOrg",
+    groupMembershipClaims: ["SecurityGroup"],
     identifierUris,
 
     publicClient: publicClient ? { redirectUris: replyUrls } : undefined,
 
     singlePageApplication:
-      appType === 'spa'
+      appType === "spa"
         ? {
             redirectUris: replyUrls,
           }
         : undefined,
 
     web:
-      appType === 'web'
+      appType === "web"
         ? {
             redirectUris: replyUrls,
             implicitGrant: {
@@ -126,7 +119,7 @@ export default ({
         : undefined,
 
     api:
-      appType === 'api'
+      appType === "api"
         ? {
             oauth2PermissionScopes: oauth2Permissions,
             mappedClaimsEnabled: true,
@@ -148,7 +141,7 @@ export default ({
       name: clientIdKeyName,
       value: app.clientId,
       vaultInfo,
-      contentType: 'Identity',
+      contentType: "Identity",
     });
 
   let clientSecret: Output<string> | undefined = undefined;
@@ -158,10 +151,10 @@ export default ({
       {
         displayName: name,
         applicationId: app.id,
-        endDateRelative: '43800h',
+        endDateRelative: "43800h",
         //value: randomPassword({ name: `${name}-clientSecret` }).result,
       },
-      { ignoreChanges: ['applicationId', 'applicationObjectId'] }
+      { ignoreChanges: ["applicationId", "applicationObjectId"] },
     ).value;
 
     if (vaultInfo)
@@ -169,7 +162,7 @@ export default ({
         name: clientSecretKeyName,
         value: clientSecret,
         vaultInfo,
-        contentType: 'Identity',
+        contentType: "Identity",
       });
   }
 
@@ -183,15 +176,14 @@ export default ({
         //Allow to access to application as the permission is manage by Group assignment.
         appRoleAssignmentRequired,
         clientId: app.clientId,
-
       },
-      { ignoreChanges: ['clientId', 'applicationId'] }
+      { ignoreChanges: ["clientId", "applicationId"] },
     );
 
     principalSecret = new azureAD.ServicePrincipalPassword(name, {
       displayName: name,
       servicePrincipalId: principal.objectId,
-      endDateRelative: '43800h',
+      endDateRelative: "43800h",
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
@@ -201,9 +193,9 @@ export default ({
           name,
           roleName: r.roleName,
           principalId: principal!.id,
-          principalType: 'ServicePrincipal',
+          principalType: "ServicePrincipal",
           scope: r.scope || defaultScope,
-        })
+        }),
       );
     }
 
@@ -212,14 +204,14 @@ export default ({
         name: principalIdKeyName,
         value: principal.objectId,
         vaultInfo,
-        contentType: 'Identity',
+        contentType: "Identity",
       });
 
       addCustomSecret({
         name: principalSecretKeyName,
         value: principalSecret,
         vaultInfo,
-        contentType: 'Identity',
+        contentType: "Identity",
       });
     }
   }
@@ -232,11 +224,5 @@ export default ({
     principalId: principal?.objectId,
     principalSecret,
     resource: app,
-    vaultNames: {
-      clientIdKeyName,
-      clientSecretKeyName,
-      principalIdKeyName,
-      principalSecretKeyName,
-    },
   };
 };

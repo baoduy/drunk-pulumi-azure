@@ -1,5 +1,6 @@
 import { enums, input as inputs } from "@pulumi/azure-native/types";
 import * as pulumi from "@pulumi/pulumi";
+import { Input, Output } from "@pulumi/pulumi";
 
 export interface NetworkRuleArgs {
   description?: pulumi.Input<string>;
@@ -46,3 +47,22 @@ export type FirewallPolicyRuleCollectionResults = {
     >[]
   >;
 };
+
+export type FirewallPolicyResults = {
+  name: string;
+  dnatRules?: Array<Input<inputs.network.NatRuleArgs>>;
+  netRules?: Array<Input<inputs.network.NetworkRuleArgs>>;
+  appRules?: Array<Input<inputs.network.ApplicationRuleArgs>>;
+};
+
+export interface FirewallPolicyProps {
+  /**These props for create new policy*/
+  parentPolicyId?: Output<string>;
+  rules?: FirewallPolicyRuleCollectionResults[];
+}
+
+export interface FirewallRuleResults {
+  applicationRuleCollections?: inputs.network.AzureFirewallApplicationRuleCollectionArgs[];
+  natRuleCollections?: inputs.network.AzureFirewallNatRuleCollectionArgs[];
+  networkRuleCollections?: inputs.network.AzureFirewallNetworkRuleCollectionArgs[];
+}

@@ -2,71 +2,29 @@ import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
-import {
-  CommonBuilderProps,
-  CustomSecurityRuleArgs,
-  IResourcesBuilder,
-  ResourceGroupInfo,
-  ResourcesBuilder,
-  RouteArgs,
-} from "../types";
-import Firewall, { FirewallProps, FirewallResult } from "../VNet/Firewall";
-import Vnet, { VnetProps, VnetResult } from "../VNet/Vnet";
+import { CustomSecurityRuleArgs, RouteArgs } from "../types";
+import Firewall, { FirewallResult } from "../VNet/Firewall";
+import Vnet, { VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
 import NatGateway from "../VNet/NatGateway";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
-import { Input } from "@pulumi/pulumi";
 import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
 import { LogInfoResults } from "../Logs/Helpers";
-import VPNGateway, { VpnGatewayProps } from "../VNet/VPNGateway";
-
-type VnetBuilderProps = CommonBuilderProps & {
-  subnets?: SubnetCreationProps;
-} & Pick<VnetProps, "addressSpaces" | "dnsServers">;
-
-// Generic Omit type excluding specified keys
-type CommonOmit<T> = Omit<T, keyof CommonBuilderProps>;
-type SubnetCreationProps = Record<string, Omit<SubnetProps, "name">>;
-type SubnetPrefixCreationProps = { addressPrefix: string };
-type BastionCreationProps = { subnet: SubnetPrefixCreationProps };
-type PeeringProps = { vnetName: Input<string>; group: ResourceGroupInfo };
-type FirewallCreationProps = {
-  subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
-} & CommonOmit<Omit<FirewallProps, "outbound" | "management">>;
-type VpnGatewayCreationProps = Pick<
-  VpnGatewayProps,
-  "sku" | "vpnClientAddressPools"
-> & { subnetSpace: string };
-
-interface IFireWallOrVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
-  withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
-}
-
-interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
-  withPublicIpAddress: (
-    type: "prefix" | "individual",
-  ) => IGatewayFireWallBuilder;
-  withNatGateway: () => IFireWallOrVnetBuilder;
-}
-
-interface IVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
-  withBastion: (props: BastionCreationProps) => IVnetBuilder;
-  peeringTo: (props: PeeringProps) => IVnetBuilder;
-  withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
-  withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
-  withLogInfo: (info: LogInfoResults) => IVnetBuilder;
-  withVpnGateway: (props: VpnGatewayCreationProps) => IVnetBuilder;
-}
-
-type VnetBuilderResults = {
-  publicIpAddress: PublicIpAddressPrefixResult | undefined;
-  firewall: FirewallResult | undefined;
-  vnet: VnetResult;
-  natGateway: network.NatGateway | undefined;
-  peering: NetworkPeeringResults | undefined;
-  vnpGateway: network.VirtualNetworkGateway | undefined;
-};
+import VPNGateway from "../VNet/VPNGateway";
+import {
+  BastionCreationProps,
+  FirewallCreationProps,
+  IFireWallOrVnetBuilder,
+  IGatewayFireWallBuilder,
+  IVnetBuilder,
+  PeeringProps,
+  ResourcesBuilder,
+  SubnetCreationProps,
+  VnetBuilderProps,
+  VnetBuilderResults,
+  VpnGatewayCreationProps,
+} from "./types";
 
 const outboundIpName = "outbound";
 
@@ -77,7 +35,6 @@ export class VnetBuilder
   /** The Props */
   private readonly _subnetProps: SubnetCreationProps | undefined = undefined;
   private readonly _vnetProps: Partial<VnetBuilderProps>;
-  //private readonly _commonProps: VnetBuilderProps;
   private _firewallProps: FirewallCreationProps | undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;

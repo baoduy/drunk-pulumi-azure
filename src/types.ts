@@ -4,24 +4,6 @@ import { DiagnosticSetting } from "@pulumi/azure-native/aadiam/diagnosticSetting
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs, enums } from "@pulumi/azure-native/types";
 
-export type CommonBuilderProps = {
-  name: string;
-  group: ResourceGroupInfo;
-  vaultInfo: KeyVaultInfo;
-};
-
-export interface IResourcesBuilder<TResults> {
-  commonProps: CommonBuilderProps;
-  build: () => TResults;
-}
-
-export abstract class ResourcesBuilder<TResults>
-  implements IResourcesBuilder<TResults>
-{
-  constructor(public commonProps: CommonBuilderProps) {}
-  public abstract build(): TResults;
-}
-
 export interface BasicArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
