@@ -3,9 +3,11 @@ import IpAddressPrefix, {
 } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
 import {
+  CommonBuilderProps,
   CustomSecurityRuleArgs,
-  KeyVaultInfo,
+  IResourcesBuilder,
   ResourceGroupInfo,
+  ResourcesBuilder,
   RouteArgs,
 } from "../types";
 import Firewall, { FirewallProps, FirewallResult } from "../VNet/Firewall";
@@ -19,19 +21,12 @@ import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
 import { LogInfoResults } from "../Logs/Helpers";
 import VPNGateway, { VpnGatewayProps } from "../VNet/VPNGateway";
 
-//Vnet builder type
-type VnetBuilderCommonProps = {
-  name: string;
-  group: ResourceGroupInfo;
-  vaultInfo: KeyVaultInfo;
-};
-
-type VnetBuilderProps = VnetBuilderCommonProps & {
+type VnetBuilderProps = CommonBuilderProps & {
   subnets?: SubnetCreationProps;
 } & Pick<VnetProps, "addressSpaces" | "dnsServers">;
 
 // Generic Omit type excluding specified keys
-type CommonOmit<T> = Omit<T, keyof VnetBuilderCommonProps>;
+type CommonOmit<T> = Omit<T, keyof CommonBuilderProps>;
 type SubnetCreationProps = Record<string, Omit<SubnetProps, "name">>;
 type SubnetPrefixCreationProps = { addressPrefix: string };
 type BastionCreationProps = { subnet: SubnetPrefixCreationProps };
@@ -44,9 +39,8 @@ type VpnGatewayCreationProps = Pick<
   "sku" | "vpnClientAddressPools"
 > & { subnetSpace: string };
 
-interface IFireWallOrVnetBuilder {
+interface IFireWallOrVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
   withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
-  build: () => VnetBuilderResults;
 }
 
 interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
@@ -56,8 +50,7 @@ interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
   withNatGateway: () => IFireWallOrVnetBuilder;
 }
 
-interface IVnetBuilder {
-  build: () => VnetBuilderResults;
+interface IVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
   peeringTo: (props: PeeringProps) => IVnetBuilder;
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
@@ -77,11 +70,14 @@ type VnetBuilderResults = {
 
 const outboundIpName = "outbound";
 
-export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
+export class VnetBuilder
+  extends ResourcesBuilder<VnetBuilderResults>
+  implements IGatewayFireWallBuilder, IVnetBuilder
+{
   /** The Props */
   private readonly _subnetProps: SubnetCreationProps | undefined = undefined;
   private readonly _vnetProps: Partial<VnetBuilderProps>;
-  private readonly _commonProps: VnetBuilderCommonProps;
+  //private readonly _commonProps: VnetBuilderProps;
   private _firewallProps: FirewallCreationProps | undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
@@ -109,9 +105,9 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     addressSpaces,
     ...commonProps
   }: VnetBuilderProps) {
+    super(commonProps);
     this._subnetProps = subnets;
     this._vnetProps = { dnsServers, addressSpaces };
-    this._commonProps = commonProps;
   }
 
   public withPublicIpAddress(
@@ -186,13 +182,13 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
 
     //Add outbound Ipaddress for Firewall alone
     if (!this._natGatewayEnabled && this._firewallProps) {
-      console.log(`${this._commonProps.name}: outbound ip will be created.`);
+      console.log(`${this.commonProps.name}: outbound ip will be created.`);
       ipNames.push(outboundIpName);
     }
 
     //Create IpPrefix
     this._ipAddressInstance = IpAddressPrefix({
-      ...this._commonProps,
+      ...this.commonProps,
       ipAddresses: ipNames.map((n) => ({ name: n })),
       createPrefix: this._ipType === "prefix",
       config: { version: "IPv4", allocationMethod: "Static" },
@@ -203,7 +199,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (!this._natGatewayEnabled || !this._ipAddressInstance) return;
 
     this._natGatewayInstance = NatGateway({
-      ...this._commonProps,
+      ...this.commonProps,
 
       publicIpAddresses:
         this._ipType === "individual"
@@ -235,7 +231,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
       : [];
 
     this._vnetInstance = Vnet({
-      ...this._commonProps,
+      ...this.commonProps,
       ...this._vnetProps,
       subnets,
       natGateway: this._natGatewayInstance,
@@ -289,7 +285,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     );
 
     this._firewallInstance = Firewall({
-      ...this._commonProps,
+      ...this.commonProps,
       ...this._firewallProps,
 
       outbound: [
@@ -325,7 +321,7 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (!subnetId) return;
 
     this._vnpGatewayInstance = VPNGateway({
-      ...this._commonProps,
+      ...this.commonProps,
       ...this._vpnGatewayProps,
       subnetId,
       dependsOn: this._vnetInstance!.vnet,
@@ -336,9 +332,9 @@ export class VnetBuilder implements IGatewayFireWallBuilder, IVnetBuilder {
     if (!this._peeringProps || !this._vnetInstance) return;
 
     this._peeringInstance = NetworkPeering({
-      name: this._commonProps.name,
+      name: this.commonProps.name,
       firstVNetName: this._vnetInstance.vnet.name,
-      firstVNetResourceGroupName: this._commonProps.group.resourceGroupName,
+      firstVNetResourceGroupName: this.commonProps.group.resourceGroupName,
       secondVNetName: this._peeringProps.vnetName,
       secondVNetResourceGroupName: this._peeringProps.group.resourceGroupName,
     });
