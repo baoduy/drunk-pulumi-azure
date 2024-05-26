@@ -48,6 +48,7 @@
     "src/AzAd/UserIdentity.ts",
     "src/Builder/AksBuilder.ts",
     "src/Builder/VnetBuilder.ts",
+    "src/Builder/index.ts",
     "src/Builder/types.ts",
     "src/Cdn/index.ts",
     "src/Certificate/index.ts",

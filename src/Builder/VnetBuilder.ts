@@ -28,7 +28,7 @@ import {
 
 const outboundIpName = "outbound";
 
-export class VnetBuilder
+class VnetBuilder
   extends ResourcesBuilder<VnetBuilderResults>
   implements IGatewayFireWallBuilder, IVnetBuilder
 {
@@ -317,4 +317,5 @@ export class VnetBuilder
   }
 }
 
-export default VnetBuilder;
+export default (props: VnetBuilderProps) =>
+  new VnetBuilder(props) as IGatewayFireWallBuilder;

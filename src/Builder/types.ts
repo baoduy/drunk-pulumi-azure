@@ -68,6 +68,7 @@ export interface IFireWallOrVnetBuilder
   withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
 }
 
+//Starting Interface
 export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
   withPublicIpAddress: (
     type: "prefix" | "individual",

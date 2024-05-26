@@ -4,6 +4,7 @@ import {
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,
+  ISshBuilder,
   ResourcesBuilder,
   SshBuilderProps,
 } from "./types";
@@ -21,9 +22,8 @@ import Aks, {
 } from "Aks";
 import { IdentityResult } from "../AzAd/Identity";
 import { PrivateZone } from "@pulumi/azure-native/network";
-import { getResourceGroupName } from "../Common/Naming";
 
-export class AksBuilder
+class AksBuilder
   extends ResourcesBuilder<AskBuilderResults>
   implements IAksBuilder
 {
@@ -119,4 +119,4 @@ export class AksBuilder
   }
 }
 
-export default AksBuilder;
+export default (props: AksBuilderProps) => new AksBuilder(props) as ISshBuilder;
