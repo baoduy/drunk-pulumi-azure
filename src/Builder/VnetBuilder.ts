@@ -19,6 +19,7 @@ import {
   IGatewayFireWallBuilder,
   IPublicIpBuilder,
   IVnetBuilder,
+  IVnetBuilderStart,
   PeeringProps,
   ResourcesBuilder,
   SubnetCreationProps,
@@ -31,7 +32,7 @@ const outboundIpName = "outbound";
 
 class VnetBuilder
   extends ResourcesBuilder<VnetBuilderResults>
-  implements IGatewayFireWallBuilder, IVnetBuilder
+  implements IGatewayFireWallBuilder, IVnetBuilder, IVnetBuilderStart
 {
   /** The Props */
   private readonly _subnetProps: SubnetCreationProps | undefined = undefined;
@@ -68,14 +69,17 @@ class VnetBuilder
     this._vnetProps = { dnsServers, addressSpaces };
   }
 
+  public asHub(): IPublicIpBuilder {
+    return this;
+  }
+  public asSpoke(): IVnetBuilder {
+    return this;
+  }
+
   public withPublicIpAddress(
     type: "prefix" | "individual",
   ): IGatewayFireWallBuilder {
     this._ipType = type;
-    return this;
-  }
-
-  public noPublicIpAddress(): IVnetBuilder {
     return this;
   }
 

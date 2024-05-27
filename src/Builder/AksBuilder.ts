@@ -6,7 +6,7 @@ import {
   IAksNetworkBuilder,
   IAskAuthBuilder,
   ISshBuilder,
-  ResourcesBuilder,
+  ResourcesBuilderAsync,
   SshBuilderProps,
 } from "./types";
 import { generateSsh, SshResults } from "../Core/KeyGenetators";
@@ -26,7 +26,7 @@ import { IdentityResult } from "../AzAd/Identity";
 import { PrivateZone } from "@pulumi/azure-native/network";
 
 class AksBuilder
-  extends ResourcesBuilder<AskBuilderResults>
+  extends ResourcesBuilderAsync<AskBuilderResults>
   implements
     ISshBuilder,
     IAskAuthBuilder,

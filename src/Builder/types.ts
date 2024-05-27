@@ -36,6 +36,7 @@ export type CommonBuilderProps = {
 };
 export type CommonOmit<T> = Omit<T, keyof CommonBuilderProps>;
 
+//Synchronous
 export interface IResourcesBuilder<TResults> {
   commonProps: CommonBuilderProps;
   build: () => TResults;
@@ -46,6 +47,19 @@ export abstract class ResourcesBuilder<TResults>
 {
   constructor(public commonProps: CommonBuilderProps) {}
   public abstract build(): TResults;
+}
+
+//Asynchronous
+export interface IResourcesBuilderAsync<TResults> {
+  commonProps: CommonBuilderProps;
+  build: () => Promise<TResults>;
+}
+
+export abstract class ResourcesBuilderAsync<TResults>
+  implements IResourcesBuilderAsync<TResults>
+{
+  constructor(public commonProps: CommonBuilderProps) {}
+  public abstract build(): Promise<TResults>;
 }
 
 //VNet Builder Types
@@ -68,11 +82,14 @@ export type VpnGatewayCreationProps = Pick<
 > & { subnetSpace: string };
 
 //Starting Interface
+export interface IVnetBuilderStart {
+  asHub: () => IPublicIpBuilder;
+  asSpoke: () => IVnetBuilder;
+}
 export interface IPublicIpBuilder {
   withPublicIpAddress: (
     type: "prefix" | "individual",
   ) => IGatewayFireWallBuilder;
-  noPublicIpAddress: () => IVnetBuilder;
 }
 
 export interface IFireWallOrVnetBuilder
@@ -84,10 +101,7 @@ export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
   withNatGateway: () => IFireWallOrVnetBuilder;
 }
 
-export interface IVnetBuilder
-  extends IResourcesBuilder<VnetBuilderResults>,
-    IPublicIpBuilder,
-    IGatewayFireWallBuilder {
+export interface IVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
   peeringTo: (props: PeeringProps) => IVnetBuilder;
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
@@ -109,7 +123,7 @@ export type VnetBuilderResults = {
 export type AksBuilderProps = CommonBuilderProps & {};
 export type AskBuilderResults = {
   ssh: SshResults;
-  ask: {
+  aks: {
     serviceIdentity: IdentityResult;
     aks: ManagedCluster;
     privateZone: PrivateZone | undefined;
@@ -129,7 +143,7 @@ export interface IAksNetworkBuilder {
 export interface IAksDefaultNodePoolBuilder {
   withDefaultNodePool: (props: DefaultAksNodePoolProps) => IAksBuilder;
 }
-export interface IAksBuilder extends IResourcesBuilder<AskBuilderResults> {
+export interface IAksBuilder extends IResourcesBuilderAsync<AskBuilderResults> {
   withNodePool: (props: AksNodePoolProps) => IAksBuilder;
   withAddon: (props: AskAddonProps) => IAksBuilder;
   withFeature: (props: AskFeatureProps) => IAksBuilder;
