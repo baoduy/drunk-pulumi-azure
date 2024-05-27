@@ -115,7 +115,7 @@ export type VnetBuilderResults = {
   firewall: FirewallResult | undefined;
   vnet: VnetResult;
   natGateway: network.NatGateway | undefined;
-  peering: NetworkPeeringResults | undefined;
+  //peering: NetworkPeeringResults | undefined;
   vnpGateway: network.VirtualNetworkGateway | undefined;
 };
 

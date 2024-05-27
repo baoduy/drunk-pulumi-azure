@@ -299,7 +299,7 @@ class VnetBuilder
 
     this._peeringInstance = NetworkPeering({
       name: this.commonProps.name,
-      firstVNetName: this._vnetInstance.vnet.name,
+      firstVNetName: this._vnetInstance!.vnet.name,
       firstVNetResourceGroupName: this.commonProps.group.resourceGroupName,
       secondVNetName: this._peeringProps.vnetName,
       secondVNetResourceGroupName: this._peeringProps.group.resourceGroupName,
@@ -320,7 +320,7 @@ class VnetBuilder
       firewall: this._firewallInstance,
       vnet: this._vnetInstance!,
       natGateway: this._natGatewayInstance,
-      peering: this._peeringInstance,
+      //peerings: this._peeringInstances,
       vnpGateway: this._vnpGatewayInstance,
     };
   }

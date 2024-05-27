@@ -117,8 +117,10 @@ export default ({
         "*.k8slens.dev",
         "github.com",
         "*.githubassets.com",
+        "*.githubusercontent.com",
         "*.googleapis.com",
         "aka.ms",
+        "*.chocolatey.org",
       ],
       protocols: [{ protocolType: "Https", port: 443 }],
     });
