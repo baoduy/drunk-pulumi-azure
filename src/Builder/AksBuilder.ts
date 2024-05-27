@@ -41,7 +41,7 @@ class AksBuilder
     | {
         serviceIdentity: IdentityResult;
         aks: ManagedCluster;
-        privateZone: PrivateZone | undefined;
+        privateZone?: PrivateZone;
       };
 
   //Props

@@ -1,8 +1,8 @@
-import * as native from '@pulumi/azure-native';
-import { Input, all, Resource, output } from '@pulumi/pulumi';
-import * as global from '../Common/GlobalEnv';
-import { getResourceInfoFromId } from '../Common/AzureEnv';
-import { ResourceGroupInfo } from '../types';
+import * as native from "@pulumi/azure-native";
+import { Input, all, Resource, output } from "@pulumi/pulumi";
+import * as global from "../Common/GlobalEnv";
+import { getResourceInfoFromId } from "../Common/AzureEnv";
+import { ResourceGroupInfo } from "../types";
 
 interface RecordProps {
   zoneName: Input<string>;
@@ -19,26 +19,26 @@ export const addARecord = ({
   ipAddresses,
   dependsOn,
 }: RecordProps) => {
-  recordName = recordName.replace('https://', '').replace('http://', '');
+  recordName = recordName.replace("https://", "").replace("http://", "");
   //.replace(`.${zoneName}`, "");
 
   return new native.network.PrivateRecordSet(
-    recordName === '*'
-      ? 'All-ARecord'
-      : recordName === '@'
-      ? 'Root-ARecord'
-      : `${recordName}-ARecord`,
+    recordName === "*"
+      ? "All-ARecord"
+      : recordName === "@"
+        ? "Root-ARecord"
+        : `${recordName}-ARecord`,
     {
       privateZoneName: zoneName,
       ...group,
       relativeRecordSetName: recordName,
-      recordType: 'A',
+      recordType: "A",
       aRecords: output(ipAddresses).apply((ips) =>
-        ips.map((i) => ({ ipv4Address: i }))
+        ips.map((i) => ({ ipv4Address: i })),
       ),
       ttl: 3600,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
@@ -68,7 +68,7 @@ export const linkVnetToPrivateDns = ({
       registrationEnabled: registrationEnabled || false,
       virtualNetwork: { id: vnetId },
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
@@ -77,7 +77,7 @@ interface Props {
   vnetIds?: Input<string>[];
   group?: ResourceGroupInfo;
   records?: {
-    aRecords: Array<Pick<RecordProps, 'recordName' | 'ipAddresses'>>;
+    aRecords: Array<Pick<RecordProps, "recordName" | "ipAddresses">>;
   };
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
@@ -95,9 +95,9 @@ export default ({
     {
       privateZoneName: name,
       ...group,
-      location: 'global',
+      location: "global",
     },
-    { dependsOn }
+    { dependsOn },
   );
 
   if (vnetIds) {
@@ -109,15 +109,15 @@ export default ({
           group,
           registrationEnabled: false,
           dependsOn: zone,
-        })
-      )
+        }),
+      ),
     );
   }
 
   if (records) {
     if (records.aRecords) {
       records.aRecords.map((a) =>
-        addARecord({ ...a, group, zoneName: zone.name, dependsOn: zone })
+        addARecord({ ...a, group, zoneName: zone.name, dependsOn: zone }),
       );
     }
   }
@@ -128,7 +128,7 @@ export default ({
 export const getPrivateZone = ({
   name,
   group = global.groupInfo,
-}: Omit<Props, 'vnetIds'>) =>
+}: Omit<Props, "vnetIds">) =>
   native.network.getPrivateZone({
     privateZoneName: name,
     resourceGroupName: group.resourceGroupName,

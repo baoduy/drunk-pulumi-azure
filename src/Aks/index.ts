@@ -1,10 +1,11 @@
 import * as native from "@pulumi/azure-native";
 import * as pulumi from "@pulumi/pulumi";
-import { Input, output } from "@pulumi/pulumi";
+import { Input, interpolate, output } from "@pulumi/pulumi";
 import vmsDiagnostic from "./VmSetMonitor";
 import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from "../types";
 import {
   currentEnv,
+  currentRegionCode,
   defaultScope,
   Environments,
   getResourceIdFromInfo,
@@ -84,23 +85,25 @@ const defaultNodePoolProps = {
 
 export enum VmSizes {
   /** 32G RAM - 4CPU - $221.92 */
-  Standard_E4as_v4_221 = "Standard_E4as_v4",
+  Standard_E4as_v4 = "Standard_E4as_v4",
   /** 8G RAM - 2CPU - $77.38 */
-  Standard_B2ms_77 = "Standard_B2ms",
+  Standard_B2ms = "Standard_B2ms",
   /** 16G RAM - 4CPU - $154.03 */
-  Standard_B4ms_154 = "Standard_B4ms",
+  Standard_B4ms = "Standard_B4ms",
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2as_v4_87 = "Standard_D2as_v4",
+  Standard_D2as_v4 = "Standard_D2as_v4",
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2s_v3_87 = "Standard_D2s_v3",
+  Standard_D2s_v3 = "Standard_D2s_v3",
+  /** 8G RAM - 4CPU - 182.5 */
+  Standard_D4s_v3 = "Standard_D4s_v3",
   /** 16G RAM - 4CPU - $175.20 */
-  Standard_D4as_v4_175 = "Standard_D4as_v4",
+  Standard_D4as_v4 = "Standard_D4as_v4",
   /** 4G RAM - 2CPU - $69.35 */
-  Standard_A2_v2_69 = "Standard_A2_v2",
+  Standard_A2_v2 = "Standard_A2_v2",
   /** 8G RAM - 4CPU - $144.54 */
-  Standard_A4_v2_144 = "Standard_A4_v2",
+  Standard_A4_v2 = "Standard_A4_v2",
   /** 32G RAM - 4CPU - $205.13 */
-  Standard_A4m_v2_205 = "Standard_A4m_v2",
+  Standard_A4m_v2 = "Standard_A4m_v2",
 }
 
 export interface NodePoolProps
@@ -246,13 +249,13 @@ export default async ({
   }
 
   //Private DNS Zone for Private CLuster
-  const privateZone = features?.enablePrivateCluster
-    ? PrivateDns({
-        name: "privatelink.southeastasia.azmk8s.io",
-        group,
-        vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
-      })
-    : undefined;
+  // const privateZone = features?.enablePrivateCluster
+  //   ? PrivateDns({
+  //       name: `privatelink.${currentRegionCode}.azmk8s.io`,
+  //       group,
+  //       vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
+  //     })
+  //   : undefined;
 
   //Create AKS Cluster
   const aks = new native.containerservice.ManagedCluster(
@@ -270,7 +273,9 @@ export default async ({
           : aksAccess?.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        privateDNSZone: privateZone?.id,
+        //privateDNSZone: "",
+        //privateDNSZone: privateZone?.id,
+        //enablePrivateClusterPublicFQDN: features?.enablePrivateCluster,
       },
       //fqdnSubdomain: '',
 
@@ -641,15 +646,15 @@ export default async ({
           });
         }
 
-        if (privateZone && identity) {
-          roleAssignment({
-            name: `${name}-private-dns`,
-            principalId: identity.principalId,
-            roleName: "Private DNS Zone Contributor",
-            principalType: "ServicePrincipal",
-            scope: privateZone.id,
-          });
-        }
+        // if (privateZone && identity) {
+        //   roleAssignment({
+        //     name: `${name}-private-dns`,
+        //     principalId: identity.principalId,
+        //     roleName: "Private DNS Zone Contributor",
+        //     principalType: "ServicePrincipal",
+        //     scope: privateZone.id,
+        //   });
+        // }
       });
 
     //Diagnostic
@@ -679,5 +684,5 @@ export default async ({
     }
   });
 
-  return { aks, serviceIdentity, privateZone };
+  return { aks, serviceIdentity };
 };

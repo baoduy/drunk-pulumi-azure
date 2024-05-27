@@ -126,7 +126,7 @@ export type AskBuilderResults = {
   aks: {
     serviceIdentity: IdentityResult;
     aks: ManagedCluster;
-    privateZone: PrivateZone | undefined;
+    //privateZone?: PrivateZone;
   };
 };
 export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
