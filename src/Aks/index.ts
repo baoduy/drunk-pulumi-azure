@@ -151,7 +151,7 @@ export type AksNodePoolProps = Omit<NodePoolProps, "subnetId" | "aksId">;
 export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, "name" | "mode">;
 
 export interface AksProps extends BasicResourceArgs {
-  nodeResourceGroup?: string;
+  //nodeResourceGroup?: string;
   tier?: native.containerservice.ManagedClusterSKUTier;
 
   addon?: AskAddonProps;
@@ -180,7 +180,6 @@ export interface AksProps extends BasicResourceArgs {
 //Using this to enable the preview feature https://azurecloudai.blog/2019/10/16/aks-enabling-and-using-preview-features-such-as-nodepools-using-cli/
 export default async ({
   group,
-  nodeResourceGroup,
   name,
   linux,
   defaultNodePool,
@@ -193,7 +192,7 @@ export default async ({
   features = { enableDiagnosticSetting: true },
   addon = {
     enableAzurePolicy: true,
-    enableAzureKeyVault: true,
+    enableAzureKeyVault: false,
     enableKubeDashboard: false,
   },
   tier = native.containerservice.ManagedClusterSKUTier.Free,
@@ -204,12 +203,12 @@ export default async ({
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
-  nodeResourceGroup =
-    nodeResourceGroup || getResourceGroupName(`${aksName}-nodes`);
+  const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
 
-  const disableLocalAccounts = vaultInfo
-    ? await getKeyVaultBase(vaultInfo.name).checkSecretExist(secretName)
-    : false;
+  const disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
+    .checkSecretExist(secretName)
+    .catch(() => false);
+
   console.log(name, { disableLocalAccounts });
 
   const serviceIdentity = aksIdentityCreator({
