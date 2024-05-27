@@ -327,4 +327,4 @@ class VnetBuilder
 }
 
 export default (props: VnetBuilderProps) =>
-  new VnetBuilder(props) as IPublicIpBuilder;
+  new VnetBuilder(props) as IVnetBuilderStart;

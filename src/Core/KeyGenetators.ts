@@ -44,8 +44,8 @@ export const generateSsh = ({
     {
       password: pass.result,
       vaultInfo,
-      publicKeyName,
-      privateKeyName,
+      //publicKeyName,
+      //privateKeyName,
     },
     { dependsOn: pass },
   );
@@ -53,6 +53,7 @@ export const generateSsh = ({
   addCustomSecret({
     name: userNameKey,
     value: userName,
+    formattedName: true,
     vaultInfo,
     contentType: "Random Ssh",
     dependsOn: rs,
@@ -61,6 +62,7 @@ export const generateSsh = ({
   addCustomSecret({
     name: passwordKeyName,
     value: pass.result,
+    formattedName: true,
     vaultInfo,
     contentType: "Random Ssh",
     dependsOn: rs,
@@ -70,17 +72,17 @@ export const generateSsh = ({
     userName,
     lists: {
       getPublicKey: (): Output<string> =>
-        output(getSecret({ name: publicKeyName, vaultInfo })!).apply(
-          (i) => i!.value!,
-        ),
+        output(
+          getSecret({ name: publicKeyName, nameFormatted: true, vaultInfo })!,
+        ).apply((i) => i!.value!),
       getPrivateKey: (): Output<string> =>
-        output(getSecret({ name: privateKeyName, vaultInfo })!).apply(
-          (i) => i!.value!,
-        ),
+        output(
+          getSecret({ name: privateKeyName, nameFormatted: true, vaultInfo })!,
+        ).apply((i) => i!.value!),
       getPassword: (): Output<string> =>
-        output(getSecret({ name: passwordKeyName, vaultInfo })!).apply(
-          (i) => i!.value!,
-        ),
+        output(
+          getSecret({ name: passwordKeyName, nameFormatted: true, vaultInfo })!,
+        ).apply((i) => i!.value!),
     },
   };
 };

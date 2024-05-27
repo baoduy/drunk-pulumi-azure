@@ -26,6 +26,7 @@ import { getAksConfig } from "./Helper";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import * as inputs from "@pulumi/azure-native/types/input";
 import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
+import { replaceAll } from "../Common/Helpers";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -106,7 +107,7 @@ export interface NodePoolProps
   extends Partial<inputs.containerservice.ManagedClusterAgentPoolProfileArgs> {
   name: string;
   mode: native.containerservice.AgentPoolMode;
-  vmSize: VmSizes;
+  vmSize: VmSizes | string;
   osDiskSizeGB: number;
   maxPods: number;
   enableEncryptionAtHost?: boolean;
@@ -329,7 +330,7 @@ export default async ({
             enableAutoScaling: features?.enableAutoScale,
           }),
 
-          name: `${name}-default-pool`,
+          name: "defaultnodes",
           mode: "System",
           count: 1,
           vnetSubnetID: network.subnetId,

@@ -133,6 +133,7 @@ export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
 
 export interface ISshBuilder {
   withNewSsh: (props: SshBuilderProps) => IAskAuthBuilder;
+  //withExistingSsh: (props: {vaultSecretName:string}) => IAskAuthBuilder;
 }
 export interface IAskAuthBuilder {
   withAuth: (props: AksAccessProps) => IAksNetworkBuilder;
