@@ -14,7 +14,7 @@ interface Props {
   allowAllOutbound?: boolean;
   allowIpCheckApi?: boolean;
   allowsAzure?: boolean;
-  allowsK8sLens?: boolean;
+  allowsK8sTools?: boolean;
   allowsSearch?: boolean;
   allowsOffice365?: boolean;
 }
@@ -24,7 +24,7 @@ export default ({
   subnetSpaces,
   allowsOffice365,
   allowsAzure,
-  allowsK8sLens,
+  allowsK8sTools,
   allowIpCheckApi,
   allowsSearch,
   allowAllOutbound,
@@ -107,13 +107,19 @@ export default ({
     });
   }
 
-  if (allowsK8sLens) {
+  if (allowsK8sTools) {
     appRules.push({
       ruleType: "ApplicationRule",
       name: "cloudpc-app-allow-k8s-lens",
       description: "Allows K8s Lens",
       sourceAddresses: subnetSpaces,
-      targetFqdns: ["*.k8slens.dev", "github.com", "*.githubassets.com"],
+      targetFqdns: [
+        "*.k8slens.dev",
+        "github.com",
+        "*.githubassets.com",
+        "*.googleapis.com",
+        "aka.ms",
+      ],
       protocols: [{ protocolType: "Https", port: 443 }],
     });
   }
