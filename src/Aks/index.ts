@@ -72,6 +72,7 @@ const defaultNodePoolProps = {
   maxPods: 50,
   enableFIPS: false,
   enableNodePublicIP: false,
+  enableEncryptionAtHost: true,
 
   enableUltraSSD: isPrd,
   osDiskSizeGB: 128,
@@ -211,24 +212,6 @@ export default async ({
     : false;
   console.log(name, { disableLocalAccounts });
 
-  // const appGateway =
-  //   addon.applicationGateway && network.outboundIpAddress
-  //     ? await AppGateway({
-  //         name,
-  //         group,
-  //         publicIpAddressId: network.outboundIpAddress.ipAddressId,
-  //         subnetId: addon.applicationGateway.gatewaySubnetId,
-  //       })
-  //     : undefined;
-
-  // const podIdentity = featureFlags?.enablePodIdentity
-  //   ? ManagedIdentity({
-  //       name,
-  //       group,
-  //       lock,
-  //     })
-  //   : undefined;
-
   const serviceIdentity = aksIdentityCreator({
     name: aksName,
     vaultInfo,
@@ -247,15 +230,6 @@ export default async ({
     console.error("Aks sshKeys is required:", name);
     return undefined;
   }
-
-  //Private DNS Zone for Private CLuster
-  // const privateZone = features?.enablePrivateCluster
-  //   ? PrivateDns({
-  //       name: `privatelink.${currentRegionCode}.azmk8s.io`,
-  //       group,
-  //       vnetIds: [output(network.subnetId).apply(getVnetIdFromSubnetId)],
-  //     })
-  //   : undefined;
 
   //Create AKS Cluster
   const aks = new native.containerservice.ManagedCluster(
@@ -324,7 +298,8 @@ export default async ({
         name: native.containerservice.ManagedClusterSKUName.Base,
         tier,
       },
-
+      // supportPlan:
+      //   native.containerservice.KubernetesSupportPlan.AKSLongTermSupport,
       agentPoolProfiles: [
         {
           ...defaultNodePoolProps,
@@ -344,7 +319,6 @@ export default async ({
           osType: "Linux",
         },
       ],
-
       linuxProfile: linux
         ? {
             adminUsername: linux.adminUsername,
@@ -376,6 +350,9 @@ export default async ({
       // workloadAutoScalerProfile: enableAutoScale
       //   ? { keda: { enabled: true } }
       //   : undefined,
+      //azureMonitorProfile: { metrics: { enabled } },
+      //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
+      //enablePodSecurityPolicy: true,
 
       servicePrincipalProfile: {
         clientId: serviceIdentity.clientId,
@@ -392,10 +369,6 @@ export default async ({
         imageCleaner: { enabled: true, intervalHours: 24 },
         workloadIdentity: { enabled: false },
       },
-
-      //azureMonitorProfile: { metrics: { enabled } },
-      //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
-      enablePodSecurityPolicy: false,
       podIdentityProfile: features.enablePodIdentity
         ? {
             enabled: features.enablePodIdentity,
@@ -403,25 +376,13 @@ export default async ({
             allowNetworkPluginKubenet: false,
           }
         : undefined,
-
       identity: {
         type: native.containerservice.ResourceIdentityType.SystemAssigned,
       },
-      // identityProfile: podIdentity
-      //   ? {
-      //       kubeletidentity: {
-      //         clientId: podIdentity.clientId,
-      //         objectId: podIdentity.principalId,
-      //         resourceId: podIdentity.id,
-      //       },
-      //     }
-      //   : undefined,
-
-      //Preview Features
       autoUpgradeProfile: {
         upgradeChannel: native.containerservice.UpgradeChannel.Patch,
+        //nodeOSUpgradeChannel: "NodeImage",
       },
-      //securityProfile:{},
       disableLocalAccounts,
       enableRBAC: true,
       aadProfile: {
@@ -430,7 +391,6 @@ export default async ({
         adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
         tenantID: tenantId,
       },
-
       storageProfile: {
         blobCSIDriver: {
           enabled: true,
@@ -440,7 +400,6 @@ export default async ({
         },
         fileCSIDriver: { enabled: true },
       },
-
       networkProfile: {
         networkMode: native.containerservice.NetworkMode.Transparent,
         networkPolicy: native.containerservice.NetworkPolicy.Azure,
@@ -481,6 +440,28 @@ export default async ({
       deleteBeforeReplace: true,
       ignoreChanges: ["privateLinkResources", "networkProfile", "linuxProfile"],
     },
+  );
+
+  new native.containerservice.MaintenanceConfiguration(
+    `${aksName}-MaintenanceConfiguration`,
+    {
+      configName: "default",
+      // notAllowedTime: [
+      //   {
+      //     end: "2020-11-30T12:00:00Z",
+      //     start: "2020-11-26T03:00:00Z",
+      //   },
+      // ],
+      ...group,
+      resourceName: aks.name,
+      timeInWeek: [
+        {
+          day: native.containerservice.WeekDay.Sunday,
+          hourSlots: [0, 23],
+        },
+      ],
+    },
+    { dependsOn: aks },
   );
 
   if (lock) {
@@ -527,6 +508,7 @@ export default async ({
       addCustomSecret({
         name: secretName,
         value: config,
+        formattedName: true,
         dependsOn: aks,
         ignoreChange: true,
         contentType: name,
@@ -536,7 +518,6 @@ export default async ({
   }
 
   //Grant permission for Group
-
   aks.id.apply(async (id) => {
     if (!id) return;
 
@@ -645,16 +626,6 @@ export default async ({
             }),
           });
         }
-
-        // if (privateZone && identity) {
-        //   roleAssignment({
-        //     name: `${name}-private-dns`,
-        //     principalId: identity.principalId,
-        //     roleName: "Private DNS Zone Contributor",
-        //     principalType: "ServicePrincipal",
-        //     scope: privateZone.id,
-        //   });
-        // }
       });
 
     //Diagnostic
