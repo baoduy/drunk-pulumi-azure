@@ -4,6 +4,7 @@ import {
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,
+  IAskAuthBuilder,
   ISshBuilder,
   ResourcesBuilder,
   SshBuilderProps,
@@ -19,13 +20,19 @@ import Aks, {
   AskFeatureProps,
   AksAccessProps,
   AksNetworkProps,
-} from "Aks";
+  DefaultAksNodePoolProps,
+} from "../Aks";
 import { IdentityResult } from "../AzAd/Identity";
 import { PrivateZone } from "@pulumi/azure-native/network";
 
 class AksBuilder
   extends ResourcesBuilder<AskBuilderResults>
-  implements IAksBuilder
+  implements
+    ISshBuilder,
+    IAskAuthBuilder,
+    IAksNetworkBuilder,
+    IAksDefaultNodePoolBuilder,
+    IAksBuilder
 {
   //Instances
   private _sshInstance: SshResults | undefined = undefined;
@@ -45,14 +52,14 @@ class AksBuilder
   private _authProps: AksAccessProps | undefined = undefined;
   private _tier: ManagedClusterSKUTier = ManagedClusterSKUTier.Free;
   private _networkProps: AksNetworkProps | undefined = undefined;
-  private _defaultNode: AksNodePoolProps | undefined = undefined;
+  private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
 
   constructor({ ...others }: AksBuilderProps) {
     super(others);
   }
 
   //Info collection methods
-  public withNewSsh(props: SshBuilderProps): IAksNetworkBuilder {
+  public withNewSsh(props: SshBuilderProps): IAskAuthBuilder {
     this._sshProps = props;
     return this;
   }
@@ -69,7 +76,7 @@ class AksBuilder
     this._featureProps = props;
     return this;
   }
-  public withAuth(props: AksAccessProps): IAksBuilder {
+  public withAuth(props: AksAccessProps): IAksNetworkBuilder {
     this._authProps = props;
     return this;
   }
@@ -79,11 +86,11 @@ class AksBuilder
   }
   public withNetwork(props: AksNetworkProps): IAksDefaultNodePoolBuilder {
     this._networkProps = props;
-    return this;
+    return this as IAksDefaultNodePoolBuilder;
   }
-  public withDefaultNodePool(props: AksNodePoolProps): IAksBuilder {
+  public withDefaultNodePool(props: DefaultAksNodePoolProps): IAksBuilder {
     this._defaultNode = props;
-    return this;
+    return this as IAksBuilder;
   }
 
   //Build Methods
@@ -96,6 +103,7 @@ class AksBuilder
 
   private async buildAsk() {
     const sshKey = this._sshInstance!.lists.getPublicKey();
+
     this._askInstance = await Aks({
       ...this.commonProps,
       addon: this._addonProps,
@@ -115,7 +123,7 @@ class AksBuilder
   public async build(): Promise<AskBuilderResults> {
     this.buildSsh();
     await this.buildAsk();
-    return {};
+    return { ssh: this._sshInstance!, aks: this._askInstance! };
   }
 }
 

@@ -143,6 +143,7 @@ export type AksNetworkProps = {
 };
 
 export type AksNodePoolProps = Omit<NodePoolProps, "subnetId" | "aksId">;
+export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, "name" | "mode">;
 
 export interface AksProps extends BasicResourceArgs {
   nodeResourceGroup?: string;
@@ -154,7 +155,7 @@ export interface AksProps extends BasicResourceArgs {
 
   //Azure Registry Container
   acr?: { enable: boolean; id?: Input<string> };
-  defaultNodePool: AksNodePoolProps;
+  defaultNodePool: DefaultAksNodePoolProps;
   network: AksNetworkProps;
   linux: {
     adminUsername: Input<string>;
@@ -284,12 +285,7 @@ export default async ({
 
         azurePolicy: { enabled: Boolean(addon.enableAzurePolicy) },
         kubeDashboard: { enabled: Boolean(addon.enableKubeDashboard) },
-        //If there is no public P address provided, the public app can access via HTTP app routing only and feature only support HTTP.
-        //TO enable HTTPS support need to create a cluster with a public IP address.
-        httpApplicationRouting: {
-          enabled:
-            !network.outboundIpAddress && !features?.enablePrivateCluster,
-        },
+        httpApplicationRouting: { enabled: false },
 
         aciConnectorLinux: {
           enabled: Boolean(network.virtualHostSubnetName),
@@ -327,15 +323,15 @@ export default async ({
         {
           ...defaultNodePoolProps,
           ...defaultNodePool,
-
           ...autoScaleFor({
             env: currentEnv,
-            nodeType: defaultNodePool.mode,
+            nodeType: "System",
             enableAutoScaling: features?.enableAutoScale,
           }),
 
-          count: defaultNodePool.mode === "System" ? 1 : 0,
-          //orchestratorVersion: kubernetesVersion,
+          name: `${name}-default-pool`,
+          mode: "System",
+          count: 1,
           vnetSubnetID: network.subnetId,
           kubeletDiskType: "OS",
           osSKU: "Ubuntu",
@@ -492,7 +488,6 @@ export default async ({
           //agentPoolName:p.name,
           resourceName: aks.name,
           ...group,
-
           ...defaultNodePoolProps,
           ...p,
 

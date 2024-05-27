@@ -19,24 +19,6 @@ export const currentRegionCode = getRegionCode(currentRegionName);
 export const currentCountryCode = getCountryCode(currentRegionName);
 export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
-//Print and Check
-pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
-  console.log(`Azure Environment:`, {
-    tenantId: t,
-    subscriptionId: s,
-    currentRegionCode,
-    currentRegionName,
-    currentCountryCode,
-  });
-});
-
-/** ======== Default Variables ================*/
-registerAutoTags({
-  environment: stack,
-  organization: organization,
-  "pulumi-project": projectName,
-});
-
 export enum Environments {
   Global = "global",
   Local = "local",
@@ -61,6 +43,25 @@ const getCurrentEnv = () => {
 };
 
 export const currentEnv = getCurrentEnv();
+
+//Print and Check
+pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
+  console.log(`Azure Environment:`, {
+    tenantId: t,
+    subscriptionId: s,
+    currentRegionCode,
+    currentRegionName,
+    currentCountryCode,
+    currentEnv,
+  });
+});
+
+/** ======== Default Variables ================*/
+registerAutoTags({
+  environment: stack,
+  organization: organization,
+  "pulumi-project": projectName,
+});
 
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
 export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {

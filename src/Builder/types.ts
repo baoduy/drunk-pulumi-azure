@@ -13,7 +13,7 @@ import { LogInfoResults } from "../Logs/Helpers";
 import { PublicIpAddressPrefixResult } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
 import { NetworkPeeringResults } from "../VNet/NetworkPeering";
-import { SshGenerationProps } from "../Core/KeyGenetators";
+import { SshGenerationProps, SshResults } from "../Core/KeyGenetators";
 import * as pulumi from "@pulumi/pulumi";
 import {
   AksAccessProps,
@@ -21,8 +21,12 @@ import {
   AksNodePoolProps,
   AskAddonProps,
   AskFeatureProps,
+  DefaultAksNodePoolProps,
 } from "../Aks";
 import * as native from "@pulumi/azure-native";
+import { IdentityResult } from "../AzAd/Identity";
+import { ManagedCluster } from "@pulumi/azure-native/containerservice";
+import { PrivateZone } from "@pulumi/azure-native/network";
 
 //Common Builder Types
 export type CommonBuilderProps = {
@@ -63,20 +67,27 @@ export type VpnGatewayCreationProps = Pick<
   "sku" | "vpnClientAddressPools"
 > & { subnetSpace: string };
 
+//Starting Interface
+export interface IPublicIpBuilder {
+  withPublicIpAddress: (
+    type: "prefix" | "individual",
+  ) => IGatewayFireWallBuilder;
+  noPublicIpAddress: () => IVnetBuilder;
+}
+
 export interface IFireWallOrVnetBuilder
   extends IResourcesBuilder<VnetBuilderResults> {
   withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
 }
 
-//Starting Interface
 export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
-  withPublicIpAddress: (
-    type: "prefix" | "individual",
-  ) => IGatewayFireWallBuilder;
   withNatGateway: () => IFireWallOrVnetBuilder;
 }
 
-export interface IVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
+export interface IVnetBuilder
+  extends IResourcesBuilder<VnetBuilderResults>,
+    IPublicIpBuilder,
+    IGatewayFireWallBuilder {
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
   peeringTo: (props: PeeringProps) => IVnetBuilder;
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
@@ -96,41 +107,29 @@ export type VnetBuilderResults = {
 
 //AKS Builder types
 export type AksBuilderProps = CommonBuilderProps & {};
-export type AskBuilderResults = {};
-export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
-
-export type AskNetworkBuilderProps = {
-  subnetId: pulumi.Input<string>;
-
-  //This outbound Ip only needed for standalone ASK without Firewall or NatGateway
-  outboundIpAddress?: {
-    ipAddressId?: pulumi.Input<string>;
-    ipAddressPrefixId?: pulumi.Input<string>;
+export type AskBuilderResults = {
+  ssh: SshResults;
+  ask: {
+    serviceIdentity: IdentityResult;
+    aks: ManagedCluster;
+    privateZone: PrivateZone | undefined;
   };
 };
+export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
 
 export interface ISshBuilder {
-  withNewSsh: (props: SshBuilderProps) => IAksNetworkBuilder;
+  withNewSsh: (props: SshBuilderProps) => IAskAuthBuilder;
 }
-
+export interface IAskAuthBuilder {
+  withAuth: (props: AksAccessProps) => IAksNetworkBuilder;
+}
 export interface IAksNetworkBuilder {
   withNetwork: (props: AksNetworkProps) => IAksDefaultNodePoolBuilder;
 }
-
 export interface IAksDefaultNodePoolBuilder {
-  withDefaultNodePool: (props: AksNodePoolProps) => IAskAuthBuilder;
+  withDefaultNodePool: (props: DefaultAksNodePoolProps) => IAksBuilder;
 }
-
-export interface IAskAuthBuilder {
-  withAuth: (props: AksAccessProps) => IAksBuilder;
-}
-
-export interface IAksBuilder
-  extends IResourcesBuilder<AskBuilderResults>,
-    ISshBuilder,
-    IAksNetworkBuilder,
-    IAksDefaultNodePoolBuilder,
-    IAskAuthBuilder {
+export interface IAksBuilder extends IResourcesBuilder<AskBuilderResults> {
   withNodePool: (props: AksNodePoolProps) => IAksBuilder;
   withAddon: (props: AskAddonProps) => IAksBuilder;
   withFeature: (props: AskFeatureProps) => IAksBuilder;

@@ -17,6 +17,7 @@ import {
   FirewallCreationProps,
   IFireWallOrVnetBuilder,
   IGatewayFireWallBuilder,
+  IPublicIpBuilder,
   IVnetBuilder,
   PeeringProps,
   ResourcesBuilder,
@@ -71,6 +72,10 @@ class VnetBuilder
     type: "prefix" | "individual",
   ): IGatewayFireWallBuilder {
     this._ipType = type;
+    return this;
+  }
+
+  public noPublicIpAddress(): IVnetBuilder {
     return this;
   }
 
@@ -318,4 +323,4 @@ class VnetBuilder
 }
 
 export default (props: VnetBuilderProps) =>
-  new VnetBuilder(props) as IGatewayFireWallBuilder;
+  new VnetBuilder(props) as IPublicIpBuilder;
