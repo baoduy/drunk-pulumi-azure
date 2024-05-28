@@ -1,5 +1,7 @@
 import { Input, Resource } from "@pulumi/pulumi";
-import * as native from "@pulumi/azure-native";
+import * as compute from "@pulumi/azure-native/compute";
+import * as network from "@pulumi/azure-native/network";
+import * as devtestlab from "@pulumi/azure-native/devtestlab";
 import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import { getNICName, getVMName } from "../Common/Naming";
 import Locker from "../Core/Locker";
@@ -10,7 +12,7 @@ import { getEncryptionKey } from "../KeyVault/Helper";
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
 interface Props extends BasicResourceArgs {
   subnetId: Input<string>;
-  storageAccountType?: native.compute.StorageAccountTypes;
+  storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
   login: { userName: Input<string>; password?: Input<string> };
   osType?: "Windows" | "Linux";
@@ -25,7 +27,6 @@ interface Props extends BasicResourceArgs {
   };
 
   enableEncryption?: boolean;
-  enableAutoPatching?: boolean;
   vaultInfo: KeyVaultInfo;
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
@@ -35,6 +36,7 @@ interface Props extends BasicResourceArgs {
     timeZone?: "Singapore Standard Time" | Input<string>;
     /** 24h HH:MM:SS */
     autoShutdownTime?: Input<string>;
+    autoStartTime?: Input<string>;
   };
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
@@ -48,11 +50,10 @@ export default ({
   osType = "Windows",
   vmSize = "Standard_B2s",
 
-  storageAccountType = native.compute.StorageAccountTypes.Premium_LRS,
+  storageAccountType = compute.StorageAccountTypes.Premium_LRS,
   osDiskSizeGB = 128,
   dataDiskSizeGB,
   enableEncryption,
-  enableAutoPatching,
   vaultInfo,
   schedule = { timeZone: "Singapore Standard Time" },
   login,
@@ -65,20 +66,20 @@ export default ({
   const vmName = getVMName(name);
   const nicName = getNICName(name);
 
-  const nic = new native.network.NetworkInterface(nicName, {
+  const nic = new network.NetworkInterface(nicName, {
     networkInterfaceName: nicName,
     ...group,
     ipConfigurations: [
       { name: "ipconfig", subnet: { id: subnetId }, primary: true },
     ],
-    nicType: native.network.NetworkInterfaceNicType.Standard,
+    nicType: network.NetworkInterfaceNicType.Standard,
   });
 
   const encryptKey = enableEncryption
     ? getEncryptionKey(`${name}-storage-encryption`, vaultInfo)
     : undefined;
 
-  const vm = new native.compute.VirtualMachine(
+  const vm = new compute.VirtualMachine(
     vmName,
     {
       vmName,
@@ -105,12 +106,17 @@ export default ({
                 //ssh: { publicKeys: [{ keyData: linux.sshPublicKey! }] },
                 disablePasswordAuthentication: false,
                 provisionVMAgent: true,
-                patchSettings: enableAutoPatching
-                  ? {
-                      //assessmentMode: "AutomaticByPlatform",
-                      patchMode: "AutomaticByPlatform",
-                    }
-                  : undefined,
+                patchSettings: {
+                  assessmentMode:
+                    compute.LinuxPatchAssessmentMode.AutomaticByPlatform,
+                  automaticByPlatformSettings: {
+                    bypassPlatformSafetyChecksOnUserSchedule: true,
+                    rebootSetting:
+                      compute.LinuxVMGuestPatchAutomaticByPlatformRebootSetting
+                        .Never,
+                  },
+                  patchMode: compute.LinuxVMGuestPatchMode.AutomaticByPlatform,
+                },
               }
             : undefined,
 
@@ -120,13 +126,12 @@ export default ({
                 enableAutomaticUpdates: true,
                 provisionVMAgent: true,
                 timeZone: schedule?.timeZone,
-                patchSettings: enableAutoPatching
-                  ? {
-                      enableHotpatching: false,
-                      //assessmentMode: 'AutomaticByPlatform',
-                      patchMode: "AutomaticByPlatform",
-                    }
-                  : undefined,
+                patchSettings: {
+                  enableHotpatching: false,
+                  assessmentMode:
+                    compute.WindowsPatchAssessmentMode.ImageDefault,
+                  patchMode: compute.WindowsVMGuestPatchMode.AutomaticByOS,
+                },
               }
             : undefined,
       },
@@ -161,7 +166,7 @@ export default ({
               {
                 name: `${name}datadisk`,
                 diskSizeGB: dataDiskSizeGB,
-                createOption: native.compute.DiskCreateOptionTypes.Empty,
+                createOption: compute.DiskCreateOptionTypes.Empty,
                 lun: 1,
               },
             ]
@@ -189,17 +194,18 @@ export default ({
     Locker({ name: vmName, resource: vm });
   }
 
-  if (schedule) {
-    new native.devtestlab.GlobalSchedule(
-      `shutdown-computevm-${vmName}`,
+  //Auto shutdown
+  if (schedule?.autoShutdownTime) {
+    new devtestlab.GlobalSchedule(
+      `${vmName}-auto-shutdown`,
       {
-        name: `shutdown-computevm-${vmName}`,
+        name: `${vmName}-auto-shutdown`,
         ...group,
         dailyRecurrence: { time: schedule.autoShutdownTime },
         timeZoneId: schedule.timeZone,
         status: "Enabled",
         targetResourceId: vm.id,
-        taskType: "ComputeVmShutdownTask",
+        taskType: "LabVmsShutdownTask",
         notificationSettings: {
           status: "Disabled",
           emailRecipient: "",
@@ -210,17 +216,30 @@ export default ({
       },
       { dependsOn: vm },
     );
+  }
 
-    // if (schedule.autoStartupTime) {
-    //   new native.devtestlab.GlobalSchedule(`${vmName}-auto-startup`, {
-    //     name: `${vmName}-auto-startup`,
-    //     ...group,
-    //     dailyRecurrence: { time: schedule.autoStartupTime },
-    //     timeZoneId: timeZone,
-    //     targetResourceId: vm.id,
-    //     taskType: 'LabVmAutoStart',
-    //   });
-    // }
+  //Auto start
+  if (schedule?.autoStartTime) {
+    new devtestlab.GlobalSchedule(
+      `${vmName}-auto-start`,
+      {
+        name: `${vmName}-auto-start`,
+        ...group,
+        dailyRecurrence: { time: schedule.autoStartTime },
+        timeZoneId: schedule.timeZone,
+        status: "Enabled",
+        targetResourceId: vm.id,
+        taskType: "LabVmsStartupTask",
+        notificationSettings: {
+          status: "Disabled",
+          emailRecipient: "",
+          notificationLocale: "en",
+          timeInMinutes: 30,
+          webhookUrl: "",
+        },
+      },
+      { dependsOn: vm },
+    );
   }
 
   return vm;
