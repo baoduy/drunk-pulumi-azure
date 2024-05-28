@@ -1,12 +1,12 @@
 import { Input } from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { currentRegionCode } from "../../Common/AzureEnv";
-import { convertPolicyToGroup } from "../Helper";
 import {
   ApplicationRuleArgs,
   FirewallPolicyRuleCollectionResults,
   NetworkRuleArgs,
 } from "../types";
+import { FirewallPolicyGroup } from "../FirewallPolicy";
 
 interface AzureFirewallPolicyProps {
   priority: number;
@@ -260,7 +260,7 @@ export default ({
     );
   }
 
-  return convertPolicyToGroup({
+  return FirewallPolicyGroup({
     policy: { name: "aks-firewall-policy", dnatRules, netRules, appRules },
     priority,
     action: "Allow",

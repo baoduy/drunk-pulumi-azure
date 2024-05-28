@@ -4,7 +4,7 @@ import {
   FirewallPolicyRuleCollectionResults,
   NetworkRuleArgs,
 } from "../types";
-import { convertPolicyToGroup } from "../Helper";
+import { FirewallPolicyGroup } from "../FirewallPolicy";
 
 export default (
   priority: number = 6001,
@@ -25,7 +25,7 @@ export default (
     targetFqdns: ["*"],
   });
 
-  return convertPolicyToGroup({
+  return FirewallPolicyGroup({
     policy: { name: "default-firewall-policy", netRules, appRules },
     priority,
     action: "Deny",

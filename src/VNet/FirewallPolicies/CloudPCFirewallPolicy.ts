@@ -1,11 +1,11 @@
 import { Input } from "@pulumi/pulumi";
 import { currentRegionCode } from "../../Common/AzureEnv";
-import { convertPolicyToGroup } from "../Helper";
 import {
   ApplicationRuleArgs,
   FirewallPolicyRuleCollectionResults,
   NetworkRuleArgs,
 } from "../types";
+import { FirewallPolicyGroup } from "../FirewallPolicy";
 
 interface Props {
   priority: number;
@@ -159,7 +159,7 @@ export default ({
     });
   }
 
-  return convertPolicyToGroup({
+  return FirewallPolicyGroup({
     policy: { name: "cloud-pc-firewall-policy", netRules, appRules },
     priority,
     action: "Allow",

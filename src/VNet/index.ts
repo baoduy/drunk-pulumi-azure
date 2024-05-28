@@ -5,7 +5,11 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { getResourceInfoFromId } from "../Common/AzureEnv";
 import { NetworkRouteResource } from "@drunk-pulumi/azure-providers/NetworkRuote";
-import { BasicMonitorArgs, ResourceGroupInfo } from "../types";
+import {
+  BasicMonitorArgs,
+  CustomSecurityRuleArgs,
+  ResourceGroupInfo,
+} from "../types";
 import Firewall, { FirewallSkus, FirewallProps } from "./Firewall";
 import { FirewallPolicyProps } from "./types";
 import VnetPeering from "./NetworkPeering";
@@ -51,7 +55,7 @@ interface Props {
       allowInboundInternetAccess?: boolean;
       /**Add Security rule to block/allow internet if it is TRUE*/
       allowOutboundInternetAccess?: boolean;
-      rules?: Input<inputs.network.SecurityRuleArgs>[];
+      rules?: Input<CustomSecurityRuleArgs>[];
     };
   };
 
@@ -69,10 +73,8 @@ export default ({
   monitorConfig,
   ...others
 }: Props) => {
-  const securities =
-    features.securityGroup?.rules ||
-    new Array<Input<inputs.network.SecurityRuleArgs>>();
-  const routes = new Array<Input<inputs.network.RouteArgs>>();
+  const securities = features.securityGroup?.rules || [];
+  const routes = new Array<Input<network.RouteArgs>>();
 
   if (publicIpAddress) {
     //Add route from IpAddress to internet

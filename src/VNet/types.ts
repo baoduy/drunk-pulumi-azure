@@ -1,47 +1,62 @@
 import { enums, input as inputs } from "@pulumi/azure-native/types";
-import * as pulumi from "@pulumi/pulumi";
 import { Input, Output } from "@pulumi/pulumi";
 
-export interface NetworkRuleArgs {
-  description?: pulumi.Input<string>;
-  destinationAddresses?: pulumi.Input<pulumi.Input<string>[]>;
-  destinationFqdns?: pulumi.Input<pulumi.Input<string>[]>;
-  destinationIpGroups?: pulumi.Input<pulumi.Input<string>[]>;
-  destinationPorts?: pulumi.Input<pulumi.Input<string>[]>;
-  ipProtocols?: pulumi.Input<
-    pulumi.Input<string | enums.network.FirewallPolicyRuleNetworkProtocol>[]
+export interface NatRuleArgs {
+  description?: Input<string>;
+  destinationAddresses?: Input<Input<string>[]>;
+  destinationPorts?: Input<Input<string>[]>;
+  ipProtocols?: Input<
+    Input<string | enums.network.FirewallPolicyRuleNetworkProtocol>[]
   >;
-  name?: pulumi.Input<string>;
-  ruleType: pulumi.Input<"NetworkRule">;
-  sourceAddresses?: pulumi.Input<pulumi.Input<string>[]>;
-  sourceIpGroups?: pulumi.Input<pulumi.Input<string>[]>;
+  name?: Input<string>;
+  ruleType: Input<"NatRule">;
+  sourceAddresses?: Input<Input<string>[]>;
+  sourceIpGroups?: Input<Input<string>[]>;
+  translatedAddress?: Input<string>;
+  translatedFqdn?: Input<string>;
+  translatedPort?: Input<string>;
+}
+
+export interface NetworkRuleArgs {
+  description?: Input<string>;
+  destinationAddresses?: Input<Input<string>[]>;
+  destinationFqdns?: Input<Input<string>[]>;
+  destinationIpGroups?: Input<Input<string>[]>;
+  destinationPorts?: Input<Input<string>[]>;
+  ipProtocols?: Input<
+    Input<string | enums.network.FirewallPolicyRuleNetworkProtocol>[]
+  >;
+  name?: Input<string>;
+  ruleType: Input<"NetworkRule">;
+  sourceAddresses?: Input<Input<string>[]>;
+  sourceIpGroups?: Input<Input<string>[]>;
 }
 
 export interface ApplicationRuleArgs {
-  description?: pulumi.Input<string>;
-  //destinationAddresses?: pulumi.Input<pulumi.Input<string>[]>;
-  fqdnTags?: pulumi.Input<pulumi.Input<string>[]>;
-  httpHeadersToInsert?: pulumi.Input<
-    pulumi.Input<inputs.network.FirewallPolicyHttpHeaderToInsertArgs>[]
+  description?: Input<string>;
+  //destinationAddresses?: Input<Input<string>[]>;
+  fqdnTags?: Input<Input<string>[]>;
+  httpHeadersToInsert?: Input<
+    Input<inputs.network.FirewallPolicyHttpHeaderToInsertArgs>[]
   >;
-  name?: pulumi.Input<string>;
-  protocols?: pulumi.Input<
-    pulumi.Input<inputs.network.FirewallPolicyRuleApplicationProtocolArgs>[]
+  name?: Input<string>;
+  protocols?: Input<
+    Input<inputs.network.FirewallPolicyRuleApplicationProtocolArgs>[]
   >;
-  ruleType: pulumi.Input<"ApplicationRule">;
-  sourceAddresses?: pulumi.Input<pulumi.Input<string>[]>;
-  sourceIpGroups?: pulumi.Input<pulumi.Input<string>[]>;
-  targetFqdns?: pulumi.Input<pulumi.Input<string>[]>;
-  targetUrls?: pulumi.Input<pulumi.Input<string>[]>;
-  terminateTLS?: pulumi.Input<boolean>;
-  webCategories?: pulumi.Input<pulumi.Input<string>[]>;
+  ruleType: Input<"ApplicationRule">;
+  sourceAddresses?: Input<Input<string>[]>;
+  sourceIpGroups?: Input<Input<string>[]>;
+  targetFqdns?: Input<Input<string>[]>;
+  targetUrls?: Input<Input<string>[]>;
+  terminateTLS?: Input<boolean>;
+  webCategories?: Input<Input<string>[]>;
 }
 
 export type FirewallPolicyRuleCollectionResults = {
   name: string;
   priority: number;
-  ruleCollections: pulumi.Input<
-    pulumi.Input<
+  ruleCollections: Input<
+    Input<
       | inputs.network.FirewallPolicyFilterRuleCollectionArgs
       | inputs.network.FirewallPolicyNatRuleCollectionArgs
     >[]
@@ -50,9 +65,9 @@ export type FirewallPolicyRuleCollectionResults = {
 
 export type FirewallPolicyResults = {
   name: string;
-  dnatRules?: Array<Input<inputs.network.NatRuleArgs>>;
-  netRules?: Array<Input<inputs.network.NetworkRuleArgs>>;
-  appRules?: Array<Input<inputs.network.ApplicationRuleArgs>>;
+  dnatRules?: Array<Input<NatRuleArgs>>;
+  netRules?: Array<Input<NetworkRuleArgs>>;
+  appRules?: Array<Input<ApplicationRuleArgs>>;
 };
 
 export interface FirewallPolicyProps {

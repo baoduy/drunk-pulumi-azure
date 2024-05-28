@@ -7,7 +7,10 @@ import {
   ResourceGroupInfo,
 } from "../types";
 import { getFirewallPolicyName } from "../Common/Naming";
-import { FirewallPolicyRuleCollectionResults } from "./types";
+import {
+  FirewallPolicyResults,
+  FirewallPolicyRuleCollectionResults,
+} from "./types";
 
 interface PolicyRulesProps {
   group: ResourceGroupInfo;
@@ -56,6 +59,69 @@ interface Props
     }>;
   };
 }
+
+export const FirewallPolicyGroup = ({
+  policy,
+  priority,
+  action = enums.network.FirewallPolicyFilterRuleCollectionActionType.Allow,
+}: {
+  policy: FirewallPolicyResults;
+  priority: number;
+  action?: enums.network.FirewallPolicyFilterRuleCollectionActionType;
+}): FirewallPolicyRuleCollectionResults => {
+  const policyCollections = new Array<
+    Input<
+      | inputs.network.FirewallPolicyFilterRuleCollectionArgs
+      | inputs.network.FirewallPolicyNatRuleCollectionArgs
+    >
+  >();
+
+  // DNAT rules
+  let pStart = priority + 1;
+  if (policy.dnatRules && policy.dnatRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-dnat`,
+      priority: pStart++,
+      action: {
+        type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
+      },
+      ruleCollectionType: "FirewallPolicyNatRuleCollection",
+      rules: policy.dnatRules,
+    });
+  }
+
+  // Network rules
+  if (policy.netRules && policy.netRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-net`,
+      priority: pStart++,
+      action: {
+        type: action,
+      },
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      rules: policy.netRules,
+    });
+  }
+
+  // Apps rules
+  if (policy.appRules && policy.appRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-app`,
+      priority: pStart++,
+      action: {
+        type: action,
+      },
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      rules: policy.appRules,
+    });
+  }
+
+  return {
+    name: `${policy.name}-grp`,
+    priority,
+    ruleCollections: policyCollections,
+  };
+};
 
 export default ({
   name,
