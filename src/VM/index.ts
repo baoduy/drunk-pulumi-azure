@@ -25,6 +25,7 @@ interface Props extends BasicResourceArgs {
   };
 
   enableEncryption?: boolean;
+  enableAutoPatching?: boolean;
   vaultInfo: KeyVaultInfo;
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
@@ -51,6 +52,7 @@ export default ({
   osDiskSizeGB = 128,
   dataDiskSizeGB,
   enableEncryption,
+  enableAutoPatching,
   vaultInfo,
   schedule = { timeZone: "Singapore Standard Time" },
   login,
@@ -103,10 +105,12 @@ export default ({
                 //ssh: { publicKeys: [{ keyData: linux.sshPublicKey! }] },
                 disablePasswordAuthentication: false,
                 provisionVMAgent: true,
-                patchSettings: {
-                  //assessmentMode: "AutomaticByPlatform",
-                  patchMode: "AutomaticByPlatform",
-                },
+                patchSettings: enableAutoPatching
+                  ? {
+                      //assessmentMode: "AutomaticByPlatform",
+                      patchMode: "AutomaticByPlatform",
+                    }
+                  : undefined,
               }
             : undefined,
 
@@ -116,12 +120,13 @@ export default ({
                 enableAutomaticUpdates: true,
                 provisionVMAgent: true,
                 timeZone: schedule?.timeZone,
-                patchSettings: {
-                  enableHotpatching: false,
-                  //Need to be enabled at subscription level
-                  //assessmentMode: 'AutomaticByPlatform',
-                  //patchMode: "AutomaticByPlatform",
-                },
+                patchSettings: enableAutoPatching
+                  ? {
+                      enableHotpatching: false,
+                      //assessmentMode: 'AutomaticByPlatform',
+                      patchMode: "AutomaticByPlatform",
+                    }
+                  : undefined,
               }
             : undefined,
       },
