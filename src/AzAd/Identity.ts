@@ -10,7 +10,7 @@ import {
   ApplicationOptionalClaims,
 } from "@pulumi/azuread/types/input";
 
-import { KeyVaultInfo } from "../types";
+import { BasicArgs, KeyVaultInfo } from "../types";
 import { roleAssignment } from "./RoleAssignment";
 import { defaultScope } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
@@ -20,7 +20,7 @@ type PreAuthApplicationProps = {
   oauth2PermissionNames: string[];
 };
 
-type IdentityProps = {
+interface IdentityProps extends BasicArgs {
   name: string;
   owners?: pulumi.Input<pulumi.Input<string>[]>;
   createClientSecret?: boolean;
@@ -47,7 +47,7 @@ type IdentityProps = {
   }>;
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
   vaultInfo?: KeyVaultInfo;
-};
+}
 
 export type IdentityResult = {
   name: string;
@@ -75,6 +75,7 @@ export default ({
   principalRoles,
   optionalClaims,
   vaultInfo,
+  dependsOn,
 }: IdentityProps): IdentityResult => {
   // Azure AD Application no need suffix
   name = getIdentityName(name);
@@ -88,53 +89,57 @@ export default ({
     ? undefined
     : [`api://${name.toLowerCase()}`];
 
-  const app = new azureAD.Application(name, {
-    displayName: name,
-    description: name,
+  const app = new azureAD.Application(
+    name,
+    {
+      displayName: name,
+      description: name,
 
-    owners,
-    appRoles,
-    signInAudience: allowMultiOrg ? "AzureADMultipleOrgs" : "AzureADMyOrg",
-    groupMembershipClaims: ["SecurityGroup"],
-    identifierUris,
+      owners,
+      appRoles,
+      signInAudience: allowMultiOrg ? "AzureADMultipleOrgs" : "AzureADMyOrg",
+      groupMembershipClaims: ["SecurityGroup"],
+      identifierUris,
 
-    publicClient: publicClient ? { redirectUris: replyUrls } : undefined,
+      publicClient: publicClient ? { redirectUris: replyUrls } : undefined,
 
-    singlePageApplication:
-      appType === "spa"
-        ? {
-            redirectUris: replyUrls,
-          }
+      singlePageApplication:
+        appType === "spa"
+          ? {
+              redirectUris: replyUrls,
+            }
+          : undefined,
+
+      web:
+        appType === "web"
+          ? {
+              redirectUris: replyUrls,
+              implicitGrant: {
+                accessTokenIssuanceEnabled: true,
+                idTokenIssuanceEnabled: true,
+              },
+            }
+          : undefined,
+
+      api:
+        appType === "api"
+          ? {
+              oauth2PermissionScopes: oauth2Permissions,
+              mappedClaimsEnabled: true,
+              requestedAccessTokenVersion: 2,
+            }
+          : undefined,
+
+      fallbackPublicClientEnabled: false,
+      preventDuplicateNames: true,
+      requiredResourceAccesses: requiredResourceAccesses
+        ? pulumi.output(requiredResourceAccesses).apply((r) => [...r])
         : undefined,
 
-    web:
-      appType === "web"
-        ? {
-            redirectUris: replyUrls,
-            implicitGrant: {
-              accessTokenIssuanceEnabled: true,
-              idTokenIssuanceEnabled: true,
-            },
-          }
-        : undefined,
-
-    api:
-      appType === "api"
-        ? {
-            oauth2PermissionScopes: oauth2Permissions,
-            mappedClaimsEnabled: true,
-            requestedAccessTokenVersion: 2,
-          }
-        : undefined,
-
-    fallbackPublicClientEnabled: false,
-    preventDuplicateNames: true,
-    requiredResourceAccesses: requiredResourceAccesses
-      ? pulumi.output(requiredResourceAccesses).apply((r) => [...r])
-      : undefined,
-
-    optionalClaims,
-  });
+      optionalClaims,
+    },
+    { dependsOn },
+  );
 
   if (vaultInfo)
     addCustomSecret({

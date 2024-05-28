@@ -1,4 +1,5 @@
-import { BasicResourceArgs, CustomSecurityRuleArgs } from "../types";
+import { BasicResourceArgs } from "../types";
+import { CustomSecurityRuleArgs } from "./types";
 import { getNetworkSecurityGroupName } from "../Common/Naming";
 import * as network from "@pulumi/azure-native/network";
 import * as pulumi from "@pulumi/pulumi";

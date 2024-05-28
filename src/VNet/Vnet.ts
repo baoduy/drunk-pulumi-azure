@@ -1,8 +1,8 @@
 import * as network from "@pulumi/azure-native/network";
 import * as pulumi from "@pulumi/pulumi";
-import { input as inputs } from "@pulumi/azure-native/types";
 import { output as outputs } from "@pulumi/azure-native/types";
-import { BasicResourceArgs, RouteArgs, CustomSecurityRuleArgs } from "../types";
+import { BasicResourceArgs } from "../types";
+import { RouteArgs, CustomSecurityRuleArgs } from "./types";
 import {
   appGatewaySubnetName,
   azBastionSubnetName,

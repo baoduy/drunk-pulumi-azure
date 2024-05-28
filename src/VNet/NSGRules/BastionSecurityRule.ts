@@ -1,4 +1,4 @@
-import { CustomSecurityRuleArgs } from "../../types";
+import { CustomSecurityRuleArgs } from "../types";
 
 interface Props {
   bastionAddressPrefix: string;

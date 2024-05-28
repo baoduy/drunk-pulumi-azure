@@ -1,5 +1,38 @@
 import { enums, input as inputs } from "@pulumi/azure-native/types";
 import { Input, Output } from "@pulumi/pulumi";
+import * as pulumi from "@pulumi/pulumi";
+
+export interface RouteArgs {
+  name?: Input<string>;
+  addressPrefix?: pulumi.Input<string>;
+  hasBgpOverride?: pulumi.Input<boolean>;
+  nextHopIpAddress?: pulumi.Input<string>;
+  nextHopType: pulumi.Input<string | enums.network.RouteNextHopType>;
+}
+
+export interface CustomSecurityRuleArgs {
+  access: pulumi.Input<string | enums.network.SecurityRuleAccess>;
+  description?: pulumi.Input<string>;
+  destinationAddressPrefix?: pulumi.Input<string>;
+  destinationAddressPrefixes?: pulumi.Input<pulumi.Input<string>[]>;
+  destinationApplicationSecurityGroups?: pulumi.Input<
+    pulumi.Input<inputs.network.ApplicationSecurityGroupArgs>[]
+  >;
+  destinationPortRange?: pulumi.Input<string>;
+  destinationPortRanges?: pulumi.Input<pulumi.Input<string>[]>;
+  direction: pulumi.Input<string | enums.network.SecurityRuleDirection>;
+  name?: pulumi.Input<string>;
+  priority: pulumi.Input<number>;
+  protocol: pulumi.Input<string | enums.network.SecurityRuleProtocol>;
+  sourceAddressPrefix?: pulumi.Input<string>;
+  sourceAddressPrefixes?: pulumi.Input<pulumi.Input<string>[]>;
+  sourceApplicationSecurityGroups?: pulumi.Input<
+    pulumi.Input<inputs.network.ApplicationSecurityGroupArgs>[]
+  >;
+  sourcePortRange?: pulumi.Input<string>;
+  sourcePortRanges?: pulumi.Input<pulumi.Input<string>[]>;
+  type?: pulumi.Input<string>;
+}
 
 export interface NatRuleArgs {
   description?: Input<string>;

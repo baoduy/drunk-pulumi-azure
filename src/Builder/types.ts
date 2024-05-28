@@ -1,20 +1,14 @@
-import {
-  CustomSecurityRuleArgs,
-  KeyVaultInfo,
-  ResourceGroupInfo,
-  RouteArgs,
-} from "../types";
+import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { RouteArgs, CustomSecurityRuleArgs } from "../VNet/types";
 import { VnetProps, VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
-import { Input } from "@pulumi/pulumi";
+import { Input, Resource } from "@pulumi/pulumi";
 import { FirewallProps, FirewallResult } from "../VNet/Firewall";
 import { VpnGatewayProps } from "../VNet/VPNGateway";
 import { LogInfoResults } from "../Logs/Helpers";
 import { PublicIpAddressPrefixResult } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
-import { NetworkPeeringResults } from "../VNet/NetworkPeering";
 import { SshGenerationProps, SshResults } from "../Core/KeyGenetators";
-import * as pulumi from "@pulumi/pulumi";
 import {
   AksAccessProps,
   AksNetworkProps,
@@ -26,13 +20,13 @@ import {
 import * as native from "@pulumi/azure-native";
 import { IdentityResult } from "../AzAd/Identity";
 import { ManagedCluster } from "@pulumi/azure-native/containerservice";
-import { PrivateZone } from "@pulumi/azure-native/network";
 
 //Common Builder Types
 export type CommonBuilderProps = {
   name: string;
   group: ResourceGroupInfo;
   vaultInfo: KeyVaultInfo;
+  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
 export type CommonOmit<T> = Omit<T, keyof CommonBuilderProps>;
 
@@ -45,7 +39,7 @@ export interface IResourcesBuilder<TResults> {
 export abstract class ResourcesBuilder<TResults>
   implements IResourcesBuilder<TResults>
 {
-  constructor(public commonProps: CommonBuilderProps) {}
+  protected constructor(public commonProps: CommonBuilderProps) {}
   public abstract build(): TResults;
 }
 

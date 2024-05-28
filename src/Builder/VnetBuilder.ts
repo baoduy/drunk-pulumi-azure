@@ -2,7 +2,7 @@ import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
-import { CustomSecurityRuleArgs, RouteArgs } from "../types";
+import { CustomSecurityRuleArgs, RouteArgs } from "../VNet/types";
 import Firewall, { FirewallResult } from "../VNet/Firewall";
 import Vnet, { VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";

@@ -173,7 +173,6 @@ export interface AksProps extends BasicResourceArgs {
   logWpId?: Input<string>;
   /**Lock resource from delete*/
   lock?: boolean;
-  dependsOn?: pulumi.Input<pulumi.Resource>[];
   importFrom?: string;
 }
 
@@ -214,6 +213,7 @@ export default async ({
   const serviceIdentity = aksIdentityCreator({
     name: aksName,
     vaultInfo,
+    dependsOn,
   });
 
   const adminGroup = aksAccess?.envRoleNames
@@ -434,7 +434,7 @@ export default async ({
     },
     {
       protect: lock,
-      dependsOn: [...dependsOn, serviceIdentity.resource],
+      dependsOn: serviceIdentity.resource,
       import: importFrom,
       deleteBeforeReplace: true,
       ignoreChanges: ["privateLinkResources", "networkProfile", "linuxProfile"],

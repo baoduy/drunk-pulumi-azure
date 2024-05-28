@@ -1,4 +1,5 @@
-import { BasicResourceArgs, RouteArgs } from "../types";
+import { BasicResourceArgs } from "../types";
+import { RouteArgs } from "./types";
 import { getRouteName, getRouteItemName } from "../Common/Naming";
 import * as network from "@pulumi/azure-native/network";
 import { Input } from "@pulumi/pulumi";
