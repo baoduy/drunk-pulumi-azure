@@ -32,6 +32,7 @@ interface Props extends BasicResourceArgs {
   schedule?: {
     /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
     timeZone?: Input<string>;
+    /** 24h HH:MM:SS */
     autoShutdownTime?: Input<string>;
   };
   lock?: boolean;
