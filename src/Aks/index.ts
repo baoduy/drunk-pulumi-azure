@@ -1,11 +1,10 @@
 import * as native from "@pulumi/azure-native";
 import * as pulumi from "@pulumi/pulumi";
-import { Input, interpolate, output } from "@pulumi/pulumi";
+import { Input, Output, output } from "@pulumi/pulumi";
 import vmsDiagnostic from "./VmSetMonitor";
-import { BasicMonitorArgs, BasicResourceArgs, KeyVaultInfo } from "../types";
+import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import {
   currentEnv,
-  currentRegionCode,
   defaultScope,
   Environments,
   getResourceIdFromInfo,
@@ -18,8 +17,6 @@ import aksIdentityCreator from "./Identity";
 import { stack } from "../Common/StackEnv";
 import { createDiagnostic } from "../Logs/Helpers";
 import { getAksName, getResourceGroupName } from "../Common/Naming";
-import PrivateDns from "../VNet/PrivateDns";
-import { getVnetIdFromSubnetId } from "../VNet/Helper";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import { getAdGroup } from "../AzAd/Group";
 import { EnvRoleNamesType } from "../AzAd/EnvRoles";
@@ -27,7 +24,8 @@ import { getAksConfig } from "./Helper";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import * as inputs from "@pulumi/azure-native/types/input";
 import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
-import { replaceAll } from "../Common/Helpers";
+import { IdentityResult } from "../AzAd/Identity";
+import { ManagedCluster } from "@pulumi/azure-native/containerservice";
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -159,9 +157,11 @@ export interface AksProps extends BasicResourceArgs {
   aksAccess?: AksAccessProps;
 
   //Azure Registry Container
-  acr?: { enable: boolean; id?: Input<string> };
+  acr?: { enable: boolean; id: Input<string> };
+
   defaultNodePool: DefaultAksNodePoolProps;
   network: AksNetworkProps;
+
   linux: {
     adminUsername: Input<string>;
     sshKeys: Array<pulumi.Input<string>>;
@@ -175,6 +175,13 @@ export interface AksProps extends BasicResourceArgs {
   lock?: boolean;
   importFrom?: string;
 }
+
+export type AksResults = {
+  serviceIdentity: IdentityResult;
+  aks: ManagedCluster;
+  disableLocalAccounts?: boolean;
+  getKubeConfig: () => Output<string>;
+};
 
 //Using this to enable the preview feature https://azurecloudai.blog/2019/10/16/aks-enabling-and-using-preview-features-such-as-nodepools-using-cli/
 export default async ({
@@ -198,7 +205,7 @@ export default async ({
   lock = true,
   dependsOn = [],
   importFrom,
-}: AksProps) => {
+}: AksProps): Promise<AksResults> => {
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
@@ -225,10 +232,10 @@ export default async ({
     : undefined;
 
   //=================Validate ===================================/
-  if (!linux?.sshKeys || !linux.sshKeys[0]) {
-    console.error("Aks sshKeys is required:", name);
-    return undefined;
-  }
+  // if (!linux?.sshKeys || !linux.sshKeys[0]) {
+  //   console.error("Aks sshKeys is required:", name);
+  //   return undefined;
+  // }
 
   //Create AKS Cluster
   const aks = new native.containerservice.ManagedCluster(
@@ -654,5 +661,15 @@ export default async ({
     }
   });
 
-  return { aks, serviceIdentity };
+  return {
+    aks,
+    serviceIdentity,
+    disableLocalAccounts,
+    getKubeConfig: (): Output<string> =>
+      output(
+        getKeyVaultBase(vaultInfo.name)
+          .getSecret(secretName)
+          .then((s) => s!.value!),
+      ),
+  };
 };

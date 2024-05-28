@@ -21,6 +21,7 @@ import Aks, {
   AksAccessProps,
   AksNetworkProps,
   DefaultAksNodePoolProps,
+  AksResults,
 } from "../Aks";
 import { IdentityResult } from "../AzAd/Identity";
 import { PrivateZone } from "@pulumi/azure-native/network";
@@ -36,13 +37,7 @@ class AksBuilder
 {
   //Instances
   private _sshInstance: SshResults | undefined = undefined;
-  private _askInstance:
-    | undefined
-    | {
-        serviceIdentity: IdentityResult;
-        aks: ManagedCluster;
-        privateZone?: PrivateZone;
-      };
+  private _askInstance: AksResults | undefined = undefined;
 
   //Props
   private _sshProps: SshBuilderProps | undefined = undefined;
@@ -108,6 +103,7 @@ class AksBuilder
       ...this.commonProps,
       addon: this._addonProps,
       aksAccess: this._authProps!,
+      tier: this._tier,
       linux: {
         adminUsername: this._sshInstance!.userName,
         sshKeys: [sshKey],

@@ -13,6 +13,7 @@ import {
   AksAccessProps,
   AksNetworkProps,
   AksNodePoolProps,
+  AksResults,
   AskAddonProps,
   AskFeatureProps,
   DefaultAksNodePoolProps,
@@ -117,11 +118,7 @@ export type VnetBuilderResults = {
 export type AksBuilderProps = CommonBuilderProps & {};
 export type AskBuilderResults = {
   ssh: SshResults;
-  aks: {
-    serviceIdentity: IdentityResult;
-    aks: ManagedCluster;
-    //privateZone?: PrivateZone;
-  };
+  aks: AksResults;
 };
 export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
 
