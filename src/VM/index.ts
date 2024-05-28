@@ -34,8 +34,9 @@ interface Props extends BasicResourceArgs {
   schedule?: {
     /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
     timeZone?: "Singapore Standard Time" | Input<string>;
-    /** 24h HH:MM:SS */
+    /** The format is ISO 8601 Standard ex: T22:00:00.000Z */
     autoShutdownTime?: Input<string>;
+    /** The format is ISO 8601 Standard ex: T09:00:28.000Z */
     autoStartTime?: Input<string>;
   };
   lock?: boolean;
@@ -205,7 +206,7 @@ export default ({
         timeZoneId: schedule.timeZone,
         status: "Enabled",
         targetResourceId: vm.id,
-        taskType: "LabVmsShutdownTask",
+        taskType: "LabVmsShutdown",
         notificationSettings: {
           status: "Disabled",
           emailRecipient: "",
@@ -229,7 +230,7 @@ export default ({
         timeZoneId: schedule.timeZone,
         status: "Enabled",
         targetResourceId: vm.id,
-        taskType: "LabVmsStartupTask",
+        taskType: "LabVmAutoStart",
         notificationSettings: {
           status: "Disabled",
           emailRecipient: "",
