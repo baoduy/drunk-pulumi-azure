@@ -74,7 +74,7 @@ export default ({
   ...others
 }: Props) => {
   const securities = features.securityGroup?.rules || [];
-  const routes = new Array<Input<network.RouteArgs>>();
+  const routes = new Array<Input<inputs.network.RouteArgs>>();
 
   if (publicIpAddress) {
     //Add route from IpAddress to internet

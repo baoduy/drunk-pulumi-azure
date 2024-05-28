@@ -31,7 +31,8 @@ export default ({
     allowVirtualNetworkAccess: true,
     allowGatewayTransit: true,
     //syncRemoteAddressSpace: true,
-    //useRemoteGateways: true,
+    useRemoteGateways: false,
+    doNotVerifyRemoteGateways: true,
   };
 
   const firstPeering = new network.VirtualNetworkPeering(
