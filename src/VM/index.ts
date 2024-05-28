@@ -31,7 +31,7 @@ interface Props extends BasicResourceArgs {
   dataDiskSizeGB?: number;
   schedule?: {
     /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
-    timeZone?: Input<string>;
+    timeZone?: "Singapore Standard Time" | Input<string>;
     /** 24h HH:MM:SS */
     autoShutdownTime?: Input<string>;
   };
