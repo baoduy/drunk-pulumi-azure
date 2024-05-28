@@ -27,13 +27,12 @@ interface Props extends BasicResourceArgs {
   enableEncryption?: boolean;
   vaultInfo: KeyVaultInfo;
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
-  /**The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c*/
-  timeZone?: Input<string>;
   osDiskSizeGB?: number;
   dataDiskSizeGB?: number;
   schedule?: {
-    autoShutdownTime: Input<string>;
-    //autoStartupTime?: Input<string>;
+    /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
+    timeZone?: Input<string>;
+    autoShutdownTime?: Input<string>;
   };
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
@@ -46,13 +45,13 @@ export default ({
   subnetId,
   osType = "Windows",
   vmSize = "Standard_B2s",
-  timeZone = "Singapore Standard Time",
+
   storageAccountType = native.compute.StorageAccountTypes.Premium_LRS,
   osDiskSizeGB = 128,
   dataDiskSizeGB,
   enableEncryption,
   vaultInfo,
-  schedule,
+  schedule = { timeZone: "Singapore Standard Time" },
   login,
   image,
   lock = true,
@@ -86,11 +85,9 @@ export default ({
       hardwareProfile: { vmSize },
       identity: { type: "SystemAssigned" },
       licenseType: "None",
-
       networkProfile: {
         networkInterfaces: [{ id: nic.id, primary: true }],
       },
-
       osProfile: {
         computerName: name,
         adminUsername: login.userName,
@@ -117,7 +114,7 @@ export default ({
             ? {
                 enableAutomaticUpdates: true,
                 provisionVMAgent: true,
-                timeZone,
+                timeZone: schedule?.timeZone,
                 patchSettings: {
                   enableHotpatching: false,
                   //Need to be enabled at subscription level
@@ -127,7 +124,6 @@ export default ({
               }
             : undefined,
       },
-
       storageProfile: {
         imageReference: {
           ...image,
@@ -165,7 +161,6 @@ export default ({
             ]
           : [],
       },
-
       diagnosticsProfile: { bootDiagnostics: { enabled: true } },
       // securityProfile: {
       //
@@ -195,7 +190,7 @@ export default ({
         name: `shutdown-computevm-${vmName}`,
         ...group,
         dailyRecurrence: { time: schedule.autoShutdownTime },
-        timeZoneId: timeZone,
+        timeZoneId: schedule.timeZone,
         status: "Enabled",
         targetResourceId: vm.id,
         taskType: "ComputeVmShutdownTask",
