@@ -6,6 +6,9 @@ import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import { getNICName, getVMName } from "../Common/Naming";
 import Locker from "../Core/Locker";
 import { getEncryptionKey } from "../KeyVault/Helper";
+import GlobalSchedule from "./GlobalSchedule";
+import Extension, { VmExtensionProps } from "./Extension";
+import { AdoVMExtensionProps } from "./AzureDevOpsExtension";
 
 //https://az-vm-image.info/
 // az vm image list --output table
@@ -37,8 +40,11 @@ interface Props extends BasicResourceArgs {
     /** The format is ISO 8601 Standard ex: 2200 */
     autoShutdownTime?: Input<string>;
     /** The format is ISO 8601 Standard ex: 0900 */
-    autoStartTime?: Input<string>;
+    //autoStartTime?: Input<string>;
   };
+
+  extensions?: Array<Omit<VmExtensionProps, "dependsOn" | "vmName" | "group">>;
+
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
@@ -50,7 +56,7 @@ export default ({
   subnetId,
   osType = "Windows",
   vmSize = "Standard_B2s",
-
+  extensions,
   storageAccountType = compute.StorageAccountTypes.Premium_LRS,
   osDiskSizeGB = 128,
   dataDiskSizeGB,
@@ -191,57 +197,45 @@ export default ({
     },
   );
 
+  if (extensions) {
+    extensions.forEach((ex) =>
+      Extension({
+        ...ex,
+        group,
+        vmName,
+        dependsOn: vm,
+      }),
+    );
+  }
   if (lock) {
     Locker({ name: vmName, resource: vm });
   }
 
   //Auto shutdown
   if (schedule?.autoShutdownTime) {
-    new devtestlab.GlobalSchedule(
-      `${vmName}-auto-shutdown`,
-      {
-        name: `${vmName}-auto-shutdown`,
-        ...group,
-        dailyRecurrence: { time: schedule.autoShutdownTime },
-        timeZoneId: schedule.timeZone,
-        status: "Enabled",
-        targetResourceId: vm.id,
-        taskType: "ComputeVmShutdownTask", //LabVmsShutdownTask,LabVmsStartupTask,LabVmReclamationTask,ComputeVmShutdownTask
-        notificationSettings: {
-          status: "Disabled",
-          emailRecipient: "",
-          notificationLocale: "en",
-          timeInMinutes: 30,
-          webhookUrl: "",
-        },
-      },
-      { dependsOn: vm },
-    );
+    GlobalSchedule({
+      name: `shutdown-computevm-${vmName}`,
+      group,
+      time: schedule.autoShutdownTime,
+      timeZone: schedule.timeZone,
+      targetResourceId: vm.id,
+      task: "ComputeVmShutdownTask", //LabVmsShutdownTask,LabVmsStartupTask,LabVmReclamationTask,ComputeVmShutdownTask
+      dependsOn: vm,
+    });
   }
 
   //Auto start
-  if (schedule?.autoStartTime) {
-    new devtestlab.GlobalSchedule(
-      `${vmName}-auto-start`,
-      {
-        name: `${vmName}-auto-start`,
-        ...group,
-        dailyRecurrence: { time: schedule.autoStartTime },
-        timeZoneId: schedule.timeZone,
-        status: "Enabled",
-        targetResourceId: vm.id,
-        taskType: "LabVmsStartupTask", //LabVmsShutdownTask,LabVmsStartupTask,LabVmReclamationTask,ComputeVmShutdownTask
-        notificationSettings: {
-          status: "Disabled",
-          emailRecipient: "",
-          notificationLocale: "en",
-          timeInMinutes: 30,
-          webhookUrl: "",
-        },
-      },
-      { dependsOn: vm },
-    );
-  }
+  // if (schedule?.autoStartTime) {
+  //   GlobalSchedule({
+  //     name: `${vmName}-auto-start`,
+  //     group,
+  //     time: schedule.autoStartTime,
+  //     timeZone: schedule.timeZone,
+  //     targetResourceId: vm.id,
+  //     task: "LabVmAutoStart", //LabVmsShutdownTask,LabVmsStartupTask,LabVmReclamationTask,ComputeVmShutdownTask
+  //     dependsOn: vm,
+  //   });
+  // }
 
   return vm;
 };
