@@ -2,7 +2,7 @@ import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
 import * as network from "@pulumi/azure-native/network";
-import { CustomSecurityRuleArgs, RouteArgs } from "../VNet/types";
+import { CustomSecurityRuleArgs, RouteArgs, VnetInfoType } from "../VNet/types";
 import Firewall, { FirewallResult } from "../VNet/Firewall";
 import Vnet, { VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
@@ -27,7 +27,11 @@ import {
   VnetBuilderResults,
   VpnGatewayCreationProps,
 } from "./types";
-import { getVnetIdByName, getVnetInfo } from "../VNet/Helper";
+import {
+  getVnetIdByName,
+  getVnetInfo,
+  parseVnetInfoFromId,
+} from "../VNet/Helper";
 
 const outboundIpName = "outbound";
 
@@ -45,7 +49,7 @@ class VnetBuilder
   private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
-  private _peeringProps: string[] = [];
+  private _peeringProps: PeeringProps[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
   private _ipType: "prefix" | "individual" = "prefix";
 
@@ -115,8 +119,8 @@ class VnetBuilder
     return this;
   }
 
-  public peeringTo(vnetName: string): IVnetBuilder {
-    this._peeringProps.push(vnetName);
+  public peeringTo(props: PeeringProps): IVnetBuilder {
+    this._peeringProps.push(props);
     return this;
   }
 
@@ -317,16 +321,24 @@ class VnetBuilder
   private buildPeering() {
     if (!this._peeringProps || !this._vnetInstance) return;
 
-    this._peeringProps.map((p) => {
-      const info = getVnetInfo(p);
-      return NetworkPeering({
-        direction: "Bidirectional",
-        firstVnet: {
-          vnetName: this._vnetInstance!.vnet.name,
-          resourceGroupName: this.commonProps.group.resourceGroupName,
-        },
-        secondVnet: info,
-      });
+    this._peeringProps.forEach((p) => {
+      let info: pulumi.Input<VnetInfoType> | undefined = undefined;
+
+      if ("groupName" in p) {
+        info = getVnetInfo(p.groupName);
+      } else if ("vnetId" in p) {
+        info = parseVnetInfoFromId(p.vnetId);
+      }
+
+      if (info)
+        NetworkPeering({
+          direction: p.direction ?? "Bidirectional",
+          firstVnet: {
+            vnetName: this._vnetInstance!.vnet.name,
+            resourceGroupName: this.commonProps.group.resourceGroupName,
+          },
+          secondVnet: info,
+        });
     });
   }
 

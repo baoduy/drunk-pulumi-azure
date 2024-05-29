@@ -63,11 +63,15 @@ export type VnetBuilderProps = CommonBuilderProps & {
 export type SubnetCreationProps = Record<string, Omit<SubnetProps, "name">>;
 export type SubnetPrefixCreationProps = { addressPrefix: string };
 export type BastionCreationProps = { subnet: SubnetPrefixCreationProps };
-export type PeeringProps = {
-  vnetName: Input<string>;
-  group: ResourceGroupInfo;
-  direction?: PeeringDirectionType;
-};
+export type PeeringProps =
+  | {
+      groupName: string;
+      direction?: PeeringDirectionType;
+    }
+  | {
+      vnetId: string;
+      direction?: PeeringDirectionType;
+    };
 export type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
 } & CommonOmit<Omit<FirewallProps, "outbound" | "management">>;
@@ -98,7 +102,7 @@ export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
 
 export interface IVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
-  peeringTo: (vnetName: string) => IVnetBuilder;
+  peeringTo: (props: PeeringProps) => IVnetBuilder;
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
   withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
   withLogInfo: (info: LogInfoResults) => IVnetBuilder;
