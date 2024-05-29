@@ -2,7 +2,6 @@ import * as network from "@pulumi/azure-native/network";
 import { input as inputs } from "@pulumi/azure-native/types";
 import { Input, output } from "@pulumi/pulumi";
 import * as pulumi from "@pulumi/pulumi";
-import { getResourceInfoFromId } from "../Common/AzureEnv";
 import { NetworkRouteResource } from "@drunk-pulumi/azure-providers/NetworkRuote";
 import { BasicMonitorArgs, ResourceGroupInfo } from "../types";
 import { CustomSecurityRuleArgs } from "./types";
@@ -11,6 +10,7 @@ import { FirewallPolicyProps } from "./types";
 import VnetPeering from "./NetworkPeering";
 import { SubnetProps } from "./Subnet";
 import Vnet from "./Vnet";
+import { parseVnetInfoFromId } from "./Helper";
 
 interface Props {
   name: string;
@@ -223,19 +223,13 @@ export default ({
   //Vnet Peering
   if (features.vnetPeering) {
     features.vnetPeering.map((pp) => {
-      //get info
-      output(pp.vnetId).apply((id) => {
-        const info = getResourceInfoFromId(id);
-
-        if (info) {
-          //peering
-          VnetPeering({
-            firstVNetName: vnet.vnet.name,
-            firstVNetResourceGroupName: group.resourceGroupName,
-            secondVNetName: info.name,
-            secondVNetResourceGroupName: info.group.resourceGroupName,
-          });
-        }
+      const info = parseVnetInfoFromId(pp.vnetId);
+      VnetPeering({
+        firstVnet: {
+          vnetName: vnet.vnet.name,
+          resourceGroupName: group.resourceGroupName,
+        },
+        secondVnet: info,
       });
 
       //Update route to firewall IpAddress

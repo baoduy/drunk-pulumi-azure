@@ -1,26 +1,22 @@
 import { stack } from "../Common/StackEnv";
 import * as network from "@pulumi/azure-native/network";
-import { subscriptionId } from "../Common/AzureEnv";
 import { all, Input, interpolate } from "@pulumi/pulumi";
 import { VirtualNetworkPeeringArgs } from "@pulumi/azure-native/network/virtualNetworkPeering";
+import { VnetInfoType } from "./types";
+import { subscriptionId } from "../Common/AzureEnv";
 
 export type PeeringDirectionType = "Unidirectional" | "Bidirectional";
 
 export interface VNetPeeringProps {
-  firstVNetName: Input<string>;
-  firstVNetResourceGroupName: Input<string>;
-
-  secondVNetName: Input<string>;
-  secondVNetResourceGroupName: Input<string>;
+  firstVnet: Input<VnetInfoType>;
+  secondVnet: Input<VnetInfoType>;
   direction?: PeeringDirectionType;
 }
 
 export default ({
   direction = "Unidirectional",
-  firstVNetName,
-  firstVNetResourceGroupName,
-  secondVNetName,
-  secondVNetResourceGroupName,
+  firstVnet,
+  secondVnet,
 }: VNetPeeringProps) => {
   const commonProps: Partial<VirtualNetworkPeeringArgs> = {
     allowForwardedTraffic: true,
@@ -31,35 +27,30 @@ export default ({
     doNotVerifyRemoteGateways: true,
   };
 
-  all([
-    firstVNetName,
-    firstVNetResourceGroupName,
-    secondVNetName,
-    secondVNetResourceGroupName,
-  ]).apply(([firstName, firstGroup, secondName, secondGroup]) => {
+  all([firstVnet, secondVnet]).apply(([first, second]) => {
     new network.VirtualNetworkPeering(
-      `${stack}-${firstName}-${secondName}-vlk`,
+      `${stack}-${first.vnetName}-${second.vnetName}-vlk`,
       {
         ...commonProps,
-        virtualNetworkPeeringName: `${stack}-${firstName}-${secondName}-vlk`,
-        virtualNetworkName: firstName,
-        resourceGroupName: firstGroup,
+        virtualNetworkPeeringName: `${stack}-${first.vnetName}-${second.vnetName}-vlk`,
+        virtualNetworkName: first.vnetName,
+        resourceGroupName: first.resourceGroupName,
         remoteVirtualNetwork: {
-          id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${secondGroup}/providers/Microsoft.Network/virtualNetworks/${secondName}`,
+          id: interpolate`/subscriptions/${second.subscriptionId ?? subscriptionId}/resourceGroups/${second.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${second.vnetName}`,
         },
       },
     );
 
     if (direction === "Bidirectional")
       new network.VirtualNetworkPeering(
-        `${stack}-${secondName}-${firstName}-vlk`,
+        `${stack}-${second.vnetName}-${first.vnetName}-vlk`,
         {
           ...commonProps,
-          virtualNetworkPeeringName: `${stack}-${secondName}-${firstName}-vlk`,
-          virtualNetworkName: secondName,
-          resourceGroupName: secondGroup,
+          virtualNetworkPeeringName: `${stack}-${second.vnetName}-${first.vnetName}-vlk`,
+          virtualNetworkName: second.vnetName,
+          resourceGroupName: second.resourceGroupName,
           remoteVirtualNetwork: {
-            id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${firstGroup}/providers/Microsoft.Network/virtualNetworks/${firstName}`,
+            id: interpolate`/subscriptions/${first.subscriptionId ?? subscriptionId}/resourceGroups/${first.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${first.vnetName}`,
           },
         },
       );

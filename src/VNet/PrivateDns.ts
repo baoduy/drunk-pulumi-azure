@@ -1,7 +1,7 @@
 import * as native from "@pulumi/azure-native";
 import { Input, all, Resource, output } from "@pulumi/pulumi";
 import * as global from "../Common/GlobalEnv";
-import { getResourceInfoFromId } from "../Common/AzureEnv";
+import { parseResourceInfoFromId } from "../Common/AzureEnv";
 import { ResourceGroupInfo } from "../types";
 
 interface RecordProps {
@@ -57,7 +57,7 @@ export const linkVnetToPrivateDns = ({
   registrationEnabled,
   dependsOn,
 }: VnetToPrivateDnsProps) => {
-  const vnetInfo = getResourceInfoFromId(vnetId);
+  const vnetInfo = parseResourceInfoFromId(vnetId);
 
   return new native.network.VirtualNetworkLink(
     `${zoneName}-link-${vnetInfo!.name}`,

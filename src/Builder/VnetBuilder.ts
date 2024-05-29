@@ -321,10 +321,11 @@ class VnetBuilder
       const info = getVnetInfo(p);
       return NetworkPeering({
         direction: "Bidirectional",
-        firstVNetName: this._vnetInstance!.vnet.name,
-        firstVNetResourceGroupName: this.commonProps.group.resourceGroupName,
-        secondVNetName: info.vnetName,
-        secondVNetResourceGroupName: info.group.resourceGroupName,
+        firstVnet: {
+          vnetName: this._vnetInstance!.vnet.name,
+          resourceGroupName: this.commonProps.group.resourceGroupName,
+        },
+        secondVnet: info,
       });
     });
   }

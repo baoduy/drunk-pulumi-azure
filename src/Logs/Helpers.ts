@@ -2,7 +2,7 @@ import * as native from "@pulumi/azure-native";
 import { Input, interpolate, Output, output } from "@pulumi/pulumi";
 import {
   currentRegionName,
-  getResourceInfoFromId,
+  parseResourceInfoFromId,
   subscriptionId,
 } from "../Common/AzureEnv";
 import {
@@ -117,7 +117,7 @@ export const getLogWpSecretsById = async ({
   logWpId: string;
   vaultInfo: KeyVaultInfo;
 }) => {
-  const info = getResourceInfoFromId(logWpId);
+  const info = parseResourceInfoFromId(logWpId);
   const secrets = info
     ? await getLogWpSecrets({ fullName: info.name, vaultInfo })
     : undefined;

@@ -99,7 +99,9 @@ export interface ResourceInfo {
   id: string;
 }
 
-export const getResourceInfoFromId = (id: string): ResourceInfo | undefined => {
+export const parseResourceInfoFromId = (
+  id: string,
+): ResourceInfo | undefined => {
   if (!id) return undefined;
 
   const details = id.split("/");

@@ -2,26 +2,11 @@ import { enums, input as inputs } from "@pulumi/azure-native/types";
 import { Input, Output } from "@pulumi/pulumi";
 import * as pulumi from "@pulumi/pulumi";
 
-// export interface VirtualNetworkPeeringArgs {
-//   allowForwardedTraffic?: pulumi.Input<boolean>;
-//   allowGatewayTransit?: pulumi.Input<boolean>;
-//   allowVirtualNetworkAccess?: pulumi.Input<boolean>;
-//   doNotVerifyRemoteGateways?: pulumi.Input<boolean>;
-//   //id?: pulumi.Input<string>;
-//   name?: pulumi.Input<string>;
-//   // peeringState?: pulumi.Input<
-//   //   string | enums.network.v20230201.VirtualNetworkPeeringState
-//   // >;
-//   // peeringSyncLevel?: pulumi.Input<
-//   //   string | enums.network.v20230201.VirtualNetworkPeeringLevel
-//   // >;
-//   remoteAddressSpace?: pulumi.Input<inputs.network.v20230201.AddressSpaceArgs>;
-//   remoteBgpCommunities?: pulumi.Input<inputs.network.v20230201.VirtualNetworkBgpCommunitiesArgs>;
-//   remoteVirtualNetwork?: pulumi.Input<inputs.network.v20230201.SubResourceArgs>;
-//   remoteVirtualNetworkAddressSpace?: pulumi.Input<inputs.network.v20230201.AddressSpaceArgs>;
-//   //type?: pulumi.Input<string>;
-//   useRemoteGateways?: pulumi.Input<boolean>;
-// }
+export type VnetInfoType = {
+  vnetName: Input<string>;
+  resourceGroupName: Input<string>;
+  subscriptionId?: Input<string>;
+};
 
 export interface RouteArgs {
   name?: Input<string>;

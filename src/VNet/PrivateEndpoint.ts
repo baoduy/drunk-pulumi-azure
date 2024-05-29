@@ -3,7 +3,7 @@ import { Input, output } from "@pulumi/pulumi";
 import { BasicResourceArgs, PrivateLinkProps } from "../types";
 import { getVnetIdFromSubnetId } from "./Helper";
 import PrivateZone, { linkVnetToPrivateDns, addARecord } from "./PrivateDns";
-import { getResourceInfoFromId } from "../Common/AzureEnv";
+import { parseResourceInfoFromId } from "../Common/AzureEnv";
 import { getPrivateEndpointName } from "../Common/Naming";
 
 interface Props extends BasicResourceArgs, PrivateLinkProps {
@@ -39,11 +39,11 @@ export default ({
 
   //Get IpAddress in
   const ipAddresses = endpoint.customDnsConfigs.apply((c) =>
-    c!.flatMap((i) => i.ipAddresses!)
+    c!.flatMap((i) => i.ipAddresses!),
   );
 
   output(resourceId).apply((id) => {
-    const resourceInfo = getResourceInfoFromId(id);
+    const resourceInfo = parseResourceInfoFromId(id);
 
     if (useGlobalDnsZone) {
       //Add A Record

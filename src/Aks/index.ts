@@ -8,7 +8,7 @@ import {
   defaultScope,
   Environments,
   getResourceIdFromInfo,
-  getResourceInfoFromId,
+  parseResourceInfoFromId,
   isPrd,
   tenantId,
 } from "../Common/AzureEnv";
@@ -641,7 +641,7 @@ export default async ({
             roleName: "Contributor",
             principalType: "ServicePrincipal",
             scope: getResourceIdFromInfo({
-              group: getResourceInfoFromId(sId)!.group,
+              group: parseResourceInfoFromId(sId)!.group,
             }),
           });
         }

@@ -1,7 +1,11 @@
 import * as network from "@pulumi/azure-native/network";
-import { Input, interpolate, Output } from "@pulumi/pulumi";
+import { Input, interpolate, output, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
-import { currentRegionName, subscriptionId } from "../Common/AzureEnv";
+import {
+  currentRegionName,
+  parseResourceInfoFromId,
+  subscriptionId,
+} from "../Common/AzureEnv";
 import {
   getFirewallName,
   getIpAddressName,
@@ -9,6 +13,8 @@ import {
   getVnetName,
 } from "../Common/Naming";
 import { ResourceGroupInfo } from "../types";
+import { VnetInfoType } from "./types";
+
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
 export const azFirewallSubnet = "AzureFirewallSubnet";
@@ -81,22 +87,33 @@ export const getIpAddressResource = ({
   });
 };
 
-export const getVnetInfo = (
-  groupName: string,
-): { vnetName: string; group: ResourceGroupInfo } => {
+export const getVnetInfo = (groupName: string): VnetInfoType => {
   const vnetName = getVnetName(groupName);
   const rsName = getResourceGroupName(groupName);
 
   return {
     vnetName,
-    group: { resourceGroupName: rsName, location: currentRegionName },
+    resourceGroupName: rsName,
+    subscriptionId,
   };
 };
 
 export const getVnetIdByName = (groupName: string) => {
   const info = getVnetInfo(groupName);
-  return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
+  return interpolate`/subscriptions/${info.subscriptionId}/resourceGroups/${info.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
 };
+
+export const parseVnetInfoFromId = (
+  vnetId: Input<string>,
+): Output<VnetInfoType> =>
+  output(vnetId).apply((id) => {
+    const info = parseResourceInfoFromId(id)!;
+    return {
+      vnetName: info.name,
+      resourceGroupName: info.group.resourceGroupName,
+      subscriptionId: info.subscriptionId,
+    } as VnetInfoType;
+  });
 
 export const getFirewallIpAddress = (
   name: string,
