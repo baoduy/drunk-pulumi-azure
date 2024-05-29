@@ -31,7 +31,7 @@ export default ({
       ...extension,
       autoUpgradeMinorVersion: true,
       enableAutomaticUpgrade,
-      suppressFailures: true,
+      suppressFailures: false,
     },
     { dependsOn },
   );
