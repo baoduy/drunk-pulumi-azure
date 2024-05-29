@@ -70,7 +70,7 @@ const defaultNodePoolProps = {
   maxPods: 50,
   enableFIPS: false,
   enableNodePublicIP: false,
-  enableEncryptionAtHost: true,
+  //enableEncryptionAtHost: false,
 
   enableUltraSSD: isPrd,
   osDiskSizeGB: 128,
@@ -174,6 +174,7 @@ export interface AksProps extends BasicResourceArgs {
   /**Lock resource from delete*/
   lock?: boolean;
   importFrom?: string;
+  ignoreChanges?: string[];
 }
 
 export type AksResults = {
@@ -205,17 +206,18 @@ export default async ({
   lock = true,
   dependsOn = [],
   importFrom,
+  ignoreChanges = [],
 }: AksProps): Promise<AksResults> => {
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
-
   const disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
     .checkSecretExist(secretName)
     .catch(() => false);
 
   console.log(name, { disableLocalAccounts });
+  ignoreChanges!.push("privateLinkResources", "networkProfile", "linuxProfile");
 
   const serviceIdentity = aksIdentityCreator({
     name: aksName,
@@ -249,13 +251,12 @@ export default async ({
 
       apiServerAccessProfile: {
         authorizedIPRanges: features?.enablePrivateCluster
-          ? []
+          ? undefined
           : aksAccess?.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        //privateDNSZone: "",
-        //privateDNSZone: privateZone?.id,
-        //enablePrivateClusterPublicFQDN: features?.enablePrivateCluster,
+        enablePrivateClusterPublicFQDN: true,
+        privateDNSZone: "system",
       },
       //fqdnSubdomain: '',
 
@@ -304,8 +305,8 @@ export default async ({
         name: native.containerservice.ManagedClusterSKUName.Base,
         tier,
       },
-      // supportPlan:
-      //   native.containerservice.KubernetesSupportPlan.AKSLongTermSupport,
+      supportPlan:
+        native.containerservice.KubernetesSupportPlan.KubernetesOfficial,
       agentPoolProfiles: [
         {
           ...defaultNodePoolProps,
@@ -314,6 +315,12 @@ export default async ({
             env: currentEnv,
             nodeType: "System",
             enableAutoScaling: features?.enableAutoScale,
+            // powerState: {
+            //   code: "Running",
+            // },
+            // upgradeSettings: {
+            //   maxSurge: "10%",
+            // },
           }),
 
           name: "defaultnodes",
@@ -331,7 +338,11 @@ export default async ({
             ssh: { publicKeys: linux.sshKeys.map((k) => ({ keyData: k })) },
           }
         : undefined,
-
+      //This is not inuse
+      windowsProfile: {
+        adminUsername: "azureuser",
+        enableCSIProxy: true,
+      },
       autoScalerProfile: {
         balanceSimilarNodeGroups: "true",
         expander: "random",
@@ -397,6 +408,7 @@ export default async ({
         adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
         tenantID: tenantId,
       },
+      oidcIssuerProfile: { enabled: false },
       storageProfile: {
         blobCSIDriver: {
           enabled: true,
@@ -405,6 +417,7 @@ export default async ({
           enabled: true,
         },
         fileCSIDriver: { enabled: true },
+        snapshotController: { enabled: true },
       },
       networkProfile: {
         networkMode: native.containerservice.NetworkMode.Transparent,
@@ -444,7 +457,7 @@ export default async ({
       dependsOn: serviceIdentity.resource,
       import: importFrom,
       deleteBeforeReplace: true,
-      ignoreChanges: ["privateLinkResources", "networkProfile", "linuxProfile"],
+      ignoreChanges,
     },
   );
 

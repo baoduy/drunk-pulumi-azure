@@ -44,8 +44,8 @@ export abstract class ResourcesBuilder<TResults>
 }
 
 //Asynchronous
-export interface IResourcesBuilderAsync<TResults> {
-  commonProps: CommonBuilderProps;
+export interface IResourcesBuilderAsync<TResults>
+  extends Omit<IResourcesBuilder<TResults>, "build"> {
   build: () => Promise<TResults>;
 }
 
@@ -98,7 +98,7 @@ export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
 
 export interface IVnetBuilder extends IResourcesBuilder<VnetBuilderResults> {
   withBastion: (props: BastionCreationProps) => IVnetBuilder;
-  peeringTo: (props: PeeringProps) => IVnetBuilder;
+  peeringTo: (vnetName: string) => IVnetBuilder;
   withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
   withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
   withLogInfo: (info: LogInfoResults) => IVnetBuilder;
@@ -120,6 +120,7 @@ export type AskBuilderResults = {
   aks: AksResults;
 };
 export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
+export type AksImportProps = { id: string; ignoreChanges?: string[] };
 
 export interface ISshBuilder {
   withNewSsh: (props: SshBuilderProps) => IAskAuthBuilder;
@@ -141,4 +142,5 @@ export interface IAksBuilder extends IResourcesBuilderAsync<AskBuilderResults> {
   withTier: (
     tier: native.containerservice.ManagedClusterSKUTier,
   ) => IAksBuilder;
+  import: (props: AksImportProps) => IAksBuilder;
 }

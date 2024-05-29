@@ -16,7 +16,7 @@ export interface VNetPeeringProps {
 }
 
 export default ({
-  direction = "Bidirectional",
+  direction = "Unidirectional",
   firstVNetName,
   firstVNetResourceGroupName,
   secondVNetName,

@@ -65,7 +65,7 @@ export default ({
   schedule = { timeZone: "Singapore Standard Time" },
   login,
   image,
-  lock = true,
+  lock = false,
   tags = {},
   dependsOn,
   ...others

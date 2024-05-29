@@ -28,7 +28,7 @@ export interface VnetProps extends BasicResourceArgs {
   subnets?: SubnetProps[];
   dnsServers?: pulumi.Input<pulumi.Input<string>[]>;
   natGateway?: network.NatGateway;
-
+  //networkPeerings?: Array<VirtualNetworkPeeringArgs>;
   /** The list of IP address that will allow public internet to go in*/
   //publicIpAddress?: pulumi.Output<string | undefined>;
 
@@ -101,6 +101,7 @@ export default ({
   natGateway,
   dnsServers,
   features = {},
+  dependsOn,
 }: VnetProps): VnetResult => {
   const vName = getVnetName(name);
   const securityRules = features.securityGroup?.rules || [];
@@ -199,31 +200,40 @@ export default ({
     : undefined;
 
   //Create VNet
-  const vnet = new network.VirtualNetwork(vName, {
-    virtualNetworkName: vName,
-    addressSpace: {
-      addressPrefixes: addressSpaces || subnets.map((s) => s.addressPrefix),
+  const vnet = new network.VirtualNetwork(
+    vName,
+    {
+      virtualNetworkName: vName,
+      addressSpace: {
+        addressPrefixes: addressSpaces || subnets.map((s) => s.addressPrefix),
+      },
+      ...group,
+      enableVmProtection: true,
+      dhcpOptions: dnsServers ? { dnsServers } : undefined,
+
+      subnets: subnets.map((s) =>
+        CreateSubnet({
+          subnet: s,
+          vnetName: name,
+          group,
+
+          natGateway: s.enableNatGateway ? natGateway : undefined,
+          securityGroup:
+            s.enableSecurityGroup === false ? undefined : securityGroup,
+          routeTable: s.enableRouteTable === false ? undefined : routeTable,
+        }),
+      ),
+      //virtualNetworkPeerings: networkPeerings,
+      // encryption: {
+      //   enabled: true,
+      //   enforcement: azure_native.network.VirtualNetworkEncryptionEnforcement.AllowUnencrypted,
+      // },
+      //enableVmProtection: false,
+      enableDdosProtection: ddosId !== undefined,
+      ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
     },
-    ...group,
-    enableVmProtection: true,
-    dhcpOptions: dnsServers ? { dnsServers } : undefined,
-
-    subnets: subnets.map((s) =>
-      CreateSubnet({
-        subnet: s,
-        vnetName: name,
-        group,
-
-        natGateway: s.enableNatGateway ? natGateway : undefined,
-        securityGroup:
-          s.enableSecurityGroup === false ? undefined : securityGroup,
-        routeTable: s.enableRouteTable === false ? undefined : routeTable,
-      }),
-    ),
-
-    enableDdosProtection: ddosId !== undefined,
-    ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
-  });
+    { dependsOn, ignoreChanges: ["virtualNetworkPeerings"] },
+  );
 
   const findSubnet = (name: string) =>
     vnet.subnets.apply((ss) => ss!.find((s) => s.name === name));

@@ -1,5 +1,6 @@
 import {
   AksBuilderProps,
+  AksImportProps,
   AskBuilderResults,
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
@@ -10,10 +11,7 @@ import {
   SshBuilderProps,
 } from "./types";
 import { generateSsh, SshResults } from "../Core/KeyGenetators";
-import {
-  ManagedCluster,
-  ManagedClusterSKUTier,
-} from "@pulumi/azure-native/containerservice";
+import { ManagedClusterSKUTier } from "@pulumi/azure-native/containerservice";
 import Aks, {
   AksNodePoolProps,
   AskAddonProps,
@@ -23,8 +21,6 @@ import Aks, {
   DefaultAksNodePoolProps,
   AksResults,
 } from "../Aks";
-import { IdentityResult } from "../AzAd/Identity";
-import { PrivateZone } from "@pulumi/azure-native/network";
 
 class AksBuilder
   extends ResourcesBuilderAsync<AskBuilderResults>
@@ -48,6 +44,7 @@ class AksBuilder
   private _tier: ManagedClusterSKUTier = ManagedClusterSKUTier.Free;
   private _networkProps: AksNetworkProps | undefined = undefined;
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
+  private _importProps: AksImportProps | undefined = undefined;
 
   constructor({ ...others }: AksBuilderProps) {
     super(others);
@@ -87,7 +84,10 @@ class AksBuilder
     this._defaultNode = props;
     return this as IAksBuilder;
   }
-
+  public import(props: AksImportProps) {
+    this._importProps = props;
+    return this;
+  }
   //Build Methods
   private buildSsh() {
     this._sshInstance = generateSsh({
@@ -112,6 +112,9 @@ class AksBuilder
       nodePools: this._nodePoolsProps,
       features: this._featureProps,
       network: this._networkProps!,
+
+      importFrom: this._importProps?.id,
+      ignoreChanges: this._importProps?.ignoreChanges,
       //nodeResourceGroup: getResourceGroupName(""),
     });
   }

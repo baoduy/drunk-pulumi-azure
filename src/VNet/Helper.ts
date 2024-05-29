@@ -9,12 +9,6 @@ import {
   getVnetName,
 } from "../Common/Naming";
 import { ResourceGroupInfo } from "../types";
-import { enums, input as inputs } from "@pulumi/azure-native/types";
-import {
-  FirewallPolicyRuleCollectionResults,
-  FirewallPolicyResults,
-} from "./types";
-
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
 export const azFirewallSubnet = "AzureFirewallSubnet";
@@ -97,6 +91,11 @@ export const getVnetInfo = (
     vnetName,
     group: { resourceGroupName: rsName, location: currentRegionName },
   };
+};
+
+export const getVnetIdByName = (groupName: string) => {
+  const info = getVnetInfo(groupName);
+  return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
 };
 
 export const getFirewallIpAddress = (

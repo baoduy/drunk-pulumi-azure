@@ -27,6 +27,7 @@ import {
   VnetBuilderResults,
   VpnGatewayCreationProps,
 } from "./types";
+import { getVnetIdByName, getVnetInfo } from "../VNet/Helper";
 
 const outboundIpName = "outbound";
 
@@ -44,7 +45,7 @@ class VnetBuilder
   private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
-  private _peeringProps: PeeringProps[] = [];
+  private _peeringProps: string[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
   private _ipType: "prefix" | "individual" = "prefix";
 
@@ -114,8 +115,8 @@ class VnetBuilder
     return this;
   }
 
-  public peeringTo(props: PeeringProps): IVnetBuilder {
-    this._peeringProps.push(props);
+  public peeringTo(vnetName: string): IVnetBuilder {
+    this._peeringProps.push(vnetName);
     return this;
   }
 
@@ -195,6 +196,25 @@ class VnetBuilder
         )
       : [];
 
+    // const peerings = this._peeringProps.map(
+    //   (p) =>
+    //     ({
+    //       name: `${this.commonProps.name}-${p}-peering`,
+    //       remoteVirtualNetwork: { id: getVnetIdByName(p) },
+    //       allowForwardedTraffic: true,
+    //       allowVirtualNetworkAccess: true,
+    //       allowGatewayTransit: true,
+    //       syncRemoteAddressSpace: "true",
+    //       useRemoteGateways: false,
+    //       doNotVerifyRemoteGateways: true,
+    //     }) as VirtualNetworkPeeringArgs,
+    // );
+    //
+    // console.log(
+    //   `${this.commonProps.name} peering to:`,
+    //   peerings.map((p) => p.name),
+    // );
+
     this._vnetInstance = Vnet({
       ...this.commonProps,
       ...this._vnetProps,
@@ -230,6 +250,7 @@ class VnetBuilder
           : undefined,
       },
 
+      //networkPeerings: peerings,
       dependsOn: this._firewallInstance?.firewall
         ? this._firewallInstance?.firewall
         : this._natGatewayInstance
@@ -296,15 +317,16 @@ class VnetBuilder
   private buildPeering() {
     if (!this._peeringProps || !this._vnetInstance) return;
 
-    this._peeringProps.map((p) =>
-      NetworkPeering({
-        direction: p.direction,
+    this._peeringProps.map((p) => {
+      const info = getVnetInfo(p);
+      return NetworkPeering({
+        direction: "Bidirectional",
         firstVNetName: this._vnetInstance!.vnet.name,
         firstVNetResourceGroupName: this.commonProps.group.resourceGroupName,
-        secondVNetName: p.vnetName,
-        secondVNetResourceGroupName: p.group.resourceGroupName,
-      }),
-    );
+        secondVNetName: info.vnetName,
+        secondVNetResourceGroupName: info.group.resourceGroupName,
+      });
+    });
   }
 
   public build(): VnetBuilderResults {
