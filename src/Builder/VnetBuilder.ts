@@ -9,7 +9,7 @@ import { SubnetProps } from "../VNet/Subnet";
 import NatGateway from "../VNet/NatGateway";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs } from "@pulumi/azure-native/types";
-import NetworkPeering, { NetworkPeeringResults } from "../VNet/NetworkPeering";
+import NetworkPeering from "../VNet/NetworkPeering";
 import { LogInfoResults } from "../Logs/Helpers";
 import VPNGateway from "../VNet/VPNGateway";
 import {
@@ -44,7 +44,7 @@ class VnetBuilder
   private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
     undefined;
-  private _peeringProps: PeeringProps | undefined = undefined;
+  private _peeringProps: PeeringProps[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
   private _ipType: "prefix" | "individual" = "prefix";
 
@@ -54,7 +54,6 @@ class VnetBuilder
   private _firewallInstance: FirewallResult | undefined = undefined;
   private _vnetInstance: VnetResult | undefined = undefined;
   private _natGatewayInstance: network.NatGateway | undefined = undefined;
-  private _peeringInstance: NetworkPeeringResults | undefined = undefined;
   private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
     undefined;
 
@@ -116,7 +115,7 @@ class VnetBuilder
   }
 
   public peeringTo(props: PeeringProps): IVnetBuilder {
-    this._peeringProps = props;
+    this._peeringProps.push(props);
     return this;
   }
 
@@ -297,13 +296,15 @@ class VnetBuilder
   private buildPeering() {
     if (!this._peeringProps || !this._vnetInstance) return;
 
-    this._peeringInstance = NetworkPeering({
-      name: this.commonProps.name,
-      firstVNetName: this._vnetInstance!.vnet.name,
-      firstVNetResourceGroupName: this.commonProps.group.resourceGroupName,
-      secondVNetName: this._peeringProps.vnetName,
-      secondVNetResourceGroupName: this._peeringProps.group.resourceGroupName,
-    });
+    this._peeringProps.map((p) =>
+      NetworkPeering({
+        direction: p.direction,
+        firstVNetName: this._vnetInstance!.vnet.name,
+        firstVNetResourceGroupName: this.commonProps.group.resourceGroupName,
+        secondVNetName: p.vnetName,
+        secondVNetResourceGroupName: p.group.resourceGroupName,
+      }),
+    );
   }
 
   public build(): VnetBuilderResults {

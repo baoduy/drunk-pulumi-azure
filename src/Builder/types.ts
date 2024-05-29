@@ -19,8 +19,7 @@ import {
   DefaultAksNodePoolProps,
 } from "../Aks";
 import * as native from "@pulumi/azure-native";
-import { IdentityResult } from "../AzAd/Identity";
-import { ManagedCluster } from "@pulumi/azure-native/containerservice";
+import { PeeringDirectionType } from "../VNet/NetworkPeering";
 
 //Common Builder Types
 export type CommonBuilderProps = {
@@ -67,6 +66,7 @@ export type BastionCreationProps = { subnet: SubnetPrefixCreationProps };
 export type PeeringProps = {
   vnetName: Input<string>;
   group: ResourceGroupInfo;
+  direction?: PeeringDirectionType;
 };
 export type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
@@ -110,7 +110,6 @@ export type VnetBuilderResults = {
   firewall: FirewallResult | undefined;
   vnet: VnetResult;
   natGateway: network.NatGateway | undefined;
-  //peering: NetworkPeeringResults | undefined;
   vnpGateway: network.VirtualNetworkGateway | undefined;
 };
 

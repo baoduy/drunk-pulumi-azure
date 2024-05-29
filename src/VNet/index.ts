@@ -230,7 +230,6 @@ export default ({
         if (info) {
           //peering
           VnetPeering({
-            name,
             firstVNetName: vnet.vnet.name,
             firstVNetResourceGroupName: group.resourceGroupName,
             secondVNetName: info.name,

@@ -8,22 +8,25 @@ import {
 import { FirewallPolicyGroup } from "../FirewallPolicy";
 
 interface Props {
+  name?: string;
   priority: number;
-
   subnetSpaces: Array<Input<string>>;
   allowAllOutbound?: boolean;
   allowIpCheckApi?: boolean;
   allowsAzure?: boolean;
+  allowsAzDevOps?: boolean;
   allowsK8sTools?: boolean;
   allowsSearch?: boolean;
   allowsOffice365?: boolean;
 }
 
 export default ({
+  name = "cloud-pc",
   priority,
   subnetSpaces,
   allowsOffice365,
   allowsAzure,
+  allowsAzDevOps,
   allowsK8sTools,
   allowIpCheckApi,
   allowsSearch,
@@ -35,7 +38,7 @@ export default ({
   if (allowAllOutbound) {
     netRules.push({
       ruleType: "NetworkRule",
-      name: "cloudpc-net-allow-all-outbound",
+      name: `${name}-net-allow-all-outbound`,
       description: "CloudPc allows all outbound",
       ipProtocols: ["TCP"],
       sourceAddresses: subnetSpaces,
@@ -47,7 +50,7 @@ export default ({
   //Default PC Rules
   appRules.push({
     ruleType: "ApplicationRule",
-    name: "cloudpc-app-allow-fqdnTags",
+    name: `${name}-app-allow-fqdnTags`,
     description: "Allows Windows Updates",
     sourceAddresses: subnetSpaces,
     fqdnTags: ["WindowsUpdate", "WindowsDiagnostics"],
@@ -57,7 +60,7 @@ export default ({
   if (allowsAzure) {
     netRules.push({
       ruleType: "NetworkRule",
-      name: "cloudpc-net-allows-azure",
+      name: `${name}-net-allows-azure`,
       description: "Allows Cloud PC to access to Azure.",
       ipProtocols: ["TCP", "UDP"],
       sourceAddresses: subnetSpaces,
@@ -67,7 +70,7 @@ export default ({
 
     netRules.push({
       ruleType: "NetworkRule",
-      name: "cloudpc-net-allows-azure-all",
+      name: `${name}-net-allows-azure-all`,
       description: "Allows Cloud PC to access to Azure.",
       ipProtocols: ["TCP", "UDP"],
       sourceAddresses: subnetSpaces,
@@ -77,7 +80,7 @@ export default ({
 
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-app-allow-azure-fqdnTags",
+      name: `${name}-app-allow-azure-fqdnTags`,
       description: "Allows Windows Updates",
       sourceAddresses: subnetSpaces,
       fqdnTags: [
@@ -90,7 +93,7 @@ export default ({
 
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-app-allow-access-azure-portal",
+      name: `${name}-app-allow-access-azure-portal`,
       description: "Allows Ip Azure Portal",
       sourceAddresses: subnetSpaces,
       targetFqdns: [
@@ -107,10 +110,71 @@ export default ({
     });
   }
 
+  if (allowsAzDevOps) {
+    netRules.push({
+      ruleType: "NetworkRule",
+      name: `${name}-net-allow-AzureDevOps`,
+      description: "AzureDevOps",
+      ipProtocols: ["TCP"],
+      sourceAddresses: subnetSpaces,
+      destinationAddresses: [
+        "13.107.6.0/24",
+        "13.107.9.0/24",
+        "13.107.42.0/24",
+        "13.107.43.0/24",
+      ],
+      destinationPorts: ["443"],
+    });
+    appRules.push({
+      ruleType: "ApplicationRule",
+      name: `${name}-app-allow-azure-resources`,
+      description: "Allows Azure Resources",
+      protocols: [{ protocolType: "Https", port: 443 }],
+      sourceAddresses: subnetSpaces,
+      targetFqdns: [
+        //Azure DevOps
+        "*.dev.azure.com",
+        "*.vsassets.io",
+        "*gallerycdn.vsassets.io",
+        "*vstmrblob.vsassets.io",
+        "aadcdn.msauth.net",
+        "aadcdn.msftauth.net",
+        "aex.dev.azure.com",
+        "aexprodea1.vsaex.visualstudio.com",
+        "amcdn.msftauth.net",
+        "amp.azure.net",
+        "app.vssps.dev.azure.com",
+        "app.vssps.visualstudio.com",
+        "*.vssps.visualstudio.com",
+        "azure.microsoft.com",
+        "azurecomcdn.azureedge.net",
+        "cdn.vsassets.io",
+        "dev.azure.com",
+        "go.microsoft.com",
+        "graph.microsoft.com",
+        "live.com",
+        "login.live.com",
+        "login.microsoftonline.com",
+        "management.azure.com",
+        "management.core.windows.net",
+        "microsoft.com",
+        "microsoftonline.com",
+        "static2.sharepointonline.com",
+        "visualstudio.com",
+        "vsrm.dev.azure.com",
+        "vstsagentpackage.azureedge.net",
+        "windows.net",
+        "login.microsoftonline.com",
+        "app.vssps.visualstudio.com",
+        "*.blob.core.windows.net",
+      ],
+    });
+  }
+
   if (allowsK8sTools) {
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-app-allow-k8s-lens",
+      name: `${name}-app-allow-k8s-lens`,
       description: "Allows K8s Lens",
       sourceAddresses: subnetSpaces,
       targetFqdns: [
@@ -129,7 +193,7 @@ export default ({
   if (allowsOffice365) {
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-app-allow-office365",
+      name: `${name}-app-allow-office365`,
       description: "Allows Office365",
       sourceAddresses: subnetSpaces,
       fqdnTags: ["Office365", "Office365.SharePoint"],
@@ -140,7 +204,7 @@ export default ({
   if (allowsSearch) {
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-app-allow-search-engines",
+      name: `${name}-app-allow-search-engines`,
       description: "Allows Search Engines",
       sourceAddresses: subnetSpaces,
       targetFqdns: ["google.com", "www.google.com", "bing.com", "www.bing.com"],
@@ -151,7 +215,7 @@ export default ({
   if (allowIpCheckApi) {
     appRules.push({
       ruleType: "ApplicationRule",
-      name: "cloudpc-app-allow-ip-checks",
+      name: `${name}-app-allow-ip-checks`,
       description: "Allows Ip Checks",
       sourceAddresses: subnetSpaces,
       targetFqdns: ["ip.me", "ifconfig.me", "*.ifconfig.me"],
