@@ -1,4 +1,4 @@
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { BasicResourceArgs, KeyVaultInfo, ResourceGroupInfo } from "../types";
 import { RouteArgs, CustomSecurityRuleArgs } from "../VNet/types";
 import { VnetProps, VnetResult } from "../VNet/Vnet";
 import { SubnetProps } from "../VNet/Subnet";
@@ -62,14 +62,17 @@ export type VnetBuilderProps = CommonBuilderProps & {
 } & Pick<VnetProps, "addressSpaces" | "dnsServers">;
 export type SubnetCreationProps = Record<string, Omit<SubnetProps, "name">>;
 export type SubnetPrefixCreationProps = { addressPrefix: string };
-export type BastionCreationProps = { subnet: SubnetPrefixCreationProps };
+export type BastionCreationProps = { subnet: SubnetPrefixCreationProps } & Pick<
+  BasicResourceArgs,
+  "importUri" | "ignoreChanges"
+>;
 export type PeeringProps =
   | {
       groupName: string;
       direction?: PeeringDirectionType;
     }
   | {
-      vnetId: string;
+      vnetId: Input<string>;
       direction?: PeeringDirectionType;
     };
 export type FirewallCreationProps = {

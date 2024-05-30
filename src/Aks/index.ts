@@ -173,8 +173,6 @@ export interface AksProps extends BasicResourceArgs {
   logWpId?: Input<string>;
   /**Lock resource from delete*/
   lock?: boolean;
-  importFrom?: string;
-  ignoreChanges?: string[];
 }
 
 export type AksResults = {
@@ -205,7 +203,7 @@ export default async ({
   tier = native.containerservice.ManagedClusterSKUTier.Free,
   lock = true,
   dependsOn = [],
-  importFrom,
+  importUri,
   ignoreChanges = [],
 }: AksProps): Promise<AksResults> => {
   const aksName = getAksName(name);
@@ -455,7 +453,7 @@ export default async ({
     {
       protect: lock,
       dependsOn: serviceIdentity.resource,
-      import: importFrom,
+      import: importUri,
       deleteBeforeReplace: true,
       ignoreChanges,
     },

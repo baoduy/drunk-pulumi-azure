@@ -1,15 +1,21 @@
 import { BasicResourceArgs } from "../types";
 import IpAddress from "./IpAddress";
 import * as network from "@pulumi/azure-native/network";
-import { Input, Resource } from "@pulumi/pulumi";
+import { Input } from "@pulumi/pulumi";
 import { getBastionName } from "../Common/Naming";
 
-interface Props extends BasicResourceArgs {
+export interface BastionProps extends BasicResourceArgs {
   subnetId: Input<string>;
-  dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 }
 
-export default ({ name, group, subnetId, dependsOn }: Props) => {
+export default ({
+  name,
+  group,
+  subnetId,
+  dependsOn,
+  importUri,
+  ignoreChanges,
+}: BastionProps) => {
   name = getBastionName(name);
 
   const ipAddressId = IpAddress({
@@ -33,6 +39,11 @@ export default ({ name, group, subnetId, dependsOn }: Props) => {
         },
       ],
     },
-    { dependsOn: dependsOn, deleteBeforeReplace: true },
+    {
+      dependsOn: dependsOn,
+      deleteBeforeReplace: true,
+      import: importUri,
+      ignoreChanges,
+    },
   );
 };

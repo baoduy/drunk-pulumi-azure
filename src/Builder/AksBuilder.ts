@@ -113,7 +113,7 @@ class AksBuilder
       features: this._featureProps,
       network: this._networkProps!,
 
-      importFrom: this._importProps?.id,
+      importUri: this._importProps?.id,
       ignoreChanges: this._importProps?.ignoreChanges,
       //nodeResourceGroup: getResourceGroupName(""),
     });

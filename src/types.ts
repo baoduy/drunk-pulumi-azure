@@ -6,6 +6,8 @@ import { input as inputs, enums } from "@pulumi/azure-native/types";
 
 export interface BasicArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
+  importUri?: string;
+  ignoreChanges?: string[];
 }
 
 export interface ResourceGroupInfo {
@@ -64,8 +66,6 @@ export interface BasicResourceArgs extends BasicArgs {
 export interface DefaultResourceArgs extends BasicArgs {
   lock?: boolean;
   monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
-  importUri?: string;
-  ignoreChanges?: string[];
 }
 
 export interface BasicResourceResultProps<TClass> {
