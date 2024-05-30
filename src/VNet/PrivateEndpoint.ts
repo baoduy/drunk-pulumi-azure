@@ -57,6 +57,8 @@ export default ({
       output(subnetId).apply((sId) => {
         const vnetId = getVnetIdFromSubnetId(sId);
         linkVnetToPrivateDns({
+          name,
+          group,
           zoneName: privateDnsZoneName,
           vnetId,
         });
@@ -79,6 +81,7 @@ export default ({
       output(subnetId).apply((sId) => {
         const vnetId = getVnetIdFromSubnetId(sId);
         linkVnetToPrivateDns({
+          name,
           zoneName: privateDnsZoneName,
           vnetId,
           group,

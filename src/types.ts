@@ -48,6 +48,12 @@ export interface DiagnosticProps extends BasicMonitorArgs {
   logsCategories?: string[];
 }
 
+export type ResourceType = {
+  name: string;
+  groupName: string;
+  formattedName?: boolean;
+};
+
 export interface ResourceInfo {
   resourceName: string;
   group: ResourceGroupInfo;

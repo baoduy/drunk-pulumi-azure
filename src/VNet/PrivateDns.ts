@@ -2,7 +2,7 @@ import * as native from "@pulumi/azure-native";
 import { Input, all, Resource, output } from "@pulumi/pulumi";
 import * as global from "../Common/GlobalEnv";
 import { parseResourceInfoFromId } from "../Common/AzureEnv";
-import { ResourceGroupInfo } from "../types";
+import { BasicResourceArgs, ResourceGroupInfo } from "../types";
 
 interface RecordProps {
   zoneName: Input<string>;
@@ -42,33 +42,29 @@ export const addARecord = ({
   );
 };
 
-interface VnetToPrivateDnsProps {
+interface VnetToPrivateDnsProps extends BasicResourceArgs {
   zoneName: string;
-  vnetId: string;
+  vnetId: Input<string>;
   registrationEnabled?: boolean;
-  group?: ResourceGroupInfo;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export const linkVnetToPrivateDns = ({
+  name,
+  group,
   zoneName,
-  group = global.groupInfo,
   vnetId,
   registrationEnabled,
-  dependsOn,
+  ...others
 }: VnetToPrivateDnsProps) => {
-  const vnetInfo = parseResourceInfoFromId(vnetId);
-
   return new native.network.VirtualNetworkLink(
-    `${zoneName}-link-${vnetInfo!.name}`,
+    `${name}-${zoneName}-link`,
     {
       ...group,
-      location: global.globalKeyName,
       privateZoneName: zoneName,
       registrationEnabled: registrationEnabled || false,
       virtualNetwork: { id: vnetId },
     },
-    { dependsOn },
+    others,
   );
 };
 
@@ -104,6 +100,7 @@ export default ({
     all(vnetIds).apply((vn) =>
       vn.map((id) =>
         linkVnetToPrivateDns({
+          name,
           vnetId: id,
           zoneName: name,
           group,

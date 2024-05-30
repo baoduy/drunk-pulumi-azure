@@ -245,6 +245,7 @@ export default async ({
       ...group,
       nodeResourceGroup,
       dnsPrefix: aksName,
+      //fqdnSubdomain: '',
       //kubernetesVersion,
 
       apiServerAccessProfile: {
@@ -256,7 +257,6 @@ export default async ({
         enablePrivateClusterPublicFQDN: true,
         privateDNSZone: "system",
       },
-      //fqdnSubdomain: '',
 
       addonProfiles: {
         azureKeyvaultSecretsProvider: {
