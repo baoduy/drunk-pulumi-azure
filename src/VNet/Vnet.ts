@@ -11,7 +11,6 @@ import {
   gatewaySubnetName,
 } from "./Helper";
 import { getVnetName } from "../Common/Naming";
-import Bastion from "./Bastion";
 import CreateSubnet, { SubnetProps } from "./Subnet";
 import SecurityGroup from "./SecurityGroup";
 import RouteTable from "./RouteTable";
@@ -28,9 +27,6 @@ export interface VnetProps extends BasicResourceArgs {
   subnets?: SubnetProps[];
   dnsServers?: pulumi.Input<pulumi.Input<string>[]>;
   natGateway?: network.NatGateway;
-  //networkPeerings?: Array<VirtualNetworkPeeringArgs>;
-  /** The list of IP address that will allow public internet to go in*/
-  //publicIpAddress?: pulumi.Output<string | undefined>;
 
   features?: {
     securityGroup?: {
@@ -62,8 +58,6 @@ export interface VnetProps extends BasicResourceArgs {
     bastion?: {
       /** Subnet address Prefix */
       addressPrefix: string;
-      /** In case just want to create subnet only without bastion host */
-      disableBastionHostCreation?: boolean;
     };
   };
 }
@@ -223,12 +217,7 @@ export default ({
           routeTable: s.enableRouteTable === false ? undefined : routeTable,
         }),
       ),
-      //virtualNetworkPeerings: networkPeerings,
-      // encryption: {
-      //   enabled: true,
-      //   enforcement: azure_native.network.VirtualNetworkEncryptionEnforcement.AllowUnencrypted,
-      // },
-      //enableVmProtection: false,
+     
       enableDdosProtection: ddosId !== undefined,
       ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
     },
@@ -238,30 +227,17 @@ export default ({
   const findSubnet = (name: string) =>
     vnet.subnets.apply((ss) => ss!.find((s) => s.name === name));
 
-  const bastionSubnet = findSubnet(azBastionSubnetName);
-
-  //Create Bastion
-  if (features.bastion && !features.bastion.disableBastionHostCreation) {
-    Bastion({
-      name,
-      group,
-      subnetId: bastionSubnet.apply((s) => s!.id!),
-      dependsOn: [vnet],
-    });
-  }
-
   //Return the results
   return {
     vnet,
+    securityGroup,
+    routeTable,
+    findSubnet,
 
     firewallSubnet: findSubnet(azFirewallSubnet),
     firewallManageSubnet: findSubnet(azFirewallManagementSubnet),
     appGatewaySubnet: findSubnet(appGatewaySubnetName),
     gatewaySubnet: findSubnet(gatewaySubnetName),
-    bastionSubnet,
-    findSubnet,
-
-    securityGroup,
-    routeTable,
+    bastionSubnet:findSubnet(azBastionSubnetName),   
   };
 };

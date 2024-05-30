@@ -24,7 +24,6 @@ interface Props {
   features?: {
     enableBastion?: {
       subnetPrefix: string;
-      disableBastionHostCreation?: boolean;
     };
 
     enableAppGateway?: { subnetPrefix: string };
@@ -173,8 +172,6 @@ export default ({
       bastion: features.enableBastion
         ? {
             addressPrefix: features.enableBastion.subnetPrefix,
-            disableBastionHostCreation:
-              features.enableBastion.disableBastionHostCreation,
           }
         : undefined,
     },

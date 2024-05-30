@@ -32,6 +32,7 @@ import {
   getVnetInfo,
   parseVnetInfoFromId,
 } from "../VNet/Helper";
+import Bastion from "../VNet/Bastion";
 
 const outboundIpName = "outbound";
 
@@ -200,25 +201,6 @@ class VnetBuilder
         )
       : [];
 
-    // const peerings = this._peeringProps.map(
-    //   (p) =>
-    //     ({
-    //       name: `${this.commonProps.name}-${p}-peering`,
-    //       remoteVirtualNetwork: { id: getVnetIdByName(p) },
-    //       allowForwardedTraffic: true,
-    //       allowVirtualNetworkAccess: true,
-    //       allowGatewayTransit: true,
-    //       syncRemoteAddressSpace: "true",
-    //       useRemoteGateways: false,
-    //       doNotVerifyRemoteGateways: true,
-    //     }) as VirtualNetworkPeeringArgs,
-    // );
-    //
-    // console.log(
-    //   `${this.commonProps.name} peering to:`,
-    //   peerings.map((p) => p.name),
-    // );
-
     this._vnetInstance = Vnet({
       ...this.commonProps,
       ...this._vnetProps,
@@ -246,8 +228,11 @@ class VnetBuilder
             }
           : undefined,
         //Bastion
-        bastion: this._bastionProps?.subnet,
-
+        bastion: this._bastionProps
+          ? {
+              ...this._bastionProps!.subnet,
+            }
+          : undefined,
         //Gateway
         gatewaySubnet: this._vpnGatewayProps
           ? { addressPrefix: this._vpnGatewayProps.subnetSpace }
@@ -318,6 +303,17 @@ class VnetBuilder
     });
   }
 
+  private buildBastion() {
+    if (!this._bastionProps || !this._vnetInstance?.bastionSubnet) return;
+
+    Bastion({
+      ...this.commonProps,
+      ...this._bastionProps,
+      subnetId: this._vnetInstance!.bastionSubnet.apply((s) => s!.id!),
+      dependsOn: [this._vnetInstance!.vnet!],
+    });
+  }
+
   private buildPeering() {
     if (!this._peeringProps || !this._vnetInstance) return;
 
@@ -349,6 +345,7 @@ class VnetBuilder
     this.buildVnet();
     this.buildFirewall();
     this.buildVpnGateway();
+    this.buildBastion();
     this.buildPeering();
 
     return {

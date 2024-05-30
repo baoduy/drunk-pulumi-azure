@@ -6,6 +6,7 @@ import { getBastionName } from "../Common/Naming";
 
 export interface BastionProps extends BasicResourceArgs {
   subnetId: Input<string>;
+  sku?: "Basic" | "Standard" | "Developer" | string;
 }
 
 export default ({
@@ -15,6 +16,7 @@ export default ({
   dependsOn,
   importUri,
   ignoreChanges,
+  sku = "Basic",
 }: BastionProps) => {
   name = getBastionName(name);
 
@@ -29,7 +31,7 @@ export default ({
     {
       bastionHostName: name,
       ...group,
-
+      sku: { name: sku },
       ipConfigurations: [
         {
           name: "IpConfig",

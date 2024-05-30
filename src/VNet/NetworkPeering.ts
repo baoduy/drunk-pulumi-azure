@@ -39,6 +39,7 @@ export default ({
           id: interpolate`/subscriptions/${second.subscriptionId ?? subscriptionId}/resourceGroups/${second.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${second.vnetName}`,
         },
       },
+      { deleteBeforeReplace: true },
     );
 
     if (direction === "Bidirectional")
@@ -53,6 +54,7 @@ export default ({
             id: interpolate`/subscriptions/${first.subscriptionId ?? subscriptionId}/resourceGroups/${first.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${first.vnetName}`,
           },
         },
+        { deleteBeforeReplace: true },
       );
   });
 };
