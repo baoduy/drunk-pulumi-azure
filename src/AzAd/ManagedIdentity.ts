@@ -34,7 +34,7 @@ export default ({
       roleAssignment({
         name,
         roleName: r.roleName,
-        principalId: managedIdentity!.id,
+        principalId: managedIdentity!.principalId,
         principalType: "ServicePrincipal",
         scope: defaultScope,
       }),
