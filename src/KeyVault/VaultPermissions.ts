@@ -4,7 +4,7 @@ import * as native from "@pulumi/azure-native";
 import * as azuread from "@pulumi/azuread";
 import { addCustomSecret } from "./CustomHelper";
 import { KeyVaultInfo } from "../types";
-import { getAdoIdentity } from "../AzAd/Identities/AzDevOps";
+import { getAdoIdentity } from "../AzAd/Identities/AzDevOpsIdentity";
 import { getVaultRoleNames } from "./Helper";
 import { addMemberToGroup, getAdGroup } from "../AzAd/Group";
 

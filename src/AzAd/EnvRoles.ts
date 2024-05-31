@@ -1,19 +1,19 @@
-import Role, { getRoleName, RoleNameType } from './Role';
-import { getAdoIdentity } from './Identities/AzDevOps';
-import { addMemberToGroup } from './Group';
+import Role, { getRoleName, RoleNameType } from "./Role";
+import { getAdoIdentity } from "./Identities/AzDevOpsIdentity";
+import { addMemberToGroup } from "./Group";
 
 const envRoleConfig = {
   readOnly: {
-    roleName: 'Readonly',
-    appName: 'Azure',
+    roleName: "Readonly",
+    appName: "Azure",
   } as RoleNameType,
   contributor: {
-    roleName: 'Contributor',
-    appName: 'Azure',
+    roleName: "Contributor",
+    appName: "Azure",
   } as RoleNameType,
   admin: {
-    roleName: 'Admin',
-    appName: 'Azure',
+    roleName: "Admin",
+    appName: "Azure",
   } as RoleNameType,
 };
 
@@ -28,7 +28,7 @@ export const getEnvRoleNames = (): EnvRoleNamesType => ({
 });
 
 export const createEnvRoles = ({
-  addAdoIdentityMember = true,
+  addAdoIdentityMember = false,
 }: {
   addAdoIdentityMember?: boolean;
 }) => {
@@ -56,7 +56,7 @@ export const createEnvRoles = ({
     //Add Global ADO Identity as Admin
     const ado = getAdoIdentity();
     addMemberToGroup({
-      name: 'ado-admin-role',
+      name: "ado-admin-role",
       groupObjectId: adminGroup.objectId,
       objectId: ado.principal.objectId,
     });

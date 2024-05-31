@@ -1,6 +1,6 @@
 import { currentEnv } from "../Common/AzureEnv";
 import Role, { getRoleName, RoleNameType } from "./Role";
-import { getAdoIdentity } from "./Identities/AzDevOps";
+import { getAdoIdentity } from "./Identities/AzDevOpsIdentity";
 import { addMemberToGroup } from "./Group";
 
 const getConfig = (name: string) => ({

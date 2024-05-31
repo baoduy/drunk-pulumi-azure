@@ -1,18 +1,45 @@
-import { BasicResourceArgs } from '../types';
-import * as azure from '@pulumi/azure-native';
-import { getManagedIdentityName } from '../Common/Naming';
-import Locker from '../Core/Locker';
+import { BasicResourceArgs } from "../types";
+import * as azure from "@pulumi/azure-native";
+import { getManagedIdentityName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { roleAssignment } from "./RoleAssignment";
+import { defaultScope } from "../Common/AzureEnv";
 
 interface Props extends BasicResourceArgs {
   lock?: boolean;
+  permissions?: Array<{ roleName: string }>;
 }
 
-export default ({ name, group, lock }: Props) => {
+export default ({
+  name,
+  group,
+  lock,
+  permissions,
+  dependsOn,
+  importUri,
+  ignoreChanges,
+}: Props) => {
   const n = getManagedIdentityName(name);
-  const managedIdentity = new azure.managedidentity.UserAssignedIdentity(n, {
-    resourceName: n,
-    ...group,
-  });
+  const managedIdentity = new azure.managedidentity.UserAssignedIdentity(
+    n,
+    {
+      resourceName: n,
+      ...group,
+    },
+    { dependsOn, import: importUri, ignoreChanges },
+  );
+
+  if (permissions) {
+    permissions.map((r) =>
+      roleAssignment({
+        name,
+        roleName: r.roleName,
+        principalId: managedIdentity!.id,
+        principalType: "ServicePrincipal",
+        scope: defaultScope,
+      }),
+    );
+  }
 
   if (lock) {
     Locker({
