@@ -43,7 +43,7 @@ export default ({
 
   if (lock) {
     Locker({
-      name: n,
+      name,
       resource: managedIdentity,
     });
   }
