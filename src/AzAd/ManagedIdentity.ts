@@ -19,11 +19,11 @@ export default ({
   importUri,
   ignoreChanges,
 }: Props) => {
-  const n = getManagedIdentityName(name);
+  name = getManagedIdentityName(name);
   const managedIdentity = new azure.managedidentity.UserAssignedIdentity(
-    n,
+    name,
     {
-      resourceName: n,
+      resourceName: name,
       ...group,
     },
     { dependsOn, import: importUri, ignoreChanges },
