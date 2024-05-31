@@ -18,7 +18,7 @@
   },
   "scripts": {
     "fastBuild": "cross-env NODE_ENV=production && npx tsc",
-    "build": "cross-env NODE_ENV=production npm run fix-issue && npm run update-tsconfig && npx tsc && npm run copy-pkg",
+    "build": "cross-env NODE_ENV=production npm run fix-issue && npm run update-tsconfig && NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc && npm run copy-pkg",
     "ciBuild": "cross-env NODE_ENV=production npm run fix-issue && npx tsc && npm run copy-pkg",
     "copy-pkg": "ts-node ./.tasks/npm-package.ts && cpy README.md .out-bin/",
     "fix-issue": "node --max-old-space-size=8192 -r ts-node/register ./.tasks/fix-issues.ts",
