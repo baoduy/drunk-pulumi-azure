@@ -1,5 +1,5 @@
 import * as keyvault from "@pulumi/azure-native/keyvault";
-import { Input, output, Resource } from "@pulumi/pulumi";
+import { Input, Output, output, Resource } from "@pulumi/pulumi";
 import { KeyVaultInfo } from "../types";
 import { getSecretName } from "../Common/Naming";
 import { replaceAll } from "../Common/Helpers";
@@ -75,38 +75,39 @@ export const getKey = async ({
   return client.getKey(n, version);
 };
 
-interface KeyVaultPropertiesArgs {
-  keyName: Input<string>;
-  url: Input<string>;
-  keyVaultUri: Input<string>;
-  keyVersion?: Input<string>;
+interface KeyVaultPropertiesResults {
+  keyName: string;
+  url: string;
+  keyVaultUri: string;
+  keyVersion?: string;
 }
 
 interface EncryptionPropertiesArgs {
   keySource: "Microsoft.KeyVault";
-  keyVaultProperties: Input<KeyVaultPropertiesArgs>;
+  keyVaultProperties: Input<KeyVaultPropertiesResults>;
 }
 
 /** Get or create encryption Key */
 const getEncryptionKey = async (
   name: string,
   vaultInfo: KeyVaultInfo,
-): Promise<EncryptionPropertiesArgs> => {
+): Promise<KeyVaultPropertiesResults> => {
   const n = `${name}-encrypt-key`;
   const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
-
-  return {
-    keySource: "Microsoft.KeyVault",
-    keyVaultProperties: {
-      keyName: key!.properties.name,
-      keyVaultUri: key!.properties.vaultUrl,
-      keyVersion: key!.properties.version,
-      url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
-    },
+  const rs = {
+    keyName: key!.properties.name,
+    keyVaultUri: key!.properties.vaultUrl,
+    keyVersion: key!.properties.version,
+    url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
   };
+  console.log(name, rs);
+  return rs;
 };
 
-export const getEncryptionKeyOutput = (name: string, vaultInfo: KeyVaultInfo) =>
+export const getEncryptionKeyOutput = (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+): Output<KeyVaultPropertiesResults> =>
   output(getEncryptionKey(name, vaultInfo));
 
 /** Get Secret */

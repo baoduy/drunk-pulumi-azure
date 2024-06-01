@@ -124,7 +124,7 @@ export default ({
         ? {
             type: dbformysql.DataEncryptionType.AzureKeyVault,
             primaryUserAssignedIdentityId: userIdentity?.id,
-            primaryKeyURI: encryptKey.apply((c) => c.keyVaultProperties.url),
+            primaryKeyURI: encryptKey.url,
           }
         : { type: dbformysql.DataEncryptionType.SystemManaged },
       //maintenanceWindow: { dayOfWeek: 6 },

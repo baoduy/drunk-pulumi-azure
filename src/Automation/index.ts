@@ -20,13 +20,17 @@ export default ({ name, group, enableEncryption, vaultInfo }: Props) => {
     ...group,
 
     publicNetworkAccess: false,
-    identity: { type: "SystemAssigned" },
+    //identity: { type: "SystemAssigned" },
     disableLocalAuth: true,
 
     encryption: encryption
       ? {
           keySource: "Microsoft.Keyvault",
-          keyVaultProperties: encryption.keyVaultProperties,
+          keyVaultProperties: {
+            keyName: encryption.apply((s) => s.keyName),
+            keyvaultUri: encryption.apply((s) => s.keyVaultUri),
+            keyVersion: encryption.apply((s) => s.keyVersion!),
+          },
         }
       : undefined,
     sku: {

@@ -158,7 +158,7 @@ export default ({
           encryptionSettings: {
             diskEncryptionKey: diskEncryption
               ? {
-                  secretUrl: diskEncryption.keyVaultProperties.url,
+                  secretUrl: diskEncryption.url,
                   sourceVault: {
                     id: vaultInfo.id,
                   },
@@ -166,7 +166,7 @@ export default ({
               : undefined,
             keyEncryptionKey: keyEncryption
               ? {
-                  keyUrl: keyEncryption.keyVaultProperties.url,
+                  keyUrl: keyEncryption.url,
                   sourceVault: {
                     id: vaultInfo.id,
                   },

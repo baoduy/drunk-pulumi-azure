@@ -137,8 +137,8 @@ export default ({
               keyType: storage.KeyType.Account,
             },
           },
-          keySource: encryptionKey.keySource,
-          keyVaultProperties: encryptionKey.keyVaultProperties,
+          keySource: "Microsoft.KeyVault",
+          keyVaultProperties: encryptionKey,
         }
       : undefined,
 
