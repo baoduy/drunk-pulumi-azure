@@ -2,8 +2,7 @@ import * as storage from "@pulumi/azure-native/storage";
 
 import { KeyVaultInfo, BasicResourceArgs } from "../types";
 import { Input } from "@pulumi/pulumi";
-import { createThreatProtection } from "../Logs/Helpers";
-import { getSecret, getEncryptionKey } from "../KeyVault/Helper";
+import { getSecret, getEncryptionKeyOutput } from "../KeyVault/Helper";
 import { isPrd } from "../Common/AzureEnv";
 import cdnCreator from "./CdnEndpoint";
 
@@ -98,7 +97,7 @@ export default ({
   const primaryConnectionKeyName = getConnectionName(name, "primary");
   const secondConnectionKeyName = getConnectionName(name, "secondary");
   const encryptionKey = featureFlags.enableKeyVaultEncryption
-    ? getEncryptionKey(name, vaultInfo)
+    ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
@@ -138,11 +137,8 @@ export default ({
               keyType: storage.KeyType.Account,
             },
           },
-          keySource: storage.KeySource.Microsoft_Keyvault,
-          keyVaultProperties: encryptionKey.apply((k) => ({
-            keyName: k!.name,
-            keyVaultUri: k!.properties.vaultUrl,
-          })),
+          keySource: encryptionKey.keySource,
+          keyVaultProperties: encryptionKey.keyVaultProperties,
         }
       : undefined,
 

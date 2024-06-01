@@ -1,14 +1,12 @@
 import { Input, Resource } from "@pulumi/pulumi";
 import * as compute from "@pulumi/azure-native/compute";
 import * as network from "@pulumi/azure-native/network";
-import * as devtestlab from "@pulumi/azure-native/devtestlab";
 import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import { getNICName, getVMName } from "../Common/Naming";
 import Locker from "../Core/Locker";
-import { getEncryptionKey } from "../KeyVault/Helper";
+import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import GlobalSchedule from "./GlobalSchedule";
 import Extension, { VmExtensionProps } from "./Extension";
-import { AdoVMExtensionProps } from "./AzureDevOpsExtension";
 
 //https://az-vm-image.info/
 // az vm image list --output table
@@ -82,8 +80,12 @@ export default ({
     nicType: network.NetworkInterfaceNicType.Standard,
   });
 
-  const encryptKey = enableEncryption
-    ? getEncryptionKey(`${name}-storage-encryption`, vaultInfo)
+  //All VM will using the same Key
+  const keyEncryption = enableEncryption
+    ? getEncryptionKeyOutput(`az-vm-key-encryption`, vaultInfo)
+    : undefined;
+  const diskEncryption = enableEncryption
+    ? getEncryptionKeyOutput(`az-vm-disk-encryption`, vaultInfo)
     : undefined;
 
   const vm = new compute.VirtualMachine(
@@ -153,15 +155,25 @@ export default ({
           caching: "ReadWrite",
           createOption: "FromImage",
           osType,
-          // encryptionSettings: enableEncryption
-          //   ? {
-          //       diskEncryptionKey: {},
-          //       keyEncryptionKey: encryptKey?.apply(k=>({
-          //           k.
-          //       })),
-          //       enabled: true,
-          //     }
-          //   : undefined,
+          encryptionSettings: {
+            diskEncryptionKey: diskEncryption
+              ? {
+                  secretUrl: diskEncryption.keyVaultProperties.url,
+                  sourceVault: {
+                    id: vaultInfo.id,
+                  },
+                }
+              : undefined,
+            keyEncryptionKey: keyEncryption
+              ? {
+                  keyUrl: keyEncryption.keyVaultProperties.url,
+                  sourceVault: {
+                    id: vaultInfo.id,
+                  },
+                }
+              : undefined,
+            enabled: enableEncryption,
+          },
           managedDisk: {
             //Changes storage account type need to be done manually through portal.
             storageAccountType,

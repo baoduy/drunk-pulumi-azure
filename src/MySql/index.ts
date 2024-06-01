@@ -9,7 +9,7 @@ import { currentEnv, isPrd, tenantId } from "../Common/AzureEnv";
 import { getAdGroup } from "../AzAd/Group";
 import Role from "../AzAd/Role";
 import { EnvRoleNamesType } from "../AzAd/EnvRoles";
-import { getEncryptionKey } from "../KeyVault/Helper";
+import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserIdentity from "../AzAd/UserIdentity";
 import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 import { RandomString } from "@pulumi/random";
@@ -83,7 +83,7 @@ export default ({
     }).result;
 
   const encryptKey = enableEncryption
-    ? getEncryptionKey(name, vaultInfo)
+    ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
 
   const userIdentity = enableEncryption
@@ -124,12 +124,7 @@ export default ({
         ? {
             type: dbformysql.DataEncryptionType.AzureKeyVault,
             primaryUserAssignedIdentityId: userIdentity?.id,
-            primaryKeyURI: encryptKey.apply(
-              (c) =>
-                `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${
-                  c!.properties.version
-                }`,
-            ),
+            primaryKeyURI: encryptKey.apply((c) => c.keyVaultProperties.url),
           }
         : { type: dbformysql.DataEncryptionType.SystemManaged },
       //maintenanceWindow: { dayOfWeek: 6 },

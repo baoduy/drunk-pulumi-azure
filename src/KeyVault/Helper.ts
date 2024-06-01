@@ -59,7 +59,7 @@ export const addKey = ({
       },
       tags,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
@@ -75,10 +75,39 @@ export const getKey = async ({
   return client.getKey(n, version);
 };
 
-export const getEncryptionKey = (name: string, vaultInfo: KeyVaultInfo) => {
+interface KeyVaultPropertiesArgs {
+  keyName: Input<string>;
+  url: Input<string>;
+  keyVaultUri: Input<string>;
+  keyVersion?: Input<string>;
+}
+
+interface EncryptionPropertiesArgs {
+  keySource: "Microsoft.KeyVault";
+  keyVaultProperties: Input<KeyVaultPropertiesArgs>;
+}
+
+/** Get or create encryption Key */
+const getEncryptionKey = async (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+): Promise<EncryptionPropertiesArgs> => {
   const n = `${name}-encrypt-key`;
-  return output(getKeyVaultBase(vaultInfo.name).getOrCreateKey(n));
+  const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
+
+  return {
+    keySource: "Microsoft.KeyVault",
+    keyVaultProperties: {
+      keyName: key!.properties.name,
+      keyVaultUri: key!.properties.vaultUrl,
+      keyVersion: key!.properties.version,
+      url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
+    },
+  };
 };
+
+export const getEncryptionKeyOutput = (name: string, vaultInfo: KeyVaultInfo) =>
+  output(getEncryptionKey(name, vaultInfo));
 
 /** Get Secret */
 export const getSecret = async ({
