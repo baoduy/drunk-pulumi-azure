@@ -15,26 +15,36 @@ export default ({ name, group, enableEncryption, vaultInfo }: Props) => {
     ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
 
-  return new automation.AutomationAccount(name, {
+  const auto = new automation.AutomationAccount(name, {
     automationAccountName: name,
     ...group,
 
     publicNetworkAccess: false,
-    //identity: { type: "SystemAssigned" },
+    identity: { type: "SystemAssigned" },
     disableLocalAuth: true,
 
-    encryption: encryption
-      ? {
-          keySource: "Microsoft.Keyvault",
-          keyVaultProperties: {
+    encryption: {
+      keySource: encryption ? "Microsoft.Keyvault" : "Microsoft.Automation",
+      //TODO: create userAssignedIdentity here
+      identity: encryption ? { userAssignedIdentity: undefined } : undefined,
+      keyVaultProperties: encryption
+        ? {
             keyName: encryption.apply((s) => s.keyName),
             keyvaultUri: encryption.apply((s) => s.keyVaultUri),
             keyVersion: encryption.apply((s) => s.keyVersion!),
-          },
-        }
-      : undefined,
+          }
+        : undefined,
+    },
     sku: {
-      name: "Free", //Free, Basic
+      name: "Basic",
     },
   });
+
+  // new automation.RuntimeEnvironment(name, {
+  //   runtimeEnvironmentName: name,
+  //   automationAccountName: auto.name,
+  //   ...group,
+  //   defaultPackages: {},
+  // });
+  return auto;
 };
