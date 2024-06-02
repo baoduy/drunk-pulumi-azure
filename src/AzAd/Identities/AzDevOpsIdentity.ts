@@ -1,19 +1,23 @@
 import { KeyVaultInfo } from "../../types";
 import Identity from "../Identity";
-import { getIdentity } from "../Helper";
 import { getGraphPermissions } from "../GraphDefinition";
-import { output } from "@pulumi/pulumi";
+import { getIdentityInfoOutput } from "../Helper";
 
 export const defaultAzAdoName = "azure-devops";
 
 interface Props {
   name?: string;
-  vaultInfo?: KeyVaultInfo;
+  vaultInfo: KeyVaultInfo;
   allowAccessPolicy?: boolean;
 }
 
 /** Get Global  ADO Identity */
-export const getAdoIdentity = () => output(getIdentity(defaultAzAdoName, true));
+export const getAdoIdentityInfo = (vaultInfo: KeyVaultInfo) =>
+  getIdentityInfoOutput({
+    name: defaultAzAdoName,
+    vaultInfo,
+    includePrincipal: true,
+  });
 
 /** Create Global ADO Identity */
 export default ({

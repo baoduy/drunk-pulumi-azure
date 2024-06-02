@@ -1,13 +1,13 @@
-import { BasicResourceArgs, KeyVaultInfo } from '../../types';
-import { getIotHubName } from '../../Common/Naming';
-import * as devices from '@pulumi/azure-native/devices';
-import { subscriptionId } from '../../Common/AzureEnv';
-import { Input } from '@pulumi/pulumi';
-import Locker from '../../Core/Locker';
-import { EnvRoleNamesType } from '../../AzAd/EnvRoles';
-import { roleAssignment } from '../../AzAd/RoleAssignment';
-import { getAdGroup } from '../../AzAd/Group';
-import { addCustomSecret } from '../../KeyVault/CustomHelper';
+import { BasicResourceArgs, KeyVaultInfo } from "../../types";
+import { getIotHubName } from "../../Common/Naming";
+import * as devices from "@pulumi/azure-native/devices";
+import { subscriptionId } from "../../Common/AzureEnv";
+import { Input } from "@pulumi/pulumi";
+import Locker from "../../Core/Locker";
+import { EnvRolesResults } from "../../AzAd/EnvRoles";
+import { roleAssignment } from "../../AzAd/RoleAssignment";
+import { getAdGroup } from "../../AzAd/Group";
+import { addCustomSecret } from "../../KeyVault/CustomHelper";
 
 type StorageEndpointPropertiesArgs = {
   name: Input<string>;
@@ -15,7 +15,7 @@ type StorageEndpointPropertiesArgs = {
   subscriptionId: Input<string>;
   connectionString: Input<string>;
   containerName: Input<string>;
-  encoding: 'avro' | 'avroDeflate'; // 'avroDeflate' and 'avro'
+  encoding: "avro" | "avroDeflate"; // 'avroDeflate' and 'avro'
   batchFrequencyInSeconds: Input<number>;
   fileNameFormat: Input<string>;
   maxChunkSizeInBytes: Input<number>;
@@ -26,7 +26,7 @@ interface Props extends BasicResourceArgs {
     name: devices.IotHubSku;
     capacity?: number;
   };
-  auth?: { envRoleNames: EnvRoleNamesType };
+  auth?: { envRoleNames: EnvRolesResults };
   serviceBus?: {
     /** provide the queue connection string to enable message to be pushing to service bus queue */
     queueMessageConnectionString?: Input<string>;
@@ -46,11 +46,11 @@ interface Props extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export default async ({
+export default ({
   name,
   group,
   auth,
-  sku = { name: 'F1', capacity: 1 },
+  sku = { name: "F1", capacity: 1 },
   storage,
   serviceBus,
   dependsOn,
@@ -58,10 +58,10 @@ export default async ({
   lock,
 }: Props) => {
   const hubName = getIotHubName(name);
-  const busQueueEndpointName = 'busQueue';
-  const busTopicEndpointName = 'busTopic';
-  const storageMessageEndpointName = 'hubStorage';
-  const storageEventEndpointName = 'hubEventStorage';
+  const busQueueEndpointName = "busQueue";
+  const busTopicEndpointName = "busTopic";
+  const storageMessageEndpointName = "hubStorage";
+  const storageEventEndpointName = "hubEventStorage";
 
   const routeEndpoints = new Array<string>();
   const storageEndpoints = new Array<StorageEndpointPropertiesArgs>();
@@ -74,9 +74,9 @@ export default async ({
       subscriptionId,
       connectionString: storage.connectionString,
       containerName: storage.messageContainerName,
-      encoding: 'avro', // 'avroDeflate' and 'avro'
+      encoding: "avro", // 'avroDeflate' and 'avro'
       batchFrequencyInSeconds: 60, //60 to 720
-      fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+      fileNameFormat: "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}", //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
       maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
     });
   }
@@ -87,9 +87,9 @@ export default async ({
       subscriptionId,
       connectionString: storage.connectionString,
       containerName: storage.eventContainerName,
-      encoding: 'avro', // 'avroDeflate' and 'avro'
+      encoding: "avro", // 'avroDeflate' and 'avro'
       batchFrequencyInSeconds: 60, //60 to 720
-      fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+      fileNameFormat: "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}", //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
       maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
     });
   }
@@ -104,7 +104,7 @@ export default async ({
     source: devices.RoutingSource.DeviceMessages,
     endpointNames: [r],
     isEnabled: true,
-    condition: 'true',
+    condition: "true",
   }));
 
   if (storage?.eventContainerName) {
@@ -113,7 +113,7 @@ export default async ({
       source: devices.RoutingSource.DeviceLifecycleEvents,
       endpointNames: [storageEventEndpointName],
       isEnabled: true,
-      condition: 'true',
+      condition: "true",
     });
   }
 
@@ -135,7 +135,7 @@ export default async ({
               $default: {
                 connectionString: storage.connectionString,
                 containerName: storage.fileContainerName,
-                sasTtlAsIso8601: 'PT1H',
+                sasTtlAsIso8601: "PT1H",
               },
             }
           : undefined,
@@ -162,12 +162,12 @@ export default async ({
         //privateEndpointConnections: {},
         messagingEndpoints: {
           fileNotifications: {
-            lockDurationAsIso8601: 'PT1M',
+            lockDurationAsIso8601: "PT1M",
             maxDeliveryCount: 10,
-            ttlAsIso8601: 'PT1H',
+            ttlAsIso8601: "PT1H",
           },
         },
-        minTlsVersion: '1.2',
+        minTlsVersion: "1.2",
 
         routing: {
           endpoints: {
@@ -198,20 +198,20 @@ export default async ({
           },
           fallbackRoute: {
             name: `$fallback`,
-            condition: 'true',
+            condition: "true",
             isEnabled: true,
             source: devices.RoutingSource.DeviceMessages,
 
             endpointNames: storage?.eventContainerName
               ? [storageEventEndpointName]
-              : ['events'],
+              : ["events"],
           },
 
           routes: routes,
         },
       },
     },
-    { dependsOn }
+    { dependsOn },
   );
 
   if (lock) {
@@ -236,7 +236,7 @@ export default async ({
           name: `${hubName}-${k.keyName}`,
           value: conn,
           vaultInfo,
-          contentType: 'IOT Hub',
+          contentType: "IOT Hub",
         });
       });
     });
@@ -244,38 +244,38 @@ export default async ({
 
   //Roles
   if (auth?.envRoleNames) {
-    const readOnlyGroup = await getAdGroup(auth.envRoleNames.readOnly);
-    const contributorGroup = await getAdGroup(auth.envRoleNames.contributor);
+    const readOnlyGroup = auth.envRoleNames.readOnly;
+    const contributorGroup = auth.envRoleNames.contributor;
 
-    await roleAssignment({
+    roleAssignment({
       name: `${name}-iot-readonly`,
       principalId: readOnlyGroup.objectId,
-      principalType: 'Group',
-      roleName: 'IoT Hub Data Reader',
+      principalType: "Group",
+      roleName: "IoT Hub Data Reader",
       scope: hub.id,
     });
 
-    await roleAssignment({
+    roleAssignment({
       name: `${name}-iot-contributor`,
       principalId: contributorGroup.objectId,
-      principalType: 'Group',
-      roleName: 'IoT Hub Data Contributor',
+      principalType: "Group",
+      roleName: "IoT Hub Data Contributor",
       scope: hub.id,
     });
 
-    await roleAssignment({
+    roleAssignment({
       name: `${name}-iot-registry-admin`,
       principalId: contributorGroup.objectId,
-      principalType: 'Group',
-      roleName: 'IoT Hub Registry Contributor',
+      principalType: "Group",
+      roleName: "IoT Hub Registry Contributor",
       scope: hub.id,
     });
 
-    await roleAssignment({
+    roleAssignment({
       name: `${name}-iot-twin-admin`,
       principalId: contributorGroup.objectId,
-      principalType: 'Group',
-      roleName: 'IoT Hub Twin Contributor',
+      principalType: "Group",
+      roleName: "IoT Hub Twin Contributor",
       scope: hub.id,
     });
   }

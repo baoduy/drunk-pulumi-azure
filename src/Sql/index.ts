@@ -1,15 +1,9 @@
 import * as sql from "@pulumi/azure-native/sql";
 import { all, Input, interpolate, Output } from "@pulumi/pulumi";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
-import { EnvRoleNamesType } from "../AzAd/EnvRoles";
-import { getAdGroup } from "../AzAd/Group";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { roleAssignment } from "../AzAd/RoleAssignment";
-import {
-  currentEnv,
-  isPrd,
-  subscriptionId,
-  tenantId,
-} from "../Common/AzureEnv";
+import { isPrd, subscriptionId, tenantId } from "../Common/AzureEnv";
 import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
 import Locker from "../Core/Locker";
 import {
@@ -22,7 +16,6 @@ import { convertToIpRange } from "../VNet/Helper";
 import privateEndpointCreator from "../VNet/PrivateEndpoint";
 import sqlDbCreator, { SqlDbProps } from "./SqlDb";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
-import Role from "../AzAd/Role";
 import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
@@ -80,7 +73,7 @@ interface Props extends BasicResourceArgs {
 
   /** if Auth is not provided it will be auto generated */
   auth: {
-    envRoleNames?: EnvRoleNamesType;
+    envRoleNames: EnvRolesResults;
     /** create an Admin group on AzAD for SQL accessing.*/
     enableAdAdministrator?: boolean;
     azureAdOnlyAuthentication?: boolean;
@@ -144,12 +137,7 @@ export default ({
   //   };
   // }
 
-  const adminGroup =
-    auth?.enableAdAdministrator || auth.azureAdOnlyAuthentication
-      ? auth.envRoleNames
-        ? getAdGroup(auth.envRoleNames.admin)
-        : Role({ env: currentEnv, roleName: "ADMIN", appName: "SQL" })
-      : undefined;
+  const adminGroup = auth.envRoleNames.contributor;
 
   if (auth.azureAdOnlyAuthentication)
     ignoreChanges.push("administratorLoginPassword");

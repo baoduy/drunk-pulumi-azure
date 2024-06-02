@@ -2,8 +2,7 @@ import * as containerservice from "@pulumi/azure-native/containerservice";
 import { getAksName, getResourceGroupName } from "../Common/Naming";
 import { KeyVaultInfo, ResourceInfo, ResourceType } from "../types";
 import { getSecret } from "../KeyVault/Helper";
-import { getIdentitySecrets } from "../AzAd/Helper";
-import { interpolate, output, Output } from "@pulumi/pulumi";
+import { interpolate, Output } from "@pulumi/pulumi";
 import { currentRegionName, subscriptionId } from "../Common/AzureEnv";
 import { linkVnetToPrivateDns } from "../VNet/PrivateDns";
 
@@ -55,17 +54,6 @@ export const getAksVaultConfig = async ({
     nameFormatted: false,
   });
   return rs?.value || "";
-};
-
-export const getAksIdentitySecrets = ({
-  name,
-  vaultInfo,
-}: {
-  name: string;
-  vaultInfo: KeyVaultInfo;
-}) => {
-  name = getAksName(name);
-  return getIdentitySecrets({ name, vaultInfo });
 };
 
 export const getAksPrivateDnz = ({

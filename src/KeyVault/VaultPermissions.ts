@@ -4,7 +4,6 @@ import * as native from "@pulumi/azure-native";
 import * as azuread from "@pulumi/azuread";
 import { addCustomSecret } from "./CustomHelper";
 import { KeyVaultInfo } from "../types";
-import { getAdoIdentity } from "../AzAd/Identities/AzDevOpsIdentity";
 import { getVaultRoleNames } from "./Helper";
 import { addMemberToGroup, getAdGroup } from "../AzAd/Group";
 
@@ -114,7 +113,6 @@ export const grantVaultPermissionToRole = ({
   roles: {
     adminGroup: pulumi.Output<azuread.Group>;
     readOnlyGroup: pulumi.Output<azuread.Group>;
-    addGlobalADOIdentity?: boolean;
   };
 }) => {
   //Grant RBAC permission to Group
@@ -134,18 +132,6 @@ export const grantVaultPermissionToRole = ({
     principalType: "Group",
   });
 
-  if (roles.addGlobalADOIdentity) {
-    //Grant Admin RBAC permission current ADO Identity as the Group will be take time to be effective
-    const ado = getAdoIdentity();
-    grantVaultRbacPermission({
-      name: `${name}-Admin-Ado`,
-      scope: vaultInfo.id,
-      objectId: ado.principal.objectId,
-      permission: "ReadWrite",
-      principalType: "ServicePrincipal",
-    });
-  }
-
   //Add RoleNames to vault
   addCustomSecret({
     name: "VaultRoleNames",
@@ -159,114 +145,3 @@ export const grantVaultPermissionToRole = ({
     contentType: "KeyVault Roles Names",
   });
 };
-
-// export const KeyVaultAdminPolicy = {
-//   certificates: [
-//     'Backup',
-//     'Create',
-//     'Delete',
-//     'DeleteIssuers',
-//     'Get',
-//     'GetIssuers',
-//     'Import',
-//     'List',
-//     'ManageContacts',
-//     'ManageIssuers',
-//     'Purge',
-//     'Recover',
-//     'Restore',
-//     'SetIssuers',
-//     'Update',
-//   ],
-//   keys: [
-//     'Backup',
-//     'Create',
-//     'Decrypt',
-//     'Delete',
-//     'Encrypt',
-//     'Get',
-//     'Import',
-//     'List',
-//     'Purge',
-//     'Recover',
-//     'Restore',
-//     'Sign',
-//     'UnwrapKey',
-//     'Update',
-//     'Verify',
-//     'WrapKey',
-//   ],
-//   secrets: [
-//     'Backup',
-//     'Delete',
-//     'Get',
-//     'List',
-//     'Purge',
-//     'Recover',
-//     'Restore',
-//     'Set',
-//   ],
-//   storage: [
-//     'Backup',
-//     'Delete',
-//     'DeleteSAS',
-//     'Get',
-//     'GetSAS',
-//     'List',
-//     'ListSAS',
-//     'Purge',
-//     'Recover',
-//     'RegenerateKey',
-//     'Restore',
-//     'Set',
-//     'SetSAS',
-//     'Update',
-//   ],
-// };
-//
-// export const KeyVaultReadOnlyPolicy = {
-//   certificates: ['Get', 'List'],
-//   keys: [
-//     'Get',
-//     'List',
-//     'Decrypt',
-//     'Encrypt',
-//     'Sign',
-//     'UnwrapKey',
-//     'Verify',
-//     'WrapKey',
-//   ],
-//   secrets: ['Get', 'List'],
-//   storage: ['Get', 'List'],
-// };
-
-// export const grantVaultAccessPolicy = ({
-//   name,
-//   objectId,
-//   permission,
-//   vaultInfo,
-// }: PermissionProps & {
-//   name: string;
-//   vaultInfo: KeyVaultInfo;
-// }) =>
-//   new vault.AccessPolicy(name, {
-//     keyVaultId: vaultInfo.id,
-//     objectId,
-//     tenantId,
-//     certificatePermissions:
-//       permission === 'ReadOnly'
-//         ? KeyVaultReadOnlyPolicy.certificates
-//         : KeyVaultAdminPolicy.certificates,
-//     keyPermissions:
-//       permission === 'ReadOnly'
-//         ? KeyVaultReadOnlyPolicy.keys
-//         : KeyVaultAdminPolicy.keys,
-//     secretPermissions:
-//       permission === 'ReadOnly'
-//         ? KeyVaultReadOnlyPolicy.secrets
-//         : KeyVaultAdminPolicy.secrets,
-//     storagePermissions:
-//       permission === 'ReadOnly'
-//         ? KeyVaultReadOnlyPolicy.storage
-//         : KeyVaultAdminPolicy.storage,
-//   });

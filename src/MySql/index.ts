@@ -8,7 +8,7 @@ import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { currentEnv, isPrd, tenantId } from "../Common/AzureEnv";
 import { getAdGroup } from "../AzAd/Group";
 import Role from "../AzAd/Role";
-import { EnvRoleNamesType } from "../AzAd/EnvRoles";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserIdentity from "../AzAd/UserIdentity";
 import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
@@ -20,8 +20,7 @@ export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
   vaultInfo: KeyVaultInfo;
   auth?: {
-    enableAdAdministrator?: boolean;
-    envRoleNames?: EnvRoleNamesType;
+    envRoleNames: EnvRolesResults;
 
     adminLogin?: pulumi.Input<string>;
     password?: pulumi.Input<string>;
@@ -156,11 +155,9 @@ export default ({
     Locker({ name, resource: mySql });
   }
 
-  if (auth?.enableAdAdministrator) {
-    const adminGroup = auth.envRoleNames
-      ? getAdGroup(auth.envRoleNames.admin)
-      : Role({ env: currentEnv, roleName: "ADMIN", appName: "MYSQL" });
-
+  //Enable AD Administrator
+  if (auth) {
+    const adminGroup = auth.envRoleNames.contributor;
     new dbformysql.AzureADAdministrator(name, {
       serverName: mySql.name,
       ...group,

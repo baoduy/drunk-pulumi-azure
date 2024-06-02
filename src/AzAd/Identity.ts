@@ -14,6 +14,7 @@ import { BasicArgs, KeyVaultInfo } from "../types";
 import { roleAssignment } from "./RoleAssignment";
 import { defaultScope } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { getIdentitySecretNames } from "./Helper";
 
 type PreAuthApplicationProps = {
   appId: string;
@@ -46,7 +47,7 @@ interface IdentityProps extends BasicArgs {
     scope?: Input<string>;
   }>;
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
-  vaultInfo?: KeyVaultInfo;
+  vaultInfo: KeyVaultInfo;
 }
 
 export type IdentityResult = {
@@ -79,11 +80,7 @@ export default ({
 }: IdentityProps): IdentityResult => {
   // Azure AD Application no need suffix
   name = getIdentityName(name);
-
-  const clientIdKeyName = `${name}-client-id`;
-  const clientSecretKeyName = `${name}-client-secret`;
-  const principalIdKeyName = `${name}-principal-id`;
-  const principalSecretKeyName = `${name}-principal-secret`;
+  const secretNames = getIdentitySecretNames(name);
 
   const identifierUris = publicClient
     ? undefined
@@ -141,13 +138,19 @@ export default ({
     { dependsOn },
   );
 
-  if (vaultInfo)
-    addCustomSecret({
-      name: clientIdKeyName,
-      value: app.clientId,
-      vaultInfo,
-      contentType: "Identity",
-    });
+  addCustomSecret({
+    name: secretNames.objectIdName,
+    value: app.objectId,
+    vaultInfo,
+    contentType: "Identity",
+  });
+
+  addCustomSecret({
+    name: secretNames.clientIdKeyName,
+    value: app.clientId,
+    vaultInfo,
+    contentType: "Identity",
+  });
 
   let clientSecret: Output<string> | undefined = undefined;
   if (createClientSecret) {
@@ -157,18 +160,16 @@ export default ({
         displayName: name,
         applicationId: app.id,
         endDateRelative: "43800h",
-        //value: randomPassword({ name: `${name}-clientSecret` }).result,
       },
       { ignoreChanges: ["applicationId", "applicationObjectId"] },
     ).value;
 
-    if (vaultInfo)
-      addCustomSecret({
-        name: clientSecretKeyName,
-        value: clientSecret,
-        vaultInfo,
-        contentType: "Identity",
-      });
+    addCustomSecret({
+      name: secretNames.clientSecretKeyName,
+      value: clientSecret,
+      vaultInfo,
+      contentType: "Identity",
+    });
   }
 
   let principal: ServicePrincipal | undefined;
@@ -204,21 +205,19 @@ export default ({
       );
     }
 
-    if (vaultInfo) {
-      addCustomSecret({
-        name: principalIdKeyName,
-        value: principal.objectId,
-        vaultInfo,
-        contentType: "Identity",
-      });
+    addCustomSecret({
+      name: secretNames.principalIdKeyName,
+      value: principal.objectId,
+      vaultInfo,
+      contentType: "Identity",
+    });
 
-      addCustomSecret({
-        name: principalSecretKeyName,
-        value: principalSecret,
-        vaultInfo,
-        contentType: "Identity",
-      });
-    }
+    addCustomSecret({
+      name: secretNames.principalSecretKeyName,
+      value: principalSecret,
+      vaultInfo,
+      contentType: "Identity",
+    });
   }
 
   return {

@@ -1,66 +1,94 @@
-import Role, { getRoleName, RoleNameType } from "./Role";
-import { getAdoIdentity } from "./Identities/AzDevOpsIdentity";
-import { addMemberToGroup } from "./Group";
+import Role, { RoleProps } from "./Role";
+import { getAdoIdentityInfo } from "./Identities/AzDevOpsIdentity";
+import { KeyVaultInfo } from "../types";
+import { output, Output } from "@pulumi/pulumi";
+import { Group } from "@pulumi/azuread";
+import { getSecretName } from "../Common/Naming";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { getSecret } from "../KeyVault/Helper";
 
-const envRoleConfig = {
+type keyTypes = "readOnly" | "contributor" | "admin";
+const envRoleConfig: Record<keyTypes, RoleProps> = {
   readOnly: {
     roleName: "Readonly",
     appName: "Azure",
-  } as RoleNameType,
+  },
   contributor: {
     roleName: "Contributor",
     appName: "Azure",
-  } as RoleNameType,
+  },
   admin: {
     roleName: "Admin",
     appName: "Azure",
-  } as RoleNameType,
+  },
 };
 
-export type EnvRoleNamesType = { [k in keyof typeof envRoleConfig]: string };
-
-export const getEnvRoleNames = (): EnvRoleNamesType => ({
-  readOnly: getRoleName({ ...envRoleConfig.readOnly }),
-  contributor: getRoleName({
-    ...envRoleConfig.contributor,
-  }),
-  admin: getRoleName({ ...envRoleConfig.admin }),
+const getRoleSecretName = (name: string) => ({
+  objectIdName: getSecretName(`envRoles-${name}-object-id`),
+  displayName: getSecretName(`envRoles-${name}-display-name`),
 });
 
 export const createEnvRoles = ({
-  addAdoIdentityMember = false,
+  includesAdoIdentityAsAdmin = false,
+  vaultInfo,
 }: {
-  addAdoIdentityMember?: boolean;
+  includesAdoIdentityAsAdmin?: boolean;
+  vaultInfo: KeyVaultInfo;
 }) => {
-  //Admin
-  const adminGroup = Role({
-    ...envRoleConfig.admin,
-    //permissions: [{ roleName: 'Reader', scope: defaultScope }],
-  });
+  const rs: Record<string, Output<Group>> = {};
 
-  //Contributor
-  const contributorGroup = Role({
-    ...envRoleConfig.contributor,
-    //permissions: [{ roleName: 'Reader', scope: defaultScope }],
-    members: [adminGroup.objectId],
-  });
+  Object.keys(envRoleConfig).forEach((key) => {
+    const config = envRoleConfig[key as keyTypes];
 
-  //ReadOnly
-  const readOnlyGroup = Role({
-    ...envRoleConfig.readOnly,
-    //permissions: [{ roleName: 'Reader', scope: defaultScope }],
-    members: [contributorGroup.objectId],
-  });
+    if (key === "admin" && includesAdoIdentityAsAdmin) {
+      const ado = getAdoIdentityInfo(vaultInfo);
+      if (ado.principalId)
+        config.members = [ado.principalId.apply((id) => id!)];
+    }
 
-  if (addAdoIdentityMember) {
-    //Add Global ADO Identity as Admin
-    const ado = getAdoIdentity();
-    addMemberToGroup({
-      name: "ado-admin-role",
-      groupObjectId: adminGroup.objectId,
-      objectId: ado.principal.objectId,
+    const role = Role(config);
+    rs[key] = role;
+
+    //Add to Key Vault
+    const secretNames = getRoleSecretName(key);
+    addCustomSecret({
+      name: secretNames.objectIdName,
+      value: role.objectId,
+      contentType: secretNames.objectIdName,
+      vaultInfo,
     });
-  }
+    addCustomSecret({
+      name: secretNames.displayName,
+      value: role.displayName,
+      contentType: secretNames.displayName,
+      vaultInfo,
+    });
+  });
 
-  return { adminGroup, contributorGroup, readOnlyGroup };
+  return rs as Record<keyTypes, Output<Group>>;
+};
+
+type RoleType = { objectId: string; displayName: string };
+export type EnvRolesResults = Record<keyTypes, Output<RoleType>>;
+
+const getEnvRole = async (name: string, vaultInfo: KeyVaultInfo) => {
+  const secretNames = getRoleSecretName(name);
+  const [objectId, displayName] = await Promise.all([
+    getSecret({ name: secretNames.objectIdName, vaultInfo }),
+    getSecret({ name: secretNames.displayName, vaultInfo }),
+  ]);
+  return {
+    displayName: displayName!.value!,
+    objectId: objectId!.value!,
+  };
+};
+
+export const getEnvRolesOutput = async (vaultInfo: KeyVaultInfo) => {
+  const rs: Record<string, Output<RoleType>> = {};
+
+  Object.keys(envRoleConfig).forEach((key) => {
+    rs[key] = output(getEnvRole(key, vaultInfo));
+  });
+
+  return rs as EnvRolesResults;
 };

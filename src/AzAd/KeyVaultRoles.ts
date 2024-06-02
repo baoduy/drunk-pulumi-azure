@@ -1,7 +1,5 @@
 import { currentEnv } from "../Common/AzureEnv";
 import Role, { getRoleName, RoleNameType } from "./Role";
-import { getAdoIdentity } from "./Identities/AzDevOpsIdentity";
-import { addMemberToGroup } from "./Group";
 
 const getConfig = (name: string) => ({
   readOnly: {
@@ -26,10 +24,7 @@ export const getVaultRoleNames = (name: string) => {
   };
 };
 
-export const createVaultRoles = (
-  name: string,
-  addGlobalADOIdentity?: boolean,
-) => {
+export const createVaultRoles = (name: string) => {
   const vaultRoleConfig = getConfig(name);
   //Admin
   const adminGroup = Role({
@@ -44,15 +39,5 @@ export const createVaultRoles = (
     members: [adminGroup.objectId],
   });
 
-  //Add Global ADO Identity as Admin
-  if (addGlobalADOIdentity) {
-    const ado = getAdoIdentity();
-    addMemberToGroup({
-      name: "ado-admin-role",
-      groupObjectId: adminGroup.objectId,
-      objectId: ado.principal.objectId,
-    });
-  }
-
-  return { adminGroup, readOnlyGroup, addGlobalADOIdentity };
+  return { adminGroup, readOnlyGroup };
 };
