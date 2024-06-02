@@ -75,19 +75,22 @@ export const createEnvRoles = () => {
   };
 };
 
+/** Get Single Env Role Object */
 const getEnvRole = async (name: string, vaultInfo: KeyVaultInfo) => {
   const secretNames = getRoleSecretName(name);
   const [objectId, displayName] = await Promise.all([
     getSecret({ name: secretNames.objectIdName, vaultInfo }),
     getSecret({ name: secretNames.displayName, vaultInfo }),
   ]);
+
   return {
     displayName: displayName!.value!,
     objectId: objectId!.value!,
   };
 };
 
-export const getEnvRolesOutput = async (vaultInfo: KeyVaultInfo) => {
+/** Get All Env Role Objects */
+export const getEnvRolesOutput = (vaultInfo: KeyVaultInfo) => {
   const rs: Record<string, Output<RoleType>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {

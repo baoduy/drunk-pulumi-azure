@@ -155,25 +155,27 @@ export default ({
           caching: "ReadWrite",
           createOption: "FromImage",
           osType,
-          encryptionSettings: {
-            diskEncryptionKey: diskEncryption
-              ? {
-                  secretUrl: diskEncryption.url,
-                  sourceVault: {
-                    id: vaultInfo.id,
-                  },
-                }
-              : undefined,
-            keyEncryptionKey: keyEncryption
-              ? {
-                  keyUrl: keyEncryption.url,
-                  sourceVault: {
-                    id: vaultInfo.id,
-                  },
-                }
-              : undefined,
-            enabled: enableEncryption,
-          },
+          encryptionSettings: enableEncryption
+            ? {
+                diskEncryptionKey: diskEncryption
+                  ? {
+                      secretUrl: diskEncryption.url,
+                      sourceVault: {
+                        id: vaultInfo.id,
+                      },
+                    }
+                  : undefined,
+                keyEncryptionKey: keyEncryption
+                  ? {
+                      keyUrl: keyEncryption.url,
+                      sourceVault: {
+                        id: vaultInfo.id,
+                      },
+                    }
+                  : undefined,
+                enabled: enableEncryption,
+              }
+            : undefined,
           managedDisk: {
             //Changes storage account type need to be done manually through portal.
             storageAccountType,
