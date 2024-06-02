@@ -1,5 +1,4 @@
 import Role, { RoleProps } from "./Role";
-import { getAdoIdentityInfo } from "./Identities/AzDevOpsIdentity";
 import { KeyVaultInfo } from "../types";
 import { output, Output } from "@pulumi/pulumi";
 import { Group } from "@pulumi/azuread";
@@ -24,53 +23,57 @@ const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   },
 };
 
+type RoleType = { objectId: string; displayName: string };
+export type EnvRolesResults = Record<
+  EnvRoleKeyTypes,
+  Output<RoleType> | RoleType
+>;
+
 const getRoleSecretName = (name: string) => ({
   objectIdName: getSecretName(`envRoles-${name}-object-id`),
   displayName: getSecretName(`envRoles-${name}-display-name`),
 });
 
-export const createEnvRoles = ({
-  includesAdoIdentityAsAdmin = false,
-  vaultInfo,
-}: {
-  includesAdoIdentityAsAdmin?: boolean;
-  vaultInfo: KeyVaultInfo;
-}) => {
-  const rs: Record<string, Output<Group>> = {};
+export const createEnvRoles = () => {
+  const groups: Record<string, Output<RoleType>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {
     const config = envRoleConfig[key as EnvRoleKeyTypes];
+    const g = Role(config);
 
-    if (key === "admin" && includesAdoIdentityAsAdmin) {
-      const ado = getAdoIdentityInfo(vaultInfo);
-      if (ado.principalId)
-        config.members = [ado.principalId.apply((id) => id!)];
-    }
-
-    const role = Role(config);
-    rs[key] = role;
-
-    //Add to Key Vault
-    const secretNames = getRoleSecretName(key);
-    addCustomSecret({
-      name: secretNames.objectIdName,
-      value: role.objectId,
-      contentType: secretNames.objectIdName,
-      vaultInfo,
-    });
-    addCustomSecret({
-      name: secretNames.displayName,
-      value: role.displayName,
-      contentType: secretNames.displayName,
-      vaultInfo,
-    });
+    groups[key] = output([g.objectId, g.displayName]).apply(([i, d]) => ({
+      objectId: i,
+      displayName: d,
+    }));
   });
 
-  return rs as Record<EnvRoleKeyTypes, Output<Group>>;
-};
+  const addRolesToVault = (vaultInfo: KeyVaultInfo) => {
+    Object.keys(groups).forEach((key) => {
+      const role = groups[key];
+      //Add to Key Vault
+      const secretNames = getRoleSecretName(key);
+      addCustomSecret({
+        name: secretNames.objectIdName,
+        value: role.objectId,
+        contentType: secretNames.objectIdName,
+        vaultInfo,
+      });
+      addCustomSecret({
+        name: secretNames.displayName,
+        value: role.displayName,
+        contentType: secretNames.displayName,
+        vaultInfo,
+      });
+    });
+  };
 
-type RoleType = { objectId: string; displayName: string };
-export type EnvRolesResults = Record<EnvRoleKeyTypes, Output<RoleType>>;
+  return {
+    ...groups,
+    addRolesToVault,
+  } as Record<EnvRoleKeyTypes, Output<RoleType>> & {
+    addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
+  };
+};
 
 const getEnvRole = async (name: string, vaultInfo: KeyVaultInfo) => {
   const secretNames = getRoleSecretName(name);

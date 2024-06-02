@@ -1,4 +1,7 @@
-import { EnvRoleKeyTypes } from "./EnvRoles";
+import { EnvRoleKeyTypes, EnvRolesResults } from "./EnvRoles";
+import { roleAssignment, RoleAssignmentProps } from "./RoleAssignment";
+import { replaceAll } from "../Common/Helpers";
+import { Input, Resource } from "@pulumi/pulumi";
 
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: ["Reader"],
@@ -47,45 +50,47 @@ const KeyVaultRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   admin: [],
 };
 
+export type RoleEnableTypes = {
+  enableRGRoles?: boolean;
+  enableAksRoles?: boolean;
+  enableIotRoles?: boolean;
+  enableVaultRoles?: boolean;
+};
+
 export const getRoleNames = ({
   enableRGRoles,
   enableIotRoles,
   enableVaultRoles,
   enableAksRoles,
-}: {
-  enableRGRoles?: boolean;
-  enableAksRoles?: boolean;
-  enableIotRoles?: boolean;
-  enableVaultRoles?: boolean;
-}): Record<EnvRoleKeyTypes, string[]> => {
-  const rs: Record<EnvRoleKeyTypes, Set<string>> = {
-    readOnly: new Set(),
-    admin: new Set(),
-    contributor: new Set(),
+}: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
+  const rs = {
+    readOnly: new Set<string>(),
+    admin: new Set<string>(),
+    contributor: new Set<string>(),
   };
 
   if (enableIotRoles) {
-    IOTHubRoleNames.readOnly.forEach(rs.readOnly.add);
-    IOTHubRoleNames.contributor.forEach(rs.contributor.add);
-    IOTHubRoleNames.admin.forEach(rs.admin.add);
+    IOTHubRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
+    IOTHubRoleNames.contributor.forEach((r) => rs.contributor.add(r));
+    IOTHubRoleNames.admin.forEach((r) => rs.admin.add(r));
   }
 
   if (enableRGRoles) {
-    RGRoleNames.readOnly.forEach(rs.readOnly.add);
-    RGRoleNames.contributor.forEach(rs.contributor.add);
-    RGRoleNames.admin.forEach(rs.admin.add);
+    RGRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
+    RGRoleNames.contributor.forEach((r) => rs.contributor.add(r));
+    RGRoleNames.admin.forEach((r) => rs.admin.add(r));
   }
 
   if (enableVaultRoles) {
-    KeyVaultRoleNames.readOnly.forEach(rs.readOnly.add);
-    KeyVaultRoleNames.contributor.forEach(rs.contributor.add);
-    KeyVaultRoleNames.admin.forEach(rs.admin.add);
+    KeyVaultRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
+    KeyVaultRoleNames.contributor.forEach((r) => rs.contributor.add(r));
+    KeyVaultRoleNames.admin.forEach((r) => rs.admin.add(r));
   }
 
   if (enableAksRoles) {
-    AksRoleNames.readOnly.forEach(rs.readOnly.add);
-    AksRoleNames.contributor.forEach(rs.contributor.add);
-    AksRoleNames.admin.forEach(rs.admin.add);
+    AksRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
+    AksRoleNames.contributor.forEach((r) => rs.contributor.add(r));
+    AksRoleNames.admin.forEach((r) => rs.admin.add(r));
   }
 
   return {
@@ -93,4 +98,98 @@ export const getRoleNames = ({
     admin: Array.from(rs.admin).sort(),
     contributor: Array.from(rs.contributor).sort(),
   };
+};
+
+export const grantEnvRolesAccess = ({
+  name,
+  dependsOn,
+  scope,
+  envRoles,
+  ...others
+}: RoleEnableTypes &
+  Omit<RoleAssignmentProps, "roleName" | "principalType" | "principalId"> & {
+    envRoles: EnvRolesResults;
+  }) => {
+  const roles = getRoleNames(others);
+  console.log(`${name}-roles`, roles);
+
+  //ReadOnly
+  roles.readOnly.forEach((r) => {
+    const n = `${name}-readonly-${replaceAll(r, " ", "")}`;
+    roleAssignment({
+      name: n,
+      principalId: envRoles.readOnly.objectId,
+      principalType: "Group",
+      roleName: r,
+      scope,
+      dependsOn,
+    });
+  });
+
+  //Contributors
+  roles.contributor.forEach((r) => {
+    const n = `${name}-contributor-${replaceAll(r, " ", "")}`;
+    roleAssignment({
+      name: n,
+      principalId: envRoles.contributor.objectId,
+      principalType: "Group",
+      roleName: r,
+      scope,
+      dependsOn,
+    });
+  });
+
+  //Admin
+  roles.admin.forEach((r) => {
+    const n = `${name}-admin-${replaceAll(r, " ", "")}`;
+    roleAssignment({
+      name: n,
+      principalId: envRoles.admin.objectId,
+      principalType: "Group",
+      roleName: r,
+      scope,
+      dependsOn,
+    });
+  });
+};
+
+export const grantIdentityRolesAccess = ({
+  name,
+  principalId,
+  scope,
+  roleType,
+  additionRoles,
+  dependsOn,
+  ...others
+}: RoleEnableTypes & {
+  name: string;
+  principalId: Input<string>;
+  scope: Input<string>;
+  roleType: EnvRoleKeyTypes;
+  additionRoles?: string[];
+  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
+}) => {
+  const roles = getRoleNames(others);
+  const finalRoles = new Set(additionRoles);
+
+  if (roleType === "readOnly") roles.readOnly.forEach((r) => finalRoles.add(r));
+  if (roleType === "contributor")
+    roles.contributor.forEach((r) => finalRoles.add(r));
+  if (roleType === "admin") roles.admin.forEach((r) => finalRoles.add(r));
+
+  console.log(`${name}-roles`, finalRoles);
+
+  Array.from(finalRoles)
+    .sort()
+    .forEach((r) => {
+      const n = `${name}-${roleType}-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId,
+        principalType: "ServicePrincipal",
+        roleName: r,
+        scope,
+        dependsOn,
+      });
+    });
 };

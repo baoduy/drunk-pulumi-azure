@@ -13,7 +13,7 @@ import { getResourceGroupName } from "../Common/Naming";
 import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import { currentRegionName } from "../Common/AzureEnv";
-import { getRoleNames } from "../AzAd/EnvRoles.Consts";
+import { getRoleNames, grantEnvRolesAccess } from "../AzAd/EnvRoles.Consts";
 import { replaceAll } from "../Common/Helpers";
 
 interface Props
@@ -47,42 +47,11 @@ export default ({
   } as ResourceGroupArgs & DefaultResourceArgs);
 
   if (permissions) {
-    const roles = getRoleNames(permissions);
-
-    //ReadOnly
-    roles.readOnly.forEach((r) => {
-      const n = `${name}-readonly-${replaceAll(r, " ", "")}`;
-      roleAssignment({
-        name: n,
-        principalId: permissions.envRoles.readOnly.objectId,
-        principalType: "Group",
-        roleName: "Contributor",
-        scope: resource.id,
-      });
-    });
-
-    //Contributors
-    roles.contributor.forEach((r) => {
-      const n = `${name}-contributor-${replaceAll(r, " ", "")}`;
-      roleAssignment({
-        name: n,
-        principalId: permissions.envRoles.contributor.objectId,
-        principalType: "Group",
-        roleName: "Contributor",
-        scope: resource.id,
-      });
-    });
-
-    //Admin
-    roles.admin.forEach((r) => {
-      const n = `${name}-admin-${replaceAll(r, " ", "")}`;
-      roleAssignment({
-        name: n,
-        principalId: permissions.envRoles.admin.objectId,
-        principalType: "Group",
-        roleName: "Contributor",
-        scope: resource.id,
-      });
+    grantEnvRolesAccess({
+      name,
+      ...permissions,
+      scope: resource.id,
+      dependsOn: resource,
     });
   }
 
