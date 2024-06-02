@@ -1,11 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import * as native from "@pulumi/azure-native";
-import * as azuread from "@pulumi/azuread";
-import { addCustomSecret } from "./CustomHelper";
-import { KeyVaultInfo } from "../types";
-import { getVaultRoleNames } from "./Helper";
-import { addMemberToGroup, getAdGroup } from "../AzAd/Group";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { Output } from "@pulumi/pulumi";
 
 export interface PermissionProps {
   /** The object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. */
@@ -82,66 +79,29 @@ const grantVaultRbacPermission = ({
   }
 };
 
-export const grantVaultAccessToIdentity = ({
-  name,
-  identity,
-  vaultInfo,
-}: {
-  name: string;
-  identity: pulumi.Output<{ principalId: string } | undefined>;
-  vaultInfo: KeyVaultInfo;
-}) =>
-  identity.apply(async (i) => {
-    if (!i) return;
-    const vaultRole = await getVaultRoleNames(vaultInfo);
-    if (!vaultRole) return;
-
-    addMemberToGroup({
-      name: `${name}-identity-readAccess-${vaultInfo.name}`,
-      objectId: i.principalId,
-      groupObjectId: getAdGroup(vaultRole.readOnly).objectId,
-    });
-  });
-
 export const grantVaultPermissionToRole = ({
   name,
-  vaultInfo,
-  roles,
+  vaultId,
+  envRoles,
 }: {
   name: string;
-  vaultInfo: KeyVaultInfo;
-  roles: {
-    adminGroup: pulumi.Output<azuread.Group>;
-    readOnlyGroup: pulumi.Output<azuread.Group>;
-  };
+  vaultId: Output<string>;
+  envRoles: EnvRolesResults;
 }) => {
   //Grant RBAC permission to Group
   grantVaultRbacPermission({
-    name: `${name}-ReadOnlyGroup`,
-    scope: vaultInfo.id,
-    objectId: roles.readOnlyGroup.objectId,
+    name: `${name}-readOnly`,
+    scope: vaultId,
+    objectId: envRoles.readOnly.objectId,
     permission: "ReadOnly",
     principalType: "Group",
   });
 
   grantVaultRbacPermission({
-    name: `${name}-AdminGroup`,
-    scope: vaultInfo.id,
-    objectId: roles.adminGroup.objectId,
+    name: `${name}-admin`,
+    scope: vaultId,
+    objectId: envRoles.admin.objectId,
     permission: "ReadWrite",
     principalType: "Group",
-  });
-
-  //Add RoleNames to vault
-  addCustomSecret({
-    name: "VaultRoleNames",
-    value: pulumi
-      .output({
-        admin: roles.adminGroup.displayName,
-        readOnly: roles.readOnlyGroup.displayName,
-      })
-      .apply((role) => JSON.stringify(role)),
-    vaultInfo,
-    contentType: "KeyVault Roles Names",
   });
 };

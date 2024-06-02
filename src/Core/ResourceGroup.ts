@@ -3,33 +3,38 @@ import {
   ResourceGroupInfo,
   ResourceResultProps,
   BasicResourceArgs,
-} from '../types';
+} from "../types";
 import {
   ResourceGroup,
   ResourceGroupArgs,
-} from '@pulumi/azure-native/resources';
-import ResourceCreator from './ResourceCreator';
-import { getResourceGroupName } from '../Common/Naming';
-import { EnvRoleNamesType } from '../AzAd/EnvRoles';
-import { assignRolesToGroup } from '../AzAd/Group';
+} from "@pulumi/azure-native/resources";
+import ResourceCreator from "./ResourceCreator";
+import { getResourceGroupName } from "../Common/Naming";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { roleAssignment } from "../AzAd/RoleAssignment";
+import { currentRegionName } from "../Common/AzureEnv";
+import { getRoleNames } from "../AzAd/EnvRoles.Consts";
+import { replaceAll } from "../Common/Helpers";
 
 interface Props
-  extends Omit<DefaultResourceArgs, 'monitoring'>,
-    Omit<BasicResourceArgs, 'group'> {
+  extends Omit<DefaultResourceArgs, "monitoring">,
+    Omit<BasicResourceArgs, "group"> {
   formattedName?: boolean;
   location?: string;
   /** Grant permission of this group into Environment Roles groups*/
-  envRoleNames?: EnvRoleNamesType;
+  permissions?: {
+    envRoles: EnvRolesResults;
+    enableRGRoles?: boolean;
+    enableAksRoles?: boolean;
+    enableIotRoles?: boolean;
+    enableVaultRoles?: boolean;
+  };
 }
-
-// export const getResourceGroupInfo = (name: string, globalGroup?: boolean) => ({
-//   resourceGroupName: getResourceGroupName(name),
-// });
 
 export default ({
   name,
   formattedName,
-  envRoleNames,
+  permissions,
   ...others
 }: Props): ResourceResultProps<ResourceGroup> & {
   toGroupInfo: () => ResourceGroupInfo;
@@ -41,34 +46,54 @@ export default ({
     ...others,
   } as ResourceGroupArgs & DefaultResourceArgs);
 
-  const g = resource as ResourceGroup;
+  if (permissions) {
+    const roles = getRoleNames(permissions);
 
-  if (envRoleNames) {
-    assignRolesToGroup({
-      groupName: envRoleNames.readOnly,
-      roles: ['Reader'],
-      scope: g.id,
+    //ReadOnly
+    roles.readOnly.forEach((r) => {
+      const n = `${name}-readonly-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId: permissions.envRoles.readOnly.objectId,
+        principalType: "Group",
+        roleName: "Contributor",
+        scope: resource.id,
+      });
     });
-    assignRolesToGroup({
-      groupName: envRoleNames.contributor,
-      roles: ['Contributor'],
-      scope: g.id,
+
+    //Contributors
+    roles.contributor.forEach((r) => {
+      const n = `${name}-contributor-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId: permissions.envRoles.contributor.objectId,
+        principalType: "Group",
+        roleName: "Contributor",
+        scope: resource.id,
+      });
     });
-    assignRolesToGroup({
-      groupName: envRoleNames.admin,
-      roles: ['Owner'],
-      scope: g.id,
+
+    //Admin
+    roles.admin.forEach((r) => {
+      const n = `${name}-admin-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId: permissions.envRoles.admin.objectId,
+        principalType: "Group",
+        roleName: "Contributor",
+        scope: resource.id,
+      });
     });
   }
 
   return {
     name,
-    resource: g,
+    resource: resource as ResourceGroup,
     locker,
     diagnostic,
     toGroupInfo: () => ({
       resourceGroupName: name,
-      location: g.location,
+      location: currentRegionName,
     }),
   };
 };

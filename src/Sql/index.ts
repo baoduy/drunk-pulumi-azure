@@ -16,7 +16,7 @@ import { convertToIpRange } from "../VNet/Helper";
 import privateEndpointCreator from "../VNet/PrivateEndpoint";
 import sqlDbCreator, { SqlDbProps } from "./SqlDb";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
+import { addMemberToGroup } from "../AzAd/Group";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -73,7 +73,7 @@ interface Props extends BasicResourceArgs {
 
   /** if Auth is not provided it will be auto generated */
   auth: {
-    envRoleNames: EnvRolesResults;
+    envRoles: EnvRolesResults;
     /** create an Admin group on AzAD for SQL accessing.*/
     enableAdAdministrator?: boolean;
     azureAdOnlyAuthentication?: boolean;
@@ -137,7 +137,7 @@ export default ({
   //   };
   // }
 
-  const adminGroup = auth.envRoleNames.contributor;
+  const adminGroup = auth.envRoles.contributor;
 
   if (auth.azureAdOnlyAuthentication)
     ignoreChanges.push("administratorLoginPassword");
@@ -179,7 +179,11 @@ export default ({
   );
 
   //Allows to Read Key Vault
-  grantVaultAccessToIdentity({ name, identity: sqlServer.identity, vaultInfo });
+  addMemberToGroup({
+    name: `${name}-contributor-role`,
+    objectId: sqlServer.identity.apply((s) => s!.principalId),
+    groupObjectId: auth.envRoles.contributor.objectId,
+  });
 
   if (lock) {
     Locker({ name: sqlName, resource: sqlServer });

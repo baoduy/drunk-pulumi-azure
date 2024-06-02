@@ -26,7 +26,6 @@ interface Props extends BasicResourceArgs {
     name: devices.IotHubSku;
     capacity?: number;
   };
-  auth?: { envRoleNames: EnvRolesResults };
   serviceBus?: {
     /** provide the queue connection string to enable message to be pushing to service bus queue */
     queueMessageConnectionString?: Input<string>;
@@ -49,7 +48,6 @@ interface Props extends BasicResourceArgs {
 export default ({
   name,
   group,
-  auth,
   sku = { name: "F1", capacity: 1 },
   storage,
   serviceBus,
@@ -242,42 +240,5 @@ export default ({
     });
   }
 
-  //Roles
-  if (auth?.envRoleNames) {
-    const readOnlyGroup = auth.envRoleNames.readOnly;
-    const contributorGroup = auth.envRoleNames.contributor;
-
-    roleAssignment({
-      name: `${name}-iot-readonly`,
-      principalId: readOnlyGroup.objectId,
-      principalType: "Group",
-      roleName: "IoT Hub Data Reader",
-      scope: hub.id,
-    });
-
-    roleAssignment({
-      name: `${name}-iot-contributor`,
-      principalId: contributorGroup.objectId,
-      principalType: "Group",
-      roleName: "IoT Hub Data Contributor",
-      scope: hub.id,
-    });
-
-    roleAssignment({
-      name: `${name}-iot-registry-admin`,
-      principalId: contributorGroup.objectId,
-      principalType: "Group",
-      roleName: "IoT Hub Registry Contributor",
-      scope: hub.id,
-    });
-
-    roleAssignment({
-      name: `${name}-iot-twin-admin`,
-      principalId: contributorGroup.objectId,
-      principalType: "Group",
-      roleName: "IoT Hub Twin Contributor",
-      scope: hub.id,
-    });
-  }
   return hub;
 };

@@ -5,13 +5,11 @@ import * as dbformysql from "@pulumi/azure-native/dbformysql";
 import { randomPassword } from "../Core/Random";
 import * as inputs from "@pulumi/azure-native/types/input";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { currentEnv, isPrd, tenantId } from "../Common/AzureEnv";
-import { getAdGroup } from "../AzAd/Group";
-import Role from "../AzAd/Role";
+import { isPrd, tenantId } from "../Common/AzureEnv";
+import { addMemberToGroup } from "../AzAd/Group";
 import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserIdentity from "../AzAd/UserIdentity";
-import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
 import { RandomString } from "@pulumi/random";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import Locker from "../Core/Locker";
@@ -20,8 +18,7 @@ export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
   vaultInfo: KeyVaultInfo;
   auth?: {
-    envRoleNames: EnvRolesResults;
-
+    envRoles: EnvRolesResults;
     adminLogin?: pulumi.Input<string>;
     password?: pulumi.Input<string>;
   };
@@ -89,15 +86,6 @@ export default ({
     ? UserIdentity({ name, group })
     : undefined;
 
-  if (userIdentity) {
-    //Allows to Read Key Vault
-    grantVaultAccessToIdentity({
-      name,
-      identity: userIdentity.principalId.apply((i) => ({ principalId: i })),
-      vaultInfo,
-    });
-  }
-
   const mySql = new dbformysql.Server(
     name,
     {
@@ -157,7 +145,16 @@ export default ({
 
   //Enable AD Administrator
   if (auth) {
-    const adminGroup = auth.envRoleNames.contributor;
+    if (userIdentity) {
+      //Allows to Read Key Vault
+      addMemberToGroup({
+        name: `${name}-contributor-role`,
+        objectId: userIdentity.principalId,
+        groupObjectId: auth?.envRoles.contributor.objectId,
+      });
+    }
+
+    const adminGroup = auth.envRoles.contributor;
     new dbformysql.AzureADAdministrator(name, {
       serverName: mySql.name,
       ...group,

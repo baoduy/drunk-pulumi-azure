@@ -1,11 +1,9 @@
 import * as storage from "@pulumi/azure-native/storage";
-
 import { KeyVaultInfo, BasicResourceArgs } from "../types";
 import { Input } from "@pulumi/pulumi";
 import { getSecret, getEncryptionKeyOutput } from "../KeyVault/Helper";
 import { isPrd } from "../Common/AzureEnv";
 import cdnCreator from "./CdnEndpoint";
-
 import {
   getConnectionName,
   getKeyName,
@@ -18,7 +16,8 @@ import {
   DefaultManagementRules,
   ManagementRules,
 } from "./ManagementRules";
-import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { addMemberToGroup } from "../AzAd/Group";
 
 type ContainerProps = {
   name: string;
@@ -30,7 +29,7 @@ type ContainerProps = {
 interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
   allowsCors?: string[];
-
+  envRoles: EnvRolesResults;
   //This is required for encryption key
   vaultInfo: KeyVaultInfo;
 
@@ -79,6 +78,7 @@ export default ({
   group,
   customDomain,
   allowsCors,
+  envRoles,
   vaultInfo,
   defaultManagementRules,
   containers = [],
@@ -311,7 +311,11 @@ export default ({
     if (!id) return;
 
     //Allows to Read Key Vault
-    grantVaultAccessToIdentity({ name, identity: stg.identity, vaultInfo });
+    addMemberToGroup({
+      name: `${name}-contributor-role`,
+      objectId: stg.identity.apply((s) => s!.principalId),
+      groupObjectId: envRoles.contributor.objectId,
+    });
 
     const keys = (
       await storage.listStorageAccountKeys({

@@ -7,8 +7,6 @@ import { createDiagnostic } from "../Logs/Helpers";
 import { BasicMonitorArgs, PrivateLinkProps } from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
-import { grantVaultPermissionToRole } from "./VaultPermissions";
-import { createVaultRoles } from "../AzAd/KeyVaultRoles";
 
 interface Props extends BasicResourceArgs {
   network?: {
@@ -17,15 +15,8 @@ interface Props extends BasicResourceArgs {
   };
 }
 
-export default ({
-  name,
-  //nameConvention,
-  group,
-  network,
-  ...others
-}: Props) => {
+export default ({ name, group, network, ...others }: Props) => {
   const vaultName = getKeyVaultName(name);
-  const roles = createVaultRoles(name);
 
   const vault = new native.keyvault.Vault(vaultName, {
     vaultName,
@@ -73,9 +64,6 @@ export default ({
     group,
     id: vault.id,
   });
-  const vaultInfo = toVaultInfo();
-
-  grantVaultPermissionToRole({ name, vaultInfo, roles });
 
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>

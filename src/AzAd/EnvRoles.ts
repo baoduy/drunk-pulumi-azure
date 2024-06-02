@@ -7,8 +7,9 @@ import { getSecretName } from "../Common/Naming";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { getSecret } from "../KeyVault/Helper";
 
-type keyTypes = "readOnly" | "contributor" | "admin";
-const envRoleConfig: Record<keyTypes, RoleProps> = {
+export type EnvRoleKeyTypes = "readOnly" | "contributor" | "admin";
+
+const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   readOnly: {
     roleName: "Readonly",
     appName: "Azure",
@@ -38,7 +39,7 @@ export const createEnvRoles = ({
   const rs: Record<string, Output<Group>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {
-    const config = envRoleConfig[key as keyTypes];
+    const config = envRoleConfig[key as EnvRoleKeyTypes];
 
     if (key === "admin" && includesAdoIdentityAsAdmin) {
       const ado = getAdoIdentityInfo(vaultInfo);
@@ -65,11 +66,11 @@ export const createEnvRoles = ({
     });
   });
 
-  return rs as Record<keyTypes, Output<Group>>;
+  return rs as Record<EnvRoleKeyTypes, Output<Group>>;
 };
 
 type RoleType = { objectId: string; displayName: string };
-export type EnvRolesResults = Record<keyTypes, Output<RoleType>>;
+export type EnvRolesResults = Record<EnvRoleKeyTypes, Output<RoleType>>;
 
 const getEnvRole = async (name: string, vaultInfo: KeyVaultInfo) => {
   const secretNames = getRoleSecretName(name);

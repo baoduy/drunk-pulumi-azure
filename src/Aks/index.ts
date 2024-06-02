@@ -18,8 +18,7 @@ import { stack } from "../Common/StackEnv";
 import { createDiagnostic } from "../Logs/Helpers";
 import { getAksName, getResourceGroupName } from "../Common/Naming";
 import { roleAssignment } from "../AzAd/RoleAssignment";
-import { getAdGroup } from "../AzAd/Group";
-import { EnvRoleNamesType } from "../AzAd/EnvRoles";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { getAksConfig } from "./Helper";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import * as inputs from "@pulumi/azure-native/types/input";
@@ -131,8 +130,7 @@ export type AskFeatureProps = {
 };
 
 export type AksAccessProps = {
-  envRoleNames: EnvRoleNamesType;
-  adminMembers?: Array<{ objectId: Input<string> }>;
+  envRoles: EnvRolesResults;
   authorizedIPRanges?: Input<string>[];
 };
 
@@ -222,14 +220,6 @@ export default async ({
     vaultInfo,
     dependsOn,
   });
-
-  const adminGroup = aksAccess?.envRoleNames
-    ? getAdGroup(aksAccess.envRoleNames.admin)
-    : undefined;
-
-  const contributeGroup = aksAccess?.envRoleNames
-    ? getAdGroup(aksAccess.envRoleNames.contributor)
-    : undefined;
 
   //=================Validate ===================================/
   // if (!linux?.sshKeys || !linux.sshKeys[0]) {
@@ -400,12 +390,14 @@ export default async ({
       },
       disableLocalAccounts,
       enableRBAC: true,
-      aadProfile: {
-        enableAzureRBAC: true,
-        managed: true,
-        adminGroupObjectIDs: adminGroup ? [adminGroup.objectId] : undefined,
-        tenantID: tenantId,
-      },
+      aadProfile: aksAccess?.envRoles
+        ? {
+            enableAzureRBAC: true,
+            managed: true,
+            adminGroupObjectIDs: [aksAccess.envRoles.admin.objectId],
+            tenantID: tenantId,
+          }
+        : undefined,
       oidcIssuerProfile: { enabled: false },
       storageProfile: {
         blobCSIDriver: {
@@ -537,74 +529,6 @@ export default async ({
   //Grant permission for Group
   aks.id.apply(async (id) => {
     if (!id) return;
-
-    //Admin
-    if (adminGroup) {
-      await Promise.all(
-        [
-          {
-            shortName: "Admin-Contributor-Role",
-            name: "Azure Kubernetes Service Contributor Role",
-          },
-          {
-            shortName: "Admin-RBAC-Cluster-Admin",
-            name: "Azure Kubernetes Service RBAC Cluster Admin",
-          },
-          {
-            shortName: "Admin-Cluster-Admin-Role",
-            name: "Azure Kubernetes Service Cluster Admin Role",
-          },
-          {
-            shortName: "Admin-Cluster-Monitoring-User",
-            name: "Azure Kubernetes Service Cluster Monitoring User",
-          },
-          {
-            shortName: "Admin-Cluster-User-Role",
-            name: "Azure Kubernetes Service Cluster User Role",
-          },
-        ].map((r) =>
-          roleAssignment({
-            name: `${name}-${r.shortName}`,
-            principalId: adminGroup.objectId,
-            principalType: "Group",
-            roleName: r.name,
-            scope: id,
-          }),
-        ),
-      );
-    }
-
-    //Contributor
-    if (contributeGroup) {
-      await Promise.all(
-        [
-          {
-            shortName: "Contributor-Contributor-Role",
-            name: "Azure Kubernetes Service Contributor Role",
-          },
-          {
-            shortName: "Contributor-RBAC-Admin",
-            name: "Azure Kubernetes Service RBAC Admin",
-          },
-          {
-            shortName: "Contributor-RBAC-Reader",
-            name: "Azure Kubernetes Service RBAC Reader",
-          },
-          {
-            shortName: "Contributor-RBAC-Writer",
-            name: "Azure Kubernetes Service RBAC Writer",
-          },
-        ].map((r) =>
-          roleAssignment({
-            name: `${name}-${r.shortName}`,
-            principalId: contributeGroup.objectId,
-            principalType: "Group",
-            roleName: r.name,
-            scope: id,
-          }),
-        ),
-      );
-    }
 
     //Grant Permission for Identity
     pulumi
