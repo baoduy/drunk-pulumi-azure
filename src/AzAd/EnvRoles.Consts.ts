@@ -38,8 +38,10 @@ const IOTHubRoleNames: Record<EnvRoleKeyTypes, string[]> = {
 const KeyVaultRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: [
     "Key Vault Crypto Service Encryption User",
-    "Key Vault Crypto User",
+    "Key Vault Crypto Service Release User",
     "Key Vault Secrets User",
+    "Key Vault Crypto User",
+    "Key Vault Certificate User",
     "Key Vault Reader",
   ],
   contributor: [
