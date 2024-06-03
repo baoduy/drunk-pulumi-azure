@@ -9,18 +9,7 @@ interface Props extends Omit<BasicResourceArgs, "name"> {
 }
 
 export default ({ name = defaultAzAdoName, ...others }: Props) => {
-  const additionRoles = [
-    "Network Contributor",
-    "Storage Account Contributor",
-    "Storage Blob Data Contributor",
-    "Storage File Data SMB Share Contributor",
-    "Storage Queue Data Contributor",
-    "Storage Table Data Contributor",
-    "Log Analytics Contributor",
-    "AcrPush",
-    "AcrPull",
-    "Data Factory Contributor",
-  ];
+  const additionRoles = ["Owner"];
 
   return UserAssignedIdentity({
     name,

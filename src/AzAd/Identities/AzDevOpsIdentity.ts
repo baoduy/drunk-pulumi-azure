@@ -24,18 +24,7 @@ export const getAdoIdentityInfo = (vaultInfo: KeyVaultInfo) =>
 export default ({
   name = defaultAzAdoName,
   vaultInfo,
-  additionRoles = [
-    "Network Contributor",
-    "Storage Account Contributor",
-    "Storage Blob Data Contributor",
-    "Storage File Data SMB Share Contributor",
-    "Storage Queue Data Contributor",
-    "Storage Table Data Contributor",
-    "Log Analytics Contributor",
-    "AcrPush",
-    "AcrPull",
-    "Data Factory Contributor",
-  ],
+  additionRoles = ["Owner"],
   ...others
 }: Props) => {
   const graphAccess = getGraphPermissions({ name: "User.Read", type: "Scope" });
