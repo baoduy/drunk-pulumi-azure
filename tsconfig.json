@@ -45,6 +45,7 @@
     "src/AzAd/Identity.ts",
     "src/AzAd/Role.ts",
     "src/AzAd/RoleAssignment.ts",
+    "src/AzAd/RoleDefinitions/JustInTimeRequestRole.ts",
     "src/AzAd/RolesBuiltIn.ts",
     "src/AzAd/UserAssignedIdentity.ts",
     "src/Builder/AksBuilder.ts",
