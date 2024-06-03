@@ -59,7 +59,6 @@ export const roleAssignment = ({
   dependsOn,
 }: RoleAssignmentProps) => {
   const role = getRoleDefinitionByName({ roleName });
-
   return new native.authorization.RoleAssignment(
     `${name}-${roleName.split(" ").join("")}`,
     {

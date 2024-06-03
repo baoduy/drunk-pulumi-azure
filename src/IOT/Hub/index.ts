@@ -4,9 +4,6 @@ import * as devices from "@pulumi/azure-native/devices";
 import { subscriptionId } from "../../Common/AzureEnv";
 import { Input } from "@pulumi/pulumi";
 import Locker from "../../Core/Locker";
-import { EnvRolesResults } from "../../AzAd/EnvRoles";
-import { roleAssignment } from "../../AzAd/RoleAssignment";
-import { getAdGroup } from "../../AzAd/Group";
 import { addCustomSecret } from "../../KeyVault/CustomHelper";
 
 type StorageEndpointPropertiesArgs = {

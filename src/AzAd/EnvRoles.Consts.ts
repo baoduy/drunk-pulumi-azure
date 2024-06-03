@@ -1,7 +1,12 @@
-import { EnvRoleKeyTypes, EnvRolesResults } from "./EnvRoles";
+import {
+  EnvRoleKeyTypes,
+  EnvRolesResults,
+  getEnvRolesOutput,
+} from "./EnvRoles";
 import { roleAssignment, RoleAssignmentProps } from "./RoleAssignment";
 import { replaceAll } from "../Common/Helpers";
 import { Input, Resource } from "@pulumi/pulumi";
+import { KeyVaultInfo } from "../types";
 
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: ["Reader"],
@@ -154,45 +159,4 @@ export const grantEnvRolesAccess = ({
       dependsOn,
     });
   });
-};
-
-export const grantIdentityRolesAccess = ({
-  name,
-  principalId,
-  scope,
-  roleType,
-  additionRoles,
-  dependsOn,
-  ...others
-}: RoleEnableTypes & {
-  name: string;
-  principalId: Input<string>;
-  scope: Input<string>;
-  roleType: EnvRoleKeyTypes;
-  additionRoles?: string[];
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
-}) => {
-  const roles = getRoleNames(others);
-  const finalRoles = new Set(additionRoles);
-
-  if (roleType === "readOnly") roles.readOnly.forEach((r) => finalRoles.add(r));
-  if (roleType === "contributor")
-    roles.contributor.forEach((r) => finalRoles.add(r));
-  if (roleType === "admin") roles.admin.forEach((r) => finalRoles.add(r));
-
-  console.log(`${name}-roles`, finalRoles);
-
-  Array.from(finalRoles)
-    .sort()
-    .forEach((r) => {
-      const n = `${name}-${roleType}-${replaceAll(r, " ", "")}`;
-      roleAssignment({
-        name: n,
-        principalId,
-        principalType: "ServicePrincipal",
-        roleName: r,
-        scope,
-        dependsOn,
-      });
-    });
 };

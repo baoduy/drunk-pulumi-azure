@@ -1,7 +1,7 @@
 import * as azureAD from "@pulumi/azuread";
 import { ServicePrincipal } from "@pulumi/azuread";
 import * as pulumi from "@pulumi/pulumi";
-import { Input, Output } from "@pulumi/pulumi";
+import { Output } from "@pulumi/pulumi";
 import { getIdentityName } from "../Common/Naming";
 import {
   ApplicationApiOauth2PermissionScope,
@@ -9,13 +9,9 @@ import {
   ApplicationRequiredResourceAccess,
   ApplicationOptionalClaims,
 } from "@pulumi/azuread/types/input";
-
 import { BasicArgs, IdentityRoleAssignment, KeyVaultInfo } from "../types";
-import { roleAssignment } from "./RoleAssignment";
-import { defaultScope } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { getIdentitySecretNames } from "./Helper";
-import { getEnvRolesOutput } from "./EnvRoles";
+import { getIdentitySecretNames, grantIdentityPermissions } from "./Helper";
 
 type PreAuthApplicationProps = {
   appId: string;
@@ -190,22 +186,13 @@ export default ({
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
-    if (roles) {
-      roles.map((r) =>
-        roleAssignment({
-          name,
-          roleName: r.name,
-          principalId: principal!.id,
-          principalType: "ServicePrincipal",
-          scope: r.scope || defaultScope,
-        }),
-      );
-
-      if (envRole) {
-        const envRoles = getEnvRolesOutput(vaultInfo);
-        const group = envRoles[envRole];
-      }
-    }
+    grantIdentityPermissions({
+      name,
+      envRole,
+      roles,
+      vaultInfo,
+      principalId: principal.objectId,
+    });
 
     addCustomSecret({
       name: secretNames.principalIdKeyName,

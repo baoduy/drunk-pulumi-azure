@@ -97,7 +97,7 @@ export interface AppInsightInfo extends ResourceInfo {
 }
 
 export type IdentityRoleAssignment = {
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
   roles?: Array<{ name: string; scope: Input<string> }>;
   envRole?: EnvRoleKeyTypes;
 };

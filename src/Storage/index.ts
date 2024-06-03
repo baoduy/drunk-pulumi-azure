@@ -16,8 +16,7 @@ import {
   DefaultManagementRules,
   ManagementRules,
 } from "./ManagementRules";
-import { EnvRolesResults } from "../AzAd/EnvRoles";
-import { addMemberToGroup } from "../AzAd/Group";
+import { grantIdentityPermissions } from "../AzAd/Helper";
 
 type ContainerProps = {
   name: string;
@@ -29,7 +28,6 @@ type ContainerProps = {
 interface StorageProps extends BasicResourceArgs {
   customDomain?: string;
   allowsCors?: string[];
-  envRoles: EnvRolesResults;
   //This is required for encryption key
   vaultInfo: KeyVaultInfo;
 
@@ -78,7 +76,6 @@ export default ({
   group,
   customDomain,
   allowsCors,
-  envRoles,
   vaultInfo,
   defaultManagementRules,
   containers = [],
@@ -311,10 +308,11 @@ export default ({
     if (!id) return;
 
     //Allows to Read Key Vault
-    addMemberToGroup({
-      name: `${name}-contributor-role`,
-      objectId: stg.identity.apply((s) => s!.principalId),
-      groupObjectId: envRoles.contributor.objectId,
+    grantIdentityPermissions({
+      name,
+      vaultInfo,
+      envRole: "readOnly",
+      principalId: stg.identity.apply((s) => s!.principalId),
     });
 
     const keys = (

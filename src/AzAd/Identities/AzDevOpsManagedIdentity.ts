@@ -9,28 +9,23 @@ interface Props extends Omit<BasicResourceArgs, "name"> {
 }
 
 export default ({ name = defaultAzAdoName, ...others }: Props) => {
-  const roles = [
-    { name: "Contributor", scope: defaultScope },
-    { name: "Network Contributor", scope: defaultScope },
-    { name: "Storage Account Contributor", scope: defaultScope },
-    { name: "Storage Blob Data Contributor", scope: defaultScope },
-    { name: "Storage File Data SMB Share Contributor", scope: defaultScope },
-    { name: "Storage Queue Data Contributor", scope: defaultScope },
-    { name: "Storage Table Data Contributor", scope: defaultScope },
-    { name: "Log Analytics Contributor", scope: defaultScope },
-    { name: "Key Vault Administrator", scope: defaultScope },
-    { name: "Key Vault Certificates Officer", scope: defaultScope },
-    { name: "Key Vault Contributor", scope: defaultScope },
-    { name: "Key Vault Crypto Officer", scope: defaultScope },
-    { name: "Key Vault Crypto Service Encryption User", scope: defaultScope },
-    { name: "Key Vault Crypto User", scope: defaultScope },
-    { name: "Key Vault Secrets Officer", scope: defaultScope },
-    { name: "Key Vault Secrets User", scope: defaultScope },
-    { name: "User Access Administrator", scope: defaultScope },
-    { name: "AcrPush", scope: defaultScope },
-    { name: "AcrPull", scope: defaultScope },
-    { name: "Data Factory Contributor", scope: defaultScope },
+  const additionRoles = [
+    "Network Contributor",
+    "Storage Account Contributor",
+    "Storage Blob Data Contributor",
+    "Storage File Data SMB Share Contributor",
+    "Storage Queue Data Contributor",
+    "Storage Table Data Contributor",
+    "Log Analytics Contributor",
+    "AcrPush",
+    "AcrPull",
+    "Data Factory Contributor",
   ];
 
-  return UserAssignedIdentity({ name, roles, ...others });
+  return UserAssignedIdentity({
+    name,
+    roles: additionRoles.map((role) => ({ name: role, scope: defaultScope })),
+    lock: true,
+    ...others,
+  });
 };

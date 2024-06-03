@@ -93,14 +93,12 @@ const getEncryptionKey = async (
 ): Promise<KeyVaultPropertiesResults> => {
   const n = `${name}-encrypt-key`;
   const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
-  const rs = {
+  return {
     keyName: key!.properties.name,
     keyVaultUri: key!.properties.vaultUrl,
     keyVersion: key!.properties.version,
     url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
   };
-  console.log(name, rs);
-  return rs;
 };
 
 export const getEncryptionKeyOutput = (

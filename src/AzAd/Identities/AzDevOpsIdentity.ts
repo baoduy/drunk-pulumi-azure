@@ -2,7 +2,6 @@ import { KeyVaultInfo } from "../../types";
 import Identity from "../Identity";
 import { getGraphPermissions } from "../GraphDefinition";
 import { getIdentityInfoOutput } from "../Helper";
-import { grantIdentityRolesAccess } from "../EnvRoles.Consts";
 import { defaultScope } from "../../Common/AzureEnv";
 
 export const defaultAzAdoName = "azure-devops";
@@ -47,24 +46,10 @@ export default ({
     createClientSecret: true,
     createPrincipal: true,
     requiredResourceAccesses: [graphAccess],
+    roles: additionRoles.map((role) => ({ name: role, scope: defaultScope })),
     vaultInfo,
     ...others,
   });
-
-  if (ado.principalId) {
-    grantIdentityRolesAccess({
-      name,
-      scope: defaultScope,
-      principalId: ado.principalId,
-      dependsOn: ado.resource,
-      roleType: "admin",
-      additionRoles,
-      enableAksRoles: true,
-      enableIotRoles: true,
-      enableVaultRoles: true,
-      enableRGRoles: true,
-    });
-  }
 
   console.log(
     `Add this principal ${name} to [User administrator, Application administrator, Cloud application administrator and Global Reader] of Azure AD to allow to Add/Update and Delete Groups, Users`,

@@ -1,16 +1,16 @@
-import { Input } from '@pulumi/pulumi';
-import * as native from '@pulumi/azure-native';
-import CdnHttpsEnable from '@drunk-pulumi/azure-providers/CdnHttpsEnable';
+import { Input } from "@pulumi/pulumi";
+import * as native from "@pulumi/azure-native";
+import CdnHttpsEnable from "@drunk-pulumi/azure-providers/CdnHttpsEnable";
 import {
   getDefaultResponseHeadersRule,
   enforceHttpsRule,
   indexFileCacheRule,
   allowsCorsRules,
-} from './CdnRules';
-import { cdnProfileInfo } from '../Common/GlobalEnv';
-import { replaceAll } from '../Common/Helpers';
-import { getCdnEndpointName } from '../Common/Naming';
-import { BasicArgs } from '../types';
+} from "./CdnRules";
+import { cdnProfileInfo } from "../Common/GlobalEnv";
+import { replaceAll } from "../Common/Helpers";
+import { getCdnEndpointName } from "../Common/Naming";
+import { BasicArgs } from "../types";
 
 interface Props extends BasicArgs {
   name: string;
@@ -42,7 +42,6 @@ export default ({
 
   //Update rule order
   rules.forEach((r, i) => (r.order = i + 1));
-  console.log('CDN Endpoint: Link to', cdnProfileInfo);
 
   const endpoint = new native.cdn.Endpoint(
     name,
@@ -53,31 +52,31 @@ export default ({
       origins: [{ name, hostName: origin }],
       originHostHeader: origin,
 
-      optimizationType: 'GeneralWebDelivery',
-      queryStringCachingBehavior: 'IgnoreQueryString',
+      optimizationType: "GeneralWebDelivery",
+      queryStringCachingBehavior: "IgnoreQueryString",
 
       deliveryPolicy: {
         rules,
-        description: 'Static Website Rules',
+        description: "Static Website Rules",
       },
 
       isCompressionEnabled: true,
       contentTypesToCompress: [
-        'text/plain',
-        'text/html',
-        'text/xml',
-        'text/css',
-        'application/xml',
-        'application/xhtml+xml',
-        'application/rss+xml',
-        'application/javascript',
-        'application/x-javascript',
+        "text/plain",
+        "text/html",
+        "text/xml",
+        "text/css",
+        "application/xml",
+        "application/xhtml+xml",
+        "application/rss+xml",
+        "application/javascript",
+        "application/x-javascript",
       ],
 
       isHttpAllowed: true,
       isHttpsAllowed: true,
     },
-    { dependsOn }
+    { dependsOn },
   );
 
   if (domainName) {
@@ -86,10 +85,10 @@ export default ({
       {
         endpointName: endpoint.name,
         ...cdnProfileInfo,
-        customDomainName: replaceAll(domainName, '.', '-'),
+        customDomainName: replaceAll(domainName, ".", "-"),
         hostName: domainName,
       },
-      { dependsOn: endpoint }
+      { dependsOn: endpoint },
     );
 
     if (httpsEnabled) {
@@ -98,7 +97,7 @@ export default ({
         {
           customDomainId: customDomain.id,
         },
-        { dependsOn: customDomain }
+        { dependsOn: customDomain },
       );
     }
   }

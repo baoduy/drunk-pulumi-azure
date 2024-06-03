@@ -1,13 +1,11 @@
-import { BasicResourceArgs } from "../types";
+import { BasicResourceArgs, IdentityRoleAssignment } from "../types";
 import * as azure from "@pulumi/azure-native";
 import { getManagedIdentityName } from "../Common/Naming";
 import Locker from "../Core/Locker";
-import { roleAssignment } from "./RoleAssignment";
-import { Input } from "@pulumi/pulumi";
+import { grantIdentityPermissions } from "./Helper";
 
-interface Props extends BasicResourceArgs {
+interface Props extends BasicResourceArgs, IdentityRoleAssignment {
   lock?: boolean;
-  roles?: Array<{ name: string; scope: Input<string> }>;
 }
 
 export default ({
@@ -15,6 +13,8 @@ export default ({
   group,
   lock,
   roles,
+  envRole,
+  vaultInfo,
   dependsOn,
   importUri,
   ignoreChanges,
@@ -29,24 +29,19 @@ export default ({
     { dependsOn, import: importUri, ignoreChanges },
   );
 
-  if (roles) {
-    roles.map((r) =>
-      roleAssignment({
-        name,
-        roleName: r.name,
-        principalId: managedIdentity!.principalId,
-        principalType: "ServicePrincipal",
-        scope: r.scope,
-      }),
-    );
-  }
+  grantIdentityPermissions({
+    name,
+    envRole,
+    roles,
+    vaultInfo,
+    principalId: managedIdentity.principalId,
+  });
 
-  if (lock) {
+  if (lock)
     Locker({
       name,
       resource: managedIdentity,
     });
-  }
 
   return managedIdentity;
 };

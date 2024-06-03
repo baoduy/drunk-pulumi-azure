@@ -4,6 +4,7 @@ import { getAutomationAccountName } from "../Common/Naming";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
 import { defaultScope } from "../Common/AzureEnv";
+import { grantIdentityPermissions } from "../AzAd/Helper";
 
 interface Props extends BasicResourceArgs {
   enableEncryption?: boolean;
@@ -24,10 +25,11 @@ export default ({
     ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
 
+  const roles = [{ name: "Contributor", scope: defaultScope }];
   const identity = UserAssignedIdentity({
     name,
     group,
-    roles: [{ name: "Contributor", scope: defaultScope }],
+    roles,
     dependsOn,
   });
   //TODO: Add this identity into a vault reader role.
@@ -40,7 +42,7 @@ export default ({
 
       publicNetworkAccess: false,
       identity: {
-        type: automation.ResourceIdentityType.UserAssigned,
+        type: automation.ResourceIdentityType.SystemAssigned_UserAssigned,
         userAssignedIdentities: [identity.id],
       },
       disableLocalAuth: true,
@@ -65,11 +67,13 @@ export default ({
     { dependsOn: identity, ignoreChanges },
   );
 
-  // new automation.RuntimeEnvironment(name, {
-  //   runtimeEnvironmentName: name,
-  //   automationAccountName: auto.name,
-  //   ...group,
-  //   defaultPackages: {},
-  // });
+  auto.identity.apply((i) =>
+    grantIdentityPermissions({
+      name,
+      roles,
+      principalId: i!.principalId,
+    }),
+  );
+
   return auto;
 };

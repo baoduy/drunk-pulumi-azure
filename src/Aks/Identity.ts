@@ -39,6 +39,5 @@ export default ({ name, vaultInfo, dependsOn }: Props) => {
     dependsOn: serverIdentity.resource,
   });
 
-  serverIdentity.clientId.apply((i) => console.log(i));
   return serverIdentity;
 };

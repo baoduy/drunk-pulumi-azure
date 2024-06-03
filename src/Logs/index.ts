@@ -5,7 +5,6 @@ import Storage from "../Storage";
 import { getResourceName } from "../Common/ResourceEnv";
 import { DefaultManagementRules } from "../Storage/ManagementRules";
 import AppInsight from "./AppInsight";
-import { EnvRolesResults } from "../AzAd/EnvRoles";
 
 type WorkspaceType = {
   createAppInsight?: boolean;
@@ -29,7 +28,6 @@ const defaultStorageRules: Array<DefaultManagementRules> = [
 interface Props {
   name: string;
   group: ResourceGroupInfo;
-  envRoles: EnvRolesResults;
   workspace?: WorkspaceType;
   storage?: {
     /** The management rule applied to Storage level (all containers)*/
@@ -38,14 +36,7 @@ interface Props {
   vaultInfo: KeyVaultInfo;
 }
 
-export default ({
-  group,
-  name,
-  workspace,
-  storage,
-  envRoles,
-  vaultInfo,
-}: Props) => {
+export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
   name = getResourceName(name, { suffix: "logs" });
 
   const createWp: WorkspaceType | undefined = workspace
@@ -79,7 +70,6 @@ export default ({
     ? Storage({
         group,
         name,
-        envRoles,
         vaultInfo,
         defaultManagementRules: storage.storageRules ?? defaultStorageRules,
         featureFlags: { allowSharedKeyAccess: true },

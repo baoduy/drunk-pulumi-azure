@@ -83,7 +83,7 @@ export default ({
     : undefined;
 
   const userIdentity = enableEncryption
-    ? UserAssignedIdentity({ name, group })
+    ? UserAssignedIdentity({ name, group, vaultInfo })
     : undefined;
 
   const mySql = new dbformysql.Server(

@@ -534,8 +534,6 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile, network.subnetId])
       .apply(([identity, identityProfile, sId]) => {
-        console.log("Grant RBAC for cluster:", name);
-
         if (acrScope && identityProfile && identityProfile["kubeletidentity"]) {
           roleAssignment({
             name: `${name}-aks-identity-profile-pull`,

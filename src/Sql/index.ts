@@ -16,7 +16,7 @@ import { convertToIpRange } from "../VNet/Helper";
 import privateEndpointCreator from "../VNet/PrivateEndpoint";
 import sqlDbCreator, { SqlDbProps } from "./SqlDb";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { addMemberToGroup } from "../AzAd/Group";
+import { grantIdentityPermissions } from "../AzAd/Helper";
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -179,10 +179,11 @@ export default ({
   );
 
   //Allows to Read Key Vault
-  addMemberToGroup({
-    name: `${name}-contributor-role`,
-    objectId: sqlServer.identity.apply((s) => s!.principalId),
-    groupObjectId: auth.envRoles.contributor.objectId,
+  grantIdentityPermissions({
+    name,
+    vaultInfo,
+    envRole: "readOnly",
+    principalId: sqlServer.identity.apply((s) => s!.principalId),
   });
 
   if (lock) {
