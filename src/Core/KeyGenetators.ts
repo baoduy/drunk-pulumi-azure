@@ -1,18 +1,34 @@
-import { KeyVaultInfo } from '../types';
-import { getSshName } from '../Common/Naming';
-import { SshKeyResource } from '@drunk-pulumi/azure-providers/SshKeyGenerator';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { getSecret } from '../KeyVault/Helper';
-import { LoginProps, randomPassword, randomUserName } from './Random';
-import { PGPProps, PGPResource } from '@drunk-pulumi/azure-providers/PGPGenerator';
+import { KeyVaultInfo } from "../types";
+import { getSshName } from "../Common/Naming";
+import { SshKeyResource } from "@drunk-pulumi/azure-providers/SshKeyGenerator";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { getSecret } from "../KeyVault/Helper";
+import { LoginProps, randomPassword, randomUserName } from "./Random";
+import {
+  PGPProps,
+  PGPResource,
+} from "@drunk-pulumi/azure-providers/PGPGenerator";
+import { Output, output } from "@pulumi/pulumi";
+
+export type SshResults = {
+  userName: Output<string>;
+  lists: {
+    getPublicKey: () => Output<string>;
+    getPrivateKey: () => Output<string>;
+    getPassword: () => Output<string>;
+  };
+};
+
+export type SshGenerationProps = Omit<LoginProps, "passwordOptions"> & {
+  vaultInfo: KeyVaultInfo;
+};
 
 export const generateSsh = ({
   name,
   loginPrefix,
   maxUserNameLength,
-  passwordOptions = { policy: false },
   vaultInfo,
-}: LoginProps & { vaultInfo: KeyVaultInfo }) => {
+}: SshGenerationProps): SshResults => {
   name = getSshName(name);
 
   const userNameKey = `${name}-user`;
@@ -21,44 +37,52 @@ export const generateSsh = ({
   const privateKeyName = `${name}-privateKey`;
 
   const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
-  const pass = randomPassword({ name, ...passwordOptions });
+  const pass = randomPassword({ name, policy: false });
 
   const rs = new SshKeyResource(
     name,
     {
       password: pass.result,
       vaultInfo,
-      publicKeyName,
-      privateKeyName,
+      //publicKeyName,
+      //privateKeyName,
     },
-    { dependsOn: pass }
+    { dependsOn: pass },
   );
 
   addCustomSecret({
     name: userNameKey,
     value: userName,
+    formattedName: true,
     vaultInfo,
-    contentType: 'Random Ssh',
+    contentType: "Random Ssh",
+    dependsOn: rs,
   });
 
   addCustomSecret({
     name: passwordKeyName,
     value: pass.result,
+    formattedName: true,
     vaultInfo,
-    contentType: 'Random Ssh',
+    contentType: "Random Ssh",
     dependsOn: rs,
   });
 
   return {
     userName,
-    ssh: rs,
-    password: pass.result,
-    vaultNames: { passwordKeyName, publicKeyName, privateKeyName },
     lists: {
-      getUserName: async () =>
-        (await getSecret({ name: userNameKey, vaultInfo }))?.value,
-      getPublicKey: async () =>
-        (await getSecret({ name: publicKeyName, vaultInfo }))?.value,
+      getPublicKey: (): Output<string> =>
+        output(
+          getSecret({ name: publicKeyName, nameFormatted: true, vaultInfo })!,
+        ).apply((i) => i!.value!),
+      getPrivateKey: (): Output<string> =>
+        output(
+          getSecret({ name: privateKeyName, nameFormatted: true, vaultInfo })!,
+        ).apply((i) => i!.value!),
+      getPassword: (): Output<string> =>
+        output(
+          getSecret({ name: passwordKeyName, nameFormatted: true, vaultInfo })!,
+        ).apply((i) => i!.value!),
     },
   };
 };
@@ -81,13 +105,18 @@ export const generatePGP = ({
     name,
     pgp: rs,
     lists: {
-      getPublicKey: async () =>
-        (await getSecret({ name: `${name}-publicKey`, vaultInfo }))?.value,
-      getPrivateKey: async () =>
-        (await getSecret({ name: `${name}-privateKey`, vaultInfo }))?.value,
-      getRevocationCertificate: async () =>
-        (await getSecret({ name: `${name}-revocationCertificate`, vaultInfo }))
-          ?.value,
+      getPublicKey: () =>
+        output(getSecret({ name: `${name}-publicKey`, vaultInfo })).apply(
+          (i) => i!.value!,
+        ),
+      getPrivateKey: () =>
+        output(getSecret({ name: `${name}-privateKey`, vaultInfo })).apply(
+          (i) => i!.value!,
+        ),
+      getRevocationCertificate: () =>
+        output(
+          getSecret({ name: `${name}-revocationCertificate`, vaultInfo }),
+        ).apply((i) => i!.value!),
     },
   };
 };

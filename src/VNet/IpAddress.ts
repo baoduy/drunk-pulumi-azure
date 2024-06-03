@@ -1,10 +1,10 @@
-import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
-import { BasicResourceArgs } from '../types';
-import { isPrd } from '../Common/AzureEnv';
-import { getIpAddressName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import { organization } from '../Common/StackEnv';
+import * as network from "@pulumi/azure-native/network";
+import { Input } from "@pulumi/pulumi";
+import { BasicResourceArgs } from "../types";
+import { isPrd } from "../Common/AzureEnv";
+import { getIpAddressName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import { organization } from "../Common/StackEnv";
 
 interface Props extends BasicResourceArgs {
   version?: network.IPVersion;
@@ -12,10 +12,8 @@ interface Props extends BasicResourceArgs {
   enableDdos?: boolean;
   ddosCustomPolicyId?: Input<string>;
   allocationMethod?: network.IPAllocationMethod;
-  sku?: {
-    name?: network.PublicIPAddressSkuName;
-    tier?: network.PublicIPAddressSkuTier;
-  };
+  tier?: network.PublicIPAddressSkuTier | string;
+  enableZone?: boolean;
   lock?: boolean;
 }
 
@@ -28,15 +26,12 @@ export default ({
   publicIPPrefix,
   enableDdos,
   ddosCustomPolicyId,
+  enableZone = isPrd,
   allocationMethod = network.IPAllocationMethod.Static,
-  sku = {
-    name: network.PublicIPAddressSkuName.Basic,
-    tier: network.PublicIPAddressSkuTier.Regional,
-  },
+  tier = network.PublicIPAddressSkuTier.Regional,
   lock = true,
 }: Props) => {
   name = getIpName(name);
-
   const ipAddress = new network.PublicIPAddress(
     name,
     {
@@ -47,18 +42,16 @@ export default ({
       publicIPAllocationMethod: allocationMethod,
       publicIPPrefix: publicIPPrefix ? { id: publicIPPrefix.id } : undefined,
       ddosSettings:
-        enableDdos &&
-        ddosCustomPolicyId &&
-        sku.name === network.PublicIPAddressSkuName.Standard
+        enableDdos && ddosCustomPolicyId
           ? {
-              protectionMode: enableDdos ? 'Enabled' : 'Disabled',
+              protectionMode: enableDdos ? "Enabled" : "Disabled",
               ddosProtectionPlan: { id: ddosCustomPolicyId },
             }
           : undefined,
-      sku,
-      zones: isPrd ? ['1', '2', '3'] : undefined,
+      sku: { name: "Standard", tier },
+      zones: enableZone ? ["1", "2", "3"] : undefined,
     },
-    { dependsOn: publicIPPrefix }
+    { dependsOn: publicIPPrefix },
   );
 
   if (lock) {

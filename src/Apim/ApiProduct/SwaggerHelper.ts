@@ -14,8 +14,6 @@ const removeVersion = (data: OpenAPI3, version: string): OpenAPI3 => {
   //Replace version from path
   Object.keys(data.paths).forEach((k) => {
     const newKey = replaceAll(k, `/${version}`, "");
-    //console.log('Replaced: ', { current: k, new: newKey });
-
     newPaths[newKey] = data.paths[k];
   });
 
@@ -29,10 +27,8 @@ export interface ApiImport {
 }
 
 const downloadSpecFile = async (
-  fileUrl: string
+  fileUrl: string,
 ): Promise<OpenAPI3 | undefined> => {
-  //console.log('Downloading Specs Url', fileUrl);
-
   try {
     //Get specs json from URL
     const specs = await axios.get<OpenAPI3>(fileUrl);
@@ -45,7 +41,7 @@ const downloadSpecFile = async (
 
 export const getImportConfig = async (
   specUrl: string,
-  version: string
+  version: string,
 ): Promise<string | undefined> => {
   const spec = await downloadSpecFile(specUrl);
 

@@ -1,40 +1,51 @@
 import { BasicResourceArgs } from "../types";
 import IpAddress from "./IpAddress";
 import * as network from "@pulumi/azure-native/network";
-import { Input, Resource } from "@pulumi/pulumi";
+import { Input } from "@pulumi/pulumi";
 import { getBastionName } from "../Common/Naming";
 
-interface Props extends BasicResourceArgs {
+export interface BastionProps extends BasicResourceArgs {
   subnetId: Input<string>;
-  dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
+  sku?: "Basic" | "Standard" | "Developer" | string;
 }
 
-export default ({ name, group, subnetId, dependsOn }: Props) => {
+export default ({
+  name,
+  group,
+  subnetId,
+  dependsOn,
+  importUri,
+  ignoreChanges,
+  sku = "Basic",
+}: BastionProps) => {
   name = getBastionName(name);
 
-  const ipAddress = IpAddress({
+  const ipAddressId = IpAddress({
     name,
     group,
-    sku: { name: "Standard", tier: "Regional" },
     lock: false,
-  });
+  }).id;
 
   return new network.BastionHost(
     name,
     {
       bastionHostName: name,
       ...group,
-      //dnsName: name,
-
+      sku: { name: sku },
       ipConfigurations: [
         {
           name: "IpConfig",
-          publicIPAddress: { id: ipAddress.id },
+          publicIPAddress: { id: ipAddressId },
           subnet: { id: subnetId },
           privateIPAllocationMethod: network.IPAllocationMethod.Dynamic,
         },
       ],
     },
-    { dependsOn: dependsOn || ipAddress, deleteBeforeReplace: true }
+    {
+      dependsOn: dependsOn,
+      deleteBeforeReplace: true,
+      import: importUri,
+      ignoreChanges,
+    },
   );
 };

@@ -1,35 +1,22 @@
 import * as native from "@pulumi/azure-native";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
-import { subscriptionId, tenantId } from "../Common/AzureEnv";
+import { tenantId } from "../Common/AzureEnv";
 import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
 import { BasicMonitorArgs, PrivateLinkProps } from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
-import { addCustomSecret } from "./CustomHelper";
-import { grantVaultPermissionToRole } from "./VaultPermissions";
-import { createVaultRoles } from "../AzAd/KeyVaultRoles";
 
 interface Props extends BasicResourceArgs {
-  /**The default-encryption-key, tenant-id va subscription-id will be added to the secrets and keys*/
-  createDefaultValues?: boolean;
   network?: {
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
   };
 }
 
-export default ({
-  name,
-  //nameConvention,
-  group,
-  createDefaultValues,
-  network,
-  ...others
-}: Props) => {
+export default ({ name, group, network, ...others }: Props) => {
   const vaultName = getKeyVaultName(name);
-  const roles = createVaultRoles(name);
 
   const vault = new native.keyvault.Vault(vaultName, {
     vaultName,
@@ -77,27 +64,6 @@ export default ({
     group,
     id: vault.id,
   });
-  const vaultInfo = toVaultInfo();
-
-  grantVaultPermissionToRole({ name, vaultInfo, roles });
-
-  if (createDefaultValues) {
-    addCustomSecret({
-      name: "tenant-id",
-      value: tenantId,
-      vaultInfo,
-      contentType: "KeyVault Default Values",
-      dependsOn: vault,
-    });
-
-    addCustomSecret({
-      name: "subscription-id",
-      value: subscriptionId,
-      vaultInfo,
-      contentType: "KeyVault Default Values",
-      dependsOn: vault,
-    });
-  }
 
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>

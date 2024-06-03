@@ -1,24 +1,24 @@
-import { ConventionProps, KeyVaultInfo, ResourceGroupInfo } from '../types';
-import { subscriptionId } from './AzureEnv';
-import { getResourceName } from './ResourceEnv';
-import { interpolate } from '@pulumi/pulumi';
-import { organization } from './StackEnv';
+import { ConventionProps, KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { subscriptionId } from "./AzureEnv";
+import { getResourceName } from "./ResourceEnv";
+import { interpolate } from "@pulumi/pulumi";
+import { organization } from "./StackEnv";
 
-export const globalKeyName = 'global';
+export const globalKeyName = "global";
 
 /**The Global resource group name.*/
 export const globalConvention: ConventionProps = {
   prefix: globalKeyName,
-  suffix: organization ? `grp-${organization}` : 'grp',
+  suffix: organization ? `grp-${organization}` : "grp",
 };
 
 export const groupInfo: ResourceGroupInfo = {
   resourceGroupName: getResourceName(globalKeyName, globalConvention),
 };
 
-export const logGroupInfo: ResourceGroupInfo = {
-  resourceGroupName: getResourceName('logs', globalConvention),
-};
+// export const logGroupInfo: ResourceGroupInfo = {
+//   resourceGroupName: getResourceName('logs', globalConvention),
+// };
 
 export const cdnProfileInfo = {
   profileName: `${globalKeyName}-${organization}-cdn-pfl`,

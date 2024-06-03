@@ -16,17 +16,19 @@ const defaultServicesEndpoints = [
 ];
 
 export interface SubnetProps {
-  name: string;
   /** The index of prefixSpaces*/
   addressPrefix: string;
-  /** Enable this to allow to link private endpoint network policies */
-  enablePrivateEndpoint?: boolean;
-  /** Enable this to allow to link private link service network policies*/
-  enablePrivateLinkService?: boolean;
-  enableSecurityGroup?: boolean;
-  enableRouteTable?: boolean;
   allowedServiceEndpoints?: boolean | string[];
   delegateServices?: DelegateServices[];
+  /** Enable this to allow linking private endpoint network policies */
+  enablePrivateEndpoint?: boolean;
+  /** Enable this to allow linking private link service network policies*/
+  enablePrivateLinkService?: boolean;
+  enableRouteTable?: boolean;
+  enableSecurityGroup?: boolean;
+  /** link Nat gateway into this subnet */
+  enableNatGateway?: boolean;
+  name: string;
 }
 
 interface Props {
@@ -35,6 +37,7 @@ interface Props {
   group: ResourceGroupInfo;
   securityGroup?: network.NetworkSecurityGroup;
   routeTable?: network.RouteTable;
+  natGateway?: network.NatGateway;
 }
 
 export default ({
@@ -42,13 +45,14 @@ export default ({
   subnet,
   vnetName,
   routeTable,
+  natGateway,
   securityGroup,
 }: Props): network.SubnetArgs => {
   const serviceEndpoints = Array.isArray(subnet.allowedServiceEndpoints)
     ? subnet.allowedServiceEndpoints
     : subnet.allowedServiceEndpoints === true
-    ? defaultServicesEndpoints
-    : undefined;
+      ? defaultServicesEndpoints
+      : undefined;
 
   return {
     name: subnet.name,
@@ -56,12 +60,13 @@ export default ({
     ...group,
     addressPrefix: subnet.addressPrefix,
     virtualNetworkName: vnetName,
+    networkSecurityGroup: securityGroup ? { id: securityGroup.id } : undefined,
+    natGateway: natGateway ? { id: natGateway.id } : undefined,
 
     routeTable:
       subnet.enableRouteTable !== false && routeTable
         ? { id: routeTable.id }
         : undefined,
-    networkSecurityGroup: securityGroup ? { id: securityGroup.id } : undefined,
 
     privateLinkServiceNetworkPolicies: subnet.enablePrivateLinkService
       ? network.VirtualNetworkPrivateLinkServiceNetworkPolicies.Enabled

@@ -5,13 +5,11 @@ import * as dbformysql from "@pulumi/azure-native/dbformysql";
 import { randomPassword } from "../Core/Random";
 import * as inputs from "@pulumi/azure-native/types/input";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { currentEnv, isPrd, tenantId } from "../Common/AzureEnv";
-import { getAdGroup } from "../AzAd/Group";
-import Role from "../AzAd/Role";
-import { EnvRoleNamesType } from "../AzAd/EnvRoles";
-import { getEncryptionKey } from "../KeyVault/Helper";
-import UserIdentity from "../AzAd/UserIdentity";
-import { grantVaultAccessToIdentity } from "../KeyVault/VaultPermissions";
+import { isPrd, tenantId } from "../Common/AzureEnv";
+import { addMemberToGroup } from "../AzAd/Group";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { getEncryptionKeyOutput } from "../KeyVault/Helper";
+import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
 import { RandomString } from "@pulumi/random";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import Locker from "../Core/Locker";
@@ -20,9 +18,7 @@ export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
   vaultInfo: KeyVaultInfo;
   auth?: {
-    enableAdAdministrator?: boolean;
-    envRoleNames?: EnvRoleNamesType;
-
+    envRoles: EnvRolesResults;
     adminLogin?: pulumi.Input<string>;
     password?: pulumi.Input<string>;
   };
@@ -83,21 +79,12 @@ export default ({
     }).result;
 
   const encryptKey = enableEncryption
-    ? getEncryptionKey(name, vaultInfo)
+    ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
 
   const userIdentity = enableEncryption
-    ? UserIdentity({ name, group })
+    ? UserAssignedIdentity({ name, group, vaultInfo })
     : undefined;
-
-  if (userIdentity) {
-    //Allows to Read Key Vault
-    grantVaultAccessToIdentity({
-      name,
-      identity: userIdentity.principalId.apply((i) => ({ principalId: i })),
-      vaultInfo,
-    });
-  }
 
   const mySql = new dbformysql.Server(
     name,
@@ -124,12 +111,7 @@ export default ({
         ? {
             type: dbformysql.DataEncryptionType.AzureKeyVault,
             primaryUserAssignedIdentityId: userIdentity?.id,
-            primaryKeyURI: encryptKey.apply(
-              (c) =>
-                `https://${vaultInfo.name}.vault.azure.net/keys/${c!.name}/${
-                  c!.properties.version
-                }`,
-            ),
+            primaryKeyURI: encryptKey.url,
           }
         : { type: dbformysql.DataEncryptionType.SystemManaged },
       //maintenanceWindow: { dayOfWeek: 6 },
@@ -161,11 +143,18 @@ export default ({
     Locker({ name, resource: mySql });
   }
 
-  if (auth?.enableAdAdministrator) {
-    const adminGroup = auth.envRoleNames
-      ? getAdGroup(auth.envRoleNames.admin)
-      : Role({ env: currentEnv, roleName: "ADMIN", appName: "MYSQL" });
+  //Enable AD Administrator
+  if (auth) {
+    if (userIdentity) {
+      //Allows to Read Key Vault
+      addMemberToGroup({
+        name: `${name}-contributor-role`,
+        objectId: userIdentity.principalId,
+        groupObjectId: auth?.envRoles.contributor.objectId,
+      });
+    }
 
+    const adminGroup = auth.envRoles.contributor;
     new dbformysql.AzureADAdministrator(name, {
       serverName: mySql.name,
       ...group,

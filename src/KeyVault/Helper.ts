@@ -1,10 +1,9 @@
 import * as keyvault from "@pulumi/azure-native/keyvault";
-import { Input, output, Resource } from "@pulumi/pulumi";
+import { Input, Output, output, Resource } from "@pulumi/pulumi";
 import { KeyVaultInfo } from "../types";
 import { getSecretName } from "../Common/Naming";
 import { replaceAll } from "../Common/Helpers";
 import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
-import * as VaultRole from "../AzAd/KeyVaultRoles";
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {
@@ -59,7 +58,7 @@ export const addKey = ({
       },
       tags,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
@@ -75,10 +74,38 @@ export const getKey = async ({
   return client.getKey(n, version);
 };
 
-export const getEncryptionKey = (name: string, vaultInfo: KeyVaultInfo) => {
+interface KeyVaultPropertiesResults {
+  keyName: string;
+  url: string;
+  keyVaultUri: string;
+  keyVersion?: string;
+}
+
+interface EncryptionPropertiesArgs {
+  keySource: "Microsoft.KeyVault";
+  keyVaultProperties: Input<KeyVaultPropertiesResults>;
+}
+
+/** Get or create encryption Key */
+const getEncryptionKey = async (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+): Promise<KeyVaultPropertiesResults> => {
   const n = `${name}-encrypt-key`;
-  return output(getKeyVaultBase(vaultInfo.name).getOrCreateKey(n));
+  const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
+  return {
+    keyName: key!.properties.name,
+    keyVaultUri: key!.properties.vaultUrl,
+    keyVersion: key!.properties.version,
+    url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
+  };
 };
+
+export const getEncryptionKeyOutput = (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+): Output<KeyVaultPropertiesResults> =>
+  output(getEncryptionKey(name, vaultInfo));
 
 /** Get Secret */
 export const getSecret = async ({
@@ -109,17 +136,4 @@ export const parseKeyUrl = (keyUrl: string): KeyResult => {
     version: splits.length > 4 ? splits[5] : "",
     vaultUrl: `https://${splits[2]}`,
   };
-};
-
-export const getVaultRoleNames = async (nameOrInfo: string | KeyVaultInfo) => {
-  if (typeof nameOrInfo === "string") {
-    return VaultRole.getVaultRoleNames(nameOrInfo);
-  }
-  const value = await getSecret({
-    name: "VaultRoleNames",
-    vaultInfo: nameOrInfo,
-  });
-  return value
-    ? (JSON.parse(value.value!) as { readOnly: string; admin: string })
-    : undefined;
 };

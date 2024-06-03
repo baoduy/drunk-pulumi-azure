@@ -1,32 +1,32 @@
-import * as tls from '@pulumi/tls';
-import * as fs from 'fs';
-import * as pem from './p12';
-import { KeyVaultInfo } from '../types';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import * as tls from "@pulumi/tls";
+import * as fs from "fs";
+import * as pem from "./p12";
+import { KeyVaultInfo } from "../types";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 export const defaultAllowedUses = [
-  'data_encipherment',
-  'digital_signature',
-  'cert_signing',
-  'client_auth',
-  'key_agreement',
-  'key_encipherment',
-  'server_auth',
-  'timestamping',
+  "data_encipherment",
+  "digital_signature",
+  "cert_signing",
+  "client_auth",
+  "key_agreement",
+  "key_encipherment",
+  "server_auth",
+  "timestamping",
 ];
 
 export const defaultCodeSignUses = [
-  'cert_signing',
-  'code_signing',
-  'content_commitment',
-  'data_encipherment',
-  'digital_signature',
-  'email_protection',
-  'key_agreement',
-  'key_encipherment',
-  'microsoft_Commercial_Code_Signing',
-  'microsoft_Kernel_Code_Signing',
-  'ocsp_signing',
+  "cert_signing",
+  "code_signing",
+  "content_commitment",
+  "data_encipherment",
+  "digital_signature",
+  "email_protection",
+  "key_agreement",
+  "key_encipherment",
+  "microsoft_Commercial_Code_Signing",
+  "microsoft_Kernel_Code_Signing",
+  "ocsp_signing",
 ];
 
 export const createSelfSignCertV2 = ({
@@ -51,7 +51,7 @@ export const createSelfSignCertV2 = ({
 
   // Create a private key
   const privateKey = new tls.PrivateKey(vaultCertName, {
-    algorithm: 'RSA',
+    algorithm: "RSA",
     rsaBits: 2048,
   });
 
@@ -86,7 +86,7 @@ export const createSelfSignCertV2 = ({
     caCertPem: ca.certPem,
     validityPeriodHours,
     isCaCertificate: false,
-    allowedUses: ['key_encipherment', 'digital_signature', 'server_auth'],
+    allowedUses: ["key_encipherment", "digital_signature", "server_auth"],
   });
 
   if (vaultInfo) {
@@ -140,7 +140,7 @@ export const createSelfSignCert = ({
 
   // Create a private key
   const privateKey = new tls.PrivateKey(vaultCertName, {
-    algorithm: 'RSA',
+    algorithm: "RSA",
     rsaBits: 2048,
   });
 
@@ -188,10 +188,9 @@ export const convertPfxFileToPem = async ({
   certPath: string;
   password?: string;
 }) => {
-  const p12File = await fs.promises.readFile(certPath, { encoding: 'binary' });
+  const p12File = await fs.promises.readFile(certPath, { encoding: "binary" });
   const cert = pem.convertToPem(p12File, password);
 
-  console.log('Loaded P12 file', certPath);
   return { cert: cert.pemCertificate, privateKey: cert.pemKey };
 };
 
@@ -202,9 +201,7 @@ export const convertPfxToPem = ({
   base64Cert: string;
   password?: string;
 }) => {
-  const byteArray = Buffer.from(base64Cert, 'base64');
-  const cert = pem.convertToPem(byteArray.toString('binary'), password);
-
-  console.log('Loaded P12 base64');
+  const byteArray = Buffer.from(base64Cert, "base64");
+  const cert = pem.convertToPem(byteArray.toString("binary"), password);
   return { cert: cert.pemCertificate, privateKey: cert.pemKey };
 };

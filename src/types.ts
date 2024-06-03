@@ -1,9 +1,14 @@
-import { Input, Output, Resource } from '@pulumi/pulumi';
-import * as authorization from '@pulumi/azure-native/authorization';
-import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
+import { Input, Output, Resource } from "@pulumi/pulumi";
+import * as authorization from "@pulumi/azure-native/authorization";
+import { DiagnosticSetting } from "@pulumi/azure-native/aadiam/diagnosticSetting";
+import * as pulumi from "@pulumi/pulumi";
+import { input as inputs, enums } from "@pulumi/azure-native/types";
+import { EnvRoleKeyTypes } from "./AzAd/EnvRoles";
 
 export interface BasicArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
+  importUri?: string;
+  ignoreChanges?: string[];
 }
 
 export interface ResourceGroupInfo {
@@ -27,7 +32,7 @@ export interface PrivateLinkProps {
 
 export interface NetworkRulesProps {
   subnetId?: Input<string>;
-  privateLink?: Omit<PrivateLinkProps, 'subnetId'>;
+  privateLink?: Omit<PrivateLinkProps, "subnetId">;
   ipAddresses?: Input<string>[];
 }
 
@@ -44,13 +49,19 @@ export interface DiagnosticProps extends BasicMonitorArgs {
   logsCategories?: string[];
 }
 
+export type ResourceType = {
+  name: string;
+  groupName: string;
+  formattedName?: boolean;
+};
+
 export interface ResourceInfo {
   resourceName: string;
   group: ResourceGroupInfo;
   id: Output<string>;
 }
 
-export interface ApimInfo extends Omit<ResourceInfo, 'resourceName' | 'id'> {
+export interface ApimInfo extends Omit<ResourceInfo, "resourceName" | "id"> {
   serviceName: string;
 }
 
@@ -61,9 +72,7 @@ export interface BasicResourceArgs extends BasicArgs {
 
 export interface DefaultResourceArgs extends BasicArgs {
   lock?: boolean;
-  monitoring?: Omit<DiagnosticProps, 'name' | 'targetResourceId'>;
-  importUri?: string;
-  ignoreChanges?: string[];
+  monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
 }
 
 export interface BasicResourceResultProps<TClass> {
@@ -86,3 +95,9 @@ export interface KeyVaultInfo {
 export interface AppInsightInfo extends ResourceInfo {
   instrumentationKey: Input<string>;
 }
+
+export type IdentityRoleAssignment = {
+  vaultInfo?: KeyVaultInfo;
+  roles?: Array<{ name: string; scope: Input<string> }>;
+  envRole?: EnvRoleKeyTypes;
+};

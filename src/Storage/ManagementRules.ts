@@ -1,35 +1,17 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as storage from '@pulumi/azure-native/storage';
-import { ResourceGroupInfo } from '../types';
+import * as pulumi from "@pulumi/pulumi";
+import * as storage from "@pulumi/azure-native/storage";
+import { ResourceGroupInfo } from "../types";
 
 interface DateAfterModificationArgs {
-  /**
-   * Value indicating the age in days after last blob access. This property can only be used in conjunction with last access time tracking policy
-   */
   daysAfterLastAccessTimeGreaterThan?: pulumi.Input<number>;
-  /**
-   * Value indicating the age in days after last modification
-   */
   daysAfterModificationGreaterThan?: pulumi.Input<number>;
 }
 interface DateAfterCreationArgs {
-  /**
-   * Value indicating the age in days after creation
-   */
   daysAfterCreationGreaterThan: pulumi.Input<number>;
 }
 interface PolicyVersionArgs {
-  /**
-   * The function to delete the blob version
-   */
   delete?: pulumi.Input<DateAfterCreationArgs>;
-  /**
-   * The function to tier blob version to archive storage. Support blob version currently at Hot or Cool tier
-   */
   tierToArchive?: pulumi.Input<DateAfterCreationArgs>;
-  /**
-   * The function to tier blob version to cool storage. Support blob version currently at Hot tier
-   */
   tierToCool?: pulumi.Input<DateAfterCreationArgs>;
 }
 
@@ -45,10 +27,10 @@ type ManagementRuleActions = {
 };
 
 type ManagementRuleFilters = {
-  blobTypes: Array<'blockBlob' | 'appendBlob'>;
+  blobTypes: Array<"blockBlob" | "appendBlob">;
   tagFilters?: pulumi.Input<{
     name: pulumi.Input<string>;
-    op: '==';
+    op: "==";
     value: pulumi.Input<string>;
   }>[];
 };
@@ -84,7 +66,7 @@ export const createManagementRules = ({
   return new storage.ManagementPolicy(
     name,
     {
-      managementPolicyName: name,
+      managementPolicyName: "default",
       accountName: storageAccount.name,
       ...group,
 
@@ -92,10 +74,10 @@ export const createManagementRules = ({
         rules: rules.map((m, i) => ({
           enabled: true,
           name: `${name}-${i}`,
-          type: 'Lifecycle',
+          type: "Lifecycle",
+
           definition: {
             actions: m.actions,
-
             filters: m.filters
               ? {
                   blobTypes: m.filters.blobTypes,
@@ -109,6 +91,6 @@ export const createManagementRules = ({
         })),
       },
     },
-    { dependsOn: storageAccount }
+    { dependsOn: storageAccount },
   );
 };

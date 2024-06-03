@@ -1,7 +1,7 @@
-import { createProduct, ProductProps } from './Product';
-import { ApiProps, createApi } from './Api';
+import { createProduct, ProductProps } from "./Product";
+import { ApiProps, createApi } from "./Api";
 
-interface Props extends ProductProps, Omit<ApiProps, 'product'> {}
+interface Props extends ProductProps, Omit<ApiProps, "product"> {}
 
 export default async ({
   name,
@@ -16,8 +16,6 @@ export default async ({
     vaultInfo,
     subscriptionRequired,
   });
-
-  product.name.apply(console.log);
 
   const api = createApi({
     name,

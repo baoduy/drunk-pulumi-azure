@@ -1,122 +1,50 @@
-import * as network from '@pulumi/azure-native/network';
-import { input as inputs, enums } from '@pulumi/azure-native/types';
-import { Input, Resource } from '@pulumi/pulumi';
-import { BasicResourceArgs, DefaultResourceArgs } from '../types';
+import * as network from "@pulumi/azure-native/network";
+import { enums, input as inputs } from "@pulumi/azure-native/types";
+import { Input, Resource } from "@pulumi/pulumi";
 import {
-  getFirewallPolicyGroupName,
-  getFirewallPolicyName,
-} from '../Common/Naming';
-import { FirewallRuleProps } from './FirewallRules/types';
+  BasicResourceArgs,
+  DefaultResourceArgs,
+  ResourceGroupInfo,
+} from "../types";
+import { getFirewallPolicyName } from "../Common/Naming";
+import {
+  FirewallPolicyResults,
+  FirewallPolicyRuleCollectionResults,
+} from "./types";
 
-export const denyOtherAppRule: inputs.network.ApplicationRuleArgs = {
-  name: 'deny-others-websites',
-  ruleType: 'ApplicationRule',
-  description: 'Deny All Others websites',
-  sourceAddresses: ['*'],
-  targetFqdns: ['*'],
-  protocols: [
-    { protocolType: 'Http', port: 80 },
-    { protocolType: 'Https', port: 443 },
-    { protocolType: 'Mssql', port: 1433 },
-  ],
-};
-
-interface PolicyRulesProps extends BasicResourceArgs {
+interface PolicyRulesProps {
+  group: ResourceGroupInfo;
   firewallPolicyName: Input<string>;
-  priority?: number;
-  rules: Array<FirewallRuleProps>;
-  enableDenyOtherAppRule?: boolean;
+  rules: FirewallPolicyRuleCollectionResults[];
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export const linkRulesToPolicy = ({
   firewallPolicyName,
-  priority = 200,
   group,
-  name,
   rules,
-  enableDenyOtherAppRule,
   dependsOn,
-}: PolicyRulesProps) => {
-  const ruleCollections = new Array<
-    Input<
-      | inputs.network.FirewallPolicyFilterRuleCollectionArgs
-      | inputs.network.FirewallPolicyNatRuleCollectionArgs
-    >
-  >();
-
-  let p = 200;
-  rules.forEach((r, i) => {
-    if (r.dnatRules && r.dnatRules.length > 0) {
-      ruleCollections.push({
-        name: `${r.name}-dnat`,
-        priority: i + p++,
-        action: {
-          type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
+}: PolicyRulesProps) =>
+  rules
+    .sort((a, b) => a.priority - b.priority)
+    .map((p) => {
+      const gr = new network.FirewallPolicyRuleCollectionGroup(
+        p.name,
+        {
+          ...group,
+          ...p,
+          firewallPolicyName,
         },
-        ruleCollectionType: 'FirewallPolicyNatRuleCollection',
-        rules: r.dnatRules,
-      });
-    }
-
-    if (r.networkRules && r.networkRules.length > 0) {
-      ruleCollections.push({
-        name: `${r.name}-net`,
-        priority: i + p++,
-        action: {
-          type: enums.network.FirewallPolicyFilterRuleCollectionActionType
-            .Allow,
-        },
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
-        rules: r.networkRules,
-      });
-    }
-
-    if (r.applicationRules && r.applicationRules.length > 0) {
-      ruleCollections.push({
-        name: `${r.name}-app`,
-        priority: i + 200 + p++,
-        action: {
-          type: enums.network.FirewallPolicyFilterRuleCollectionActionType
-            .Allow,
-        },
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
-        rules: r.applicationRules,
-      });
-    }
-  });
-
-  if (enableDenyOtherAppRule) {
-    //Denied others
-    ruleCollections.push({
-      name: `${name}-deny-others`,
-      priority: 6001,
-      action: {
-        type: enums.network.FirewallPolicyFilterRuleCollectionActionType.Allow,
-      },
-      ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
-      rules: [denyOtherAppRule],
+        { dependsOn },
+      );
+      dependsOn = gr;
+      return gr;
     });
-  }
-
-  const groupName = getFirewallPolicyGroupName(name);
-  return new network.FirewallPolicyRuleCollectionGroup(
-    groupName,
-    {
-      name: groupName,
-      ...group,
-      firewallPolicyName,
-      priority,
-      ruleCollections,
-    },
-    { dependsOn }
-  );
-};
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, 'monitoring'>,
-    Omit<PolicyRulesProps, 'firewallPolicyName' | 'rules'> {
+    Omit<DefaultResourceArgs, "monitoring">,
+    Omit<PolicyRulesProps, "firewallPolicyName" | "rules"> {
   basePolicyId?: Input<string>;
 
   dnsSettings?: Input<inputs.network.DnsSettingsArgs>;
@@ -132,21 +60,81 @@ interface Props
   };
 }
 
+export const FirewallPolicyGroup = ({
+  policy,
+  priority,
+  action = enums.network.FirewallPolicyFilterRuleCollectionActionType.Allow,
+}: {
+  policy: FirewallPolicyResults;
+  priority: number;
+  action?: enums.network.FirewallPolicyFilterRuleCollectionActionType;
+}): FirewallPolicyRuleCollectionResults => {
+  const policyCollections = new Array<
+    Input<
+      | inputs.network.FirewallPolicyFilterRuleCollectionArgs
+      | inputs.network.FirewallPolicyNatRuleCollectionArgs
+    >
+  >();
+
+  // DNAT rules
+  let pStart = priority + 1;
+  if (policy.dnatRules && policy.dnatRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-dnat`,
+      priority: pStart++,
+      action: {
+        type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
+      },
+      ruleCollectionType: "FirewallPolicyNatRuleCollection",
+      rules: policy.dnatRules,
+    });
+  }
+
+  // Network rules
+  if (policy.netRules && policy.netRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-net`,
+      priority: pStart++,
+      action: {
+        type: action,
+      },
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      rules: policy.netRules,
+    });
+  }
+
+  // Apps rules
+  if (policy.appRules && policy.appRules.length > 0) {
+    policyCollections.push({
+      name: `${policy.name}-app`,
+      priority: pStart++,
+      action: {
+        type: action,
+      },
+      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      rules: policy.appRules,
+    });
+  }
+
+  return {
+    name: `${policy.name}-grp`,
+    priority,
+    ruleCollections: policyCollections,
+  };
+};
+
 export default ({
   name,
   group,
-
   basePolicyId,
   dnsSettings,
-
   transportSecurityCA,
   insights,
   sku = enums.network.FirewallPolicySkuTier.Basic,
   dependsOn,
 }: Props) => {
   name = getFirewallPolicyName(name);
-
-  const policy = new network.FirewallPolicy(
+  return new network.FirewallPolicy(
     name,
     {
       firewallPolicyName: name,
@@ -155,11 +143,24 @@ export default ({
 
       basePolicy: basePolicyId ? { id: basePolicyId } : undefined,
       dnsSettings,
+      snat: {
+        //Auto learn need a Route Server
+        autoLearnPrivateRanges: "Enabled",
+        privateRanges: ["IANAPrivateRanges"],
+      },
+      sql: {
+        allowSqlRedirect: true,
+      },
 
-      threatIntelMode: enums.network.AzureFirewallThreatIntelMode.Deny,
-      transportSecurity: transportSecurityCA
-        ? { certificateAuthority: transportSecurityCA }
-        : undefined,
+      threatIntelMode:
+        sku !== enums.network.FirewallPolicySkuTier.Basic
+          ? enums.network.AzureFirewallThreatIntelMode.Deny
+          : undefined,
+
+      transportSecurity:
+        sku !== enums.network.FirewallPolicySkuTier.Basic && transportSecurityCA
+          ? { certificateAuthority: transportSecurityCA }
+          : undefined,
 
       insights: insights
         ? {
@@ -174,8 +175,6 @@ export default ({
           }
         : undefined,
     },
-    { dependsOn }
+    { dependsOn },
   );
-
-  return policy;
 };

@@ -1,4 +1,4 @@
-import * as pulumi from '@pulumi/pulumi';
+import * as pulumi from "@pulumi/pulumi";
 
 const tryFindName = (props: any) => {
   let name: string = props.name || props.resourceName;
@@ -6,7 +6,7 @@ const tryFindName = (props: any) => {
   if (!name) {
     const keys = Object.keys(props);
     //Try to find the name that is not a resourceGroupName
-    let key = keys.find((k) => k.endsWith('Name'));
+    let key = keys.find((k) => k.endsWith("Name"));
 
     if (key) {
       name = props[key];
@@ -19,14 +19,13 @@ const tryFindName = (props: any) => {
 export default pulumi.runtime.setMocks(
   {
     newResource: (
-      args: pulumi.runtime.MockResourceArgs
+      args: pulumi.runtime.MockResourceArgs,
     ): {
       id: string;
       name: string;
       state: any;
     } => {
       const name = tryFindName(args.inputs);
-      //console.log(`Mocks resource ${name}`);
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
@@ -34,28 +33,28 @@ export default pulumi.runtime.setMocks(
         state: {
           name,
           ...args.inputs,
-          result: args.type.includes('Random')
-            ? '5c1c5657-085b-41c8-8d11-de897e70eae7'
-            : name.endsWith('ssh')
-            ? {
-                publicKey: '1234567890',
-                privateKey: '1234567890',
-              }
-            : '',
+          result: args.type.includes("Random")
+            ? "5c1c5657-085b-41c8-8d11-de897e70eae7"
+            : name.endsWith("ssh")
+              ? {
+                  publicKey: "1234567890",
+                  privateKey: "1234567890",
+                }
+              : "",
         },
       };
     },
     call: (args: pulumi.runtime.MockCallArgs) => {
-      if (args.token === 'azure:core/getSubscription:getSubscription')
+      if (args.token === "azure:core/getSubscription:getSubscription")
         return {
-          id: '00000000-0000-0000-0000-000000000000',
-          display_name: 'subscription',
+          id: "00000000-0000-0000-0000-000000000000",
+          display_name: "subscription",
         };
       return args.inputs;
     },
   },
-  'testProject',
-  'testStack',
+  "testProject",
+  "testStack",
   false,
-  'testOrganization'
+  "testOrganization",
 );

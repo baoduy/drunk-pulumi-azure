@@ -1,6 +1,6 @@
-import { isPrd } from '../../Common/AzureEnv';
-import { getIpsRange } from '../../VNet/Helper';
-import { organization } from '../../Common/StackEnv';
+import { isPrd } from "../../Common/AzureEnv";
+import { getIpsRange } from "../../VNet/Helper";
+import { organization } from "../../Common/StackEnv";
 
 const defaultRateLimit = isPrd ? 60 : 120;
 const enableApimEventHub = false;
@@ -12,7 +12,7 @@ interface MockProps {
 
 const getInMockResponse = ({
   code = 200,
-  contentType = 'text/html',
+  contentType = "text/html",
 }: MockProps) =>
   `      <mock-response status-code="${code}" content-type="${contentType}" />`;
 
@@ -20,7 +20,7 @@ interface RewriteUriProps {
   template?: string;
 }
 
-const getInRewriteUri = ({ template = '/' }: RewriteUriProps) =>
+const getInRewriteUri = ({ template = "/" }: RewriteUriProps) =>
   `      <rewrite-uri template="${template}" />`;
 
 interface BaseUrlProps {
@@ -88,19 +88,19 @@ const getInClientCertValidate = ({
   `   <choose>
         <when condition="@(context.Request.Certificate == null${
           verifyCert
-            ? ' || !context.Request.Certificate.VerifyNoRevocation()'
-            : ''
+            ? " || !context.Request.Certificate.VerifyNoRevocation()"
+            : ""
         }${
-    issuer ? ` || context.Request.Certificate.Issuer != "${issuer}"` : ''
-  }${
-    subject
-      ? ` || context.Request.Certificate.SubjectName.Name != "${subject}"`
-      : ''
-  }${
-    thumbprint
-      ? ` || context.Request.Certificate.Thumbprint != "${thumbprint}"`
-      : ''
-  })" >
+          issuer ? ` || context.Request.Certificate.Issuer != "${issuer}"` : ""
+        }${
+          subject
+            ? ` || context.Request.Certificate.SubjectName.Name != "${subject}"`
+            : ""
+        }${
+          thumbprint
+            ? ` || context.Request.Certificate.Thumbprint != "${thumbprint}"`
+            : ""
+        })" >
           <return-response>
             <set-status code="403" reason="Invalid client certificate" />
           </return-response>
@@ -114,11 +114,11 @@ interface CorsProps {
 const getCorsPolicy = ({ origins }: CorsProps) => {
   const orgs = origins
     ? origins.map((o) => `<origin>${o}</origin>`)
-    : ['<origin>*</origin>'];
+    : ["<origin>*</origin>"];
 
   return `<cors allow-credentials="${Array.isArray(origins)}">
     <allowed-origins>
-        ${orgs.join('\n')}
+        ${orgs.join("\n")}
     </allowed-origins>
     <allowed-methods preflight-result-max-age="300">
         <method>*</method>
@@ -157,7 +157,7 @@ const getEventHubPolicy = ({
       <value>${azFuncKey}</value>
     </set-header>
   </send-request>`
-      : ''
+      : ""
   }
 
   <log-to-eventhub logger-id="${eventHubName}" partition-id="0">@{
@@ -195,7 +195,7 @@ ${
             ipLocation = (((IResponse)context.Variables["ipstackResponse"]).Body?.As<JObject>()["country_name"]).ToString();
         }
       }catch {}`
-    : ''
+    : ""
 }
 
       string clientThumbprint = "";
@@ -211,7 +211,7 @@ ${
       }
       else{ clientThumbprint = "Not found";}
 `
-    : ''
+    : ""
 }
 
       return new JObject(
@@ -230,7 +230,6 @@ ${
       ).ToString();
   }</log-to-eventhub>`;
 
-  //console.log(rs);
   return rs;
 };
 
@@ -296,23 +295,22 @@ interface WhitelistIpProps {
 const getIpWhitelistPolicy = ({ ipAddresses }: WhitelistIpProps) => {
   const policy = `<ip-filter action="allow">\r\n${ipAddresses
     .map((ip) => {
-      if (ip.includes('/')) {
+      if (ip.includes("/")) {
         const range = getIpsRange(ip);
         return `<address-range from="${range.first}" to="${range.last}" />`;
       }
       return `<address>${ip}</address>`;
     })
-    .join('\r\n')}\r\n</ip-filter>`;
+    .join("\r\n")}\r\n</ip-filter>`;
 
-  //console.log(policy);
   return policy;
 };
 
 export enum SetHeaderTypes {
-  delete = 'delete',
-  override = 'override',
-  skip = 'skip',
-  append = 'append',
+  delete = "delete",
+  override = "override",
+  skip = "skip",
+  append = "append",
 }
 
 interface SetHeaderProps {
@@ -331,7 +329,7 @@ const setHeader = ({
   if (value) {
     rs += ` <value>${value}</value>`;
   }
-  rs += '</set-header>';
+  rs += "</set-header>";
 
   return rs;
 };
@@ -348,26 +346,26 @@ const checkHeaderPolicy = ({ checkHeaders }: CheckHeaders) => {
       }" failed-check-httpcode="401" failed-check-error-message="The header ${
         c.name
       } is not found" ignore-case="true">
-    ${c.value ? c.value.map((v) => `<value>${v}</value>`).join('\n') : ''}
+    ${c.value ? c.value.map((v) => `<value>${v}</value>`).join("\n") : ""}
 </check-header>`;
     })
-    .join('\n');
+    .join("\n");
 };
 
 /** Set Client IP address to 'x-ts-client-ip' header key */
 const setClientIpHeader = (key: string = `x-${organization}-clientIp`) =>
   setHeader({
     name: key,
-    value: '@(context.Request.IpAddress)',
+    value: "@(context.Request.IpAddress)",
     type: SetHeaderTypes.override,
   });
 
 const setFindAndReplaces = (
-  findAndReplaces: Array<{ from: string; to: string }>
+  findAndReplaces: Array<{ from: string; to: string }>,
 ) =>
   findAndReplaces
     .map((f) => ` <find-and-replace from="${f.from}" to="${f.to}" />`)
-    .join('\n');
+    .join("\n");
 
 export interface PoliciesProps {
   setBaseUrl?: BaseUrlProps;
@@ -409,7 +407,7 @@ export const getPolicies = ({
   const outbound = new Array<string>();
 
   const getProps = <T>(p: T | boolean) =>
-    (typeof p === 'boolean' ? {} : p) as T;
+    (typeof p === "boolean" ? {} : p) as T;
 
   if (enableClientIpHeader) {
     inbound.push(setClientIpHeader());
@@ -474,7 +472,7 @@ export const getPolicies = ({
     inbound.push(getInClientCertValidate(props.clientCert));
   }
 
-  let backend = '<base />';
+  let backend = "<base />";
 
   if (!props.mockResponse) {
     backend =
@@ -484,7 +482,7 @@ export const getPolicies = ({
   return `<policies>
   <inbound>
       <base />
-      ${inbound.join('\n')}
+      ${inbound.join("\n")}
   </inbound>
   <backend>
       ${backend}
@@ -515,7 +513,7 @@ export const getPolicies = ({
       <set-header name="X-Powered-By" exists-action="delete" />    
       <set-header name="X-AspNet-Version" exists-action="delete" />
       
-      ${outbound.join('\n')}
+      ${outbound.join("\n")}
       ${
         enableApimEventHub && props.logEventHubName
           ? getEventHubPolicy({
@@ -524,7 +522,7 @@ export const getPolicies = ({
               azFuncKey: props.azFuncKey,
               captureClientCertThumbprint: props.captureClientCertThumbprint,
             })
-          : ''
+          : ""
       }
   </outbound>
   <on-error>
@@ -537,7 +535,7 @@ export const getPolicies = ({
               azFuncKey: props.azFuncKey,
               captureClientCertThumbprint: props.captureClientCertThumbprint,
             })
-          : ''
+          : ""
       }
   </on-error>
 </policies>`;

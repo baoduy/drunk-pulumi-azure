@@ -1,15 +1,19 @@
 import * as network from "@pulumi/azure-native/network";
-import { input as inputs } from "@pulumi/azure-native/types";
-import { interpolate, Output } from "@pulumi/pulumi";
+import { Input, interpolate, output, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
-
-import { subscriptionId } from "../Common/AzureEnv";
 import {
+  currentRegionName,
+  parseResourceInfoFromId,
+  subscriptionId,
+} from "../Common/AzureEnv";
+import {
+  getFirewallName,
   getIpAddressName,
   getResourceGroupName,
   getVnetName,
 } from "../Common/Naming";
-import { FirewallRuleResults } from "./FirewallRules/types";
+import { ResourceGroupInfo } from "../types";
+import { VnetInfoType } from "./types";
 
 export const appGatewaySubnetName = "app-gateway";
 export const gatewaySubnetName = "GatewaySubnet";
@@ -18,14 +22,13 @@ export const azFirewallManagementSubnet = "AzureFirewallManagementSubnet";
 export const azBastionSubnetName = "AzureBastionSubnet";
 
 export const getIpsRange = (prefix: string) => {
-  const block = new netmask.Netmask(prefix);
   //console.debug('getIpsRange', block);
-  return block;
+  return new netmask.Netmask(prefix);
 };
 
 /** Convert IP address and IP address group into range */
 export const convertToIpRange = (
-  ipAddress: string[]
+  ipAddress: string[],
 ): Array<{ start: string; end: string }> =>
   ipAddress.map((ip) => {
     if (ip.includes("/")) {
@@ -37,48 +40,7 @@ export const convertToIpRange = (
 
 export const getVnetIdFromSubnetId = (subnetId: string) => {
   //The sample SubnetId is /subscriptions/63a31b41-eb5d-4160-9fc9-d30fc00286c9/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-vnet-trans/subnets/aks-main-nodes
-  const id = subnetId.split("/subnets")[0];
-  //console.log(id);
-  return id;
-};
-
-/**Merge Firewall Rules Policies with starting priority*/
-export const mergeFirewallRules = (
-  rules: Array<FirewallRuleResults>,
-  startPriority: number = 200
-): FirewallRuleResults => {
-  const applicationRuleCollections =
-    new Array<inputs.network.AzureFirewallApplicationRuleCollectionArgs>();
-  const natRuleCollections =
-    new Array<inputs.network.AzureFirewallNatRuleCollectionArgs>();
-  const networkRuleCollections =
-    new Array<inputs.network.AzureFirewallNetworkRuleCollectionArgs>();
-
-  //Combined Rules
-  rules.forEach((r) => {
-    if (r.applicationRuleCollections) {
-      applicationRuleCollections.push(...r.applicationRuleCollections);
-    }
-    if (r.natRuleCollections) {
-      natRuleCollections.push(...r.natRuleCollections);
-    }
-    if (r.networkRuleCollections) {
-      networkRuleCollections.push(...r.networkRuleCollections);
-    }
-  });
-
-  //Update Priority
-  applicationRuleCollections.forEach(
-    (a, i) => (a.priority = startPriority + i)
-  );
-  natRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
-  networkRuleCollections.forEach((a, i) => (a.priority = startPriority + i));
-
-  return {
-    applicationRuleCollections,
-    natRuleCollections,
-    networkRuleCollections,
-  };
+  return subnetId.split("/subnets")[0];
 };
 
 interface SubnetProps {
@@ -123,4 +85,50 @@ export const getIpAddressResource = ({
     publicIpAddressName: n,
     resourceGroupName: group,
   });
+};
+
+export const getVnetInfo = (groupName: string): VnetInfoType => {
+  const vnetName = getVnetName(groupName);
+  const rsName = getResourceGroupName(groupName);
+
+  return {
+    vnetName,
+    resourceGroupName: rsName,
+    subscriptionId,
+  };
+};
+
+export const getVnetIdByName = (groupName: string) => {
+  const info = getVnetInfo(groupName);
+  return interpolate`/subscriptions/${info.subscriptionId}/resourceGroups/${info.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
+};
+
+export const parseVnetInfoFromId = (
+  vnetId: Input<string>,
+): Output<VnetInfoType> =>
+  output(vnetId).apply((id) => {
+    const info = parseResourceInfoFromId(id)!;
+    return {
+      vnetName: info.name,
+      resourceGroupName: info.group.resourceGroupName,
+      subscriptionId: info.subscriptionId,
+    } as VnetInfoType;
+  });
+
+export const getFirewallIpAddress = (
+  name: string,
+  group: ResourceGroupInfo,
+) => {
+  const firewall = network.getAzureFirewallOutput({
+    azureFirewallName: name,
+    ...group,
+  });
+
+  return firewall.ipConfigurations!.apply((cf) => cf![0]!.privateIPAddress!);
+};
+
+export const getFirewallIpAddressByGroupName = (groupName: string) => {
+  const fireWallName = getFirewallName(groupName);
+  const rsName = getResourceGroupName(groupName);
+  return getFirewallIpAddress(fireWallName, { resourceGroupName: rsName });
 };

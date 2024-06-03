@@ -1,8 +1,10 @@
-import * as containerservice from '@pulumi/azure-native/containerservice';
-import { getAksName, getResourceGroupName } from '../Common/Naming';
-import { KeyVaultInfo } from '../types';
-import { getSecret } from '../KeyVault/Helper';
-import { getIdentitySecrets } from '../AzAd/Helper';
+import * as containerservice from "@pulumi/azure-native/containerservice";
+import { getAksName, getResourceGroupName } from "../Common/Naming";
+import { KeyVaultInfo, ResourceInfo, ResourceType } from "../types";
+import { getSecret } from "../KeyVault/Helper";
+import { interpolate, Output } from "@pulumi/pulumi";
+import { currentRegionName, subscriptionId } from "../Common/AzureEnv";
+import { linkVnetToPrivateDns } from "../VNet/PrivateDns";
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
@@ -29,7 +31,7 @@ export const getAksConfig = async ({
         resourceGroupName: group,
       });
 
-  return Buffer.from(aks.kubeconfigs[0].value, 'base64').toString('utf8');
+  return Buffer.from(aks.kubeconfigs[0].value, "base64").toString("utf8");
 };
 
 /** Get AKS Config from Key Vault*/
@@ -51,75 +53,49 @@ export const getAksVaultConfig = async ({
     vaultInfo,
     nameFormatted: false,
   });
-  return rs?.value || '';
+  return rs?.value || "";
 };
 
-export const getAksIdentitySecrets = ({
+export const getAksPrivateDnz = ({
   name,
-  vaultInfo,
-}: {
-  name: string;
-  vaultInfo: KeyVaultInfo;
-}) => {
-  name = getAksName(name);
-  return getIdentitySecrets({ name, vaultInfo });
+  groupName,
+  formattedName,
+}: ResourceType): Output<ResourceInfo | undefined> => {
+  name = formattedName ? name : getAksName(name);
+  groupName = formattedName ? groupName : getResourceGroupName(groupName);
+
+  const aks = containerservice.getManagedClusterOutput({
+    resourceName: name,
+    resourceGroupName: groupName,
+  });
+
+  return aks.apply((a) => {
+    if (!a.privateFQDN) return undefined;
+    const dnsName = a.privateFQDN.split(":").slice(1).join(".");
+    const rsGroup = a.nodeResourceGroup!;
+
+    return {
+      resourceName: dnsName,
+      group: { resourceGroupName: rsGroup, location: currentRegionName },
+      id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
+    } as ResourceInfo;
+  });
 };
 
-// interface AksProps {
-//   aksName: string;
-//   formatedName?: boolean;
-//   namespace?: string;
-//   groupName: string;
-//   localAccountDisabled?: boolean;
-// }
-
-// /** Get AKS Provider from Managed Cluster*/
-// export const createAksProvider = async ({
-//   aksName,
-//   namespace,
-//   groupName,
-//   formatedName,
-//   localAccountDisabled,
-// }: AksProps) => {
-//   return createProvider({
-//     name: aksName,
-//     namespace,
-//     kubeconfig: await getAksConfig({
-//       name: aksName,
-//       groupName,
-//       formattedName: formatedName,
-//       localAccountDisabled,
-//     }),
-//   });
-// };
-
-/** Get AKS Provider from Key Vault*/
-// export const createAksVaultProvider = async ({
-//   aksName,
-//   version,
-//   secretName,
-//   namespace,
-//   base64Encoded,
-//   vaultInfo,
-// }: {
-//   aksName: string;
-//   secretName?: string;
-//   version?: string;
-//   vaultInfo: KeyVaultInfo;
-//   base64Encoded?: boolean;
-//   namespace?: string;
-// }) => {
-//   const value = await getAksVaultConfig({
-//     name: secretName ?? aksName,
-//     version,
-//     formattedName: Boolean(secretName),
-//     vaultInfo,
-//   });
-//
-//   return createProvider({
-//     name: aksName,
-//     namespace,
-//     ignoreChanges: true,
-//     kubeconfig: base64Encoded ? Buffer.from(value, 'base64').toString() : value,
-//   });
-// };
+export const linkAksPrivateDnzVnet = ({
+  vnetId,
+  name,
+  groupName,
+  formattedName,
+}: ResourceType & { vnetId: Output<string> }) => {
+  const dns = getAksPrivateDnz({ name, groupName, formattedName });
+  return dns.apply((d) => {
+    if (!d) return;
+    return linkVnetToPrivateDns({
+      name,
+      group: d.group,
+      zoneName: d.resourceName,
+      vnetId,
+    });
+  });
+};

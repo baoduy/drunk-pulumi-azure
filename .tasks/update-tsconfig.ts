@@ -1,15 +1,9 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
-const tsconfigPath: string = './tsconfig.json';
-const srcFolderPath: string = './'; // Adjust 'src' if your TS files are in a different directory
-const excludeFolders: string[] = [
-  'node_modules',
-  '.out-bin',
-  'z_tests',
-  '.tasks',
-  'pulumi-test'
-]; // List of folder names to exclude
+const tsconfigPath: string = "./tsconfig.json";
+const srcFolderPath: string = "./src"; // Adjust 'src' if your TS files are in a different directory
+const excludeFolders: string[] = ["z_tests"]; // List of folder names to exclude
 
 // Function to recursively find .ts files, excluding specified folders
 function findTsFiles(dir: string, arrayOfFiles: string[] = []): string[] {
@@ -22,8 +16,8 @@ function findTsFiles(dir: string, arrayOfFiles: string[] = []): string[] {
         // Check if the directory is not in the exclude list
         arrayOfFiles = findTsFiles(fullPath, arrayOfFiles);
       }
-    } else if (file.endsWith('.ts')) {
-      arrayOfFiles.push(path.relative('./', fullPath).replace(/\\/g, '/'));
+    } else if (file.endsWith(".ts")) {
+      arrayOfFiles.push(path.relative("./", fullPath).replace(/\\/g, "/"));
     }
   });
 
@@ -33,7 +27,7 @@ function findTsFiles(dir: string, arrayOfFiles: string[] = []): string[] {
 const tsFiles: string[] = findTsFiles(srcFolderPath);
 
 // Read tsconfig.json, update it with the found .ts files, excluding those in the excludeFolders, and write it back
-fs.readFile(tsconfigPath, 'utf8', (err, data) => {
+fs.readFile(tsconfigPath, "utf8", (err, data) => {
   if (err) {
     console.error(err);
     return;
@@ -45,13 +39,13 @@ fs.readFile(tsconfigPath, 'utf8', (err, data) => {
   fs.writeFile(
     tsconfigPath,
     JSON.stringify(tsconfig, null, 2),
-    'utf8',
+    "utf8",
     (err) => {
       if (err) {
         console.error(err);
         return;
       }
-      console.log('tsconfig.json has been updated with TypeScript files.');
-    }
+      console.log("tsconfig.json has been updated with TypeScript files.");
+    },
   );
 });

@@ -1,36 +1,34 @@
-import * as pulumi from '@pulumi/pulumi';
-import { BasicResourceArgs } from '../types';
-import { getRouteName, getRouteItemName } from '../Common/Naming';
-import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
+import { BasicResourceArgs } from "../types";
+import { RouteArgs } from "./types";
+import { getRouteName, getRouteItemName } from "../Common/Naming";
+import * as network from "@pulumi/azure-native/network";
+import { Input } from "@pulumi/pulumi";
 
 interface Props extends BasicResourceArgs {
-  routes?: pulumi.Input<pulumi.Input<network.RouteArgs>[]>;
+  routes?: Input<RouteArgs>[];
 }
 
 export default ({ name, group, routes }: Props) => {
   const routeName = getRouteName(name);
-
   return new network.RouteTable(routeName, {
-    ...group,
     routeTableName: routeName,
+    ...group,
     routes,
   });
 };
 
-interface RouteProps
-  extends BasicResourceArgs,
-    Omit<
-      network.RouteArgs,
-      'name'   | 'id' | 'resourceGroupName' | 'type'
-    > {
-  routes?: Input<Input<network.RouteArgs>[]>;
+interface RouteItemsProps extends BasicResourceArgs, Omit<RouteArgs, "name"> {
+  routeTableName: Input<string>;
 }
 
-export const updateRuoteItem = ({ name, group, ...others }: RouteProps) => {
+export const updateRouteItems = ({
+  name,
+  group,
+  ...others
+}: RouteItemsProps) => {
   const routeName = getRouteItemName(name);
   return new network.Route(routeName, {
-    routeName,
+    name: routeName,
     ...group,
     ...others,
   });
