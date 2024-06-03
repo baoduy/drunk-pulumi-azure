@@ -153,7 +153,6 @@ class VnetBuilder
 
     //Add outbound Ipaddress for Firewall alone
     if (!this._natGatewayEnabled && this._firewallProps) {
-      console.log(`${this.commonProps.name}: outbound ip will be created.`);
       ipNames.push(outboundIpName);
     }
 

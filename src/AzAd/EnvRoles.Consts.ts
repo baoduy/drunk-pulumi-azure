@@ -119,7 +119,6 @@ export const grantEnvRolesAccess = ({
     envRoles: EnvRolesResults;
   }) => {
   const roles = getRoleNames(others);
-  console.log(`${name}-roles`, roles);
 
   //ReadOnly
   roles.readOnly.forEach((r) => {
