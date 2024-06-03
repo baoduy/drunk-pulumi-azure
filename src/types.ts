@@ -3,6 +3,7 @@ import * as authorization from "@pulumi/azure-native/authorization";
 import { DiagnosticSetting } from "@pulumi/azure-native/aadiam/diagnosticSetting";
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs, enums } from "@pulumi/azure-native/types";
+import { EnvRoleKeyTypes } from "./AzAd/EnvRoles";
 
 export interface BasicArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
@@ -94,3 +95,9 @@ export interface KeyVaultInfo {
 export interface AppInsightInfo extends ResourceInfo {
   instrumentationKey: Input<string>;
 }
+
+export type IdentityRoleAssignment = {
+  vaultInfo: KeyVaultInfo;
+  roles?: Array<{ name: string; scope: Input<string> }>;
+  envRole?: EnvRoleKeyTypes;
+};

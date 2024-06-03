@@ -40,14 +40,15 @@ const KeyVaultRoleNames: Record<EnvRoleKeyTypes, string[]> = {
     "Key Vault Crypto Service Encryption User",
     "Key Vault Crypto User",
     "Key Vault Secrets User",
+    "Key Vault Reader",
   ],
   contributor: [
-    "Key Vault Administrator",
     "Key Vault Certificates Officer",
     "Key Vault Crypto Officer",
     "Key Vault Secrets Officer",
+    "Key Vault Contributor",
   ],
-  admin: [],
+  admin: ["Key Vault Administrator", "Key Vault Data Access Administrator"],
 };
 
 export type RoleEnableTypes = {

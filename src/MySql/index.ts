@@ -9,7 +9,7 @@ import { isPrd, tenantId } from "../Common/AzureEnv";
 import { addMemberToGroup } from "../AzAd/Group";
 import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
-import UserIdentity from "../AzAd/UserIdentity";
+import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
 import { RandomString } from "@pulumi/random";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import Locker from "../Core/Locker";
@@ -83,7 +83,7 @@ export default ({
     : undefined;
 
   const userIdentity = enableEncryption
-    ? UserIdentity({ name, group })
+    ? UserAssignedIdentity({ name, group })
     : undefined;
 
   const mySql = new dbformysql.Server(

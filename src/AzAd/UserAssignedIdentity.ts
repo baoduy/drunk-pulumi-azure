@@ -3,18 +3,18 @@ import * as azure from "@pulumi/azure-native";
 import { getManagedIdentityName } from "../Common/Naming";
 import Locker from "../Core/Locker";
 import { roleAssignment } from "./RoleAssignment";
-import { defaultScope } from "../Common/AzureEnv";
+import { Input } from "@pulumi/pulumi";
 
 interface Props extends BasicResourceArgs {
   lock?: boolean;
-  permissions?: Array<{ roleName: string }>;
+  roles?: Array<{ name: string; scope: Input<string> }>;
 }
 
 export default ({
   name,
   group,
   lock,
-  permissions,
+  roles,
   dependsOn,
   importUri,
   ignoreChanges,
@@ -29,14 +29,14 @@ export default ({
     { dependsOn, import: importUri, ignoreChanges },
   );
 
-  if (permissions) {
-    permissions.map((r) =>
+  if (roles) {
+    roles.map((r) =>
       roleAssignment({
         name,
-        roleName: r.roleName,
+        roleName: r.name,
         principalId: managedIdentity!.principalId,
         principalType: "ServicePrincipal",
-        scope: defaultScope,
+        scope: r.scope,
       }),
     );
   }

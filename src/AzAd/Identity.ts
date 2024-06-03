@@ -10,18 +10,19 @@ import {
   ApplicationOptionalClaims,
 } from "@pulumi/azuread/types/input";
 
-import { BasicArgs, KeyVaultInfo } from "../types";
+import { BasicArgs, IdentityRoleAssignment, KeyVaultInfo } from "../types";
 import { roleAssignment } from "./RoleAssignment";
 import { defaultScope } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { getIdentitySecretNames } from "./Helper";
+import { getEnvRolesOutput } from "./EnvRoles";
 
 type PreAuthApplicationProps = {
   appId: string;
   oauth2PermissionNames: string[];
 };
 
-interface IdentityProps extends BasicArgs {
+interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
   name: string;
   owners?: pulumi.Input<pulumi.Input<string>[]>;
   createClientSecret?: boolean;
@@ -41,11 +42,6 @@ interface IdentityProps extends BasicArgs {
   requiredResourceAccesses?: pulumi.Input<
     pulumi.Input<ApplicationRequiredResourceAccess>[]
   >;
-  /**The Role Assignment of principal. If scope is not defined the default scope will be at subscription level*/
-  principalRoles?: Array<{
-    roleName: string;
-    scope?: Input<string>;
-  }>;
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
   vaultInfo: KeyVaultInfo;
 }
@@ -73,7 +69,8 @@ export default ({
   requiredResourceAccesses = [],
   oauth2Permissions,
   publicClient = false,
-  principalRoles,
+  roles,
+  envRole,
   optionalClaims,
   vaultInfo,
   dependsOn,
@@ -193,16 +190,21 @@ export default ({
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
-    if (principalRoles) {
-      principalRoles.map((r) =>
+    if (roles) {
+      roles.map((r) =>
         roleAssignment({
           name,
-          roleName: r.roleName,
+          roleName: r.name,
           principalId: principal!.id,
           principalType: "ServicePrincipal",
           scope: r.scope || defaultScope,
         }),
       );
+
+      if (envRole) {
+        const envRoles = getEnvRolesOutput(vaultInfo);
+        const group = envRoles[envRole];
+      }
     }
 
     addCustomSecret({
