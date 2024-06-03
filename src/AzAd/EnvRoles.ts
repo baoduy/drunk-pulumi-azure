@@ -23,10 +23,10 @@ const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   },
 };
 
-type RoleType = { objectId: string; displayName: string };
+type EnvRoleInfoType = { objectId: string; displayName: string };
 export type EnvRolesResults = Record<
   EnvRoleKeyTypes,
-  Output<RoleType> | RoleType
+  Output<EnvRoleInfoType> | EnvRoleInfoType
 >;
 
 const getRoleSecretName = (name: string) => ({
@@ -35,7 +35,7 @@ const getRoleSecretName = (name: string) => ({
 });
 
 export const createEnvRoles = () => {
-  const groups: Record<string, Output<RoleType>> = {};
+  const groups: Record<string, Output<EnvRoleInfoType>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {
     const config = envRoleConfig[key as EnvRoleKeyTypes];
@@ -70,7 +70,7 @@ export const createEnvRoles = () => {
   return {
     ...groups,
     addRolesToVault,
-  } as Record<EnvRoleKeyTypes, Output<RoleType>> & {
+  } as Record<EnvRoleKeyTypes, Output<EnvRoleInfoType>> & {
     addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
   };
 };
@@ -78,20 +78,22 @@ export const createEnvRoles = () => {
 /** Get Single Env Role Object */
 export const getEnvRole = async (name: string, vaultInfo: KeyVaultInfo) => {
   const secretNames = getRoleSecretName(name);
+  console.log(`getEnvRole:`, secretNames);
+
   const [objectId, displayName] = await Promise.all([
     getSecret({ name: secretNames.objectIdName, vaultInfo }),
     getSecret({ name: secretNames.displayName, vaultInfo }),
   ]);
 
   return {
-    displayName: displayName!.value!,
-    objectId: objectId!.value!,
+    displayName: displayName?.value!,
+    objectId: objectId?.value!,
   };
 };
 
 /** Get All Env Role Objects */
 export const getEnvRolesOutput = (vaultInfo: KeyVaultInfo) => {
-  const rs: Record<string, Output<RoleType>> = {};
+  const rs: Record<string, Output<EnvRoleInfoType>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {
     rs[key] = output(getEnvRole(key, vaultInfo));
