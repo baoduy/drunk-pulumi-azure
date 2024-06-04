@@ -4,7 +4,7 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../../types";
 import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
 
 export type ResourceBuilderResults = BuilderProps & {
-  envRoles?: EnvRolesResults;
+  envRoles: EnvRolesResults;
 };
 export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
 export type BuilderFunctionType = (props: BuilderProps) => IBuilder<any>;
