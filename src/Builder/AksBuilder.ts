@@ -1,5 +1,4 @@
 import {
-  AksBuilderProps,
   AksImportProps,
   AskBuilderResults,
   IAksBuilder,
@@ -7,8 +6,9 @@ import {
   IAksNetworkBuilder,
   IAskAuthBuilder,
   ISshBuilder,
-  ResourcesBuilderAsync,
+  BuilderAsync,
   SshBuilderProps,
+  BuilderProps,
 } from "./types";
 import { generateSsh, SshResults } from "../Core/KeyGenetators";
 import { ManagedClusterSKUTier } from "@pulumi/azure-native/containerservice";
@@ -23,7 +23,7 @@ import Aks, {
 } from "../Aks";
 
 class AksBuilder
-  extends ResourcesBuilderAsync<AskBuilderResults>
+  extends BuilderAsync<AskBuilderResults>
   implements
     ISshBuilder,
     IAskAuthBuilder,
@@ -46,8 +46,8 @@ class AksBuilder
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
   private _importProps: AksImportProps | undefined = undefined;
 
-  constructor({ ...others }: AksBuilderProps) {
-    super(others);
+  constructor(props: BuilderProps) {
+    super(props);
   }
 
   //Info collection methods
@@ -126,4 +126,4 @@ class AksBuilder
   }
 }
 
-export default (props: AksBuilderProps) => new AksBuilder(props) as ISshBuilder;
+export default (props: BuilderProps) => new AksBuilder(props) as ISshBuilder;

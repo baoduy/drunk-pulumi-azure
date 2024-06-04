@@ -34,6 +34,13 @@ const getRoleSecretName = (name: string) => ({
   displayName: getSecretName(`envRoles-${name}-display-name`),
 });
 
+export type CreateEnvRolesType = Record<
+  EnvRoleKeyTypes,
+  Output<EnvRoleInfoType>
+> & {
+  addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
+};
+
 export const createEnvRoles = () => {
   const groups: Record<string, Output<EnvRoleInfoType>> = {};
 
@@ -70,9 +77,7 @@ export const createEnvRoles = () => {
   return {
     ...groups,
     addRolesToVault,
-  } as Record<EnvRoleKeyTypes, Output<EnvRoleInfoType>> & {
-    addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
-  };
+  } as CreateEnvRolesType;
 };
 
 /** Get Single Env Role Object */
