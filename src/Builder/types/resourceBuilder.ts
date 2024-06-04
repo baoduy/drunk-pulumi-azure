@@ -5,6 +5,7 @@ import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
 
 export type ResourceBuilderResults = BuilderProps & {
   envRoles: EnvRolesResults;
+  others: Array<any>;
 };
 export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
 export type BuilderFunctionType = (props: BuilderProps) => IBuilder<any>;

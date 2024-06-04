@@ -42,6 +42,7 @@ class ResourceBuilder
   private _RGInstance: ResourceGroup | undefined = undefined;
   private _vaultInstance: Resource | undefined = undefined;
   private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
+  private _otherInstances = new Array<any>();
 
   constructor(public name: string) {}
 
@@ -128,8 +129,10 @@ class ResourceBuilder
       vaultInfo: this._vaultInfo!,
     };
 
-    this._otherBuilders.map((b) => b(props).build());
+    const rs = this._otherBuilders.map((b) => b(props).build());
+    this._otherInstances.push(...rs);
   }
+
   private async buildOthersAsync() {
     const props: BuilderProps = {
       name: this.name,
@@ -137,7 +140,10 @@ class ResourceBuilder
       vaultInfo: this._vaultInfo!,
     };
 
-    await Promise.all(this._otherBuildersAsync.map((b) => b(props).build()));
+    const rs = await Promise.all(
+      this._otherBuildersAsync.map((b) => b(props).build()),
+    );
+    this._otherInstances.push(...rs);
   }
 
   public async build(): Promise<ResourceBuilderResults> {
@@ -152,6 +158,7 @@ class ResourceBuilder
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!,
       envRoles: this._envRoles!,
+      others: this._otherInstances!,
     };
   }
 }
