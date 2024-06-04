@@ -27,5 +27,5 @@ export interface IResourceVaultBuilder {
 export interface IResourceBuilder {
   withBuilder: (builder: BuilderFunctionType) => IResourceBuilder;
   withBuilderAsync: (builder: BuilderAsyncFunctionType) => IResourceBuilder;
-  build: () => Promise<void>;
+  build: () => Promise<BuilderProps>;
 }

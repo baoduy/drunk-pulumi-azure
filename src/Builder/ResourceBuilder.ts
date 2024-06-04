@@ -117,12 +117,18 @@ class ResourceBuilder
     await Promise.all(this._otherBuildersAsync.map((b) => b(props).build()));
   }
 
-  public async build() {
+  public async build(): Promise<BuilderProps> {
     this.buildRoles();
     this.buildRG();
     this.buildVault();
     this.buildOthers();
     await this.buildOthersAsync();
+
+    return {
+      name: this.name,
+      group: this._RGInfo!,
+      vaultInfo: this._vaultInfo!,
+    };
   }
 }
 
