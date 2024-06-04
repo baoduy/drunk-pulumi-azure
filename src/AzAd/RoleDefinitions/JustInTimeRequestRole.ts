@@ -19,6 +19,6 @@ export default () =>
         notDataActions: [],
       },
     ],
-    assignableScopes: [defaultScope],
+    //assignableScopes: [defaultScope],
     scope: defaultScope,
   });
