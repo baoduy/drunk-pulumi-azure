@@ -41,7 +41,7 @@ export type CreateEnvRolesType = Record<
   addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
 };
 
-export const createEnvRoles = (): CreateEnvRolesType => {
+export const createEnvRoles = () => {
   const groups: Record<string, Output<EnvRoleInfoType>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {
@@ -77,7 +77,7 @@ export const createEnvRoles = (): CreateEnvRolesType => {
   return {
     ...groups,
     addRolesToVault,
-  };
+  } as CreateEnvRolesType;
 };
 
 /** Get Single Env Role Object */

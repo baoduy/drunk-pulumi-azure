@@ -102,8 +102,9 @@ class ResourceBuilder
     });
     this._vaultInstance = rs.vault;
     this._vaultInfo = rs.toVaultInfo();
+
     if (this._envRolesInstance)
-      this._envRolesInstance.addRolesToVault(vaultInfo);
+      this._envRolesInstance.addRolesToVault(this._vaultInfo);
   }
 
   private buildOthers() {
