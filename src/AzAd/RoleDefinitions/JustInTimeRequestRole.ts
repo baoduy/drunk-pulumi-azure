@@ -3,7 +3,6 @@ import * as authorization from "@pulumi/azure-native/authorization";
 
 export default () =>
   new authorization.RoleDefinition("Just_In_Time_Request_Role", {
-    roleDefinitionId: "f13ceb01-0f55-45de-97d9-cf64d24ca824",
     roleName: "Just In Time Request Role",
     description: "Just In Time Request Role",
     permissions: [
@@ -19,6 +18,6 @@ export default () =>
         notDataActions: [],
       },
     ],
-    //assignableScopes: [defaultScope],
+    assignableScopes: [defaultScope],
     scope: defaultScope,
   });
