@@ -7,7 +7,11 @@ import {
   IResourceVaultBuilder,
   ResourceGroupBuilderType,
 } from "./types/resourceBuilder";
-import { createEnvRoles, EnvRolesResults } from "AzAd/EnvRoles";
+import {
+  createEnvRoles,
+  CreateEnvRolesType,
+  EnvRolesResults,
+} from "AzAd/EnvRoles";
 import { KeyVaultInfo, ResourceGroupInfo } from "types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
@@ -34,6 +38,7 @@ class ResourceBuilder
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
   private _vaultInstance: Resource | undefined = undefined;
+  private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
 
   constructor(public name: string) {}
 
@@ -72,7 +77,8 @@ class ResourceBuilder
 
   private buildRoles() {
     if (!this._createRole) return;
-    this._envRoles = createEnvRoles();
+    this._envRolesInstance = createEnvRoles();
+    this._envRoles = this._envRolesInstance;
   }
 
   private buildRG() {
@@ -94,8 +100,10 @@ class ResourceBuilder
       name: this.name,
       group: this._RGInfo!,
     });
-    this._vaultInfo = rs.toVaultInfo();
     this._vaultInstance = rs.vault;
+    this._vaultInfo = rs.toVaultInfo();
+    if (this._envRolesInstance)
+      this._envRolesInstance.addRolesToVault(vaultInfo);
   }
 
   private buildOthers() {

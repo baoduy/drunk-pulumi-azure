@@ -34,7 +34,14 @@ const getRoleSecretName = (name: string) => ({
   displayName: getSecretName(`envRoles-${name}-display-name`),
 });
 
-export const createEnvRoles = () => {
+export type CreateEnvRolesType = Record<
+  EnvRoleKeyTypes,
+  Output<EnvRoleInfoType>
+> & {
+  addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
+};
+
+export const createEnvRoles = (): CreateEnvRolesType => {
   const groups: Record<string, Output<EnvRoleInfoType>> = {};
 
   Object.keys(envRoleConfig).forEach((key) => {
@@ -70,8 +77,6 @@ export const createEnvRoles = () => {
   return {
     ...groups,
     addRolesToVault,
-  } as Record<EnvRoleKeyTypes, Output<EnvRoleInfoType>> & {
-    addRolesToVault: (vaultInfo: KeyVaultInfo) => void;
   };
 };
 
