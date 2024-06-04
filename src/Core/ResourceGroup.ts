@@ -11,10 +11,16 @@ import {
 import ResourceCreator from "./ResourceCreator";
 import { getResourceGroupName } from "../Common/Naming";
 import { EnvRolesResults } from "../AzAd/EnvRoles";
-import { roleAssignment } from "../AzAd/RoleAssignment";
 import { currentRegionName } from "../Common/AzureEnv";
-import { getRoleNames, grantEnvRolesAccess } from "../AzAd/EnvRoles.Consts";
-import { replaceAll } from "../Common/Helpers";
+import { grantEnvRolesAccess } from "../AzAd/EnvRoles.Consts";
+
+export type RGPermissionType = {
+  envRoles: EnvRolesResults;
+  enableRGRoles?: boolean;
+  enableAksRoles?: boolean;
+  enableIotRoles?: boolean;
+  enableVaultRoles?: boolean;
+};
 
 interface Props
   extends Omit<DefaultResourceArgs, "monitoring">,
@@ -22,13 +28,7 @@ interface Props
   formattedName?: boolean;
   location?: string;
   /** Grant permission of this group into Environment Roles groups*/
-  permissions?: {
-    envRoles: EnvRolesResults;
-    enableRGRoles?: boolean;
-    enableAksRoles?: boolean;
-    enableIotRoles?: boolean;
-    enableVaultRoles?: boolean;
-  };
+  permissions?: RGPermissionType;
 }
 
 export default ({

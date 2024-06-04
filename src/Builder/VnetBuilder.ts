@@ -21,23 +21,19 @@ import {
   IVnetBuilder,
   IVnetBuilderStart,
   PeeringProps,
-  ResourcesBuilder,
+  Builder,
   SubnetCreationProps,
   VnetBuilderProps,
   VnetBuilderResults,
   VpnGatewayCreationProps,
 } from "./types";
-import {
-  getVnetIdByName,
-  getVnetInfo,
-  parseVnetInfoFromId,
-} from "../VNet/Helper";
+import { getVnetInfo, parseVnetInfoFromId } from "../VNet/Helper";
 import Bastion from "../VNet/Bastion";
 
 const outboundIpName = "outbound";
 
 class VnetBuilder
-  extends ResourcesBuilder<VnetBuilderResults>
+  extends Builder<VnetBuilderResults>
   implements IGatewayFireWallBuilder, IVnetBuilder, IVnetBuilderStart
 {
   /** The Props */
