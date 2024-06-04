@@ -6,17 +6,17 @@ import {
   IResourceRoleBuilder,
   IResourceVaultBuilder,
   ResourceGroupBuilderType,
-} from "./types/resourceBuilder";
+  BuilderProps,
+} from "./types";
 import {
   createEnvRoles,
   CreateEnvRolesType,
   EnvRolesResults,
-} from "AzAd/EnvRoles";
-import { KeyVaultInfo, ResourceGroupInfo } from "types";
+} from "../AzAd/EnvRoles";
+import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
 import Vault from "../KeyVault";
-import { BuilderProps } from "./types";
 import { Resource } from "@pulumi/pulumi";
 
 class ResourceBuilder
