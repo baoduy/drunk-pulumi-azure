@@ -3,6 +3,9 @@ import { RGPermissionType } from "../../Core/ResourceGroup";
 import { KeyVaultInfo, ResourceGroupInfo } from "../../types";
 import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
 
+export type ResourceBuilderResults = BuilderProps & {
+  envRoles?: EnvRolesResults;
+};
 export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
 export type BuilderFunctionType = (props: BuilderProps) => IBuilder<any>;
 export type BuilderAsyncFunctionType = (
@@ -12,6 +15,7 @@ export type BuilderAsyncFunctionType = (
 export interface IResourceRoleBuilder {
   createRoles: () => IResourceGroupBuilder;
   withRoles: (props: EnvRolesResults) => IResourceGroupBuilder;
+  withRolesFromVault: () => IResourceGroupBuilder;
 }
 
 export interface IResourceGroupBuilder {
@@ -27,5 +31,5 @@ export interface IResourceVaultBuilder {
 export interface IResourceBuilder {
   withBuilder: (builder: BuilderFunctionType) => IResourceBuilder;
   withBuilderAsync: (builder: BuilderAsyncFunctionType) => IResourceBuilder;
-  build: () => Promise<BuilderProps>;
+  build: () => Promise<ResourceBuilderResults>;
 }

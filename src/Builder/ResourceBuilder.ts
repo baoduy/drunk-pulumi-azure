@@ -7,11 +7,13 @@ import {
   IResourceVaultBuilder,
   ResourceGroupBuilderType,
   BuilderProps,
+  ResourceBuilderResults,
 } from "./types";
 import {
   createEnvRoles,
   CreateEnvRolesType,
   EnvRolesResults,
+  getEnvRolesOutput,
 } from "../AzAd/EnvRoles";
 import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
@@ -30,6 +32,7 @@ class ResourceBuilder
   private _RGInfo: ResourceGroupInfo | undefined = undefined;
   private _createRole: boolean = false;
   private _createVault: boolean = false;
+  private _loadRolesFromVault: boolean = false;
   private _envRoles: EnvRolesResults | undefined = undefined;
   private _otherBuilders = new Array<BuilderFunctionType>();
   private _otherBuildersAsync = new Array<BuilderAsyncFunctionType>();
@@ -48,6 +51,10 @@ class ResourceBuilder
   }
   public withRoles(props: EnvRolesResults): IResourceGroupBuilder {
     this._envRoles = props;
+    return this;
+  }
+  public withRolesFromVault(): IResourceGroupBuilder {
+    this._loadRolesFromVault = true;
     return this;
   }
   public createRG(props: ResourceGroupBuilderType): IResourceVaultBuilder {
@@ -76,9 +83,16 @@ class ResourceBuilder
   }
 
   private buildRoles() {
-    if (!this._createRole) return;
-    this._envRolesInstance = createEnvRoles();
-    this._envRoles = this._envRolesInstance;
+    if (this._createRole) {
+      this._envRolesInstance = createEnvRoles();
+      this._envRoles = this._envRolesInstance;
+    } else if (this._loadRolesFromVault) {
+      if (!this._vaultInfo)
+        throw new Error(
+          "The KeyVaultInfo needs to be defined to load environment Roles info.",
+        );
+      this._envRoles = getEnvRolesOutput(this._vaultInfo);
+    }
   }
 
   private buildRG() {
@@ -126,7 +140,7 @@ class ResourceBuilder
     await Promise.all(this._otherBuildersAsync.map((b) => b(props).build()));
   }
 
-  public async build(): Promise<BuilderProps> {
+  public async build(): Promise<ResourceBuilderResults> {
     this.buildRoles();
     this.buildRG();
     this.buildVault();
@@ -137,6 +151,7 @@ class ResourceBuilder
       name: this.name,
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!,
+      envRoles: this._envRoles!,
     };
   }
 }
