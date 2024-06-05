@@ -1,13 +1,12 @@
 import {
-  BuilderAsyncFunctionType,
-  BuilderFunctionType,
   IResourceBuilder,
   IResourceGroupBuilder,
   IResourceRoleBuilder,
   IResourceVaultBuilder,
-  ResourceGroupBuilderType,
-  BuilderProps,
+  OtherAsyncBuilderType,
+  OtherBuilderType,
   ResourceBuilderResults,
+  ResourceGroupBuilderType,
 } from "./types";
 import {
   createEnvRoles,
@@ -34,15 +33,15 @@ class ResourceBuilder
   private _createVault: boolean = false;
   private _loadRolesFromVault: boolean = false;
   private _envRoles: EnvRolesResults | undefined = undefined;
-  private _otherBuilders = new Array<BuilderFunctionType>();
-  private _otherBuildersAsync = new Array<BuilderAsyncFunctionType>();
+  private _otherBuilders: OtherBuilderType = {};
+  private _otherBuildersAsync: OtherAsyncBuilderType = {};
   private _vaultInfo: KeyVaultInfo | undefined = undefined;
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
   private _vaultInstance: Resource | undefined = undefined;
   private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
-  private _otherInstances = new Array<any>();
+  private _otherInstances: Record<string, any> = {};
 
   constructor(public name: string) {}
 
@@ -74,12 +73,12 @@ class ResourceBuilder
     this._vaultInfo = props;
     return this;
   }
-  public withBuilder(builder: BuilderFunctionType) {
-    this._otherBuilders.push(builder);
+  public withBuilder(builders: OtherBuilderType) {
+    this._otherBuilders = { ...this._otherBuilders, ...builders };
     return this;
   }
-  public withBuilderAsync(builder: BuilderAsyncFunctionType) {
-    this._otherBuildersAsync.push(builder);
+  public withBuilderAsync(builders: OtherAsyncBuilderType) {
+    this._otherBuildersAsync = { ...this._otherBuildersAsync, ...builders };
     return this;
   }
 
@@ -123,27 +122,35 @@ class ResourceBuilder
   }
 
   private buildOthers() {
-    const props: BuilderProps = {
-      name: this.name,
-      group: this._RGInfo!,
-      vaultInfo: this._vaultInfo!,
-    };
-
-    const rs = this._otherBuilders.map((b) => b(props).build());
-    this._otherInstances.push(...rs);
+    Object.keys(this._otherBuilders).forEach((key) => {
+      const b = this._otherBuilders[key];
+      this._otherInstances[key] = b({
+        ...this.getResults(),
+        name: `${this.name}-${key}`,
+      }).build();
+    });
   }
 
   private async buildOthersAsync() {
-    const props: BuilderProps = {
+    await Promise.all(
+      Object.keys(this._otherBuildersAsync).map(async (key) => {
+        const b = this._otherBuildersAsync[key];
+        this._otherInstances[key] = await b({
+          ...this.getResults(),
+          name: `${this.name}-${key}`,
+        }).build();
+      }),
+    );
+  }
+
+  private getResults() {
+    return {
       name: this.name,
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!,
+      envRoles: this._envRoles!,
+      instances: this._otherInstances!,
     };
-
-    const rs = await Promise.all(
-      this._otherBuildersAsync.map((b) => b(props).build()),
-    );
-    this._otherInstances.push(...rs);
   }
 
   public async build(): Promise<ResourceBuilderResults> {
@@ -153,13 +160,7 @@ class ResourceBuilder
     this.buildOthers();
     await this.buildOthersAsync();
 
-    return {
-      name: this.name,
-      group: this._RGInfo!,
-      vaultInfo: this._vaultInfo!,
-      envRoles: this._envRoles!,
-      others: this._otherInstances!,
-    };
+    return this.getResults();
   }
 }
 

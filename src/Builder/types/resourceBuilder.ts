@@ -5,14 +5,17 @@ import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
 
 export type ResourceBuilderResults = BuilderProps & {
   envRoles: EnvRolesResults;
-  others: Array<any>;
+  instances: Record<string, any>;
 };
 export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
-export type BuilderFunctionType = (props: BuilderProps) => IBuilder<any>;
+export type BuilderFunctionType = (
+  props: ResourceBuilderResults,
+) => IBuilder<any>;
+export type OtherBuilderType = Record<string, BuilderFunctionType>;
 export type BuilderAsyncFunctionType = (
-  props: BuilderProps,
+  props: ResourceBuilderResults,
 ) => IBuilderAsync<any>;
-
+export type OtherAsyncBuilderType = Record<string, BuilderAsyncFunctionType>;
 export interface IResourceRoleBuilder {
   createRoles: () => IResourceGroupBuilder;
   withRoles: (props: EnvRolesResults) => IResourceGroupBuilder;
@@ -30,7 +33,7 @@ export interface IResourceVaultBuilder {
 }
 
 export interface IResourceBuilder {
-  withBuilder: (builder: BuilderFunctionType) => IResourceBuilder;
-  withBuilderAsync: (builder: BuilderAsyncFunctionType) => IResourceBuilder;
+  withBuilder: (builders: OtherBuilderType) => IResourceBuilder;
+  withBuilderAsync: (builders: OtherAsyncBuilderType) => IResourceBuilder;
   build: () => Promise<ResourceBuilderResults>;
 }

@@ -12,7 +12,7 @@ import { LogInfoResults } from "../../Logs/Helpers";
 import { PublicIpAddressPrefixResult } from "../../VNet/IpAddressPrefix";
 
 //VNet Builder Types
-export type VnetBuilderProps = BuilderProps & {
+export type VnetBuilderProps = {
   subnets?: SubnetCreationProps;
 } & Pick<VnetProps, "addressSpaces" | "dnsServers">;
 export type SubnetCreationProps = Record<string, Omit<SubnetProps, "name">>;
@@ -40,8 +40,8 @@ export type VpnGatewayCreationProps = Pick<
 
 //Starting Interface
 export interface IVnetBuilderStart {
-  asHub: () => IPublicIpBuilder;
-  asSpoke: () => IVnetBuilder;
+  asHub: (props?: VnetBuilderProps) => IPublicIpBuilder;
+  asSpoke: (props?: VnetBuilderProps) => IVnetBuilder;
 }
 export interface IPublicIpBuilder {
   withPublicIpAddress: (
