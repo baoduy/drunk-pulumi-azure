@@ -143,6 +143,7 @@ class ResourceBuilder
       VnetBuilder(this.getResults()),
     ).build();
   }
+
   private buildOthers() {
     Object.keys(this._otherBuilders).forEach((key) => {
       const b = this._otherBuilders[key];
@@ -182,6 +183,7 @@ class ResourceBuilder
     this.buildRoles();
     this.buildRG();
     this.buildVault();
+    this.buildVnet();
     this.buildOthers();
     await this.buildOthersAsync();
 
