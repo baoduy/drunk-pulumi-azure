@@ -2,10 +2,16 @@ import { EnvRolesResults } from "../../AzAd/EnvRoles";
 import { RGPermissionType } from "../../Core/ResourceGroup";
 import { KeyVaultInfo, ResourceGroupInfo } from "../../types";
 import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
+import {
+  IVnetBuilder,
+  IVnetBuilderStart,
+  VnetBuilderResults,
+} from "./vnetBuilder";
 
 export type ResourceBuilderResults = BuilderProps & {
   envRoles: EnvRolesResults;
-  instances: Record<string, any>;
+  vnetInstance?: VnetBuilderResults;
+  otherInstances: Record<string, any>;
 };
 export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
 export type BuilderFunctionType = (
@@ -16,6 +22,10 @@ export type BuilderAsyncFunctionType = (
   props: ResourceBuilderResults,
 ) => IBuilderAsync<any>;
 export type OtherAsyncBuilderType = Record<string, BuilderAsyncFunctionType>;
+export type ResourceVnetBuilderType = (
+  builder: IVnetBuilderStart,
+) => IVnetBuilder;
+
 export interface IResourceRoleBuilder {
   createRoles: () => IResourceGroupBuilder;
   withRoles: (props: EnvRolesResults) => IResourceGroupBuilder;
@@ -32,7 +42,11 @@ export interface IResourceVaultBuilder {
   withVault: (props: KeyVaultInfo) => IResourceBuilder;
 }
 
-export interface IResourceBuilder {
+export interface IResourceVnetBuilder {
+  withVnet: (props: ResourceVnetBuilderType) => IResourceBuilder;
+}
+export interface IResourceBuilder extends IResourceVnetBuilder {
+  lock: () => IResourceBuilder;
   withBuilder: (builders: OtherBuilderType) => IResourceBuilder;
   withBuilderAsync: (builders: OtherAsyncBuilderType) => IResourceBuilder;
   build: () => Promise<ResourceBuilderResults>;

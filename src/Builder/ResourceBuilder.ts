@@ -7,6 +7,8 @@ import {
   OtherBuilderType,
   ResourceBuilderResults,
   ResourceGroupBuilderType,
+  ResourceVnetBuilderType,
+  VnetBuilderResults,
 } from "./types";
 import {
   createEnvRoles,
@@ -18,7 +20,8 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
 import Vault from "../KeyVault";
-import { Resource } from "@pulumi/pulumi";
+import { CustomResource, Resource } from "@pulumi/pulumi";
+import VnetBuilder from "./VnetBuilder";
 
 class ResourceBuilder
   implements
@@ -29,6 +32,7 @@ class ResourceBuilder
 {
   private _createRGProps: ResourceGroupBuilderType | undefined = undefined;
   private _RGInfo: ResourceGroupInfo | undefined = undefined;
+  private _lock: boolean = false;
   private _createRole: boolean = false;
   private _createVault: boolean = false;
   private _loadRolesFromVault: boolean = false;
@@ -36,12 +40,14 @@ class ResourceBuilder
   private _otherBuilders: OtherBuilderType = {};
   private _otherBuildersAsync: OtherAsyncBuilderType = {};
   private _vaultInfo: KeyVaultInfo | undefined = undefined;
+  private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
-  private _vaultInstance: Resource | undefined = undefined;
+  private _vaultInstance: CustomResource | undefined = undefined;
   private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
   private _otherInstances: Record<string, any> = {};
+  private _vnetInstance: VnetBuilderResults | undefined = undefined;
 
   constructor(public name: string) {}
 
@@ -73,12 +79,20 @@ class ResourceBuilder
     this._vaultInfo = props;
     return this;
   }
-  public withBuilder(builders: OtherBuilderType) {
+  public withVnet(props: ResourceVnetBuilderType): IResourceBuilder {
+    this._vnetBuilder = props;
+    return this;
+  }
+  public withBuilder(builders: OtherBuilderType): IResourceBuilder {
     this._otherBuilders = { ...this._otherBuilders, ...builders };
     return this;
   }
-  public withBuilderAsync(builders: OtherAsyncBuilderType) {
+  public withBuilderAsync(builders: OtherAsyncBuilderType): IResourceBuilder {
     this._otherBuildersAsync = { ...this._otherBuildersAsync, ...builders };
+    return this;
+  }
+  public lock(): IResourceBuilder {
+    this._lock = true;
     return this;
   }
 
@@ -103,6 +117,7 @@ class ResourceBuilder
         envRoles: this._envRoles!,
         ...this._createRGProps,
       },
+      lock: this._lock,
     });
     this._RGInfo = rs.toGroupInfo();
     this._RGInstance = rs.resource;
@@ -113,6 +128,7 @@ class ResourceBuilder
     const rs = Vault({
       name: this.name,
       group: this._RGInfo!,
+      dependsOn: this._RGInstance,
     });
     this._vaultInstance = rs.vault;
     this._vaultInfo = rs.toVaultInfo();
@@ -121,12 +137,19 @@ class ResourceBuilder
       this._envRolesInstance.addRolesToVault(this._vaultInfo);
   }
 
+  private buildVnet() {
+    if (!this._vnetBuilder) return;
+    this._vnetInstance = this._vnetBuilder(
+      VnetBuilder(this.getResults()),
+    ).build();
+  }
   private buildOthers() {
     Object.keys(this._otherBuilders).forEach((key) => {
       const b = this._otherBuilders[key];
       this._otherInstances[key] = b({
         ...this.getResults(),
         name: `${this.name}-${key}`,
+        dependsOn: this._vaultInstance ?? this._vnetInstance?.vnet,
       }).build();
     });
   }
@@ -138,18 +161,20 @@ class ResourceBuilder
         this._otherInstances[key] = await b({
           ...this.getResults(),
           name: `${this.name}-${key}`,
+          dependsOn: this._vaultInstance ?? this._vnetInstance?.vnet,
         }).build();
       }),
     );
   }
 
-  private getResults() {
+  private getResults(): ResourceBuilderResults {
     return {
       name: this.name,
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!,
       envRoles: this._envRoles!,
-      instances: this._otherInstances!,
+      vnetInstance: this._vnetInstance,
+      otherInstances: this._otherInstances!,
     };
   }
 

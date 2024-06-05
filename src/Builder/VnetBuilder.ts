@@ -350,9 +350,9 @@ class VnetBuilder
     this.buildPeering();
 
     return {
+      ...this._vnetInstance!,
       publicIpAddress: this._ipAddressInstance,
       firewall: this._firewallInstance,
-      vnet: this._vnetInstance!,
       natGateway: this._natGatewayInstance,
       //peerings: this._peeringInstances,
       vnpGateway: this._vnpGatewayInstance,

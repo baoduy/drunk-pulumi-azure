@@ -66,10 +66,9 @@ export interface IVnetBuilder extends IBuilder<VnetBuilderResults> {
   withVpnGateway: (props: VpnGatewayCreationProps) => IVnetBuilder;
 }
 
-export type VnetBuilderResults = {
+export type VnetBuilderResults = VnetResult & {
   publicIpAddress: PublicIpAddressPrefixResult | undefined;
   firewall: FirewallResult | undefined;
-  vnet: VnetResult;
   natGateway: network.NatGateway | undefined;
   vnpGateway: network.VirtualNetworkGateway | undefined;
 };
