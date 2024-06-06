@@ -20,8 +20,9 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
 import Vault from "../KeyVault";
-import { CustomResource, Resource } from "@pulumi/pulumi";
+import { CustomResource, Input, Resource } from "@pulumi/pulumi";
 import VnetBuilder from "./VnetBuilder";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 class ResourceBuilder
   implements
@@ -41,6 +42,7 @@ class ResourceBuilder
   private _otherBuildersAsync: OtherAsyncBuilderType = {};
   private _vaultInfo: KeyVaultInfo | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
+  private _secrets: Record<string, Input<string>> = {};
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
@@ -79,6 +81,11 @@ class ResourceBuilder
     this._vaultInfo = props;
     return this;
   }
+  public addSecrets(items: Record<string, Input<string>>): IResourceBuilder {
+    this._secrets = { ...this._secrets, ...items };
+    return this;
+  }
+
   public withVnet(props: ResourceVnetBuilderType): IResourceBuilder {
     this._vnetBuilder = props;
     return this;
@@ -124,17 +131,32 @@ class ResourceBuilder
   }
 
   private buildVault() {
-    if (!this._createVault) return;
-    const rs = Vault({
-      name: this.name,
-      group: this._RGInfo!,
-      dependsOn: this._RGInstance,
-    });
-    this._vaultInstance = rs.vault;
-    this._vaultInfo = rs.toVaultInfo();
+    //Create Vault
+    if (this._createVault) {
+      const rs = Vault({
+        name: this.name,
+        group: this._RGInfo!,
+        dependsOn: this._RGInstance,
+      });
+      this._vaultInstance = rs.vault;
+      this._vaultInfo = rs.toVaultInfo();
 
-    if (this._envRolesInstance)
-      this._envRolesInstance.addRolesToVault(this._vaultInfo);
+      //Add Environment Roles to Vault
+      if (this._envRolesInstance)
+        this._envRolesInstance.addRolesToVault(this._vaultInfo);
+    }
+
+    //Add Secrets to Vaults
+    Object.keys(this._secrets).forEach((key) => {
+      const val = this._secrets[key];
+      addCustomSecret({
+        name: key,
+        value: val,
+        contentType: `${this.name}-${key}`,
+        vaultInfo: this._vaultInfo!,
+        dependsOn: this._vaultInstance,
+      });
+    });
   }
 
   private buildVnet() {
