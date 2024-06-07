@@ -7,6 +7,8 @@ import {
   OtherBuilderType,
   ResourceBuilderResults,
   ResourceGroupBuilderType,
+  ResourceVaultLinkingBuilderType,
+  ResourceVaultPrivateLinkBuilderType,
   ResourceVnetBuilderType,
   VnetBuilderResults,
 } from "./types";
@@ -19,7 +21,7 @@ import {
 import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
-import Vault from "../KeyVault";
+import Vault, { createVaultPrivateLink } from "../KeyVault";
 import { CustomResource, Input, Resource } from "@pulumi/pulumi";
 import VnetBuilder from "./VnetBuilder";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
@@ -43,6 +45,8 @@ class ResourceBuilder
   private _vaultInfo: KeyVaultInfo | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
+  private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
+    undefined;
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
@@ -73,12 +77,21 @@ class ResourceBuilder
     this._RGInfo = props;
     return this;
   }
-  public createVault(): IResourceBuilder {
+  public createVault(
+    props?: ResourceVaultLinkingBuilderType,
+  ): IResourceBuilder {
     this._createVault = true;
+    this._vaultLinkingProps = props;
     return this;
   }
   public withVault(props: KeyVaultInfo): IResourceBuilder {
     this._vaultInfo = props;
+    return this;
+  }
+  public linkVaultTo(
+    props: ResourceVaultPrivateLinkBuilderType,
+  ): IResourceBuilder {
+    this._vaultLinkingProps = { ...props, asPrivateLink: true };
     return this;
   }
   public addSecrets(items: Record<string, Input<string>>): IResourceBuilder {
@@ -133,17 +146,55 @@ class ResourceBuilder
   private buildVault() {
     //Create Vault
     if (this._createVault) {
+      const {
+        asPrivateLink,
+        allowsIpAddresses,
+        allowsAzureService,
+        subnetName,
+      } = this._vaultLinkingProps || {};
+
+      const subnetId = subnetName
+        ? this._vnetInstance?.findSubnet(subnetName)!.apply((s) => s!.id!)
+        : undefined;
+
       const rs = Vault({
         name: this.name,
         group: this._RGInfo!,
         dependsOn: this._RGInstance,
+        network: !asPrivateLink
+          ? {
+              allowsAzureService,
+              subnetIds: subnetId ? [subnetId] : undefined,
+              ipAddresses: allowsIpAddresses,
+            }
+          : undefined,
       });
+      if (asPrivateLink && subnetId) {
+        rs.createPrivateLink({ subnetId });
+      }
+
       this._vaultInstance = rs.vault;
       this._vaultInfo = rs.toVaultInfo();
 
       //Add Environment Roles to Vault
       if (this._envRolesInstance)
         this._envRolesInstance.addRolesToVault(this._vaultInfo);
+    }
+    //private link existing Vault to Vnet
+    else if (
+      this._vnetInstance &&
+      this._vaultLinkingProps &&
+      this._vaultLinkingProps.asPrivateLink
+    ) {
+      const subnetId = this._vnetInstance!.findSubnet(
+        this._vaultLinkingProps.subnetName,
+      )!.apply((s) => s!.id!);
+      createVaultPrivateLink({
+        name: `${this.name}-vault`,
+        vaultId: this._vaultInfo!.id,
+        group: this._RGInfo!,
+        subnetId,
+      });
     }
 
     //Add Secrets to Vaults

@@ -1,24 +1,46 @@
-import * as native from "@pulumi/azure-native";
+import * as keyvault from "@pulumi/azure-native/keyvault";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
 import { tenantId } from "../Common/AzureEnv";
 import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
-import { BasicMonitorArgs, PrivateLinkProps } from "../types";
+import {
+  BasicMonitorArgs,
+  PrivateLinkProps,
+  ResourceGroupInfo,
+} from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
 
-interface Props extends BasicResourceArgs {
+export interface KeyVaultProps extends BasicResourceArgs {
   network?: {
+    allowsAzureService?: boolean;
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
   };
 }
 
-export default ({ name, group, network, ...others }: Props) => {
+export const createVaultPrivateLink = ({
+  name,
+  vaultId,
+  ...props
+}: PrivateLinkProps & {
+  name: string;
+  group: ResourceGroupInfo;
+  vaultId: Input<string>;
+}) =>
+  PrivateEndpoint({
+    name: getPrivateEndpointName(name),
+    ...props,
+    resourceId: vaultId,
+    privateDnsZoneName: "privatelink.vaultcore.azure.net",
+    linkServiceGroupIds: ["keyVault"],
+  });
+
+export default ({ name, group, network, ...others }: KeyVaultProps) => {
   const vaultName = getKeyVaultName(name);
 
-  const vault = new native.keyvault.Vault(vaultName, {
+  const vault = new keyvault.Vault(vaultName, {
     vaultName,
     ...group,
     ...others,
@@ -38,23 +60,20 @@ export default ({ name, group, network, ...others }: Props) => {
       enabledForDeployment: true,
       enabledForDiskEncryption: true,
 
-      networkAcls: network
-        ? {
-            bypass: "AzureServices",
-            defaultAction: enums.keyvault.NetworkRuleAction.Deny,
+      networkAcls: {
+        bypass: "AzureServices",
+        defaultAction: network?.allowsAzureService
+          ? enums.keyvault.NetworkRuleAction.Allow
+          : enums.keyvault.NetworkRuleAction.Deny,
 
-            ipRules: network.ipAddresses
-              ? network.ipAddresses.map((i) => ({ value: i }))
-              : [],
+        ipRules: network?.ipAddresses
+          ? network.ipAddresses.map((i) => ({ value: i }))
+          : [],
 
-            virtualNetworkRules: network.subnetIds
-              ? network.subnetIds.map((s) => ({ id: s }))
-              : undefined,
-          }
-        : {
-            bypass: "AzureServices",
-            defaultAction: enums.keyvault.NetworkRuleAction.Allow,
-          },
+        virtualNetworkRules: network?.subnetIds
+          ? network.subnetIds.map((s) => ({ id: s }))
+          : undefined,
+      },
     },
   });
 
@@ -76,14 +95,7 @@ export default ({ name, group, network, ...others }: Props) => {
 
   // Create Private Link
   const createPrivateLink = (props: PrivateLinkProps) =>
-    PrivateEndpoint({
-      name: getPrivateEndpointName(name),
-      group,
-      ...props,
-      resourceId: vault.id,
-      privateDnsZoneName: "privatelink.vaultcore.azure.net",
-      linkServiceGroupIds: ["keyVault"],
-    });
+    createVaultPrivateLink({ name, group, vaultId: vault.id, ...props });
 
   return {
     name: vaultName,

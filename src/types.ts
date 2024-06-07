@@ -27,7 +27,7 @@ export interface ConventionProps {
 
 export interface PrivateLinkProps {
   subnetId: Input<string>;
-  useGlobalDnsZone?: boolean;
+  //useGlobalDnsZone?: boolean;
 }
 
 export interface NetworkRulesProps {

@@ -26,6 +26,16 @@ export type OtherAsyncBuilderType = Record<string, BuilderAsyncFunctionType>;
 export type ResourceVnetBuilderType = (
   builder: IVnetBuilderStart,
 ) => IVnetBuilder;
+export type ResourceVaultPrivateLinkBuilderType = {
+  subnetName: string;
+};
+export type ResourceVaultLinkingBuilderType =
+  ResourceVaultPrivateLinkBuilderType & {
+    /** Link as private link to Subnet or just Vnet Linking*/
+    asPrivateLink?: boolean;
+    allowsAzureService?: boolean;
+    allowsIpAddresses?: Input<string>[];
+  };
 
 export interface IResourceRoleBuilder {
   createRoles: () => IResourceGroupBuilder;
@@ -39,7 +49,7 @@ export interface IResourceGroupBuilder {
 }
 
 export interface IResourceVaultBuilder {
-  createVault: () => IResourceBuilder;
+  createVault: (props?: ResourceVaultLinkingBuilderType) => IResourceBuilder;
   withVault: (props: KeyVaultInfo) => IResourceBuilder;
 }
 export interface IResourceVaultItemsBuilder {
@@ -49,6 +59,7 @@ export interface IResourceVaultItemsBuilder {
 }
 export interface IResourceVnetBuilder {
   withVnet: (props: ResourceVnetBuilderType) => IResourceBuilder;
+  linkVaultTo: (props: ResourceVaultPrivateLinkBuilderType) => IResourceBuilder;
 }
 export interface IResourceBuilder
   extends IResourceVnetBuilder,

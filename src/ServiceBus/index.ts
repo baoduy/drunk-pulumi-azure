@@ -1,5 +1,5 @@
-import * as bus from '@pulumi/azure-native/servicebus';
-import * as pulumi from '@pulumi/pulumi';
+import * as bus from "@pulumi/azure-native/servicebus";
+import * as pulumi from "@pulumi/pulumi";
 
 import {
   BasicArgs,
@@ -10,7 +10,7 @@ import {
   KeyVaultInfo,
   PrivateLinkProps,
   ResourceGroupInfo,
-} from '../types';
+} from "../types";
 import {
   BusConnectionTypes,
   getNamespaceVaultName,
@@ -18,26 +18,26 @@ import {
   getSubscriptionName,
   getTopicName,
   getTopicOrQueueVaultName,
-} from './ServiceBusHelper';
-import { isPrd } from '../Common/AzureEnv';
-import creator from '../Core/ResourceCreator';
-import { getPrivateEndpointName, getServiceBusName } from '../Common/Naming';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import Locker from '../Core/Locker';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { getSecret } from '../KeyVault/Helper';
+} from "./ServiceBusHelper";
+import { isPrd } from "../Common/AzureEnv";
+import creator from "../Core/ResourceCreator";
+import { getPrivateEndpointName, getServiceBusName } from "../Common/Naming";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import Locker from "../Core/Locker";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { getSecret } from "../KeyVault/Helper";
 
-type TransportTypes = 'AmqpWebSockets' | 'Amqp' | null;
-const duplicateDetectedTime = isPrd ? 'P3D' : 'PT10M';
+type TransportTypes = "AmqpWebSockets" | "Amqp" | null;
+const duplicateDetectedTime = isPrd ? "P3D" : "PT10M";
 
 const defaultValues = {
   maxDeliveryCount: 10,
   enableBatchedOperations: true,
-  defaultMessageTtl: isPrd ? 'P30D' : 'P1D',
-  defaultMessageTimeToLive: isPrd ? 'P30D' : 'P1D',
+  defaultMessageTtl: isPrd ? "P30D" : "P1D",
+  defaultMessageTimeToLive: isPrd ? "P30D" : "P1D",
   deadLetteringOnMessageExpiration: true,
   maxSizeInMegabytes: 1024,
-  lockDuration: 'PT1M',
+  lockDuration: "PT1M",
 
   //Auto delete subscription after 30 idle.
   //autoDeleteOnIdle: 'P30D',
@@ -67,7 +67,7 @@ const createAndStoreConnection = ({
   topicName,
   queueName,
   connectionType,
-  transportType = 'AmqpWebSockets',
+  transportType = "AmqpWebSockets",
   resourceGroupName,
   removeEntityPath,
   vaultInfo,
@@ -96,8 +96,8 @@ const createAndStoreConnection = ({
           bus.AccessRights.Manage,
         ]
       : connectionType == BusConnectionTypes.Send
-      ? [bus.AccessRights.Send]
-      : [bus.AccessRights.Listen];
+        ? [bus.AccessRights.Send]
+        : [bus.AccessRights.Listen];
 
   const rule = topicName
     ? new bus.TopicAuthorizationRule(
@@ -110,32 +110,32 @@ const createAndStoreConnection = ({
 
           rights,
         },
-        { dependsOn }
+        { dependsOn },
       )
     : queueName
-    ? new bus.QueueAuthorizationRule(
-        key,
-        {
-          authorizationRuleName: key,
-          queueName,
-          namespaceName,
-          resourceGroupName,
+      ? new bus.QueueAuthorizationRule(
+          key,
+          {
+            authorizationRuleName: key,
+            queueName,
+            namespaceName,
+            resourceGroupName,
 
-          rights,
-        },
-        { dependsOn }
-      )
-    : new bus.NamespaceAuthorizationRule(
-        key,
-        {
-          authorizationRuleName: key,
-          namespaceName,
-          resourceGroupName,
+            rights,
+          },
+          { dependsOn },
+        )
+      : new bus.NamespaceAuthorizationRule(
+          key,
+          {
+            authorizationRuleName: key,
+            namespaceName,
+            resourceGroupName,
 
-          rights,
-        },
-        { dependsOn }
-      );
+            rights,
+          },
+          { dependsOn },
+        );
 
   rule.id.apply(async (id) => {
     if (!id) return;
@@ -148,23 +148,23 @@ const createAndStoreConnection = ({
           topicName,
         })
       : queueName
-      ? bus.listQueueKeys({
-          authorizationRuleName: key,
-          namespaceName,
-          resourceGroupName,
-          queueName,
-        })
-      : bus.listNamespaceKeys({
-          authorizationRuleName: key,
-          namespaceName,
-          resourceGroupName,
-        }));
+        ? bus.listQueueKeys({
+            authorizationRuleName: key,
+            namespaceName,
+            resourceGroupName,
+            queueName,
+          })
+        : bus.listNamespaceKeys({
+            authorizationRuleName: key,
+            namespaceName,
+            resourceGroupName,
+          }));
 
     let primaryConn = removeEntityPath
-      ? keys.primaryConnectionString.replace(`;EntityPath=${name}`, '')
+      ? keys.primaryConnectionString.replace(`;EntityPath=${name}`, "")
       : keys.primaryConnectionString;
 
-    if (typeof transportType === 'string')
+    if (typeof transportType === "string")
       primaryConn += `;TransportType=${transportType};`;
 
     addCustomSecret({
@@ -176,10 +176,10 @@ const createAndStoreConnection = ({
     });
 
     let secondConn = removeEntityPath
-      ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, '')
+      ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, "")
       : keys.secondaryConnectionString;
 
-    if (typeof transportType === 'string')
+    if (typeof transportType === "string")
       secondConn += `;TransportType=${transportType};`;
 
     addCustomSecret({
@@ -195,7 +195,7 @@ const createAndStoreConnection = ({
 };
 
 interface TopicProps
-  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'>,
+  extends Pick<ConnCreatorProps, "removeEntityPath" | "transportType">,
     BasicArgs {
   shortName: string;
   namespaceFullName: string;
@@ -240,7 +240,7 @@ const topicCreator = ({
       ...defaultValues,
       ...options,
     },
-    { dependsOn }
+    { dependsOn },
   );
 
   if (lock) {
@@ -304,7 +304,7 @@ const topicCreator = ({
         group,
         lock: false,
         dependsOn: topic,
-      })
+      }),
     );
   }
 
@@ -348,7 +348,7 @@ const subscriptionCreator = ({
 
       ...defaultValues,
     },
-    { dependsOn }
+    { dependsOn },
   );
 
   if (lock) {
@@ -362,7 +362,7 @@ const subscriptionCreator = ({
 };
 
 interface QueueProps
-  extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'>,
+  extends Pick<ConnCreatorProps, "removeEntityPath" | "transportType">,
     BasicArgs {
   shortName: string;
   version: number;
@@ -413,7 +413,7 @@ const queueCreator = ({
       ...defaultValues,
       ...options,
     },
-    { dependsOn }
+    { dependsOn },
   );
 
   if (lock) {
@@ -471,12 +471,12 @@ const queueCreator = ({
 
 interface Props
   extends BasicResourceArgs,
-    Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'> {
+    Pick<ConnCreatorProps, "removeEntityPath" | "transportType"> {
   topics?: Array<
-    Omit<TopicProps, 'group' | 'namespaceFullName' | 'vaultInfo' | 'dependsOn'>
+    Omit<TopicProps, "group" | "namespaceFullName" | "vaultInfo" | "dependsOn">
   >;
   queues?: Array<
-    Omit<QueueProps, 'group' | 'namespaceFullName' | 'vaultInfo' | 'dependsOn'>
+    Omit<QueueProps, "group" | "namespaceFullName" | "vaultInfo" | "dependsOn">
   >;
   drConfig?: {
     alias?: pulumi.Input<string>;
@@ -524,7 +524,7 @@ export default ({
     monitoring: monitoring
       ? {
           ...monitoring,
-          logsCategories: ['OperationalLogs'],
+          logsCategories: ["OperationalLogs"],
         }
       : undefined,
   } as bus.NamespaceArgs & DefaultResourceArgs);
@@ -591,7 +591,7 @@ export default ({
         enableConnections: enableTopicConnections,
         ...others,
         ...t,
-      })
+      }),
     );
   }
 
@@ -607,7 +607,7 @@ export default ({
         enableConnections: enableQueueConnections,
         ...others,
         ...q,
-      })
+      }),
     );
   }
 
@@ -619,7 +619,7 @@ export default ({
       new bus.NamespaceNetworkRuleSet(name, {
         namespaceName: namespace.name,
         ...group,
-        defaultAction: 'Deny',
+        defaultAction: "Deny",
 
         ipRules: network.whitelistIps
           ? network.whitelistIps.map((i) => ({
@@ -642,10 +642,10 @@ export default ({
         name: getPrivateEndpointName(name),
         group,
         subnetId: network.subnetId,
-        useGlobalDnsZone: network.useGlobalDnsZone,
+        //useGlobalDnsZone: network.useGlobalDnsZone,
         resourceId: namespace.id,
-        linkServiceGroupIds: ['namespace'],
-        privateDnsZoneName: 'privatelink.servicebus.windows.net',
+        linkServiceGroupIds: ["namespace"],
+        privateDnsZoneName: "privatelink.servicebus.windows.net",
       });
     }
   }
