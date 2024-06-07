@@ -224,7 +224,7 @@ export default ({
   }
 
   return FirewallPolicyGroup({
-    policy: { name: "cloud-pc-firewall-policy", netRules, appRules },
+    policy: { name: `${name}-firewall-policy`, netRules, appRules },
     priority,
     action: "Allow",
   });
