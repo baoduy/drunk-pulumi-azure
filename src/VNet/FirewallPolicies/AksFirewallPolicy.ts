@@ -212,17 +212,7 @@ export default ({
         ruleType: "ApplicationRule",
         name: "docker-services",
         sourceAddresses: subnetSpaces,
-        targetFqdns: [
-          "auth.docker.io",
-          "*.auth.docker.io",
-          "*.cloudflare.docker.io",
-          "docker.io",
-          "cloudflare.docker.io",
-          "cloudflare.docker.com",
-          "*.cloudflare.docker.com",
-          "*.registry-1.docker.io",
-          "registry-1.docker.io",
-        ],
+        targetFqdns: ["*.docker.io", "docker.io", "*.docker.com", "*.pkg.dev"],
         protocols: [{ protocolType: "Https", port: 443 }],
       },
       {
@@ -232,12 +222,10 @@ export default ({
         targetFqdns: [
           "quay.io", //For Cert Manager
           "*.quay.io",
-          "registry.k8s.io",
           "k8s.gcr.io", //nginx images
           "*.k8s.io",
           "*.cloudfront.net",
-          "asia-east1-docker.pkg.dev",
-          "prod-registry-k8s-io-ap-southeast-1.s3.dualstack.ap-southeast-1.amazonaws.com",
+          "*.amazonaws.com",
           "*.gcr.io",
           "*.googleapis.com",
         ],
