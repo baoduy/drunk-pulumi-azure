@@ -210,14 +210,9 @@ export default ({
     appRules.push(
       {
         ruleType: "ApplicationRule",
-        //TODO Allow Docker Access is potential risk once we have budget and able to upload external images to ACR then remove docker.
         name: "docker-services",
         sourceAddresses: subnetSpaces,
         targetFqdns: [
-          "quay.io", //For Cert Manager
-          "registry.k8s.io",
-          "*.cloudfront.net",
-          "*.quay.io",
           "auth.docker.io",
           "*.auth.docker.io",
           "*.cloudflare.docker.io",
@@ -232,12 +227,15 @@ export default ({
       },
       {
         ruleType: "ApplicationRule",
-        //TODO Allow external registry is potential risk once we have budget and able to upload external images to ACR then remove docker.
         name: "k8s-services",
         sourceAddresses: subnetSpaces,
         targetFqdns: [
+          "quay.io", //For Cert Manager
+          "*.quay.io",
+          "registry.k8s.io",
           "k8s.gcr.io", //nginx images
           "*.k8s.io",
+          "*.cloudfront.net",
           "asia-east1-docker.pkg.dev",
           "prod-registry-k8s-io-ap-southeast-1.s3.dualstack.ap-southeast-1.amazonaws.com",
           "*.gcr.io",
@@ -247,7 +245,6 @@ export default ({
       },
       {
         ruleType: "ApplicationRule",
-        //TODO Allow external registry is potential risk once we have budget and able to upload external images to ACR then remove docker.
         name: "ubuntu-services",
         sourceAddresses: subnetSpaces,
         targetFqdns: [

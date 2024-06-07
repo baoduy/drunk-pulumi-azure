@@ -519,7 +519,6 @@ export default async ({
         value: config,
         formattedName: true,
         dependsOn: aks,
-        ignoreChange: true,
         contentType: name,
         vaultInfo,
       });
