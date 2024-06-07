@@ -11,17 +11,17 @@ export const getAksConfig = async ({
   name,
   groupName,
   formattedName,
-  localAccountDisabled,
+  disableLocalAccounts,
 }: {
   name: string;
   groupName: string;
   formattedName?: boolean;
-  localAccountDisabled?: boolean;
+  disableLocalAccounts?: boolean;
 }): Promise<string> => {
   const aksName = formattedName ? name : getAksName(name);
   const group = formattedName ? groupName : getResourceGroupName(groupName);
 
-  const aks = localAccountDisabled
+  const aks = disableLocalAccounts
     ? await containerservice.listManagedClusterUserCredentials({
         resourceName: aksName,
         resourceGroupName: group,

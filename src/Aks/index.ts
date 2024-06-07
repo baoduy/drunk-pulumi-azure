@@ -153,7 +153,7 @@ export interface AksProps extends BasicResourceArgs {
 
   addon?: AskAddonProps;
   features?: AskFeatureProps;
-  aksAccess?: AksAccessProps;
+  aksAccess: AksAccessProps;
 
   //Azure Registry Container
   acr?: { enable: boolean; id: Input<string> };
@@ -191,7 +191,7 @@ export default async ({
   network,
   logWpId,
   acr,
-  aksAccess = {},
+  aksAccess,
   vaultInfo,
   features = { enableDiagnosticSetting: true },
   addon = {
@@ -210,7 +210,7 @@ export default async ({
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
   //Auto detect and disable Local Account
-  if (aksAccess?.disableLocalAccounts === undefined) {
+  if (aksAccess.disableLocalAccounts === undefined) {
     aksAccess.disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
       .checkSecretExist(secretName)
       .catch(() => false);
@@ -244,7 +244,7 @@ export default async ({
       apiServerAccessProfile: {
         authorizedIPRanges: features?.enablePrivateCluster
           ? undefined
-          : aksAccess?.authorizedIPRanges || [],
+          : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
         enablePrivateClusterPublicFQDN: true,
@@ -391,16 +391,14 @@ export default async ({
         upgradeChannel: native.containerservice.UpgradeChannel.Patch,
         //nodeOSUpgradeChannel: "NodeImage",
       },
-      disableLocalAccounts: Boolean(aksAccess?.disableLocalAccounts),
+      disableLocalAccounts: Boolean(aksAccess.disableLocalAccounts),
       enableRBAC: true,
-      aadProfile: aksAccess?.envRoles
-        ? {
-            enableAzureRBAC: true,
-            managed: true,
-            adminGroupObjectIDs: [aksAccess.envRoles.admin.objectId],
-            tenantID: tenantId,
-          }
-        : undefined,
+      aadProfile: {
+        enableAzureRBAC: true,
+        managed: true,
+        adminGroupObjectIDs: [aksAccess.envRoles.admin.objectId],
+        tenantID: tenantId,
+      },
       oidcIssuerProfile: { enabled: false },
       storageProfile: {
         blobCSIDriver: {
@@ -550,7 +548,7 @@ export default async ({
       name: aksName,
       groupName: group.resourceGroupName,
       formattedName: true,
-      localAccountDisabled: aksAccess?.disableLocalAccounts,
+      disableLocalAccounts: aksAccess.disableLocalAccounts,
     });
 
     addCustomSecret({
@@ -558,7 +556,9 @@ export default async ({
       value: config,
       formattedName: true,
       dependsOn: aks,
-      contentType: name,
+      contentType: aksAccess.disableLocalAccounts
+        ? `${name}-UserCredentials`
+        : `${name}-AdminCredentials`,
       vaultInfo,
     });
 
