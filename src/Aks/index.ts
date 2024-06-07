@@ -132,6 +132,7 @@ export type AskFeatureProps = {
 export type AksAccessProps = {
   envRoles: EnvRolesResults;
   authorizedIPRanges?: Input<string>[];
+  disableLocalAccounts?: boolean;
 };
 
 export type AksNetworkProps = {
@@ -190,7 +191,7 @@ export default async ({
   network,
   logWpId,
   acr,
-  aksAccess,
+  aksAccess = {},
   vaultInfo,
   features = { enableDiagnosticSetting: true },
   addon = {
@@ -208,11 +209,13 @@ export default async ({
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
-  const disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
-    .checkSecretExist(secretName)
-    .catch(() => false);
+  //Auto detect and disable Local Account
+  if (aksAccess?.disableLocalAccounts === undefined) {
+    aksAccess.disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
+      .checkSecretExist(secretName)
+      .catch(() => false);
+  }
 
-  console.log(name, { disableLocalAccounts });
   ignoreChanges!.push("privateLinkResources", "networkProfile", "linuxProfile");
 
   const serviceIdentity = aksIdentityCreator({
@@ -388,7 +391,7 @@ export default async ({
         upgradeChannel: native.containerservice.UpgradeChannel.Patch,
         //nodeOSUpgradeChannel: "NodeImage",
       },
-      disableLocalAccounts,
+      disableLocalAccounts: Boolean(aksAccess?.disableLocalAccounts),
       enableRBAC: true,
       aadProfile: aksAccess?.envRoles
         ? {
@@ -503,28 +506,6 @@ export default async ({
     );
   }
 
-  if (vaultInfo) {
-    aks.id.apply(async (id) => {
-      if (!id) return;
-
-      const config = await getAksConfig({
-        name: aksName,
-        groupName: group.resourceGroupName,
-        formattedName: true,
-        localAccountDisabled: disableLocalAccounts,
-      });
-
-      addCustomSecret({
-        name: secretName,
-        value: config,
-        formattedName: true,
-        dependsOn: aks,
-        contentType: name,
-        vaultInfo,
-      });
-    });
-  }
-
   //Grant permission for Group
   aks.id.apply(async (id) => {
     if (!id) return;
@@ -542,15 +523,13 @@ export default async ({
             scope: acrScope,
           });
 
-          if (vaultInfo) {
-            addCustomSecret({
-              name: `${name}-identity-clientId`,
-              value: identityProfile["kubeletidentity"].clientId!,
-              dependsOn: aks,
-              contentType: name,
-              vaultInfo,
-            });
-          }
+          addCustomSecret({
+            name: `${name}-identity-clientId`,
+            value: identityProfile["kubeletidentity"].clientId!,
+            dependsOn: aks,
+            contentType: name,
+            vaultInfo,
+          });
         }
 
         if (network.subnetId && identity) {
@@ -565,6 +544,23 @@ export default async ({
           });
         }
       });
+
+    //Update Vault
+    const config = await getAksConfig({
+      name: aksName,
+      groupName: group.resourceGroupName,
+      formattedName: true,
+      localAccountDisabled: aksAccess?.disableLocalAccounts,
+    });
+
+    addCustomSecret({
+      name: secretName,
+      value: config,
+      formattedName: true,
+      dependsOn: aks,
+      contentType: name,
+      vaultInfo,
+    });
 
     //Diagnostic
     if (features.enableDiagnosticSetting && logWpId) {
@@ -596,7 +592,6 @@ export default async ({
   return {
     aks,
     serviceIdentity,
-    disableLocalAccounts,
     getKubeConfig: (): Output<string> =>
       output(
         getKeyVaultBase(vaultInfo.name)
