@@ -41,42 +41,52 @@ export const createVaultPrivateLink = ({
 export default ({ name, group, network, ...others }: KeyVaultProps) => {
   const vaultName = getKeyVaultName(name);
 
-  const vault = new keyvault.Vault(vaultName, {
+  const vault = new keyvault.Vault(
     vaultName,
-    ...group,
-    ...others,
+    {
+      vaultName,
+      ...group,
+      ...others,
 
-    properties: {
-      tenantId,
-      sku: { name: "standard", family: "A" },
-      createMode: "default",
+      properties: {
+        tenantId,
+        sku: { name: "standard", family: "A" },
+        createMode: "default",
 
-      enableRbacAuthorization: true,
-      accessPolicies: undefined,
+        enableRbacAuthorization: true,
+        accessPolicies: undefined,
 
-      enablePurgeProtection: true,
-      enableSoftDelete: true,
-      softDeleteRetentionInDays: isPrd ? 90 : 7, //This is not important as pulumi auto restore and update the sift deleted.
+        enablePurgeProtection: true,
+        enableSoftDelete: true,
+        softDeleteRetentionInDays: isPrd ? 90 : 7, //This is not important as pulumi auto restore and update the sift deleted.
 
-      enabledForDeployment: true,
-      enabledForDiskEncryption: true,
+        enabledForDeployment: true,
+        enabledForDiskEncryption: true,
 
-      networkAcls: {
-        bypass: "AzureServices",
-        defaultAction: network?.allowsAzureService
-          ? enums.keyvault.NetworkRuleAction.Allow
-          : enums.keyvault.NetworkRuleAction.Deny,
+        networkAcls: {
+          bypass: "AzureServices",
+          defaultAction: network?.allowsAzureService
+            ? enums.keyvault.NetworkRuleAction.Allow
+            : enums.keyvault.NetworkRuleAction.Deny,
 
-        ipRules: network?.ipAddresses
-          ? network.ipAddresses.map((i) => ({ value: i }))
-          : [],
+          ipRules: network?.ipAddresses
+            ? network.ipAddresses.map((i) => ({ value: i }))
+            : [],
 
-        virtualNetworkRules: network?.subnetIds
-          ? network.subnetIds.map((s) => ({ id: s }))
-          : undefined,
+          virtualNetworkRules: network?.subnetIds
+            ? network.subnetIds.map((s) => ({ id: s }))
+            : undefined,
+        },
       },
     },
-  });
+    {
+      ignoreChanges: [
+        "softDeleteRetentionInDays",
+        "enableSoftDelete",
+        "enablePurgeProtection",
+      ],
+    },
+  );
 
   //To Vault Info
   const toVaultInfo = () => ({
