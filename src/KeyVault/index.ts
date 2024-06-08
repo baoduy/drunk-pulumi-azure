@@ -14,7 +14,7 @@ import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
 
 export interface KeyVaultProps extends BasicResourceArgs {
-  softDeleteRetentionInDays: Input<number>;
+  softDeleteRetentionInDays?: Input<number>;
   network?: {
     allowsAzureService?: boolean;
     ipAddresses?: Array<Input<string>>;
