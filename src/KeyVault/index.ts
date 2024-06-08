@@ -56,7 +56,7 @@ export default ({ name, group, network, ...others }: KeyVaultProps) => {
 
       enablePurgeProtection: true,
       enableSoftDelete: true,
-      softDeleteRetentionInDays: 7, //This is not important as pulumi auto restore and update the sift deleted.
+      softDeleteRetentionInDays: 90, //This is not important as pulumi auto restore and update the sift deleted.
 
       enabledForDeployment: true,
       enabledForDiskEncryption: true,

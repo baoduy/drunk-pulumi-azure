@@ -116,6 +116,18 @@ class ResourceBuilder
     return this;
   }
 
+  private validate() {
+    if (
+      this._vaultLinkingProps &&
+      !this._vaultLinkingProps.subnetName &&
+      !this._vaultLinkingProps.subnetName
+    ) {
+      throw new Error(
+        "Either subnetName or subnetId needs to be provided for Vault private link.",
+      );
+    }
+  }
+
   private buildRoles() {
     if (this._createRole) {
       this._envRolesInstance = createEnvRoles();
@@ -146,36 +158,11 @@ class ResourceBuilder
   private buildVault() {
     //Create Vault
     if (this._createVault) {
-      const {
-        asPrivateLink,
-        allowsIpAddresses,
-        allowsAzureService,
-        subnetName,
-        subnetId,
-      } = this._vaultLinkingProps || {};
-
-      const subId = subnetId
-        ? subnetId
-        : subnetName
-          ? this._vnetInstance?.findSubnet(subnetName)!.apply((s) => s!.id!)
-          : undefined;
-
       const rs = Vault({
         name: this.name,
         group: this._RGInfo!,
         dependsOn: this._RGInstance,
-        network: !asPrivateLink
-          ? {
-              allowsAzureService,
-              subnetIds: subId ? [subId] : undefined,
-              ipAddresses: allowsIpAddresses,
-            }
-          : undefined,
       });
-
-      if (asPrivateLink && subId) {
-        rs.createPrivateLink({ subnetId: subId });
-      }
 
       this._vaultInstance = rs.vault;
       this._vaultInfo = rs.toVaultInfo();
@@ -183,27 +170,6 @@ class ResourceBuilder
       //Add Environment Roles to Vault
       if (this._envRolesInstance)
         this._envRolesInstance.addRolesToVault(this._vaultInfo);
-    }
-    //private link existing Vault to Vnet
-    else if (
-      this._vnetInstance &&
-      this._vaultLinkingProps &&
-      this._vaultLinkingProps.asPrivateLink
-    ) {
-      const { subnetName, subnetId } = this._vaultLinkingProps;
-
-      const subId = subnetId
-        ? subnetId
-        : subnetName
-          ? this._vnetInstance!.findSubnet(subnetName)!.apply((s) => s!.id!)
-          : undefined;
-
-      if (subId && this._vaultInfo)
-        createVaultPrivateLink({
-          name: `${this.name}-vault`,
-          vaultInfo: this._vaultInfo,
-          subnetId: subId,
-        });
     }
 
     //Add Secrets to Vaults
@@ -217,6 +183,31 @@ class ResourceBuilder
         dependsOn: this._vaultInstance,
       });
     });
+  }
+
+  //This linking need to be called after Vnet created
+  private buildVaultLinking() {
+    if (!this._vaultLinkingProps || !this._vnetInstance) return;
+    const {
+      asPrivateLink,
+      allowsIpAddresses,
+      allowsAzureService,
+      subnetName,
+      subnetId,
+    } = this._vaultLinkingProps;
+
+    const subId = subnetId
+      ? subnetId
+      : subnetName
+        ? this._vnetInstance!.findSubnet(subnetName)!.apply((s) => s!.id!)
+        : undefined;
+
+    if (asPrivateLink && subId)
+      createVaultPrivateLink({
+        name: `${this.name}-vault`,
+        vaultInfo: this._vaultInfo!,
+        subnetId: subId,
+      });
   }
 
   private buildVnet() {
@@ -262,10 +253,12 @@ class ResourceBuilder
   }
 
   public async build(): Promise<ResourceBuilderResults> {
+    this.validate();
     this.buildRoles();
     this.buildRG();
     this.buildVault();
     this.buildVnet();
+    this.buildVaultLinking();
     this.buildOthers();
     await this.buildOthersAsync();
 
