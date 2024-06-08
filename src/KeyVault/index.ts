@@ -14,6 +14,7 @@ import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
 
 export interface KeyVaultProps extends BasicResourceArgs {
+  softDeleteRetentionInDays: Input<number>;
   network?: {
     allowsAzureService?: boolean;
     ipAddresses?: Array<Input<string>>;
@@ -38,7 +39,13 @@ export const createVaultPrivateLink = ({
     linkServiceGroupIds: ["keyVault"],
   });
 
-export default ({ name, group, network, ...others }: KeyVaultProps) => {
+export default ({
+  name,
+  group,
+  network,
+  softDeleteRetentionInDays = 7,
+  ...others
+}: KeyVaultProps) => {
   const vaultName = getKeyVaultName(name);
 
   const vault = new keyvault.Vault(
@@ -58,7 +65,7 @@ export default ({ name, group, network, ...others }: KeyVaultProps) => {
 
         enablePurgeProtection: true,
         enableSoftDelete: true,
-        softDeleteRetentionInDays: isPrd ? 90 : 7, //This is not important as pulumi auto restore and update the sift deleted.
+        softDeleteRetentionInDays, //This is not important as pulumi auto restore and update the sift deleted.
 
         enabledForDeployment: true,
         enabledForDiskEncryption: true,
