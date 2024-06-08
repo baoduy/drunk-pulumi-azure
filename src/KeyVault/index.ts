@@ -44,6 +44,9 @@ export default ({
   group,
   network,
   softDeleteRetentionInDays = 7,
+  ignoreChanges = [],
+  dependsOn,
+  importUri,
   ...others
 }: KeyVaultProps) => {
   const vaultName = getKeyVaultName(name);
@@ -85,10 +88,13 @@ export default ({
       },
     },
     {
+      dependsOn,
+      import: importUri,
       ignoreChanges: [
         "softDeleteRetentionInDays",
         "enableSoftDelete",
         "enablePurgeProtection",
+        ...ignoreChanges,
       ],
     },
   );

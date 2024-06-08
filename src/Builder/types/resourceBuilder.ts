@@ -34,7 +34,6 @@ export type ResourceVaultLinkingBuilderType =
   ResourceVaultPrivateLinkBuilderType & {
     /** Link as private link to Subnet or just Vnet Linking*/
     asPrivateLink?: boolean;
-    allowsAzureService?: boolean;
     allowsIpAddresses?: Input<string>[];
   };
 

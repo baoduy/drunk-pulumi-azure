@@ -22,9 +22,11 @@ import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
 import Vault, { createVaultPrivateLink } from "../KeyVault";
-import { CustomResource, Input, Resource } from "@pulumi/pulumi";
+import { CustomResource, Input } from "@pulumi/pulumi";
 import VnetBuilder from "./VnetBuilder";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { VaultNetworkResource } from "@drunk-pulumi/azure-providers";
+import { subscriptionId } from "../Common/AzureEnv";
 
 class ResourceBuilder
   implements
@@ -188,13 +190,8 @@ class ResourceBuilder
   //This linking need to be called after Vnet created
   private buildVaultLinking() {
     if (!this._vaultLinkingProps || !this._vnetInstance) return;
-    const {
-      asPrivateLink,
-      allowsIpAddresses,
-      allowsAzureService,
-      subnetName,
-      subnetId,
-    } = this._vaultLinkingProps;
+    const { asPrivateLink, allowsIpAddresses, subnetName, subnetId } =
+      this._vaultLinkingProps;
 
     const subId = subnetId
       ? subnetId
@@ -202,12 +199,21 @@ class ResourceBuilder
         ? this._vnetInstance!.findSubnet(subnetName)!.apply((s) => s!.id!)
         : undefined;
 
-    if (asPrivateLink && subId)
+    if (asPrivateLink && subId) {
       createVaultPrivateLink({
         name: `${this.name}-vault`,
         vaultInfo: this._vaultInfo!,
         subnetId: subId,
       });
+    } else {
+      new VaultNetworkResource(`${this.name}-vault`, {
+        vaultName: this._vaultInfo!.name,
+        resourceGroupName: this._vaultInfo!.group.resourceGroupName,
+        subscriptionId,
+        subnetIds: subId ? [subId] : undefined,
+        ipAddresses: allowsIpAddresses,
+      });
+    }
   }
 
   private buildVnet() {
