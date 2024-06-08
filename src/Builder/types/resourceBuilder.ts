@@ -27,7 +27,10 @@ export type ResourceVnetBuilderType = (
   builder: IVnetBuilderStart,
 ) => IVnetBuilder;
 export type ResourceVaultPrivateLinkBuilderType = {
-  subnetName: string;
+  /** Either subnet name or id need to be provided */
+  subnetName?: string;
+  /** Either subnet name or id need to be provided */
+  subnetId?: Input<string>;
 };
 export type ResourceVaultLinkingBuilderType =
   ResourceVaultPrivateLinkBuilderType & {

@@ -6,6 +6,7 @@ import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
 import {
   BasicMonitorArgs,
+  KeyVaultInfo,
   PrivateLinkProps,
   ResourceGroupInfo,
 } from "../types";
@@ -22,17 +23,17 @@ export interface KeyVaultProps extends BasicResourceArgs {
 
 export const createVaultPrivateLink = ({
   name,
-  vaultId,
+  vaultInfo,
   ...props
 }: PrivateLinkProps & {
   name: string;
-  group: ResourceGroupInfo;
-  vaultId: Input<string>;
+  vaultInfo: KeyVaultInfo;
 }) =>
   PrivateEndpoint({
     name: getPrivateEndpointName(name),
     ...props,
-    resourceId: vaultId,
+    group: vaultInfo.group,
+    resourceId: vaultInfo.id,
     privateDnsZoneName: "privatelink.vaultcore.azure.net",
     linkServiceGroupIds: ["keyVault"],
   });
@@ -95,7 +96,7 @@ export default ({ name, group, network, ...others }: KeyVaultProps) => {
 
   // Create Private Link
   const createPrivateLink = (props: PrivateLinkProps) =>
-    createVaultPrivateLink({ name, group, vaultId: vault.id, ...props });
+    createVaultPrivateLink({ name, vaultInfo: toVaultInfo(), ...props });
 
   return {
     name: vaultName,

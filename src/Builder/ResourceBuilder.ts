@@ -151,11 +151,14 @@ class ResourceBuilder
         allowsIpAddresses,
         allowsAzureService,
         subnetName,
+        subnetId,
       } = this._vaultLinkingProps || {};
 
-      const subnetId = subnetName
-        ? this._vnetInstance?.findSubnet(subnetName)!.apply((s) => s!.id!)
-        : undefined;
+      const subId = subnetId
+        ? subnetId
+        : subnetName
+          ? this._vnetInstance?.findSubnet(subnetName)!.apply((s) => s!.id!)
+          : undefined;
 
       const rs = Vault({
         name: this.name,
@@ -164,13 +167,14 @@ class ResourceBuilder
         network: !asPrivateLink
           ? {
               allowsAzureService,
-              subnetIds: subnetId ? [subnetId] : undefined,
+              subnetIds: subId ? [subId] : undefined,
               ipAddresses: allowsIpAddresses,
             }
           : undefined,
       });
-      if (asPrivateLink && subnetId) {
-        rs.createPrivateLink({ subnetId });
+
+      if (asPrivateLink && subId) {
+        rs.createPrivateLink({ subnetId: subId });
       }
 
       this._vaultInstance = rs.vault;
@@ -186,15 +190,20 @@ class ResourceBuilder
       this._vaultLinkingProps &&
       this._vaultLinkingProps.asPrivateLink
     ) {
-      const subnetId = this._vnetInstance!.findSubnet(
-        this._vaultLinkingProps.subnetName,
-      )!.apply((s) => s!.id!);
-      createVaultPrivateLink({
-        name: `${this.name}-vault`,
-        vaultId: this._vaultInfo!.id,
-        group: this._RGInfo!,
-        subnetId,
-      });
+      const { subnetName, subnetId } = this._vaultLinkingProps;
+
+      const subId = subnetId
+        ? subnetId
+        : subnetName
+          ? this._vnetInstance!.findSubnet(subnetName)!.apply((s) => s!.id!)
+          : undefined;
+
+      if (subId && this._vaultInfo)
+        createVaultPrivateLink({
+          name: `${this.name}-vault`,
+          vaultInfo: this._vaultInfo,
+          subnetId: subId,
+        });
     }
 
     //Add Secrets to Vaults
