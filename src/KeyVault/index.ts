@@ -1,7 +1,7 @@
 import * as keyvault from "@pulumi/azure-native/keyvault";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
-import { tenantId } from "../Common/AzureEnv";
+import { isPrd, tenantId } from "../Common/AzureEnv";
 import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
 import {
@@ -56,7 +56,7 @@ export default ({ name, group, network, ...others }: KeyVaultProps) => {
 
       enablePurgeProtection: true,
       enableSoftDelete: true,
-      softDeleteRetentionInDays: 90, //This is not important as pulumi auto restore and update the sift deleted.
+      softDeleteRetentionInDays: isPrd ? 90 : 7, //This is not important as pulumi auto restore and update the sift deleted.
 
       enabledForDeployment: true,
       enabledForDiskEncryption: true,
