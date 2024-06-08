@@ -1,10 +1,10 @@
 import {
+  BuilderAsyncFunctionType,
+  BuilderFunctionType,
   IResourceBuilder,
   IResourceGroupBuilder,
   IResourceRoleBuilder,
   IResourceVaultBuilder,
-  OtherAsyncBuilderType,
-  OtherBuilderType,
   ResourceBuilderResults,
   ResourceGroupBuilderType,
   ResourceVaultLinkingBuilderType,
@@ -40,8 +40,8 @@ class ResourceBuilder
   private _createVault: boolean = false;
   private _loadRolesFromVault: boolean = false;
   private _envRoles: EnvRolesResults | undefined = undefined;
-  private _otherBuilders: OtherBuilderType = {};
-  private _otherBuildersAsync: OtherAsyncBuilderType = {};
+  private _otherBuilders = new Array<BuilderFunctionType>();
+  private _otherBuildersAsync = new Array<BuilderAsyncFunctionType>();
   private _vaultInfo: KeyVaultInfo | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
@@ -103,12 +103,12 @@ class ResourceBuilder
     this._vnetBuilder = props;
     return this;
   }
-  public withBuilder(builders: OtherBuilderType): IResourceBuilder {
-    this._otherBuilders = { ...this._otherBuilders, ...builders };
+  public withBuilder(props: BuilderFunctionType): IResourceBuilder {
+    this._otherBuilders.push(props);
     return this;
   }
-  public withBuilderAsync(builders: OtherAsyncBuilderType): IResourceBuilder {
-    this._otherBuildersAsync = { ...this._otherBuildersAsync, ...builders };
+  public withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder {
+    this._otherBuildersAsync.push(props);
     return this;
   }
   public lock(): IResourceBuilder {
@@ -218,25 +218,23 @@ class ResourceBuilder
   }
 
   private buildOthers() {
-    Object.keys(this._otherBuilders).forEach((key) => {
-      const b = this._otherBuilders[key];
-      this._otherInstances[key] = b({
+    this._otherBuilders.forEach((b) => {
+      const builder = b({
         ...this.getResults(),
-        name: `${this.name}-${key}`,
         dependsOn: this._vaultInstance ?? this._vnetInstance?.vnet,
-      }).build();
+      });
+      this._otherInstances[builder.commonProps.name] = builder.build();
     });
   }
 
   private async buildOthersAsync() {
     await Promise.all(
-      Object.keys(this._otherBuildersAsync).map(async (key) => {
-        const b = this._otherBuildersAsync[key];
-        this._otherInstances[key] = await b({
+      this._otherBuildersAsync.map(async (b) => {
+        const builder = b({
           ...this.getResults(),
-          name: `${this.name}-${key}`,
           dependsOn: this._vaultInstance ?? this._vnetInstance?.vnet,
-        }).build();
+        });
+        this._otherInstances[builder.commonProps.name] = await builder.build();
       }),
     );
   }

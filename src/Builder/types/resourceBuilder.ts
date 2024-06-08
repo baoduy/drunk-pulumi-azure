@@ -18,11 +18,9 @@ export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
 export type BuilderFunctionType = (
   props: ResourceBuilderResults,
 ) => IBuilder<any>;
-export type OtherBuilderType = Record<string, BuilderFunctionType>;
 export type BuilderAsyncFunctionType = (
   props: ResourceBuilderResults,
 ) => IBuilderAsync<any>;
-export type OtherAsyncBuilderType = Record<string, BuilderAsyncFunctionType>;
 export type ResourceVnetBuilderType = (
   builder: IVnetBuilderStart,
 ) => IVnetBuilder;
@@ -68,7 +66,7 @@ export interface IResourceBuilder
   extends IResourceVnetBuilder,
     IResourceVaultItemsBuilder {
   lock: () => IResourceBuilder;
-  withBuilder: (builders: OtherBuilderType) => IResourceBuilder;
-  withBuilderAsync: (builders: OtherAsyncBuilderType) => IResourceBuilder;
+  withBuilder: (props: BuilderFunctionType) => IResourceBuilder;
+  withBuilderAsync: (props: BuilderAsyncFunctionType) => IResourceBuilder;
   build: () => Promise<ResourceBuilderResults>;
 }
