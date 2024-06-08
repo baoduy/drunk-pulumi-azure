@@ -16,7 +16,7 @@ import { BasicResourceArgs } from "../types";
 export interface KeyVaultProps extends BasicResourceArgs {
   softDeleteRetentionInDays?: Input<number>;
   network?: {
-    allowsAzureService?: boolean;
+    //allowsAzureService?: boolean;
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
   };
@@ -72,9 +72,7 @@ export default ({
 
         networkAcls: {
           bypass: "AzureServices",
-          defaultAction: network?.allowsAzureService
-            ? enums.keyvault.NetworkRuleAction.Allow
-            : enums.keyvault.NetworkRuleAction.Deny,
+          defaultAction: enums.keyvault.NetworkRuleAction.Allow,
 
           ipRules: network?.ipAddresses
             ? network.ipAddresses.map((i) => ({ value: i }))
