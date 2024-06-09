@@ -25,7 +25,6 @@ interface ElasticPoolProps extends BasicResourceArgs {
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
   sku?: { name: "Standard" | "Basic"; capacity: ElasticPoolCapacityProps };
-  lock?: boolean;
 }
 
 const createElasticPool = ({
@@ -35,7 +34,6 @@ const createElasticPool = ({
   //Minimum is 50 GD
   maxSizeBytesGb = 50,
   sku = { name: isPrd ? "Standard" : "Basic", capacity: 50 },
-  lock = true,
 }: ElasticPoolProps): BasicResourceResultProps<sql.ElasticPool> => {
   //Create Sql Elastic
   const elasticName = getElasticPoolName(name);
@@ -59,10 +57,6 @@ const createElasticPool = ({
     //licenseType: sql.ElasticPoolLicenseType.BasePrice,
     //zoneRedundant: isPrd,
   });
-
-  if (lock) {
-    Locker({ name, resource: ep });
-  }
 
   return { name: elasticName, resource: ep };
 };
@@ -107,7 +101,6 @@ interface Props extends BasicResourceArgs {
   };
 
   ignoreChanges?: string[];
-  lock?: boolean;
 }
 
 export default ({
@@ -118,11 +111,9 @@ export default ({
   elasticPool,
   databases,
   vaultInfo,
-
   network,
   vulnerabilityAssessment,
   ignoreChanges = ["administratorLogin", "administrators"],
-  lock = true,
 }: Props) => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
@@ -174,7 +165,6 @@ export default ({
     },
     {
       ignoreChanges,
-      protect: lock,
     },
   );
 
@@ -185,10 +175,6 @@ export default ({
     envRole: "readOnly",
     principalId: sqlServer.identity.apply((s) => s!.principalId),
   });
-
-  if (lock) {
-    Locker({ name: sqlName, resource: sqlServer });
-  }
 
   const ep = elasticPool
     ? createElasticPool({

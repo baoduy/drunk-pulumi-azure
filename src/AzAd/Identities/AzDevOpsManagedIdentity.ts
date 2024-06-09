@@ -5,7 +5,6 @@ import { defaultScope } from "../../Common/AzureEnv";
 
 interface Props extends Omit<BasicResourceArgs, "name"> {
   name?: string;
-  lock?: boolean;
 }
 
 export default ({ name = defaultAzAdoName, ...others }: Props) => {
@@ -14,7 +13,6 @@ export default ({ name = defaultAzAdoName, ...others }: Props) => {
   return UserAssignedIdentity({
     name,
     roles: additionRoles.map((role) => ({ name: role, scope: defaultScope })),
-    lock: true,
     ...others,
   });
 };

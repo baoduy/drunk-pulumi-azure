@@ -1,19 +1,19 @@
-import * as containerregistry from '@pulumi/azure-native/containerregistry';
+import * as containerregistry from "@pulumi/azure-native/containerregistry";
 import {
   DefaultResourceArgs,
   KeyVaultInfo,
   NetworkRulesProps,
   ResourceGroupInfo,
-} from '../types';
-import creator from '../Core/ResourceCreator';
-import * as global from '../Common/GlobalEnv';
+} from "../types";
+import creator from "../Core/ResourceCreator";
+import * as global from "../Common/GlobalEnv";
 import {
   getAcrName,
   getPasswordName,
   getPrivateEndpointName,
-} from '../Common/Naming';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+} from "../Common/Naming";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 interface Props extends DefaultResourceArgs {
   name: string;
@@ -34,7 +34,6 @@ export default ({
   group = global.groupInfo,
   sku = containerregistry.SkuName.Basic,
   adminUserEnabled = true,
-  lock = true,
   vaultInfo,
   network,
   ...others
@@ -43,44 +42,40 @@ export default ({
 
   const urlKey = `${name}-url`;
   const userNameKey = `${name}-user-name`;
-  const primaryPasswordKey = getPasswordName(name, 'primary');
-  const secondaryPasswordKey = getPasswordName(name, 'secondary');
+  const primaryPasswordKey = getPasswordName(name, "primary");
+  const secondaryPasswordKey = getPasswordName(name, "secondary");
 
-  const { resource, diagnostic, locker } = creator(
-    containerregistry.Registry,
-    {
-      registryName: name,
-      ...group,
+  const { resource, diagnostic } = creator(containerregistry.Registry, {
+    registryName: name,
+    ...group,
 
-      adminUserEnabled,
-      lock,
-      sku: { name: sku },
-      networkRuleSet:
-        sku === 'Premium' && network
-          ? {
-              defaultAction: containerregistry.DefaultAction.Allow,
+    adminUserEnabled,
+    sku: { name: sku },
+    networkRuleSet:
+      sku === "Premium" && network
+        ? {
+            defaultAction: containerregistry.DefaultAction.Allow,
 
-              ipRules: network.ipAddresses
-                ? network.ipAddresses.map((ip) => ({ iPAddressOrRange: ip }))
-                : undefined,
+            ipRules: network.ipAddresses
+              ? network.ipAddresses.map((ip) => ({ iPAddressOrRange: ip }))
+              : undefined,
 
-              virtualNetworkRules: network.subnetId
-                ? [{ virtualNetworkResourceId: network.subnetId }]
-                : undefined,
-            }
-          : undefined,
-      ...others,
-    } as containerregistry.RegistryArgs & DefaultResourceArgs
-  );
+            virtualNetworkRules: network.subnetId
+              ? [{ virtualNetworkResourceId: network.subnetId }]
+              : undefined,
+          }
+        : undefined,
+    ...others,
+  } as containerregistry.RegistryArgs & DefaultResourceArgs);
 
-  if (sku === 'Premium' && network?.privateLink && network?.subnetId) {
+  if (sku === "Premium" && network?.privateLink && network?.subnetId) {
     PrivateEndpoint({
       name: getPrivateEndpointName(name),
       group,
-      privateDnsZoneName: 'privatelink.azurecr.io',
+      privateDnsZoneName: "privatelink.azurecr.io",
       subnetId: network.subnetId,
       ...network.privateLink,
-      linkServiceGroupIds: ['azurecr'],
+      linkServiceGroupIds: ["azurecr"],
       resourceId: resource.id,
     });
   }
@@ -99,7 +94,7 @@ export default ({
         name: urlKey,
         value: `https://${name}.azurecr.io`,
         vaultInfo,
-        contentType: 'Container Registry',
+        contentType: "Container Registry",
         dependsOn: resource,
       });
 
@@ -107,7 +102,7 @@ export default ({
         name: userNameKey,
         value: keys.username!,
         vaultInfo,
-        contentType: 'Container Registry',
+        contentType: "Container Registry",
         dependsOn: resource,
       });
 
@@ -116,7 +111,7 @@ export default ({
         formattedName: true,
         value: keys.passwords![0].value!,
         vaultInfo,
-        contentType: 'Container Registry',
+        contentType: "Container Registry",
         dependsOn: resource,
       });
 
@@ -125,7 +120,7 @@ export default ({
         formattedName: true,
         value: keys.passwords![1].value!,
         vaultInfo,
-        contentType: 'Container Registry',
+        contentType: "Container Registry",
         dependsOn: resource,
       });
     });
@@ -140,7 +135,6 @@ export default ({
       secondaryPasswordKey,
       urlKey,
     },
-    locker,
     diagnostic,
   };
 };

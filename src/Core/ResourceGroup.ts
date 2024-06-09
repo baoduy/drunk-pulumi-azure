@@ -29,6 +29,8 @@ interface Props
   location?: string;
   /** Grant permission of this group into Environment Roles groups*/
   permissions?: RGPermissionType;
+  //Resource group need a lock
+  lock?: boolean;
 }
 
 export default ({

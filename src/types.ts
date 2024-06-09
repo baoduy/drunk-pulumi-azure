@@ -71,7 +71,6 @@ export interface BasicResourceArgs extends BasicArgs {
 }
 
 export interface DefaultResourceArgs extends BasicArgs {
-  lock?: boolean;
   monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
 }
 

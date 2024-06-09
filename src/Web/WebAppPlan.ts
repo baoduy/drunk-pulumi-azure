@@ -1,35 +1,30 @@
-import * as native from '@pulumi/azure-native';
-import { BasicResourceArgs } from '../types';
-import { getAppPlanName } from '../Common/Naming';
-import Locker from '../Core/Locker';
+import * as native from "@pulumi/azure-native";
+import { BasicResourceArgs } from "../types";
+import { getAppPlanName } from "../Common/Naming";
+import Locker from "../Core/Locker";
 
 interface Props extends BasicResourceArgs {
-  kind: 'Linux';
-  lock?: boolean;
+  kind: "Linux";
 }
 
-export default ({ name, group, kind, lock }: Props) => {
+export default ({ name, group, kind }: Props) => {
   const finalName = getAppPlanName(name);
 
   const appServicePlan = new native.web.AppServicePlan(finalName, {
     name: finalName,
     ...group,
-
     // Run on Linux
     kind,
 
     // Consumption plan SKU
     sku: {
-      tier: 'Dynamic',
-      name: 'Y1',
+      tier: "Dynamic",
+      name: "Y1",
     },
 
     // For Linux, you need to change the plan to have Reserved = true property.
-    reserved: kind === 'Linux',
+    reserved: kind === "Linux",
   });
 
-  if (lock) {
-    Locker({ name, resource: appServicePlan });
-  }
   return appServicePlan;
 };

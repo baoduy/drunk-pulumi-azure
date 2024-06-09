@@ -207,7 +207,6 @@ interface TopicProps
   enableConnections?: boolean;
 
   options?: OptionsType & { supportOrdering?: boolean };
-  lock?: boolean;
 }
 
 /** Topic creator */
@@ -219,7 +218,6 @@ const topicCreator = ({
   vaultInfo,
   version,
   enableConnections,
-  lock = true,
   dependsOn,
   options = {
     duplicateDetectionHistoryTimeWindow: duplicateDetectedTime,
@@ -242,10 +240,6 @@ const topicCreator = ({
     },
     { dependsOn },
   );
-
-  if (lock) {
-    Locker({ name: topicName, resource: topic });
-  }
 
   let primaryConnectionKeys:
     | { secondaryName: string; primaryName: string }
@@ -302,7 +296,6 @@ const topicCreator = ({
         topicFullName: topic.name,
         enableSession: s.enableSession,
         group,
-        lock: false,
         dependsOn: topic,
       }),
     );
@@ -322,7 +315,6 @@ interface SubProps extends BasicArgs {
   topicFullName: pulumi.Input<string>;
   group: ResourceGroupInfo;
   enableSession?: boolean;
-  lock?: boolean;
 }
 
 /** Subscription creator */
@@ -332,7 +324,6 @@ const subscriptionCreator = ({
   topicFullName,
   namespaceFullName,
   enableSession,
-  lock = true,
   dependsOn,
 }: SubProps) => {
   const name = getSubscriptionName(shortName);
@@ -351,10 +342,6 @@ const subscriptionCreator = ({
     { dependsOn },
   );
 
-  if (lock) {
-    Locker({ name, resource });
-  }
-
   return {
     name,
     resource,
@@ -369,7 +356,6 @@ interface QueueProps
   namespaceFullName: string;
   vaultInfo?: KeyVaultInfo;
   group: ResourceGroupInfo;
-  lock?: boolean;
   enableConnections?: boolean;
   options?: OptionsType;
 }
@@ -392,7 +378,6 @@ const queueCreator = ({
   shortName,
   vaultInfo,
   version,
-  lock = true,
   enableConnections,
   options = {
     requiresDuplicateDetection: false,
@@ -415,10 +400,6 @@ const queueCreator = ({
     },
     { dependsOn },
   );
-
-  if (lock) {
-    Locker({ name, resource: queue });
-  }
 
   let primaryConnectionKeys:
     | { secondaryName: string; primaryName: string }
@@ -493,7 +474,6 @@ interface Props
   enableNamespaceConnections?: boolean;
   enableTopicConnections?: boolean;
   enableQueueConnections?: boolean;
-  lock?: boolean;
 }
 
 /** Azure Bus creator */
@@ -514,7 +494,7 @@ export default ({
 }: Props) => {
   name = getServiceBusName(name);
 
-  const { resource, locker, diagnostic } = creator(bus.Namespace, {
+  const { resource, diagnostic } = creator(bus.Namespace, {
     namespaceName: name,
     ...group,
     sku: { name: sku, tier: sku },
@@ -660,7 +640,6 @@ export default ({
       vaultInfo
         ? getSecret({ name, nameFormatted: true, vaultInfo })
         : undefined,
-    locker,
     diagnostic,
   };
 };
