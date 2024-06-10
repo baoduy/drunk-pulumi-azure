@@ -5,12 +5,24 @@ import { BasicMonitorArgs, KeyVaultInfo } from "../types";
 import { Input } from "@pulumi/pulumi";
 import { VaultNetworkResource } from "@drunk-pulumi/azure-providers";
 import { subscriptionId } from "../Common/AzureEnv";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
 
   public static from(vaultInfo: KeyVaultInfo): IVaultBuilderResults {
     return new VaultBuilderResults(vaultInfo);
+  }
+  public get name() {
+    return this.vaultInfo.name;
+  }
+
+  public get group() {
+    return this.vaultInfo.group;
+  }
+
+  public get id() {
+    return this.vaultInfo.id;
   }
 
   public linkTo(props: {
@@ -35,16 +47,20 @@ class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
-  public get name() {
-    return this.vaultInfo.name;
-  }
-
-  public get group() {
-    return this.vaultInfo.group;
-  }
-
-  public get id() {
-    return this.vaultInfo.id;
+  public addSecrets(
+    items: Record<string, Input<string>>,
+  ): IVaultBuilderResults {
+    //Add Secrets to Vaults
+    Object.keys(items).map((key) => {
+      const val = items[key];
+      return addCustomSecret({
+        name: key,
+        value: val,
+        contentType: `${this.name}-${key}`,
+        vaultInfo: this,
+      });
+    });
+    return this;
   }
 }
 

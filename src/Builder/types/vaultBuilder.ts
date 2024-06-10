@@ -7,6 +7,10 @@ export interface IVaultBuilderResults extends KeyVaultInfo {
     ipAddresses: Input<string>[];
   }) => IVaultBuilderResults;
   privateLinkTo: (subnetIds: Input<string>[]) => IVaultBuilderResults;
+
+  addSecrets: (items: Record<string, Input<string>>) => IVaultBuilderResults;
+  //addKeys: () => IVaultBuilderResults;
+  //addCerts:() => IVaultBuilderResults;
 }
 
 export interface IVaultBuilder {
