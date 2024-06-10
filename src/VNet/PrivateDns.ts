@@ -9,7 +9,7 @@ interface RecordProps {
   /**Default is Global Resource Group*/
   group?: ResourceGroupInfo;
   recordName: string;
-  ipAddresses: Input<string[]>;
+  ipAddresses: Input<string>[] | Input<string[]>;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 export const addARecord = ({

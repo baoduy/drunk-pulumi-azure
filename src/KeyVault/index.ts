@@ -39,6 +39,20 @@ export const createVaultPrivateLink = ({
     linkServiceGroupIds: ["keyVault"],
   });
 
+export const createVaultDiagnostic = ({
+  vaultInfo,
+  logInfo,
+}: {
+  vaultInfo: KeyVaultInfo;
+  logInfo: BasicMonitorArgs;
+}) =>
+  createDiagnostic({
+    name: `${vaultInfo.name}-vault`,
+    targetResourceId: vaultInfo.id,
+    ...logInfo,
+    logsCategories: ["AuditEvent"],
+  });
+
 export default ({
   name,
   group,
@@ -108,12 +122,7 @@ export default ({
 
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>
-    createDiagnostic({
-      name,
-      targetResourceId: vault.id,
-      ...logInfo,
-      logsCategories: ["AuditEvent"],
-    });
+    createVaultDiagnostic({ vaultInfo: toVaultInfo(), logInfo });
 
   // Create Private Link
   const createPrivateLink = (props: PrivateLinkProps) =>
