@@ -5,7 +5,6 @@ import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import { isPrd, subscriptionId, tenantId } from "../Common/AzureEnv";
 import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
-import Locker from "../Core/Locker";
 import {
   BasicResourceArgs,
   BasicResourceResultProps,
@@ -193,7 +192,7 @@ export default ({
         resourceId: sqlServer.id,
         privateDnsZoneName: "privatelink.database.windows.net",
         ...network.privateLink,
-        subnetId: network.subnetId,
+        subnetIds: [network.subnetId],
         linkServiceGroupIds: ["sqlServer"],
       });
     } else {

@@ -1,6 +1,5 @@
 import * as bus from "@pulumi/azure-native/servicebus";
 import * as pulumi from "@pulumi/pulumi";
-
 import {
   BasicArgs,
   BasicMonitorArgs,
@@ -23,7 +22,6 @@ import { isPrd } from "../Common/AzureEnv";
 import creator from "../Core/ResourceCreator";
 import { getPrivateEndpointName, getServiceBusName } from "../Common/Naming";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import Locker from "../Core/Locker";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { getSecret } from "../KeyVault/Helper";
 
@@ -467,7 +465,8 @@ interface Props
   network?: {
     whitelistIps?: Array<pulumi.Input<string>>;
     enablePrivateLink?: boolean;
-  } & Partial<PrivateLinkProps>;
+    subnetId?: pulumi.Input<string>;
+  };
   monitoring?: BasicMonitorArgs;
   sku?: bus.SkuName;
   vaultInfo?: KeyVaultInfo;
@@ -621,7 +620,7 @@ export default ({
       PrivateEndpoint({
         name: getPrivateEndpointName(name),
         group,
-        subnetId: network.subnetId,
+        subnetIds: [network.subnetId],
         //useGlobalDnsZone: network.useGlobalDnsZone,
         resourceId: namespace.id,
         linkServiceGroupIds: ["namespace"],

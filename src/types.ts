@@ -32,7 +32,7 @@ export interface PrivateLinkProps {
 
 export interface NetworkRulesProps {
   subnetId?: Input<string>;
-  privateLink?: Omit<PrivateLinkProps, "subnetId">;
+  privateLink?: Omit<PrivateLinkProps, "subnetIds">;
   ipAddresses?: Input<string>[];
 }
 

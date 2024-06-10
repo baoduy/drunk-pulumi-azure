@@ -203,7 +203,7 @@ class ResourceBuilder
       createVaultPrivateLink({
         name: `${this.name}-vault`,
         vaultInfo: this._vaultInfo!,
-        subnetId: subId,
+        subnetIds: [subId],
       });
     } else {
       new VaultNetworkResource(`${this.name}-vault`, {

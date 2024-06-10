@@ -138,7 +138,7 @@ export default ({
         resourceId: postgres.id,
         privateDnsZoneName: "postgres.database.azure.com",
         linkServiceGroupIds: ["postgresql"],
-        subnetId: network.privateLink.subnetId,
+        subnetIds: [network.privateLink.subnetId],
       });
     }
   }

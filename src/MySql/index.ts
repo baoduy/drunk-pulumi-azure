@@ -187,7 +187,7 @@ export default ({
         resourceId: mySql.id,
         privateDnsZoneName: "mysql.database.azure.com",
         linkServiceGroupIds: ["mysql"],
-        subnetId: network.privateLink.subnetId,
+        subnetIds: [network.privateLink.subnetId],
       });
     }
   }

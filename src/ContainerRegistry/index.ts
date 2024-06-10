@@ -73,7 +73,7 @@ export default ({
       name: getPrivateEndpointName(name),
       group,
       privateDnsZoneName: "privatelink.azurecr.io",
-      subnetId: network.subnetId,
+      subnetIds: [network.subnetId],
       ...network.privateLink,
       linkServiceGroupIds: ["azurecr"],
       resourceId: resource.id,
