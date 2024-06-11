@@ -7,7 +7,7 @@ import { VaultNetworkResource } from "@drunk-pulumi/azure-providers";
 import { subscriptionId } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 
-class VaultBuilderResults implements IVaultBuilderResults {
+export class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
 
   public static from(vaultInfo: KeyVaultInfo): IVaultBuilderResults {

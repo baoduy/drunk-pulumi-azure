@@ -8,7 +8,6 @@ import {
   ResourceBuilderResults,
   ResourceGroupBuilderType,
   ResourceVaultLinkingBuilderType,
-  ResourceVaultPrivateLinkBuilderType,
   ResourceVnetBuilderType,
   VnetBuilderResults,
 } from "./types";
@@ -21,12 +20,14 @@ import {
 import { KeyVaultInfo, ResourceGroupInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
-import Vault, { createVaultPrivateLink } from "../KeyVault";
-import { CustomResource, Input } from "@pulumi/pulumi";
+import { createVaultPrivateLink } from "../KeyVault";
+import { Input } from "@pulumi/pulumi";
 import VnetBuilder from "./VnetBuilder";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { VaultNetworkResource } from "@drunk-pulumi/azure-providers";
 import { subscriptionId } from "../Common/AzureEnv";
+import { IVaultBuilderResults } from "./types/vaultBuilder";
+import { VaultBuilderResults } from "./VaultBuilder";
+import VaultBuilder from "./VaultBuilder";
 
 class ResourceBuilder
   implements
@@ -44,7 +45,7 @@ class ResourceBuilder
   private _envRoles: EnvRolesResults | undefined = undefined;
   private _otherBuilders = new Array<BuilderFunctionType>();
   private _otherBuildersAsync = new Array<BuilderAsyncFunctionType>();
-  private _vaultInfo: KeyVaultInfo | undefined = undefined;
+  private _vaultInfo: IVaultBuilderResults | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
   private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
@@ -52,7 +53,6 @@ class ResourceBuilder
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
-  private _vaultInstance: CustomResource | undefined = undefined;
   private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
   private _otherInstances: Record<string, any> = {};
   private _vnetInstance: VnetBuilderResults | undefined = undefined;
@@ -79,21 +79,16 @@ class ResourceBuilder
     this._RGInfo = props;
     return this;
   }
-  public createVault(
-    props?: ResourceVaultLinkingBuilderType,
-  ): IResourceBuilder {
+  public createVault(): IResourceBuilder {
     this._createVault = true;
-    this._vaultLinkingProps = props;
     return this;
   }
   public withVault(props: KeyVaultInfo): IResourceBuilder {
-    this._vaultInfo = props;
+    this._vaultInfo = VaultBuilderResults.from(props);
     return this;
   }
-  public linkVaultTo(
-    props: ResourceVaultPrivateLinkBuilderType,
-  ): IResourceBuilder {
-    this._vaultLinkingProps = { ...props, asPrivateLink: true };
+  public linkVaultTo(props: ResourceVaultLinkingBuilderType): IResourceBuilder {
+    this._vaultLinkingProps = props;
     return this;
   }
   public addSecrets(items: Record<string, Input<string>>): IResourceBuilder {
@@ -118,18 +113,6 @@ class ResourceBuilder
     return this;
   }
 
-  private validate() {
-    if (
-      this._vaultLinkingProps &&
-      !this._vaultLinkingProps.subnetName &&
-      !this._vaultLinkingProps.subnetName
-    ) {
-      throw new Error(
-        "Either subnetName or subnetId needs to be provided for Vault private link.",
-      );
-    }
-  }
-
   private buildRoles() {
     if (this._createRole) {
       this._envRolesInstance = createEnvRoles();
@@ -145,6 +128,7 @@ class ResourceBuilder
 
   private buildRG() {
     if (!this._createRGProps) return;
+
     const rs = RG({
       name: this.name,
       permissions: {
@@ -160,14 +144,11 @@ class ResourceBuilder
   private buildVault() {
     //Create Vault
     if (this._createVault) {
-      const rs = Vault({
+      this._vaultInfo = VaultBuilder({
         name: this.name,
         group: this._RGInfo!,
         dependsOn: this._RGInstance,
-      });
-
-      this._vaultInstance = rs.vault;
-      this._vaultInfo = rs.toVaultInfo();
+      }).build();
 
       //Add Environment Roles to Vault
       if (this._envRolesInstance)
@@ -175,43 +156,33 @@ class ResourceBuilder
     }
 
     //Add Secrets to Vaults
-    Object.keys(this._secrets).forEach((key) => {
-      const val = this._secrets[key];
-      addCustomSecret({
-        name: key,
-        value: val,
-        contentType: `${this.name}-${key}`,
-        vaultInfo: this._vaultInfo!,
-        dependsOn: this._vaultInstance,
-      });
-    });
+    if (this._secrets) this._vaultInfo?.addSecrets(this._secrets);
   }
 
   //This linking need to be called after Vnet created
   private buildVaultLinking() {
     if (!this._vaultLinkingProps || !this._vnetInstance) return;
-    const { asPrivateLink, allowsIpAddresses, subnetName, subnetId } =
-      this._vaultLinkingProps;
+    const { asPrivateLink, subnetNames, ipAddresses } = this._vaultLinkingProps;
 
-    const subId = subnetId
-      ? subnetId
-      : subnetName
-        ? this._vnetInstance!.findSubnet(subnetName)!.apply((s) => s!.id!)
-        : undefined;
+    const subIds =
+      subnetNames?.map(
+        (name: string) =>
+          this._vnetInstance?.findSubnet(name)!.apply((s) => s!.id!)!,
+      ) ?? [];
 
-    if (asPrivateLink && subId) {
+    if (asPrivateLink && subIds.length > 0) {
       createVaultPrivateLink({
         name: `${this.name}-vault`,
         vaultInfo: this._vaultInfo!,
-        subnetIds: [subId],
+        subnetIds: subIds,
       });
     } else {
       new VaultNetworkResource(`${this.name}-vault`, {
         vaultName: this._vaultInfo!.name,
         resourceGroupName: this._vaultInfo!.group.resourceGroupName,
         subscriptionId,
-        subnetIds: subId ? [subId] : undefined,
-        ipAddresses: allowsIpAddresses,
+        subnetIds: subIds,
+        ipAddresses: ipAddresses,
       });
     }
   }
@@ -227,7 +198,7 @@ class ResourceBuilder
     this._otherBuilders.forEach((b) => {
       const builder = b({
         ...this.getResults(),
-        dependsOn: this._vaultInstance ?? this._vnetInstance?.vnet,
+        dependsOn: this._vnetInstance?.vnet ?? this._RGInstance,
       });
       this._otherInstances[builder.commonProps.name] = builder.build();
     });
@@ -238,7 +209,7 @@ class ResourceBuilder
       this._otherBuildersAsync.map(async (b) => {
         const builder = b({
           ...this.getResults(),
-          dependsOn: this._vaultInstance ?? this._vnetInstance?.vnet,
+          dependsOn: this._vnetInstance?.vnet ?? this._RGInstance,
         });
         this._otherInstances[builder.commonProps.name] = await builder.build();
       }),
@@ -257,7 +228,6 @@ class ResourceBuilder
   }
 
   public async build(): Promise<ResourceBuilderResults> {
-    this.validate();
     this.buildRoles();
     this.buildRG();
     this.buildVault();
@@ -265,7 +235,6 @@ class ResourceBuilder
     this.buildVaultLinking();
     this.buildOthers();
     await this.buildOthersAsync();
-
     return this.getResults();
   }
 }
