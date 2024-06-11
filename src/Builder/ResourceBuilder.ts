@@ -147,6 +147,7 @@ class ResourceBuilder
       this._vaultInfo = VaultBuilder({
         name: this.name,
         group: this._RGInfo!,
+        envRoles: this._envRoles!,
         dependsOn: this._RGInstance,
       }).build();
 

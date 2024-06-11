@@ -1,10 +1,12 @@
 //Common Builder Types
 import { Input, Resource } from "@pulumi/pulumi";
 import { KeyVaultInfo, ResourceGroupInfo } from "../../types";
+import { EnvRolesResults } from "../../AzAd/EnvRoles";
 
 export type BuilderProps = {
   name: string;
   group: ResourceGroupInfo;
+  envRoles: EnvRolesResults;
   vaultInfo: KeyVaultInfo;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
