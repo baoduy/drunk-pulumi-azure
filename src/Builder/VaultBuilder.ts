@@ -8,11 +8,7 @@ import { subscriptionId } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 export class VaultBuilderResults implements IVaultBuilderResults {
-  private constructor(private readonly vaultInfo: KeyVaultInfo) {}
-
-  public toVaultInfo(): KeyVaultInfo {
-    return this.vaultInfo;
-  }
+  private constructor(public readonly vaultInfo: KeyVaultInfo) {}
 
   public static from(vaultInfo: KeyVaultInfo): IVaultBuilderResults {
     if (!vaultInfo || !vaultInfo.name || !vaultInfo.id)
@@ -21,25 +17,13 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return new VaultBuilderResults(vaultInfo);
   }
 
-  public get name() {
-    return this.vaultInfo.name;
-  }
-
-  public get group() {
-    return this.vaultInfo.group;
-  }
-
-  public get id() {
-    return this.vaultInfo.id;
-  }
-
   public linkTo(props: {
     subnetIds: Input<string>[];
     ipAddresses: Input<string>[];
   }): IVaultBuilderResults {
-    new VaultNetworkResource(`${this.name}-vault-link`, {
-      vaultName: this.name,
-      resourceGroupName: this.group.resourceGroupName,
+    new VaultNetworkResource(`${this.vaultInfo.name}-vault-link`, {
+      vaultName: this.vaultInfo.name,
+      resourceGroupName: this.vaultInfo.group.resourceGroupName,
       subscriptionId,
       ...props,
     });
@@ -48,8 +32,8 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
   public privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults {
     createVaultPrivateLink({
-      name: `${this.name}-vault`,
-      vaultInfo: this,
+      name: `${this.vaultInfo.name}-vault`,
+      vaultInfo: this.vaultInfo,
       subnetIds,
     });
     return this;
@@ -64,8 +48,8 @@ export class VaultBuilderResults implements IVaultBuilderResults {
       return addCustomSecret({
         name: key,
         value: val,
-        contentType: `${this.name}-${key}`,
-        vaultInfo: this,
+        contentType: `${this.vaultInfo.name}-${key}`,
+        vaultInfo: this.vaultInfo,
       });
     });
     return this;

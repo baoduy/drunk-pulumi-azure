@@ -113,6 +113,10 @@ class ResourceBuilder
     return this;
   }
 
+  // public get vaultInfo(): KeyVaultInfo {
+  //   return this._vaultInfo!.vaultInfo;
+  // }
+
   private buildRoles() {
     if (this._createRole) {
       this._envRolesInstance = createEnvRoles();
@@ -122,7 +126,7 @@ class ResourceBuilder
         throw new Error(
           "The KeyVaultInfo needs to be defined to load environment Roles info.",
         );
-      this._envRoles = getEnvRolesOutput(this._vaultInfo);
+      this._envRoles = getEnvRolesOutput(this._vaultInfo!.vaultInfo);
     }
   }
 
@@ -153,7 +157,7 @@ class ResourceBuilder
 
       //Add Environment Roles to Vault
       if (this._envRolesInstance)
-        this._envRolesInstance.addRolesToVault(this._vaultInfo);
+        this._envRolesInstance.addRolesToVault(this._vaultInfo!.vaultInfo);
     }
 
     if (!this._vaultInfo)
@@ -162,7 +166,7 @@ class ResourceBuilder
       );
 
     //Add Secrets to Vaults
-    if (this._secrets) this._vaultInfo?.addSecrets(this._secrets);
+    if (this._secrets) this._vaultInfo!.addSecrets(this._secrets);
   }
 
   //This linking need to be called after Vnet created
@@ -179,13 +183,13 @@ class ResourceBuilder
     if (asPrivateLink && subIds.length > 0) {
       createVaultPrivateLink({
         name: `${this.name}-vault`,
-        vaultInfo: this._vaultInfo!,
+        vaultInfo: this._vaultInfo!.vaultInfo,
         subnetIds: subIds,
       });
     } else {
       new VaultNetworkResource(`${this.name}-vault`, {
-        vaultName: this._vaultInfo!.name,
-        resourceGroupName: this._vaultInfo!.group.resourceGroupName,
+        vaultName: this._vaultInfo!.vaultInfo!.name,
+        resourceGroupName: this._vaultInfo!.vaultInfo!.group.resourceGroupName,
         subscriptionId,
         subnetIds: subIds,
         ipAddresses: ipAddresses,
@@ -226,7 +230,7 @@ class ResourceBuilder
     return {
       name: this.name,
       group: this._RGInfo!,
-      vaultInfo: this._vaultInfo!,
+      vaultInfo: this._vaultInfo!.vaultInfo,
       envRoles: this._envRoles!,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,
