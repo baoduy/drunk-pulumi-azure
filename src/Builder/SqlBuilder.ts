@@ -1,4 +1,4 @@
-import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from "Sql";
+import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from "../Sql";
 import {
   Builder,
   BuilderProps,
