@@ -73,6 +73,7 @@ class SqlBuilder
 
   private buildSql() {
     if (!this._loginInfo) throw new Error("LoginInfo is required.");
+    if (!this.commonProps.vaultInfo) throw new Error("VaultInfo is required.");
 
     this._sqlInstance = Sql({
       ...this.commonProps,

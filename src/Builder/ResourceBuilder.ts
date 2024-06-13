@@ -156,6 +156,11 @@ class ResourceBuilder
         this._envRolesInstance.addRolesToVault(this._vaultInfo);
     }
 
+    if (!this._vaultInfo)
+      throw new Error(
+        "VaultInfo needs to be provided to be continuing to create other resources.",
+      );
+
     //Add Secrets to Vaults
     if (this._secrets) this._vaultInfo?.addSecrets(this._secrets);
   }

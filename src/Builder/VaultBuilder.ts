@@ -1,4 +1,4 @@
-import { BuilderProps, IResourceBuilder } from "./types";
+import { BuilderProps } from "./types";
 import { IVaultBuilder, IVaultBuilderResults } from "./types/vaultBuilder";
 import Vault, { createVaultPrivateLink } from "../KeyVault";
 import { BasicMonitorArgs, KeyVaultInfo } from "../types";
@@ -10,9 +10,17 @@ import { addCustomSecret } from "../KeyVault/CustomHelper";
 export class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
 
+  public toVaultInfo(): KeyVaultInfo {
+    return this.vaultInfo;
+  }
+
   public static from(vaultInfo: KeyVaultInfo): IVaultBuilderResults {
+    if (!vaultInfo || !vaultInfo.name || !vaultInfo.id)
+      throw new Error("VaultBuilderResult is not defined");
+
     return new VaultBuilderResults(vaultInfo);
   }
+
   public get name() {
     return this.vaultInfo.name;
   }
