@@ -56,6 +56,7 @@ class SqlBuilder
 
   private buildLogin() {
     if (!this._generateLogin) return;
+
     const login = randomLogin({
       name: this.commonProps.name,
       loginPrefix: this.commonProps.name,

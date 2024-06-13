@@ -59,8 +59,8 @@ export default ({
     addARecord({
       ipAddresses,
       recordName: "@",
-      zoneName: privateDnsZoneName,
-      dependsOn: zone,
+      dnsInfo: zone.toDnsInfo(),
+      dependsOn: zone.resource,
     });
 
     //Link to Vnet
@@ -72,7 +72,7 @@ export default ({
           zoneName: privateDnsZoneName,
           vnetId,
           group,
-          dependsOn: zone,
+          dependsOn: zone.resource,
         });
       }),
     );
