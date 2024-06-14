@@ -114,7 +114,7 @@ export default ({
   );
 
   //To Vault Info
-  const toVaultInfo = () => ({
+  const info = () => ({
     name: vaultName,
     group,
     id: vault.id,
@@ -122,16 +122,16 @@ export default ({
 
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>
-    createVaultDiagnostic({ vaultInfo: toVaultInfo(), logInfo });
+    createVaultDiagnostic({ vaultInfo: info(), logInfo });
 
   // Create Private Link
   const createPrivateLink = (props: PrivateLinkProps) =>
-    createVaultPrivateLink({ name, vaultInfo: toVaultInfo(), ...props });
+    createVaultPrivateLink({ name, vaultInfo: info(), ...props });
 
   return {
     name: vaultName,
     vault,
-    toVaultInfo,
+    info,
     addDiagnostic,
     createPrivateLink,
   };

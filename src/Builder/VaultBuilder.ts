@@ -8,7 +8,7 @@ import { subscriptionId } from "../Common/AzureEnv";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 
 export class VaultBuilderResults implements IVaultBuilderResults {
-  private constructor(public readonly vaultInfo: KeyVaultInfo) {}
+  private constructor(private readonly vaultInfo: KeyVaultInfo) {}
 
   public static from(vaultInfo: KeyVaultInfo): IVaultBuilderResults {
     if (!vaultInfo || !vaultInfo.name || !vaultInfo.id)
@@ -17,6 +17,9 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return new VaultBuilderResults(vaultInfo);
   }
 
+  public info(): KeyVaultInfo {
+    return this.vaultInfo;
+  }
   public linkTo(props: {
     subnetIds: Input<string>[];
     ipAddresses: Input<string>[];
@@ -76,7 +79,7 @@ class VaultBuilder implements IVaultBuilder {
   public build(): IVaultBuilderResults {
     const rs = Vault(this._props);
     if (this._logInfo) rs.addDiagnostic(this._logInfo);
-    return VaultBuilderResults.from(rs.toVaultInfo());
+    return VaultBuilderResults.from(rs.info());
   }
 }
 

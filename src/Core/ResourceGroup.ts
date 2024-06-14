@@ -39,7 +39,7 @@ export default ({
   permissions,
   ...others
 }: Props): ResourceResultProps<ResourceGroup> & {
-  toGroupInfo: () => ResourceGroupInfo;
+  info: () => ResourceGroupInfo;
 } => {
   name = formattedName ? name : getResourceGroupName(name);
 
@@ -62,7 +62,7 @@ export default ({
     resource: resource as ResourceGroup,
     locker,
     diagnostic,
-    toGroupInfo: () => ({
+    info: () => ({
       resourceGroupName: name,
       location: currentRegionName,
     }),
