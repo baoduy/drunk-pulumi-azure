@@ -56,6 +56,7 @@ class SqlBuilder
 
   private buildLogin() {
     if (!this._generateLogin) return;
+    console.log(this.commonProps.name, this.commonProps.vaultInfo);
 
     const login = randomLogin({
       name: this.commonProps.name,
