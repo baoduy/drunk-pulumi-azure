@@ -1,4 +1,4 @@
-import { IBuilder } from "./genericBuilder";
+import { IBuilder, ILoginBuilder } from "./genericBuilder";
 import {
   SqlAuthType,
   SqlElasticPoolType,
@@ -12,20 +12,12 @@ export type SqlBuilderAuthOptionsType = Pick<
   "enableAdAdministrator" | "azureAdOnlyAuthentication"
 >;
 
-export type SqlBuilderLoginInfoType = Pick<
-  SqlAuthType,
-  "adminLogin" | "password"
->;
-
 export type SqlDbBuilderType = Record<
   string,
   { name?: string; sku?: SqlDbSku }
 >;
 
-export interface ISqlLoginBuilder {
-  generateLogin: () => ISqlAuthBuilder;
-  withLoginInfo: (props: SqlBuilderLoginInfoType) => ISqlAuthBuilder;
-}
+export interface ISqlLoginBuilder extends ILoginBuilder<ISqlAuthBuilder> {}
 
 export interface ISqlAuthBuilder {
   withAuthOptions: (props: SqlBuilderAuthOptionsType) => ISqlNetworkBuilder;

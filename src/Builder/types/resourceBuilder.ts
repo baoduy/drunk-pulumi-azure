@@ -48,8 +48,11 @@ export interface IResourceVaultBuilder {
   withVault: (props: KeyVaultInfo) => IResourceBuilder;
 }
 
-export interface IResourceVaultItemsBuilder
-  extends Pick<IVaultBuilderResults, "addSecrets"> {}
+export interface IResourceVaultItemsBuilder {
+  addSecrets: (items: Record<string, Input<string>>) => IResourceBuilder;
+  //addKeys: () => IResourceBuilder;
+  //addCerts:() => IResourceBuilder;
+}
 
 export interface IResourceVnetBuilder {
   withVnet: (props: ResourceVnetBuilderType) => IResourceBuilder;

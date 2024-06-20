@@ -6,8 +6,8 @@ import {
   ISqlBuilder,
   ISqlLoginBuilder,
   ISqlNetworkBuilder,
+  LoginBuilderProps,
   SqlBuilderAuthOptionsType,
-  SqlBuilderLoginInfoType,
   SqlDbBuilderType,
 } from "./types";
 import { randomLogin } from "../Core/Random";
@@ -17,7 +17,7 @@ class SqlBuilder
   implements ISqlLoginBuilder, ISqlAuthBuilder, ISqlNetworkBuilder, ISqlBuilder
 {
   private _generateLogin: boolean = false;
-  private _loginInfo: SqlBuilderLoginInfoType | undefined = undefined;
+  private _loginInfo: LoginBuilderProps | undefined = undefined;
   private _authOptions: SqlBuilderAuthOptionsType = {};
   private _networkProps: SqlNetworkType | undefined = undefined;
   private _elasticPoolProps: SqlElasticPoolType | undefined = undefined;
@@ -49,14 +49,13 @@ class SqlBuilder
     this._generateLogin = true;
     return this;
   }
-  public withLoginInfo(props: SqlBuilderLoginInfoType): ISqlAuthBuilder {
+  public withLoginInfo(props: LoginBuilderProps): ISqlAuthBuilder {
     this._loginInfo = props;
     return this;
   }
 
   private buildLogin() {
     if (!this._generateLogin) return;
-    console.log(this.commonProps.name, this.commonProps.vaultInfo);
 
     const login = randomLogin({
       name: this.commonProps.name,

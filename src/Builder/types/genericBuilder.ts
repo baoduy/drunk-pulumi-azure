@@ -11,6 +11,15 @@ export type BuilderProps = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
 export type CommonOmit<T> = Omit<T, keyof BuilderProps>;
+export type LoginBuilderProps = {
+  adminLogin: Input<string>;
+  password: Input<string>;
+};
+
+export interface ILoginBuilder<IReturnInterface> {
+  generateLogin: () => IReturnInterface;
+  withLoginInfo: (props: LoginBuilderProps) => IReturnInterface;
+}
 
 //Synchronous
 export interface IBuilder<TResults> {
