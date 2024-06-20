@@ -4,7 +4,6 @@ import {
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,
-  IAskAuthBuilder,
   ISshBuilder,
   BuilderAsync,
   SshBuilderProps,
@@ -26,7 +25,6 @@ class AksBuilder
   extends BuilderAsync<AskBuilderResults>
   implements
     ISshBuilder,
-    IAskAuthBuilder,
     IAksNetworkBuilder,
     IAksDefaultNodePoolBuilder,
     IAksBuilder
@@ -40,7 +38,7 @@ class AksBuilder
   private _nodePoolsProps: AksNodePoolProps[] = [];
   private _addonProps: AskAddonProps | undefined = undefined;
   private _featureProps: AskFeatureProps | undefined = undefined;
-  private _authProps: AksAccessProps | undefined = undefined;
+  private _authProps: Omit<AksAccessProps, "envRoles"> | undefined = {};
   private _tier: ManagedClusterSKUTier = ManagedClusterSKUTier.Free;
   private _networkProps: AksNetworkProps | undefined = undefined;
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
@@ -51,7 +49,7 @@ class AksBuilder
   }
 
   //Info collection methods
-  public withNewSsh(props: SshBuilderProps): IAskAuthBuilder {
+  public withNewSsh(props: SshBuilderProps): IAksNetworkBuilder {
     this._sshProps = props;
     return this;
   }
@@ -68,7 +66,7 @@ class AksBuilder
     this._featureProps = props;
     return this;
   }
-  public withAuth(props: AksAccessProps): IAksNetworkBuilder {
+  public withAuth(props: Omit<AksAccessProps, "envRoles">): IAksBuilder {
     this._authProps = props;
     return this;
   }
@@ -78,11 +76,11 @@ class AksBuilder
   }
   public withNetwork(props: AksNetworkProps): IAksDefaultNodePoolBuilder {
     this._networkProps = props;
-    return this as IAksDefaultNodePoolBuilder;
+    return this;
   }
   public withDefaultNodePool(props: DefaultAksNodePoolProps): IAksBuilder {
     this._defaultNode = props;
-    return this as IAksBuilder;
+    return this;
   }
   public import(props: AksImportProps) {
     this._importProps = props;
@@ -102,7 +100,7 @@ class AksBuilder
     this._askInstance = await Aks({
       ...this.commonProps,
       addon: this._addonProps,
-      aksAccess: this._authProps!,
+      aksAccess: { ...this._authProps, envRoles: this.commonProps.envRoles },
       tier: this._tier,
       linux: {
         adminUsername: this._sshInstance!.userName,
@@ -115,7 +113,6 @@ class AksBuilder
 
       importUri: this._importProps?.id,
       ignoreChanges: this._importProps?.ignoreChanges,
-      //nodeResourceGroup: getResourceGroupName(""),
     });
   }
 
