@@ -8,7 +8,6 @@ import {
   VnetBuilderResults,
 } from "./vnetBuilder";
 import { Input } from "@pulumi/pulumi";
-import { IVaultBuilderResults } from "./vaultBuilder";
 
 export type ResourceBuilderResults = BuilderProps & {
   envRoles: EnvRolesResults;

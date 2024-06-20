@@ -14,7 +14,37 @@ export type VmOsBuilderLinuxProps = {
   publisher: "Canonical" | string;
   sku: "22_04-lts" | string;
 };
-export type VmSizeTypes = "Standard_D2as_v4";
+export type VmSizeTypes =
+  | "Standard_D2a_v4"
+  | "Standard_D4a_v4"
+  | "Standard_D8a_v4"
+  | "Standard_D16a_v4"
+  | "Standard_D32a_v4"
+  | "Standard_D48a_v4"
+  | "Standard_D64a_v4"
+  | "Standard_D96a_v4"
+  | "Standard_D2as_v4"
+  | "Standard_D4as_v4"
+  | "Standard_D8as_v4"
+  | "Standard_D16as_v4"
+  | "Standard_D32as_v4"
+  | "Standard_D48as_v4"
+  | "Standard_D64as_v4"
+  | "Standard_D96as_v4"
+  | "Standard_E2_v4"
+  | "Standard_E4_v4"
+  | "Standard_E8_v4"
+  | "Standard_E16_v4"
+  | "Standard_E20_v4"
+  | "Standard_E32_v4"
+  | "Standard_E48_v4"
+  | "Standard_E64_v4"
+  | "Standard_E8-4ads_v5"
+  | "Standard_E16-4ads_v5"
+  | "Standard_E32-8ads_v5"
+  | "Standard_E64-16ads_v5"
+  | "Standard_E96-24ads_v5"
+  | string;
 
 export interface IVmOsBuilder {
   withWindowsImage: (props: VmOsBuilderWindowsProps) => IVmSizeBuilder;
