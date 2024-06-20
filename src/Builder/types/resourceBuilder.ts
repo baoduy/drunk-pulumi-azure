@@ -8,6 +8,7 @@ import {
   VnetBuilderResults,
 } from "./vnetBuilder";
 import { Input } from "@pulumi/pulumi";
+import { IVaultBuilderResults } from "./vaultBuilder";
 
 export type ResourceBuilderResults = BuilderProps & {
   envRoles: EnvRolesResults;
@@ -46,11 +47,10 @@ export interface IResourceVaultBuilder {
   createVault: () => IResourceBuilder;
   withVault: (props: KeyVaultInfo) => IResourceBuilder;
 }
-export interface IResourceVaultItemsBuilder {
-  addSecrets: (items: Record<string, Input<string>>) => IResourceBuilder;
-  //addKeys: () => IResourceBuilder;
-  //addCerts:() => IResourceBuilder;
-}
+
+export interface IResourceVaultItemsBuilder
+  extends Pick<IVaultBuilderResults, "addSecrets"> {}
+
 export interface IResourceVnetBuilder {
   withVnet: (props: ResourceVnetBuilderType) => IResourceBuilder;
   linkVaultTo: (props: ResourceVaultLinkingBuilderType) => IResourceBuilder;
