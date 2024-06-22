@@ -1,6 +1,7 @@
 import { BasicResourceArgs, ResourceInfo } from "../types";
 import { DnsZoneARecordType, IDnsZoneBuilder } from "./types";
 import * as network from "@pulumi/azure-native/network";
+import { output } from "@pulumi/pulumi";
 
 class DnsZoneBuilder implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -51,7 +52,9 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
               ...group,
               relativeRecordSetName: a.recordName,
               recordType: "A",
-              aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
+              aRecords: output(a.ipAddresses).apply((ip) =>
+                ip.map((i) => ({ ipv4Address: i })),
+              ),
               ttl: 3600,
             },
           ),
