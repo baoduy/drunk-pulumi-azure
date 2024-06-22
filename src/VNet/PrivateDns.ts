@@ -55,15 +55,16 @@ export const linkVnetToPrivateDns = ({
   group,
   zoneName,
   vnetId,
-  registrationEnabled,
+  registrationEnabled = false,
   ...others
 }: VnetToPrivateDnsProps) => {
   return new native.network.VirtualNetworkLink(
     `${name}-${zoneName}-link`,
     {
       ...group,
+      location: "global",
       privateZoneName: zoneName,
-      registrationEnabled: registrationEnabled || false,
+      registrationEnabled,
       virtualNetwork: { id: vnetId },
     },
     others,
