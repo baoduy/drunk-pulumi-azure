@@ -1,9 +1,9 @@
-import { Input, output, Resource } from '@pulumi/pulumi';
-import { getSecretName } from '../Common/Naming';
-import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
-import { KeyVaultInfo } from '../types';
-import { getSecret } from '../Common/ConfigHelper';
-import { replaceAll } from '../Common/Helpers';
+import { Input, output, Resource } from "@pulumi/pulumi";
+import { getSecretName } from "../Common/Naming";
+import { VaultSecretResource } from "@drunk-pulumi/azure-providers/VaultSecret";
+import { KeyVaultInfo } from "../types";
+import { getSecret } from "../Common/ConfigHelper";
+import { replaceAll } from "../Common/Helpers";
 
 interface Props {
   name: string;
@@ -21,7 +21,7 @@ export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
     name,
     value,
     vaultInfo,
-    contentType: 'config variables',
+    contentType: "config variables",
   });
 };
 
@@ -46,27 +46,25 @@ export const addCustomSecret = ({
   vaultInfo,
   value,
   contentType,
-  ignoreChange,
-  tags,
   dependsOn,
+  ...others
 }: SecretProps) => {
   const n = formattedName ? name : getSecretName(name);
   //This KeyVault Secret is not auto recovery the deleted one.
   return new VaultSecretResource(
-    replaceAll(name, '.', '-'),
+    replaceAll(name, ".", "-"),
     {
-      name: replaceAll(n, '.', '-'),
-      value: value ? output(value).apply((v) => v || '') : '',
-      vaultInfo,
+      name: replaceAll(n, ".", "-"),
+      value: value ? output(value).apply((v) => v || "") : "",
+      vaultName: vaultInfo.name,
       contentType: contentType || name,
-      ignoreChange,
-      tags,
+      ...others,
     },
-    { dependsOn }
+    { dependsOn },
   );
 };
 
-interface MultiSecretProps extends Omit<SecretProps, 'value' | 'name'> {
+interface MultiSecretProps extends Omit<SecretProps, "value" | "name"> {
   items: Array<{ name: string; value: Input<string> }>;
 }
 
