@@ -126,8 +126,10 @@ export default ({
 
   const adminGroup = auth.envRoles.contributor;
 
-  if (auth.azureAdOnlyAuthentication)
+  if (auth.azureAdOnlyAuthentication) {
+    ignoreChanges.push("administratorLogin");
     ignoreChanges.push("administratorLoginPassword");
+  }
 
   const sqlServer = new sql.Server(
     sqlName,
