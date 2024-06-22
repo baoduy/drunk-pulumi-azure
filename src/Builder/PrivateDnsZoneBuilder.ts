@@ -1,30 +1,21 @@
-import { Builder, BuilderProps, DnsZoneARecordType } from "./types";
-import { ResourceInfo } from "../types";
+import { DnsZoneARecordType } from "./types";
+import { BasicResourceArgs, ResourceInfo } from "../types";
 import * as network from "@pulumi/azure-native/network";
 import {
   IPrivateDnsZoneBuilder,
   PrivateDnsZoneVnetLinkingType,
 } from "./types/privateDnsZoneBuilder";
 import * as native from "@pulumi/azure-native";
+import { output } from "@pulumi/pulumi";
+import { getVnetIdFromSubnetId } from "../VNet/Helper";
 
-class PrivateDnsZoneBuilder
-  extends Builder<ResourceInfo>
-  implements IPrivateDnsZoneBuilder
-{
+class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
   private _vnetLinks: PrivateDnsZoneVnetLinkingType[] = [];
 
-  private _zoneInstance: network.Zone | undefined = undefined;
+  private _zoneInstance: network.PrivateZone | undefined = undefined;
 
-  public constructor(props: BuilderProps) {
-    super({
-      ...props,
-      group: {
-        resourceGroupName: props.group.resourceGroupName,
-        location: "global",
-      },
-    });
-  }
+  public constructor(private commonProps: BasicResourceArgs) {}
 
   linkTo(props: PrivateDnsZoneVnetLinkingType): IPrivateDnsZoneBuilder {
     this._vnetLinks.push(props);
@@ -36,17 +27,12 @@ class PrivateDnsZoneBuilder
     return this;
   }
 
-  private getZoneInstance() {
-    return this._zoneInstance;
-  }
-
   private buildZone() {
     const { name, group, dependsOn } = this.commonProps;
-    this._zoneInstance = new network.Zone(
+    this._zoneInstance = new network.PrivateZone(
       name,
       {
-        zoneName: name,
-        zoneType: network.ZoneType.Private,
+        privateZoneName: name,
         ...group,
       },
       { dependsOn },
@@ -55,18 +41,20 @@ class PrivateDnsZoneBuilder
     if (this._aRecords) {
       this._aRecords.forEach(
         (a) =>
-          new network.RecordSet(
+          new network.PrivateRecordSet(
             a.recordName === "*"
               ? "All-ARecord"
               : a.recordName === "@"
                 ? "Root-ARecord"
                 : `${a.recordName}-ARecord`,
             {
-              zoneName: this._zoneInstance!.name,
+              privateZoneName: this._zoneInstance!.name,
               ...group,
               relativeRecordSetName: a.recordName,
               recordType: "A",
-              aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
+              aRecords: output(a.ipAddresses).apply((ip) =>
+                ip.map((i) => ({ ipv4Address: i })),
+              ),
               ttl: 3600,
             },
           ),
@@ -76,18 +64,25 @@ class PrivateDnsZoneBuilder
 
   private buildVnetLinks() {
     if (this._vnetLinks.length <= 0) return;
-    this._vnetLinks.map(
-      (lik, index) =>
-        new native.network.VirtualNetworkLink(
-          `${this.commonProps.name}-${index}-link`,
-          {
-            ...this.commonProps.group,
-            privateZoneName: this._zoneInstance!.name,
-            registrationEnabled: lik.registrationEnabled,
-            virtualNetwork: { id: lik.vnetId },
-          },
-          { dependsOn: this._zoneInstance },
+    this._vnetLinks.forEach((lik, index) =>
+      [
+        ...(lik.vnetIds ?? []),
+        ...(lik.subnetIds ?? []).map((s) =>
+          output(s).apply(getVnetIdFromSubnetId),
         ),
+      ].map(
+        (v) =>
+          new native.network.VirtualNetworkLink(
+            `${this.commonProps.name}-${index}-link`,
+            {
+              ...this.commonProps.group,
+              privateZoneName: this._zoneInstance!.name,
+              registrationEnabled: lik.registrationEnabled,
+              virtualNetwork: { id: v },
+            },
+            { dependsOn: this._zoneInstance },
+          ),
+      ),
     );
   }
 
@@ -103,5 +98,5 @@ class PrivateDnsZoneBuilder
   }
 }
 
-export default (props: BuilderProps) =>
+export default (props: BasicResourceArgs) =>
   new PrivateDnsZoneBuilder(props) as IPrivateDnsZoneBuilder;

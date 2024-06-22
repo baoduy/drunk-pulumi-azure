@@ -2,9 +2,9 @@ import * as network from "@pulumi/azure-native/network";
 import { Input, output } from "@pulumi/pulumi";
 import { BasicResourceArgs, PrivateLinkProps } from "../types";
 import { getVnetIdFromSubnetId } from "./Helper";
-import PrivateZone, { linkVnetToPrivateDns, addARecord } from "./PrivateDns";
 import { parseResourceInfoFromId } from "../Common/AzureEnv";
 import { getPrivateEndpointName } from "../Common/Naming";
+import { PrivateDnsZoneBuilder } from "../Builder";
 
 interface Props extends BasicResourceArgs, PrivateLinkProps {
   resourceId: Input<string>;
@@ -44,39 +44,17 @@ export default ({
     endpoints.map((e) =>
       e.customDnsConfigs.apply((c) => c!.flatMap((i) => i.ipAddresses!)),
     ),
-  ).apply((a) => a.flatMap((i) => i));
+  ).apply((a) => a.flatMap((i) => i!));
 
   output(resourceId).apply((id) => {
     const resourceInfo = parseResourceInfoFromId(id);
-
-    //Create Zone
-    const zone = PrivateZone({
+    return PrivateDnsZoneBuilder({
       name: `${resourceInfo!.name}.${privateDnsZoneName}`,
       group,
-    });
-
-    //Add Root Record
-    addARecord({
-      ipAddresses,
-      recordName: "@",
-      dnsInfo: zone.toDnsInfo(),
-      dependsOn: zone.resource,
-    });
-
-    //Link to Vnet
-    subnetIds.map((s, index) =>
-      output(s).apply((id) => {
-        const vnetId = getVnetIdFromSubnetId(id);
-        linkVnetToPrivateDns({
-          name: `${name}-${index}`,
-          zoneName: zone.name,
-          vnetId,
-          group,
-          dependsOn: zone.resource,
-        });
-      }),
-    );
-    //}
+    })
+      .withARecord({ ipAddresses, recordName: "@" })
+      .linkTo({ subnetIds })
+      .build();
   });
 
   return endpoints;

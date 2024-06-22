@@ -1,24 +1,15 @@
-import { Builder, BuilderProps } from "./types";
-import { ResourceInfo } from "../types";
-import { DnsZoneARecordType, IDnsZoneBuilder } from "./types/dnsZoneBuilder";
+import { BasicResourceArgs, ResourceInfo } from "../types";
+import { DnsZoneARecordType, IDnsZoneBuilder } from "./types";
 import * as network from "@pulumi/azure-native/network";
 
-class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
+class DnsZoneBuilder implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
   private _children: string[] = [];
 
   private _zoneInstance: network.Zone | undefined = undefined;
   private _childrenInstances: ResourceInfo[] | undefined = undefined;
 
-  public constructor(props: BuilderProps) {
-    super({
-      ...props,
-      group: {
-        resourceGroupName: props.group.resourceGroupName,
-        location: "global",
-      },
-    });
-  }
+  public constructor(private commonProps: BasicResourceArgs) {}
 
   withSubZone(name: string): IDnsZoneBuilder {
     this._children.push(name);
@@ -70,15 +61,13 @@ class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
 
   private buildChildren() {
     if (this._children.length <= 0) return;
-    const { name, group, vaultInfo, envRoles } = this.commonProps;
+    const { name, group } = this.commonProps;
 
     this._childrenInstances = this._children.map((c) => {
       const n = `${c}.${name}`;
       const builder = new DnsZoneBuilder({
         name: n,
         group,
-        vaultInfo,
-        envRoles,
         dependsOn: this._zoneInstance,
       });
 
@@ -115,5 +104,5 @@ class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
   }
 }
 
-export default (props: BuilderProps) =>
+export default (props: BasicResourceArgs) =>
   new DnsZoneBuilder(props) as IDnsZoneBuilder;

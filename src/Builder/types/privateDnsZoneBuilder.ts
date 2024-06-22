@@ -4,11 +4,14 @@ import { ResourceInfo } from "../../types";
 import { DnsZoneARecordType } from "./dnsZoneBuilder";
 
 export type PrivateDnsZoneVnetLinkingType = {
-  vnetId: Input<string>;
+  vnetIds?: Input<string>[];
+  //The vnetId will be calculated based on subnetId
+  subnetIds?: Input<string>[];
   registrationEnabled?: boolean;
 };
 
-export interface IPrivateDnsZoneBuilder extends IBuilder<ResourceInfo> {
+export interface IPrivateDnsZoneBuilder {
   withARecord(props: DnsZoneARecordType): IPrivateDnsZoneBuilder;
   linkTo(props: PrivateDnsZoneVnetLinkingType): IPrivateDnsZoneBuilder;
+  build(): ResourceInfo;
 }
