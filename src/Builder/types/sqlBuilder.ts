@@ -9,7 +9,7 @@ import { SqlDbSku } from "../../Sql/SqlDb";
 
 export type SqlBuilderAuthOptionsType = Pick<
   SqlAuthType,
-  "enableAdAdministrator" | "azureAdOnlyAuthentication"
+  "azureAdOnlyAuthentication"
 >;
 
 export type SqlDbBuilderType = Record<

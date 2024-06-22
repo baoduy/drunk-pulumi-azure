@@ -61,10 +61,10 @@
     "replace-in-file": "^7.2.0"
   },
   "dependencies": {
-    "@drunk-pulumi/azure-providers": "^0.0.18",
+    "@drunk-pulumi/azure-providers": "^0.0.21",
     "@pulumi/azure-native": "^2.46.0",
     "@pulumi/azuread": "5.52.0",
-    "@pulumi/pulumi": "^3.120.0",
+    "@pulumi/pulumi": "^3.121.0",
     "@pulumi/random": "^4.16.2",
     "@pulumi/tls": "^5.0.3",
     "axios": "^1.7.2",

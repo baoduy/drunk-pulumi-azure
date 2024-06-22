@@ -45,7 +45,7 @@ export const addARecord = ({
 };
 
 interface VnetToPrivateDnsProps extends BasicResourceArgs {
-  zoneName: string;
+  zoneName: Input<string>;
   vnetId: Input<string>;
   registrationEnabled?: boolean;
 }
@@ -55,15 +55,16 @@ export const linkVnetToPrivateDns = ({
   group,
   zoneName,
   vnetId,
-  registrationEnabled,
+  registrationEnabled = false,
   ...others
 }: VnetToPrivateDnsProps) => {
   return new native.network.VirtualNetworkLink(
-    `${name}-${zoneName}-link`,
+    `${name}-link`,
     {
       ...group,
+      location: "global",
       privateZoneName: zoneName,
-      registrationEnabled: registrationEnabled || false,
+      registrationEnabled,
       virtualNetwork: { id: vnetId },
     },
     others,
@@ -103,17 +104,15 @@ export default ({
   const toDnsInfo = () => ({ resourceName: name, group, id: zone.id });
 
   if (vnetIds) {
-    all(vnetIds).apply((vn) =>
-      vn.map((id) =>
-        linkVnetToPrivateDns({
-          name,
-          vnetId: id,
-          zoneName: name,
-          group,
-          registrationEnabled: false,
-          dependsOn: zone,
-        }),
-      ),
+    vnetIds.map((id) =>
+      linkVnetToPrivateDns({
+        name,
+        vnetId: id,
+        zoneName: name,
+        group,
+        registrationEnabled: false,
+        dependsOn: zone,
+      }),
     );
   }
 
