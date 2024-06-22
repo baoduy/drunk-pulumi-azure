@@ -1,4 +1,9 @@
-import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from "../Sql";
+import Sql, {
+  SqlElasticPoolType,
+  SqlNetworkType,
+  SqlResults,
+  SqlVulnerabilityAssessmentType,
+} from "../Sql";
 import {
   Builder,
   BuilderProps,
@@ -8,6 +13,7 @@ import {
   ISqlNetworkBuilder,
   LoginBuilderProps,
   SqlBuilderAuthOptionsType,
+  SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
 } from "./types";
 import { randomLogin } from "../Core/Random";
@@ -22,11 +28,21 @@ class SqlBuilder
   private _networkProps: SqlNetworkType | undefined = undefined;
   private _elasticPoolProps: SqlElasticPoolType | undefined = undefined;
   private _databasesProps: SqlDbBuilderType = {};
+  private _vulnerabilityAssessment:
+    | SqlBuilderVulnerabilityAssessmentType
+    | undefined = undefined;
 
   private _sqlInstance: SqlResults | undefined = undefined;
 
   constructor(props: BuilderProps) {
     super(props);
+  }
+
+  withVulnerabilityAssessment(
+    props: SqlBuilderVulnerabilityAssessmentType,
+  ): ISqlBuilder {
+    this._vulnerabilityAssessment = props;
+    return this;
   }
 
   public withElasticPool(props: SqlElasticPoolType): ISqlBuilder {
@@ -73,8 +89,16 @@ class SqlBuilder
   }
 
   private buildSql() {
-    if (!this._loginInfo) throw new Error("LoginInfo is required.");
-    if (!this.commonProps.vaultInfo) throw new Error("VaultInfo is required.");
+    if (!this._loginInfo) throw new Error("The LoginInfo is required.");
+    if (!this.commonProps.vaultInfo)
+      throw new Error("The VaultInfo is required.");
+    if (
+      this._vulnerabilityAssessment &&
+      !this._vulnerabilityAssessment.logInfo.secrets
+    )
+      throw new Error(
+        "The LogInfo's secrets are required to enable the vulnerability assessment.",
+      );
 
     this._sqlInstance = Sql({
       ...this.commonProps,
@@ -83,6 +107,16 @@ class SqlBuilder
         ...this._loginInfo!,
         envRoles: this.commonProps.envRoles,
       },
+      vulnerabilityAssessment: this._vulnerabilityAssessment
+        ? {
+            logStorageId: this._vulnerabilityAssessment.logInfo.id,
+            alertEmails: this._vulnerabilityAssessment.alertEmails,
+            storageAccessKey:
+              this._vulnerabilityAssessment.logInfo.secrets!.primaryKey!,
+            storageEndpoint:
+              this._vulnerabilityAssessment.logInfo.secrets!.endpoints.blob!,
+          }
+        : undefined,
       network: this._networkProps,
       elasticPool: this._elasticPoolProps,
       databases: this._databasesProps,

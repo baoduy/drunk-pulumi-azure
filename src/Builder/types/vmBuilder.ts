@@ -47,17 +47,17 @@ export type VmSizeTypes =
   | string;
 
 export interface IVmOsBuilder {
-  withWindowsImage: (props: VmOsBuilderWindowsProps) => IVmSizeBuilder;
-  withLinuxImage: (props: VmOsBuilderLinuxProps) => IVmSizeBuilder;
+  withWindowsImage(props: VmOsBuilderWindowsProps): IVmSizeBuilder;
+  withLinuxImage(props: VmOsBuilderLinuxProps): IVmSizeBuilder;
 }
 
 export interface IVmSizeBuilder {
-  withSize: (props: VmSizeTypes) => IVmLoginBuilder;
+  withSize(props: VmSizeTypes): IVmLoginBuilder;
 }
 export interface IVmLoginBuilder extends ILoginBuilder<IVmVnetBuilder> {}
 export interface IVmVnetBuilder {
-  withSubnetId: (props: Input<string>) => IVmBuilder;
+  withSubnetId(props: Input<string>): IVmBuilder;
 }
 export interface IVmBuilder extends IBuilder<VirtualMachine> {
-  withTags: (props: Record<string, Input<string>>) => IVmBuilder;
+  withTags(props: Record<string, Input<string>>): IVmBuilder;
 }

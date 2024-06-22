@@ -4,7 +4,6 @@ import { KeyVaultInfo, ResourceInfo, ResourceType } from "../types";
 import { getSecret } from "../KeyVault/Helper";
 import { interpolate, Output } from "@pulumi/pulumi";
 import { currentRegionName, subscriptionId } from "../Common/AzureEnv";
-import { linkVnetToPrivateDns } from "../VNet/PrivateDns";
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
@@ -82,20 +81,20 @@ export const getAksPrivateDnz = ({
   });
 };
 
-export const linkAksPrivateDnzVnet = ({
-  vnetId,
-  name,
-  groupName,
-  formattedName,
-}: ResourceType & { vnetId: Output<string> }) => {
-  const dns = getAksPrivateDnz({ name, groupName, formattedName });
-  return dns.apply((d) => {
-    if (!d) return;
-    return linkVnetToPrivateDns({
-      name,
-      group: d.group,
-      zoneName: d.resourceName,
-      vnetId,
-    });
-  });
-};
+// export const linkAksPrivateDnzVnet = ({
+//   vnetId,
+//   name,
+//   groupName,
+//   formattedName,
+// }: ResourceType & { vnetId: Output<string> }) => {
+//   const dns = getAksPrivateDnz({ name, groupName, formattedName });
+//   return dns.apply((d) => {
+//     if (!d) return;
+//     return linkVnetToPrivateDns({
+//       name,
+//       group: d.group,
+//       zoneName: d.resourceName,
+//       vnetId,
+//     });
+//   });
+// };

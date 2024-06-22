@@ -208,6 +208,7 @@ export default ({
       ignoreChanges: [
         "storageProfile.osDisk.managedDisk.storageAccountType",
         "storageProfile.osDisk.managedDisk.id",
+        "osDisk.osType",
       ],
     },
   );

@@ -1,6 +1,6 @@
 import { Input } from "@pulumi/pulumi";
 import * as network from "@pulumi/azure-native/network";
-import { BuilderProps, CommonOmit, IBuilder } from "./genericBuilder";
+import { CommonOmit, IBuilder } from "./genericBuilder";
 import { VnetProps, VnetResult } from "../../VNet/Vnet";
 import { SubnetProps } from "../../VNet/Subnet";
 import { BasicResourceArgs } from "../../types";
@@ -12,6 +12,13 @@ import { LogInfoResults } from "../../Logs/Helpers";
 import { PublicIpAddressPrefixResult } from "../../VNet/IpAddressPrefix";
 
 //VNet Builder Types
+export type VnetBuilderResults = VnetResult & {
+  publicIpAddress: PublicIpAddressPrefixResult | undefined;
+  firewall: FirewallResult | undefined;
+  natGateway: network.NatGateway | undefined;
+  vnpGateway: network.VirtualNetworkGateway | undefined;
+};
+
 export type VnetBuilderProps = {
   subnets?: SubnetCreationProps;
 } & Pick<VnetProps, "addressSpaces" | "dnsServers">;
@@ -40,35 +47,26 @@ export type VpnGatewayCreationProps = Pick<
 
 //Starting Interface
 export interface IVnetBuilderStart {
-  asHub: (props?: VnetBuilderProps) => IPublicIpBuilder;
-  asSpoke: (props?: VnetBuilderProps) => IVnetBuilder;
+  asHub(props?: VnetBuilderProps): IPublicIpBuilder;
+  asSpoke(props?: VnetBuilderProps): IVnetBuilder;
 }
 export interface IPublicIpBuilder {
-  withPublicIpAddress: (
-    type: "prefix" | "individual",
-  ) => IGatewayFireWallBuilder;
+  withPublicIpAddress(type: "prefix" | "individual"): IGatewayFireWallBuilder;
 }
 
 export interface IFireWallOrVnetBuilder extends IBuilder<VnetBuilderResults> {
-  withFirewall: (props: FirewallCreationProps) => IVnetBuilder;
+  withFirewall(props: FirewallCreationProps): IVnetBuilder;
 }
 
 export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
-  withNatGateway: () => IFireWallOrVnetBuilder;
+  withNatGateway(): IFireWallOrVnetBuilder;
 }
 
 export interface IVnetBuilder extends IBuilder<VnetBuilderResults> {
-  withBastion: (props: BastionCreationProps) => IVnetBuilder;
-  peeringTo: (props: PeeringProps) => IVnetBuilder;
-  withSecurityRules: (rules: CustomSecurityRuleArgs[]) => IVnetBuilder;
-  withRouteRules: (rules: RouteArgs[]) => IVnetBuilder;
-  withLogInfo: (info: LogInfoResults) => IVnetBuilder;
-  withVpnGateway: (props: VpnGatewayCreationProps) => IVnetBuilder;
+  withBastion(props: BastionCreationProps): IVnetBuilder;
+  peeringTo(props: PeeringProps): IVnetBuilder;
+  withSecurityRules(rules: CustomSecurityRuleArgs[]): IVnetBuilder;
+  withRouteRules(rules: RouteArgs[]): IVnetBuilder;
+  withLogInfo(info: LogInfoResults): IVnetBuilder;
+  withVpnGateway(props: VpnGatewayCreationProps): IVnetBuilder;
 }
-
-export type VnetBuilderResults = VnetResult & {
-  publicIpAddress: PublicIpAddressPrefixResult | undefined;
-  firewall: FirewallResult | undefined;
-  natGateway: network.NatGateway | undefined;
-  vnpGateway: network.VirtualNetworkGateway | undefined;
-};

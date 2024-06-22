@@ -11,10 +11,10 @@ import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import { parseResourceInfoFromId } from "../Common/AzureEnv";
 
 export type StorageConnectionInfo = {
-  primaryConnection?: string;
-  secondaryConnection?: string;
-  primaryKey?: string;
-  secondaryKey?: string;
+  primaryConnection: string;
+  secondaryConnection: string;
+  primaryKey: string;
+  secondaryKey: string;
 
   endpoints: {
     blob: string;
@@ -54,10 +54,10 @@ export const getStorageSecrets = async ({
     );
 
   return {
-    primaryConnection: primaryConnection?.value,
-    secondaryConnection: secondaryConnection?.value,
-    primaryKey: primaryKey?.value,
-    secondaryKey: secondaryKey?.value,
+    primaryConnection: primaryConnection?.value!,
+    secondaryConnection: secondaryConnection?.value!,
+    primaryKey: primaryKey?.value!,
+    secondaryKey: secondaryKey?.value!,
 
     endpoints: {
       blob: `https://${name}.blob.core.windows.net`,

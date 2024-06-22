@@ -17,14 +17,14 @@ export type LoginBuilderProps = {
 };
 
 export interface ILoginBuilder<IReturnInterface> {
-  generateLogin: () => IReturnInterface;
-  withLoginInfo: (props: LoginBuilderProps) => IReturnInterface;
+  generateLogin(): IReturnInterface;
+  withLoginInfo(props: LoginBuilderProps): IReturnInterface;
 }
 
 //Synchronous
 export interface IBuilder<TResults> {
   commonProps: BuilderProps;
-  build: () => TResults;
+  build(): TResults;
 }
 
 export abstract class Builder<TResults> implements IBuilder<TResults> {
@@ -35,7 +35,7 @@ export abstract class Builder<TResults> implements IBuilder<TResults> {
 //Asynchronous
 export interface IBuilderAsync<TResults>
   extends Omit<IBuilder<TResults>, "build"> {
-  build: () => Promise<TResults>;
+  build(): Promise<TResults>;
 }
 
 export abstract class BuilderAsync<TResults>
