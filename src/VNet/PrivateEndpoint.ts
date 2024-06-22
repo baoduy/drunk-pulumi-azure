@@ -23,9 +23,9 @@ export default ({
   name = getPrivateEndpointName(name);
 
   const endpoints = subnetIds.map(
-    (s) =>
-      new network.PrivateEndpoint(name, {
-        privateEndpointName: name,
+    (s, index) =>
+      new network.PrivateEndpoint(`${name}-${index}`, {
+        privateEndpointName: `${name}-${index}`,
         ...group,
 
         subnet: { id: s },
