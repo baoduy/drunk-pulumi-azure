@@ -237,60 +237,73 @@ export default ({
       });
     }
 
-    //Server Audit
-    new sql.ExtendedServerBlobAuditingPolicy(name, {
-      auditActionsAndGroups: [
-        "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
-        "FAILED_DATABASE_AUTHENTICATION_GROUP",
-        "BATCH_COMPLETED_GROUP",
-      ],
-      serverName: sqlServer.name,
-      ...group,
-
-      blobAuditingPolicyName: "default",
-      isAzureMonitorTargetEnabled: true,
-      isStorageSecondaryKeyInUse: false,
-      predicateExpression: "object_name = 'SensitiveData'",
-      queueDelayMs: 4000,
-      retentionDays: isPrd ? 30 : 6,
-      state: "Enabled",
-      isDevopsAuditEnabled: true,
-
-      storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
-      storageAccountSubscriptionId: subscriptionId,
-      storageEndpoint: vulnerabilityAssessment.storageEndpoint,
-    });
-
+    //Default Alert Policy
     //ServerSecurityAlertPolicy
-    new sql.ServerSecurityAlertPolicy(name, {
-      securityAlertPolicyName: name,
-      ...group,
-      serverName: sqlServer.name,
-      emailAccountAdmins: !vulnerabilityAssessment.alertEmails,
-      emailAddresses: vulnerabilityAssessment.alertEmails,
+    const alertPolicy = new sql.ServerSecurityAlertPolicy(
+      name,
+      {
+        securityAlertPolicyName: "default",
+        ...group,
+        serverName: sqlServer.name,
+        emailAccountAdmins: !vulnerabilityAssessment.alertEmails,
+        emailAddresses: vulnerabilityAssessment.alertEmails,
 
-      retentionDays: 7,
+        retentionDays: 7,
 
-      storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
-      storageEndpoint: vulnerabilityAssessment.storageEndpoint,
-      state: "Enabled",
-    });
+        storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
+        storageEndpoint: vulnerabilityAssessment.storageEndpoint,
+        state: "Enabled",
+      },
+      { dependsOn: sqlServer },
+    );
+
+    //Server Audit
+    new sql.ExtendedServerBlobAuditingPolicy(
+      name,
+      {
+        auditActionsAndGroups: [
+          "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+          "FAILED_DATABASE_AUTHENTICATION_GROUP",
+          "BATCH_COMPLETED_GROUP",
+        ],
+        serverName: sqlServer.name,
+        ...group,
+
+        blobAuditingPolicyName: "default",
+        isAzureMonitorTargetEnabled: true,
+        isStorageSecondaryKeyInUse: false,
+        predicateExpression: "object_name = 'SensitiveData'",
+        queueDelayMs: 4000,
+        retentionDays: isPrd ? 30 : 6,
+        state: "Enabled",
+        isDevopsAuditEnabled: true,
+
+        storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
+        storageAccountSubscriptionId: subscriptionId,
+        storageEndpoint: vulnerabilityAssessment.storageEndpoint,
+      },
+      { dependsOn: alertPolicy },
+    );
 
     //ServerVulnerabilityAssessment
-    new sql.ServerVulnerabilityAssessment(name, {
-      vulnerabilityAssessmentName: name,
-      ...group,
-      serverName: sqlServer.name,
+    new sql.ServerVulnerabilityAssessment(
+      name,
+      {
+        vulnerabilityAssessmentName: name,
+        ...group,
+        serverName: sqlServer.name,
 
-      recurringScans: {
-        isEnabled: true,
-        emailSubscriptionAdmins: !vulnerabilityAssessment.alertEmails,
-        emails: vulnerabilityAssessment.alertEmails,
+        recurringScans: {
+          isEnabled: true,
+          emailSubscriptionAdmins: !vulnerabilityAssessment.alertEmails,
+          emails: vulnerabilityAssessment.alertEmails,
+        },
+
+        storageContainerPath: interpolate`${vulnerabilityAssessment.storageEndpoint}/${sqlName}`,
+        storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
       },
-
-      storageContainerPath: interpolate`${vulnerabilityAssessment.storageEndpoint}/${sqlName}`,
-      storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
-    });
+      { dependsOn: alertPolicy },
+    );
   }
 
   if (encryptKey) {
@@ -305,7 +318,7 @@ export default ({
         keyName: encryptKey.keyName,
         uri: encryptKey.url,
       },
-      { ignoreChanges: ["keyName", "uri"] },
+      { dependsOn: sqlServer, ignoreChanges: ["keyName", "uri"] },
     );
 
     new sql.EncryptionProtector(
