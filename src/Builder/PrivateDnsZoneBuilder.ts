@@ -81,7 +81,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
           output(s).apply((i) => getVnetIdFromSubnetId(i)),
         ),
       ].map((v, i) => {
-        output(v).apply((i) => console.log(this.commonProps.name, i));
+        //output(v).apply((i) => console.log(this.commonProps.name, i));
 
         return new native.network.VirtualNetworkLink(
           `${this.commonProps.name.split(".")[0]}-${index}-${i}-link`,
