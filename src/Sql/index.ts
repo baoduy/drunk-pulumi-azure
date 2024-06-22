@@ -61,8 +61,6 @@ const createElasticPool = ({
 
 export type SqlAuthType = {
   envRoles: EnvRolesResults;
-  /** create an Admin group on AzAD for SQL accessing.*/
-  enableAdAdministrator?: boolean;
   azureAdOnlyAuthentication?: boolean;
   adminLogin: Input<string>;
   password: Input<string>;
@@ -143,20 +141,15 @@ export default ({
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
 
-      administrators:
-        (auth?.enableAdAdministrator || auth.azureAdOnlyAuthentication) &&
-        adminGroup
-          ? {
-              administratorType: sql.AdministratorType.ActiveDirectory,
-              azureADOnlyAuthentication: auth.azureAdOnlyAuthentication,
+      administrators: {
+        administratorType: sql.AdministratorType.ActiveDirectory,
+        azureADOnlyAuthentication: Boolean(auth.azureAdOnlyAuthentication),
 
-              principalType: sql.PrincipalType.Group,
-              tenantId,
-              sid: adminGroup.objectId,
-              login: adminGroup.displayName,
-            }
-          : undefined,
-
+        principalType: sql.PrincipalType.Group,
+        tenantId,
+        sid: adminGroup?.objectId,
+        login: adminGroup?.displayName,
+      },
       publicNetworkAccess: network?.asPrivateLink
         ? sql.ServerNetworkAccessFlag.Disabled
         : sql.ServerNetworkAccessFlag.Enabled,
