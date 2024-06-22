@@ -9,6 +9,7 @@ import * as native from "@pulumi/azure-native";
 import { output } from "@pulumi/pulumi";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
 import { globalKeyName } from "../Common/GlobalEnv";
+import { currentRegionCode } from "../Common/AzureEnv";
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -77,21 +78,22 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       [
         ...(lik.vnetIds ?? []),
         ...(lik.subnetIds ?? []).map((s) =>
-          output(s).apply(getVnetIdFromSubnetId),
+          output(s).apply((i) => getVnetIdFromSubnetId(i)),
         ),
-      ].map(
-        (v, i) =>
-          new native.network.VirtualNetworkLink(
-            `${this.commonProps.name.substring(0, 25)}-${index}-${i}-link`,
-            {
-              ...this.commonProps.group,
-              privateZoneName: this._zoneInstance!.name,
-              registrationEnabled: lik.registrationEnabled,
-              virtualNetwork: { id: v },
-            },
-            { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
-          ),
-      ),
+      ].map((v, i) => {
+        output(v).apply((i) => console.log(this.commonProps.name, i));
+
+        return new native.network.VirtualNetworkLink(
+          `${this.commonProps.name.split(".")[0]}-${index}-${i}-link`,
+          {
+            ...this.commonProps.group,
+            privateZoneName: this._zoneInstance!.name,
+            registrationEnabled: Boolean(lik.registrationEnabled),
+            virtualNetwork: { id: v },
+          },
+          { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
+        );
+      }),
     );
   }
 

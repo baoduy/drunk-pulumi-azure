@@ -53,7 +53,7 @@ export default ({
       group,
     })
       .withARecord({ ipAddresses: ip as string[], recordName: "@" })
-      .linkTo({ subnetIds })
+      .linkTo({ subnetIds, registrationEnabled: false })
       .build();
   });
 
