@@ -8,14 +8,24 @@ import {
 import * as native from "@pulumi/azure-native";
 import { output } from "@pulumi/pulumi";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
+import { globalKeyName } from "../Common/GlobalEnv";
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
   private _vnetLinks: PrivateDnsZoneVnetLinkingType[] = [];
+  private readonly commonProps: BasicResourceArgs;
 
   private _zoneInstance: network.PrivateZone | undefined = undefined;
 
-  public constructor(private commonProps: BasicResourceArgs) {}
+  public constructor({ group, ...others }: BasicResourceArgs) {
+    this.commonProps = {
+      ...others,
+      group: {
+        resourceGroupName: group.resourceGroupName,
+        location: globalKeyName,
+      },
+    };
+  }
 
   linkTo(props: PrivateDnsZoneVnetLinkingType): IPrivateDnsZoneBuilder {
     this._vnetLinks.push(props);
@@ -73,14 +83,14 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       ].map(
         (v, i) =>
           new native.network.VirtualNetworkLink(
-            `${this.commonProps.name}-${index}-${i}-link`,
+            `${this.commonProps.name.substring(0, 20)}-${index}-${i}-link`,
             {
               ...this.commonProps.group,
               privateZoneName: this._zoneInstance!.name,
               registrationEnabled: lik.registrationEnabled,
               virtualNetwork: { id: v },
             },
-            { dependsOn: this._zoneInstance },
+            { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
           ),
       ),
     );
