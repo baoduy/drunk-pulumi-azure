@@ -65,6 +65,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
               aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
               ttl: 3600,
             },
+            { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
           ),
       );
     }
