@@ -44,16 +44,17 @@ export const addARecord = ({
   );
 };
 
-interface VnetToPrivateDnsProps extends BasicResourceArgs {
-  zoneName: Input<string>;
+interface VnetToPrivateDnsProps
+  extends Pick<BasicResourceArgs, "dependsOn" | "ignoreChanges"> {
+  name: string;
+  dnsInfo: ResourceInfo;
   vnetId: Input<string>;
   registrationEnabled?: boolean;
 }
 
 export const linkVnetToPrivateDns = ({
   name,
-  group,
-  zoneName,
+  dnsInfo,
   vnetId,
   registrationEnabled = false,
   ...others
@@ -61,9 +62,8 @@ export const linkVnetToPrivateDns = ({
   return new native.network.VirtualNetworkLink(
     `${name}-link`,
     {
-      ...group,
-      location: "global",
-      privateZoneName: zoneName,
+      ...dnsInfo.group,
+      privateZoneName: dnsInfo.resourceName,
       registrationEnabled,
       virtualNetwork: { id: vnetId },
     },
@@ -74,7 +74,7 @@ export const linkVnetToPrivateDns = ({
 interface Props {
   name: string;
   vnetIds?: Input<string>[];
-  group?: ResourceGroupInfo;
+  group: ResourceGroupInfo;
   records?: {
     aRecords: Array<Pick<RecordProps, "recordName" | "ipAddresses">>;
   };
@@ -84,32 +84,39 @@ interface Props {
 /** Create Private DNS zone. This should be created in the Global resource group. */
 export default ({
   name,
-  group = global.groupInfo,
+  group,
   vnetIds,
   records,
   dependsOn,
 }: Props): BasicResourceResultProps<native.network.PrivateZone> & {
-  toDnsInfo: () => ResourceInfo;
+  info: () => ResourceInfo;
 } => {
+  const internalGroup = {
+    resourceGroupName: group.resourceGroupName,
+    location: "global",
+  };
+
   const zone = new native.network.PrivateZone(
     name,
     {
       privateZoneName: name,
-      ...group,
-      location: "global",
+      ...internalGroup,
     },
     { dependsOn },
   );
 
-  const toDnsInfo = () => ({ resourceName: name, group, id: zone.id });
+  const info = () => ({
+    resourceName: name,
+    group: internalGroup,
+    id: zone.id,
+  });
 
   if (vnetIds) {
     vnetIds.map((id) =>
       linkVnetToPrivateDns({
         name,
+        dnsInfo: info(),
         vnetId: id,
-        zoneName: name,
-        group,
         registrationEnabled: false,
         dependsOn: zone,
       }),
@@ -119,7 +126,7 @@ export default ({
   if (records) {
     if (records.aRecords) {
       records.aRecords.map((a) =>
-        addARecord({ ...a, dnsInfo: toDnsInfo(), dependsOn: zone }),
+        addARecord({ ...a, dnsInfo: info(), dependsOn: zone }),
       );
     }
   }
@@ -127,7 +134,7 @@ export default ({
   return {
     name,
     resource: zone,
-    toDnsInfo,
+    info,
   };
 };
 

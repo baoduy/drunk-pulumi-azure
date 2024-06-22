@@ -1,4 +1,5 @@
 export * from "./askBuilder";
+export * from "./dnsZoneBuilder";
 export * from "./genericBuilder";
 export * from "./resourceBuilder";
 export * from "./sqlBuilder";

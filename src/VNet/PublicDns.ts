@@ -17,8 +17,8 @@ export const addARecord = ({
     recordName === "*"
       ? "All-ARecord"
       : recordName === "@"
-      ? "Root-ARecord"
-      : `${recordName}-ARecord`,
+        ? "Root-ARecord"
+        : `${recordName}-ARecord`,
     {
       zoneName,
       ...global.groupInfo,
@@ -26,7 +26,7 @@ export const addARecord = ({
       recordType: "A",
       aRecords: ipAddresses.map((i) => ({ ipv4Address: i })),
       ttl: 3600,
-    }
+    },
   );
 
 interface ZoneProps {
@@ -39,8 +39,8 @@ const zoneCreator = ({ name, defaultIpAddress }: Props) => {
   const zone = new network.Zone(name, {
     zoneName: name,
     zoneType: network.ZoneType.Public,
-    location: global.globalKeyName,
     ...global.groupInfo,
+    location: global.globalKeyName,
   });
 
   if (defaultIpAddress) {
@@ -80,7 +80,7 @@ export default ({ name, defaultIpAddress, childZones }: Props) => {
             nsRecords: ns.map((s) => ({ nsdname: s })),
             ttl: 3600,
           },
-          { dependsOn: c }
+          { dependsOn: c },
         );
       });
 
