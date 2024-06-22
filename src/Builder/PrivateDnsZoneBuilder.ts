@@ -62,9 +62,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
               ...group,
               relativeRecordSetName: a.recordName,
               recordType: "A",
-              aRecords: output(a.ipAddresses).apply((ip) =>
-                ip.map((i) => ({ ipv4Address: i })),
-              ),
+              aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
               ttl: 3600,
             },
           ),
@@ -83,7 +81,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       ].map(
         (v, i) =>
           new native.network.VirtualNetworkLink(
-            `${this.commonProps.name.substring(0, 20)}-${index}-${i}-link`,
+            `${this.commonProps.name.substring(0, 25)}-${index}-${i}-link`,
             {
               ...this.commonProps.group,
               privateZoneName: this._zoneInstance!.name,

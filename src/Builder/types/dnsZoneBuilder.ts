@@ -3,7 +3,7 @@ import { ResourceInfo } from "../../types";
 
 export type DnsZoneARecordType = {
   recordName: string;
-  ipAddresses: Input<string>[] | Input<string[]>;
+  ipAddresses: Input<string>[];
 };
 
 export interface IDnsZoneBuilder {

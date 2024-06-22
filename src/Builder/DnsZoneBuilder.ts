@@ -62,9 +62,7 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
               ...group,
               relativeRecordSetName: a.recordName,
               recordType: "A",
-              aRecords: output(a.ipAddresses).apply((ip) =>
-                ip.map((i) => ({ ipv4Address: i })),
-              ),
+              aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
               ttl: 3600,
             },
           ),

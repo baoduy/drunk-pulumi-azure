@@ -46,13 +46,13 @@ export default ({
     ),
   ).apply((a) => a.flatMap((i) => i!));
 
-  output(resourceId).apply((id) => {
-    const resourceInfo = parseResourceInfoFromId(id);
+  output([resourceId, ipAddresses]).apply(([id, ip]) => {
+    const resourceInfo = parseResourceInfoFromId(id as string);
     return PrivateDnsZoneBuilder({
       name: `${resourceInfo!.name}.${privateDnsZoneName}`,
       group,
     })
-      .withARecord({ ipAddresses, recordName: "@" })
+      .withARecord({ ipAddresses: ip as string[], recordName: "@" })
       .linkTo({ subnetIds })
       .build();
   });
