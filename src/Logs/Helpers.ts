@@ -174,7 +174,7 @@ export const getLogStorageInfo = ({
   const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`;
 
   const secrets = vaultInfo
-    ? output(getStorageSecrets({ name, vaultInfo }))
+    ? output(getStorageSecrets({ name, nameFormatted: true, vaultInfo }))
     : undefined;
 
   return { name, group, id, secrets };

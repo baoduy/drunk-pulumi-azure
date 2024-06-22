@@ -87,6 +87,13 @@ export type SqlResults = {
   databases?: Record<string, BasicResourceResultProps<sql.Database>>;
 };
 
+export type SqlVulnerabilityAssessmentType = {
+  alertEmails: Array<string>;
+  logStorageId: Input<string>;
+  storageAccessKey: Input<string>;
+  storageEndpoint: Input<string>;
+};
+
 interface Props extends BasicResourceArgs {
   vaultInfo: KeyVaultInfo;
   enableEncryption?: boolean;
@@ -96,13 +103,7 @@ interface Props extends BasicResourceArgs {
   databases?: Record<string, { name?: string; sku?: SqlDbSku }>;
 
   network?: SqlNetworkType;
-
-  vulnerabilityAssessment?: {
-    alertEmails: Array<string>;
-    logStorageId?: Input<string>;
-    storageAccessKey: Input<string>;
-    storageEndpoint: Input<string>;
-  };
+  vulnerabilityAssessment?: SqlVulnerabilityAssessmentType;
 }
 
 export default ({

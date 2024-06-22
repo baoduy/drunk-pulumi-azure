@@ -32,36 +32,36 @@ export type ResourceVaultLinkingBuilderType = {
 };
 
 export interface IResourceRoleBuilder {
-  createRoles: () => IResourceGroupBuilder;
-  withRoles: (props: EnvRolesResults) => IResourceGroupBuilder;
-  withRolesFromVault: () => IResourceGroupBuilder;
+  createRoles(): IResourceGroupBuilder;
+  withRoles(props: EnvRolesResults): IResourceGroupBuilder;
+  withRolesFromVault(): IResourceGroupBuilder;
 }
 
 export interface IResourceGroupBuilder {
-  createRG: (props: ResourceGroupBuilderType) => IResourceVaultBuilder;
-  withRG: (props: ResourceGroupInfo) => IResourceVaultBuilder;
+  createRG(props: ResourceGroupBuilderType): IResourceVaultBuilder;
+  withRG(props: ResourceGroupInfo): IResourceVaultBuilder;
 }
 
 export interface IResourceVaultBuilder {
-  createVault: () => IResourceBuilder;
-  withVault: (props: KeyVaultInfo) => IResourceBuilder;
+  createVault(): IResourceBuilder;
+  withVault(props: KeyVaultInfo): IResourceBuilder;
 }
 
 export interface IResourceVaultItemsBuilder {
-  addSecrets: (items: Record<string, Input<string>>) => IResourceBuilder;
-  //addKeys: () => IResourceBuilder;
-  //addCerts:() => IResourceBuilder;
+  addSecrets(items: Record<string, Input<string>>): IResourceBuilder;
+  //addKeys () : IResourceBuilder;
+  //addCerts() : IResourceBuilder;
 }
 
 export interface IResourceVnetBuilder {
-  withVnet: (props: ResourceVnetBuilderType) => IResourceBuilder;
-  linkVaultTo: (props: ResourceVaultLinkingBuilderType) => IResourceBuilder;
+  withVnet(props: ResourceVnetBuilderType): IResourceBuilder;
+  linkVaultTo(props: ResourceVaultLinkingBuilderType): IResourceBuilder;
 }
 export interface IResourceBuilder
   extends IResourceVnetBuilder,
     IResourceVaultItemsBuilder {
-  lock: () => IResourceBuilder;
-  withBuilder: (props: BuilderFunctionType) => IResourceBuilder;
-  withBuilderAsync: (props: BuilderAsyncFunctionType) => IResourceBuilder;
-  build: () => Promise<ResourceBuilderResults>;
+  lock(): IResourceBuilder;
+  withBuilder(props: BuilderFunctionType): IResourceBuilder;
+  withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
+  build(): Promise<ResourceBuilderResults>;
 }
