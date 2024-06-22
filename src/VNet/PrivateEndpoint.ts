@@ -51,7 +51,7 @@ export default ({
 
     //Create Zone
     const zone = PrivateZone({
-      name: `${resourceInfo?.name}.${privateDnsZoneName}`,
+      name: `${resourceInfo!.name}.${privateDnsZoneName}`,
       group,
     });
 
@@ -69,7 +69,7 @@ export default ({
         const vnetId = getVnetIdFromSubnetId(id);
         linkVnetToPrivateDns({
           name: `${name}-${index}`,
-          zoneName: privateDnsZoneName,
+          zoneName: zone.name,
           vnetId,
           group,
           dependsOn: zone.resource,
