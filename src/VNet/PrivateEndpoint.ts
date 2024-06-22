@@ -16,80 +16,68 @@ export default ({
   name,
   group,
   resourceId,
-  subnetId,
+  subnetIds,
   privateDnsZoneName,
-  useGlobalDnsZone,
   linkServiceGroupIds,
 }: Props) => {
   name = getPrivateEndpointName(name);
 
-  const endpoint = new network.PrivateEndpoint(name, {
-    privateEndpointName: name,
-    ...group,
+  const endpoints = subnetIds.map(
+    (s, index) =>
+      new network.PrivateEndpoint(`${name}-${index}`, {
+        privateEndpointName: `${name}-${index}`,
+        ...group,
 
-    subnet: { id: subnetId },
-    privateLinkServiceConnections: [
-      {
-        groupIds: linkServiceGroupIds,
-        name: `${name}-conn`,
-        privateLinkServiceId: resourceId,
-      },
-    ],
-  });
+        subnet: { id: s },
+        privateLinkServiceConnections: [
+          {
+            groupIds: linkServiceGroupIds,
+            name: `${name}-conn`,
+            privateLinkServiceId: resourceId,
+          },
+        ],
+      }),
+  );
 
   //Get IpAddress in
-  const ipAddresses = endpoint.customDnsConfigs.apply((c) =>
-    c!.flatMap((i) => i.ipAddresses!),
-  );
+  const ipAddresses = output(
+    endpoints.map((e) =>
+      e.customDnsConfigs.apply((c) => c!.flatMap((i) => i.ipAddresses!)),
+    ),
+  ).apply((a) => a.flatMap((i) => i));
 
   output(resourceId).apply((id) => {
     const resourceInfo = parseResourceInfoFromId(id);
 
-    if (useGlobalDnsZone) {
-      //Add A Record
-      addARecord({
-        ipAddresses,
-        recordName: resourceInfo?.name || "",
-        zoneName: privateDnsZoneName,
-      });
+    //Create Zone
+    const zone = PrivateZone({
+      name: `${resourceInfo?.name}.${privateDnsZoneName}`,
+      group,
+    });
 
-      //Link to Vnet
-      output(subnetId).apply((sId) => {
-        const vnetId = getVnetIdFromSubnetId(sId);
-        linkVnetToPrivateDns({
-          name,
-          group,
-          zoneName: privateDnsZoneName,
-          vnetId,
-        });
-      });
-    } else {
-      //Create Zone
-      const zone = PrivateZone({
-        name: `${resourceInfo?.name}.${privateDnsZoneName}`,
-        group,
-      });
+    //Add Root Record
+    addARecord({
+      ipAddresses,
+      recordName: "@",
+      dnsInfo: zone.toDnsInfo(),
+      dependsOn: zone.resource,
+    });
 
-      //Add Root Record
-      addARecord({
-        ipAddresses,
-        recordName: "@",
-        zoneName: privateDnsZoneName,
-        dependsOn: zone,
-      });
-      //Link to Vnet
-      output(subnetId).apply((sId) => {
-        const vnetId = getVnetIdFromSubnetId(sId);
+    //Link to Vnet
+    subnetIds.map((s, index) =>
+      output(s).apply((id) => {
+        const vnetId = getVnetIdFromSubnetId(id);
         linkVnetToPrivateDns({
-          name,
+          name: `${name}-${index}`,
           zoneName: privateDnsZoneName,
           vnetId,
           group,
-          dependsOn: zone,
+          dependsOn: zone.resource,
         });
-      });
-    }
+      }),
+    );
+    //}
   });
-  //TODO: Create private DNS Zone in the same resource group and link to VNet
-  return endpoint;
+
+  return endpoints;
 };

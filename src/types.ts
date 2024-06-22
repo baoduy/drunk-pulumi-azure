@@ -26,13 +26,13 @@ export interface ConventionProps {
 }
 
 export interface PrivateLinkProps {
-  subnetId: Input<string>;
-  useGlobalDnsZone?: boolean;
+  subnetIds: Input<string>[];
+  //useGlobalDnsZone?: boolean;
 }
 
 export interface NetworkRulesProps {
   subnetId?: Input<string>;
-  privateLink?: Omit<PrivateLinkProps, "subnetId">;
+  privateLink?: Omit<PrivateLinkProps, "subnetIds">;
   ipAddresses?: Input<string>[];
 }
 
@@ -71,7 +71,6 @@ export interface BasicResourceArgs extends BasicArgs {
 }
 
 export interface DefaultResourceArgs extends BasicArgs {
-  lock?: boolean;
   monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
 }
 

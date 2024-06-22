@@ -5,16 +5,14 @@ import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import { isPrd, subscriptionId, tenantId } from "../Common/AzureEnv";
 import { getElasticPoolName, getSqlServerName } from "../Common/Naming";
-import Locker from "../Core/Locker";
 import {
   BasicResourceArgs,
   BasicResourceResultProps,
   KeyVaultInfo,
-  PrivateLinkProps,
 } from "../types";
 import { convertToIpRange } from "../VNet/Helper";
 import privateEndpointCreator from "../VNet/PrivateEndpoint";
-import sqlDbCreator, { SqlDbProps } from "./SqlDb";
+import sqlDbCreator, { SqlDbProps, SqlDbSku } from "./SqlDb";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { grantIdentityPermissions } from "../AzAd/Helper";
 
@@ -25,7 +23,6 @@ interface ElasticPoolProps extends BasicResourceArgs {
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
   sku?: { name: "Standard" | "Basic"; capacity: ElasticPoolCapacityProps };
-  lock?: boolean;
 }
 
 const createElasticPool = ({
@@ -35,7 +32,6 @@ const createElasticPool = ({
   //Minimum is 50 GD
   maxSizeBytesGb = 50,
   sku = { name: isPrd ? "Standard" : "Basic", capacity: 50 },
-  lock = true,
 }: ElasticPoolProps): BasicResourceResultProps<sql.ElasticPool> => {
   //Create Sql Elastic
   const elasticName = getElasticPoolName(name);
@@ -60,44 +56,48 @@ const createElasticPool = ({
     //zoneRedundant: isPrd,
   });
 
-  if (lock) {
-    Locker({ name, resource: ep });
-  }
-
   return { name: elasticName, resource: ep };
+};
+
+export type SqlAuthType = {
+  envRoles: EnvRolesResults;
+  /** create an Admin group on AzAD for SQL accessing.*/
+  enableAdAdministrator?: boolean;
+  azureAdOnlyAuthentication?: boolean;
+  adminLogin: Input<string>;
+  password: Input<string>;
+};
+
+export type SqlNetworkType = {
+  //Enable this will add 0.0.0.0 to 255.255.255.255 to the DB whitelist
+  acceptAllPublicConnect?: boolean;
+  subnetId?: Input<string>;
+  ipAddresses?: Input<string>[];
+  /** To enable Private Link need to ensure the subnetId is provided. */
+  asPrivateLink?: boolean;
+};
+
+export type SqlElasticPoolType = {
+  name: "Standard" | "Basic";
+  capacity: ElasticPoolCapacityProps;
+};
+
+export type SqlResults = {
+  name: string;
+  resource: sql.Server;
+  elasticPool?: BasicResourceResultProps<sql.ElasticPool>;
+  databases?: Record<string, BasicResourceResultProps<sql.Database>>;
 };
 
 interface Props extends BasicResourceArgs {
   vaultInfo: KeyVaultInfo;
   enableEncryption?: boolean;
-
   /** if Auth is not provided it will be auto generated */
-  auth: {
-    envRoles: EnvRolesResults;
-    /** create an Admin group on AzAD for SQL accessing.*/
-    enableAdAdministrator?: boolean;
-    azureAdOnlyAuthentication?: boolean;
-    adminLogin: Input<string>;
-    password: Input<string>;
-  };
+  auth: SqlAuthType;
+  elasticPool?: SqlElasticPoolType;
+  databases?: Record<string, { name?: string; sku?: SqlDbSku }>;
 
-  elasticPool?: {
-    name: "Standard" | "Basic";
-    capacity: ElasticPoolCapacityProps;
-  };
-
-  databases: Array<
-    Omit<SqlDbProps, "sqlServerName" | "group" | "elasticPoolId" | "dependsOn">
-  >;
-
-  network?: {
-    //Enable this will add 0.0.0.0 to 255.255.255.255 to the DB whitelist
-    acceptAllInternetConnect?: boolean;
-    subnetId?: Input<string>;
-    ipAddresses?: Input<string>[];
-    /** To enable Private Link need to ensure the subnetId is provided. */
-    privateLink?: Omit<PrivateLinkProps, "subnetId">;
-  };
+  network?: SqlNetworkType;
 
   vulnerabilityAssessment?: {
     alertEmails: Array<string>;
@@ -105,9 +105,6 @@ interface Props extends BasicResourceArgs {
     storageAccessKey: Input<string>;
     storageEndpoint: Input<string>;
   };
-
-  ignoreChanges?: string[];
-  lock?: boolean;
 }
 
 export default ({
@@ -118,24 +115,14 @@ export default ({
   elasticPool,
   databases,
   vaultInfo,
-
   network,
   vulnerabilityAssessment,
   ignoreChanges = ["administratorLogin", "administrators"],
-  lock = true,
-}: Props) => {
+}: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
     ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
-  // if (vaultInfo && !auth) {
-  //   const login = await randomLogin({ name, loginPrefix: 'sql', vaultInfo });
-  //   auth = {
-  //     enableAdAdministrator: true,
-  //     adminLogin: login.userName,
-  //     password: login.password,
-  //   };
-  // }
 
   const adminGroup = auth.envRoles.contributor;
 
@@ -168,13 +155,12 @@ export default ({
             }
           : undefined,
 
-      publicNetworkAccess: network?.privateLink
+      publicNetworkAccess: network?.asPrivateLink
         ? sql.ServerNetworkAccessFlag.Disabled
         : sql.ServerNetworkAccessFlag.Enabled,
     },
     {
       ignoreChanges,
-      protect: lock,
     },
   );
 
@@ -186,10 +172,6 @@ export default ({
     principalId: sqlServer.identity.apply((s) => s!.principalId),
   });
 
-  if (lock) {
-    Locker({ name: sqlName, resource: sqlServer });
-  }
-
   const ep = elasticPool
     ? createElasticPool({
         name,
@@ -200,14 +182,13 @@ export default ({
     : undefined;
 
   if (network?.subnetId) {
-    if (network.privateLink) {
+    if (network.asPrivateLink) {
       privateEndpointCreator({
         group,
         name,
         resourceId: sqlServer.id,
         privateDnsZoneName: "privatelink.database.windows.net",
-        ...network.privateLink,
-        subnetId: network.subnetId,
+        subnetIds: [network.subnetId],
         linkServiceGroupIds: ["sqlServer"],
       });
     } else {
@@ -224,7 +205,7 @@ export default ({
   }
 
   //Allow Public Ip Accessing
-  if (network?.acceptAllInternetConnect) {
+  if (network?.acceptAllPublicConnect) {
     new sql.FirewallRule("accept-all-connection", {
       firewallRuleName: "accept-all-connection",
       serverName: sqlServer.name,
@@ -345,47 +326,52 @@ export default ({
     );
   }
 
-  const dbs = databases?.map((db) => {
-    const d = sqlDbCreator({
-      ...db,
-      group,
-      sqlServerName: sqlName,
-      dependsOn: sqlServer,
-      elasticPoolId: ep ? ep.resource.id : undefined,
-    });
-
-    // if (encryptKey) {
-    //   //Enable TransparentDataEncryption for each database
-    //   new sql.TransparentDataEncryption(`${sqlName}-${db.name}`, {
-    //     serverName: sqlName,
-    //     databaseName: d.name,
-    //     resourceGroupName: group.resourceGroupName,
-    //     state: "Enabled",
-    //   });
-    // }
-
-    if (vaultInfo) {
-      const connectionString = auth?.adminLogin
-        ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
-        : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
-
-      addCustomSecret({
-        name: d.name,
-        value: connectionString,
-        vaultInfo,
-        contentType: `Sql ${d.name} Connection String`,
-        dependsOn: d.resource,
+  const dbs: Record<string, BasicResourceResultProps<sql.Database>> = {};
+  if (databases) {
+    Object.keys(databases).forEach((key) => {
+      const db = databases[key];
+      const n = db.name ?? key;
+      const d = sqlDbCreator({
+        ...db,
+        name: n,
+        group,
+        sqlServerName: sqlName,
+        dependsOn: sqlServer,
+        elasticPoolId: ep ? ep.resource.id : undefined,
       });
-    }
 
-    return d;
-  });
+      if (vaultInfo) {
+        const connectionString = auth?.adminLogin
+          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
+          : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
+
+        addCustomSecret({
+          name: d.name,
+          value: connectionString,
+          vaultInfo,
+          contentType: `Sql ${d.name} Connection String`,
+          dependsOn: d.resource,
+        });
+      }
+
+      dbs[key] = d;
+    });
+  }
+
+  // if (encryptKey) {
+  //   //Enable TransparentDataEncryption for each database
+  //   new sql.TransparentDataEncryption(`${sqlName}-${db.name}`, {
+  //     serverName: sqlName,
+  //     databaseName: d.name,
+  //     resourceGroupName: group.resourceGroupName,
+  //     state: "Enabled",
+  //   });
+  // }
 
   return {
     name: sqlName,
     resource: sqlServer,
     elasticPool: ep,
     databases: dbs,
-    adminGroup,
   };
 };

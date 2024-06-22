@@ -1,16 +1,16 @@
-import * as apimanagement from '@pulumi/azure-native/apimanagement';
-import { Input } from '@pulumi/pulumi';
-import { getApimName } from '../Common/Naming';
-import { organization } from '../Common/StackEnv';
-import { randomUuId } from '../Core/Random';
-import Creator from '../Core/ResourceCreator';
-import { ApimSignInSettingsResource } from '@drunk-pulumi/azure-providers/ApimSignInSettings';
-import { ApimSignUpSettingsResource } from '@drunk-pulumi/azure-providers/ApimSignUpSettings';
-import { ApimInfo, BasicResourceArgs, DefaultResourceArgs } from '../types';
+import * as apimanagement from "@pulumi/azure-native/apimanagement";
+import { Input } from "@pulumi/pulumi";
+import { getApimName } from "../Common/Naming";
+import { organization } from "../Common/StackEnv";
+import { randomUuId } from "../Core/Random";
+import Creator from "../Core/ResourceCreator";
+import { ApimSignInSettingsResource } from "@drunk-pulumi/azure-providers/ApimSignInSettings";
+import { ApimSignUpSettingsResource } from "@drunk-pulumi/azure-providers/ApimSignUpSettings";
+import { ApimInfo, BasicResourceArgs, DefaultResourceArgs } from "../types";
 
 interface Props
   extends BasicResourceArgs,
-  Omit<DefaultResourceArgs, "monitoring"> {
+    Omit<DefaultResourceArgs, "monitoring"> {
   insight?: { id: Input<string>; key: Input<string> };
   sku: apimanagement.SkuType;
   capacity?: number;
@@ -29,7 +29,6 @@ export default ({
   insight,
   sku,
   capacity = 1,
-  lock = true,
   alertEmail,
   ...others
 }: Props) => {
@@ -48,43 +47,43 @@ export default ({
 
     hostnameConfigurations: customDomain
       ? [
-        //   {
-        //     type: 'Management',
-        //     hostName: `mm-${customDomain.domain}`,
+          //   {
+          //     type: 'Management',
+          //     hostName: `mm-${customDomain.domain}`,
 
-        //     certificatePassword: customDomain.certificatePassword,
-        //     negotiateClientCertificate: false,
-        //     encodedCertificate: customDomain.certificate,
-        //     defaultSslBinding: false,
-        //   },
-        //   {
-        //     type: 'DeveloperPortal',
-        //     hostName: `dev-${customDomain.domain}`,
+          //     certificatePassword: customDomain.certificatePassword,
+          //     negotiateClientCertificate: false,
+          //     encodedCertificate: customDomain.certificate,
+          //     defaultSslBinding: false,
+          //   },
+          //   {
+          //     type: 'DeveloperPortal',
+          //     hostName: `dev-${customDomain.domain}`,
 
-        //     certificatePassword: customDomain.certificatePassword,
-        //     negotiateClientCertificate: false,
-        //     encodedCertificate: customDomain.certificate,
-        //     defaultSslBinding: false,
-        //   },
-        {
-          type: "Proxy",
-          hostName: customDomain.domain,
+          //     certificatePassword: customDomain.certificatePassword,
+          //     negotiateClientCertificate: false,
+          //     encodedCertificate: customDomain.certificate,
+          //     defaultSslBinding: false,
+          //   },
+          {
+            type: "Proxy",
+            hostName: customDomain.domain,
 
-          certificatePassword: customDomain.certificatePassword,
-          negotiateClientCertificate: false,
-          encodedCertificate: customDomain.certificate,
-          defaultSslBinding: false,
-        },
-        //   {
-        //     type: 'Scm',
-        //     hostName: `scm-${customDomain.domain}`,
+            certificatePassword: customDomain.certificatePassword,
+            negotiateClientCertificate: false,
+            encodedCertificate: customDomain.certificate,
+            defaultSslBinding: false,
+          },
+          //   {
+          //     type: 'Scm',
+          //     hostName: `scm-${customDomain.domain}`,
 
-        //     certificatePassword: customDomain.certificatePassword,
-        //     negotiateClientCertificate: false,
-        //     encodedCertificate: customDomain.certificate,
-        //     defaultSslBinding: false,
-        //   },
-      ]
+          //     certificatePassword: customDomain.certificatePassword,
+          //     negotiateClientCertificate: false,
+          //     encodedCertificate: customDomain.certificate,
+          //     defaultSslBinding: false,
+          //   },
+        ]
       : undefined,
 
     customProperties: {
@@ -123,8 +122,6 @@ export default ({
       "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11":
         "false",
     },
-
-    lock,
     ...others,
     ignoreChanges: [],
   } as apimanagement.ApiManagementServiceArgs & DefaultResourceArgs);
@@ -151,7 +148,7 @@ export default ({
   new ApimSignInSettingsResource(
     apimName,
     { serviceName: apim.name, ...group, enabled: false },
-    { dependsOn: apim }
+    { dependsOn: apim },
   );
   //Turn off the setting
   new ApimSignUpSettingsResource(
@@ -166,7 +163,7 @@ export default ({
         text: "terms Of Service",
       },
     },
-    { dependsOn: apim }
+    { dependsOn: apim },
   );
 
   return {

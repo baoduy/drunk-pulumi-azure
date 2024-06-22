@@ -134,10 +134,13 @@ const grantIdentityEnvRolesGroup = ({
   vaultInfo: KeyVaultInfo;
 }) => {
   const role = output(getEnvRole(roleType, vaultInfo));
-  return addMemberToGroup({
-    name,
-    objectId: principalId,
-    groupObjectId: role.objectId,
+  return role.apply((r) => {
+    if (!role.objectId) return;
+    return addMemberToGroup({
+      name,
+      objectId: principalId,
+      groupObjectId: r.objectId,
+    });
   });
 };
 

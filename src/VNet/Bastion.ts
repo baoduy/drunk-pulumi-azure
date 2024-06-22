@@ -23,7 +23,6 @@ export default ({
   const ipAddressId = IpAddress({
     name,
     group,
-    lock: false,
   }).id;
 
   return new network.BastionHost(

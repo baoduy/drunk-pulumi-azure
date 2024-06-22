@@ -1,16 +1,15 @@
-import * as native from '@pulumi/azure-native';
-import { BasicResourceArgs } from '../types';
-import { getFuncAppName } from '../Common/Naming';
-import Locker from '../Core/Locker';
-import * as pulumi from '@pulumi/pulumi';
-import { SiteConfigArgs } from './types';
+import * as native from "@pulumi/azure-native";
+import { BasicResourceArgs } from "../types";
+import { getFuncAppName } from "../Common/Naming";
+import Locker from "../Core/Locker";
+import * as pulumi from "@pulumi/pulumi";
+import { SiteConfigArgs } from "./types";
 
 interface Props extends BasicResourceArgs {
-  kind: 'FunctionApp' | 'WebApp';
+  kind: "FunctionApp" | "WebApp";
   appServicePlanId: pulumi.Output<string>;
   siteConfig?: SiteConfigArgs;
   enabled?: boolean;
-  lock?: boolean;
 }
 
 export default ({
@@ -20,7 +19,6 @@ export default ({
   appServicePlanId,
   siteConfig,
   enabled,
-  lock,
 }: Props) => {
   const finalName = getFuncAppName(name);
 
@@ -37,11 +35,8 @@ export default ({
 
       siteConfig,
     },
-    { deleteBeforeReplace: true }
+    { deleteBeforeReplace: true },
   );
 
-  if (lock) {
-    Locker({ name, resource: app });
-  }
   return app;
 };

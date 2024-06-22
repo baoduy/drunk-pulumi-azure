@@ -36,7 +36,6 @@ export interface MySqlProps extends BasicResourceArgs {
       endIpAddress: string;
     }>;
   };
-  lock?: boolean;
 }
 
 export default ({
@@ -57,7 +56,6 @@ export default ({
   databases,
   vaultInfo,
   dependsOn,
-  lock = true,
 }: MySqlProps) => {
   name = getMySqlName(name);
 
@@ -128,7 +126,6 @@ export default ({
     },
     {
       dependsOn,
-      protect: lock,
       ignoreChanges: [
         "serverName",
         "highAvailability",
@@ -138,10 +135,6 @@ export default ({
       ],
     },
   );
-
-  if (lock) {
-    Locker({ name, resource: mySql });
-  }
 
   //Enable AD Administrator
   if (auth) {
@@ -194,7 +187,7 @@ export default ({
         resourceId: mySql.id,
         privateDnsZoneName: "mysql.database.azure.com",
         linkServiceGroupIds: ["mysql"],
-        subnetId: network.privateLink.subnetId,
+        subnetIds: [network.privateLink.subnetId],
       });
     }
   }

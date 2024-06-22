@@ -1,5 +1,4 @@
-import AksFirewallPolicy from "./AksFirewallPolicy";
-import CloudPCFirewallPolicy from "./CloudPCFirewallPolicy";
-import DefaultFirewallPolicy from "./DefaultFirewallPolicy";
-
-export { AksFirewallPolicy, CloudPCFirewallPolicy, DefaultFirewallPolicy };
+export { default as AksFirewallPolicy } from "./AksFirewallPolicy";
+export { default as CloudPCFirewallPolicy } from "./CloudPCFirewallPolicy";
+export { default as CFTunnelFirewallPolicy } from "./CFTunnelFirewallPolicy";
+export { default as DefaultFirewallPolicy } from "./DefaultFirewallPolicy";

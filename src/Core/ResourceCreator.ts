@@ -1,11 +1,11 @@
 /* eslint  @typescript-eslint/no-explicit-any: "off" */
 
-import * as authorization from '@pulumi/azure-native/authorization';
-import * as pulumi from '@pulumi/pulumi';
-import { DefaultResourceArgs } from '../types';
-import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
-import Locker from './Locker';
-import { createDiagnostic } from '../Logs/Helpers';
+import * as authorization from "@pulumi/azure-native/authorization";
+import * as pulumi from "@pulumi/pulumi";
+import { DefaultResourceArgs } from "../types";
+import { DiagnosticSetting } from "@pulumi/azure-native/aadiam/diagnosticSetting";
+import Locker from "./Locker";
+import { createDiagnostic } from "../Logs/Helpers";
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
   const rs = props as {
@@ -23,14 +23,14 @@ const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
 
   const keys = Object.keys(rs);
   //Try to find the name that is not a resourceGroupName
-  const key = keys.find((k) => k.endsWith('Name') && k !== 'resourceGroupName');
+  const key = keys.find((k) => k.endsWith("Name") && k !== "resourceGroupName");
 
   if (key) {
     name = rs[key] as string;
   }
 
   if (!name)
-    throw new Error('Name is not able to find in: ' + JSON.stringify(props));
+    throw new Error("Name is not able to find in: " + JSON.stringify(props));
 
   return name;
 };
@@ -38,27 +38,32 @@ const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
 type ClassOf = new (
   name: string,
   props: any,
-  opts?: pulumi.CustomResourceOptions
+  opts?: pulumi.CustomResourceOptions,
 ) => pulumi.CustomResource & {
   id: pulumi.Output<string>;
   urn: pulumi.Output<string>;
 };
 
+export type DefaultCreatorProps = Omit<
+  DefaultResourceArgs,
+  "name" | "group"
+> & { lock?: boolean };
+
 /** Create Resource with Locker */
 export default function <
   TClass extends ClassOf,
-  TProps extends Omit<DefaultResourceArgs, 'name' | 'group'>
+  TProps extends DefaultCreatorProps,
 >(
   Class: TClass,
-  { lock, monitoring, dependsOn, ignoreChanges, importUri, ...props }: TProps
+  { lock, monitoring, dependsOn, ignoreChanges, importUri, ...props }: TProps,
 ) {
-  const isResourceGroup = Class.name.endsWith('ResourceGroup');
+  const isResourceGroup = Class.name.endsWith("ResourceGroup");
   const name = tryFindName(props, isResourceGroup);
 
   const resource = new Class(
     name,
     { name, ...props },
-    { dependsOn, import: importUri, ignoreChanges, deleteBeforeReplace: true }
+    { dependsOn, import: importUri, ignoreChanges, deleteBeforeReplace: true },
   );
 
   //Lock Azure Resource from Delete

@@ -1,65 +1,120 @@
-import * as native from "@pulumi/azure-native";
+import * as keyvault from "@pulumi/azure-native/keyvault";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
-import { tenantId } from "../Common/AzureEnv";
+import { isPrd, tenantId } from "../Common/AzureEnv";
 import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
-import { BasicMonitorArgs, PrivateLinkProps } from "../types";
+import {
+  BasicMonitorArgs,
+  KeyVaultInfo,
+  PrivateLinkProps,
+  ResourceGroupInfo,
+} from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
 
-interface Props extends BasicResourceArgs {
+export interface KeyVaultProps extends BasicResourceArgs {
+  softDeleteRetentionInDays?: Input<number>;
   network?: {
+    //allowsAzureService?: boolean;
     ipAddresses?: Array<Input<string>>;
     subnetIds?: Array<Input<string>>;
   };
 }
 
-export default ({ name, group, network, ...others }: Props) => {
-  const vaultName = getKeyVaultName(name);
-
-  const vault = new native.keyvault.Vault(vaultName, {
-    vaultName,
-    ...group,
-    ...others,
-
-    properties: {
-      tenantId,
-      sku: { name: "standard", family: "A" },
-      createMode: "default",
-
-      enableRbacAuthorization: true,
-      accessPolicies: undefined,
-
-      enablePurgeProtection: true,
-      enableSoftDelete: true,
-      softDeleteRetentionInDays: 7, //This is not important as pulumi auto restore and update the sift deleted.
-
-      enabledForDeployment: true,
-      enabledForDiskEncryption: true,
-
-      networkAcls: network
-        ? {
-            bypass: "AzureServices",
-            defaultAction: enums.keyvault.NetworkRuleAction.Deny,
-
-            ipRules: network.ipAddresses
-              ? network.ipAddresses.map((i) => ({ value: i }))
-              : [],
-
-            virtualNetworkRules: network.subnetIds
-              ? network.subnetIds.map((s) => ({ id: s }))
-              : undefined,
-          }
-        : {
-            bypass: "AzureServices",
-            defaultAction: enums.keyvault.NetworkRuleAction.Allow,
-          },
-    },
+export const createVaultPrivateLink = ({
+  name,
+  vaultInfo,
+  ...props
+}: PrivateLinkProps & {
+  name: string;
+  vaultInfo: KeyVaultInfo;
+}) =>
+  PrivateEndpoint({
+    name: getPrivateEndpointName(name),
+    ...props,
+    group: vaultInfo.group,
+    resourceId: vaultInfo.id,
+    privateDnsZoneName: "privatelink.vaultcore.azure.net",
+    linkServiceGroupIds: ["keyVault"],
   });
 
+export const createVaultDiagnostic = ({
+  vaultInfo,
+  logInfo,
+}: {
+  vaultInfo: KeyVaultInfo;
+  logInfo: BasicMonitorArgs;
+}) =>
+  createDiagnostic({
+    name: `${vaultInfo.name}-vault`,
+    targetResourceId: vaultInfo.id,
+    ...logInfo,
+    logsCategories: ["AuditEvent"],
+  });
+
+export default ({
+  name,
+  group,
+  network,
+  softDeleteRetentionInDays = 7,
+  ignoreChanges = [],
+  dependsOn,
+  importUri,
+  ...others
+}: KeyVaultProps) => {
+  const vaultName = getKeyVaultName(name);
+
+  const vault = new keyvault.Vault(
+    vaultName,
+    {
+      vaultName,
+      ...group,
+      ...others,
+
+      properties: {
+        tenantId,
+        sku: { name: "standard", family: "A" },
+        createMode: "default",
+
+        enableRbacAuthorization: true,
+        accessPolicies: undefined,
+
+        enablePurgeProtection: true,
+        enableSoftDelete: true,
+        softDeleteRetentionInDays, //This is not important as pulumi auto restore and update the sift deleted.
+
+        enabledForDeployment: true,
+        enabledForDiskEncryption: true,
+
+        networkAcls: {
+          bypass: "AzureServices",
+          defaultAction: enums.keyvault.NetworkRuleAction.Allow,
+
+          ipRules: network?.ipAddresses
+            ? network.ipAddresses.map((i) => ({ value: i }))
+            : [],
+
+          virtualNetworkRules: network?.subnetIds
+            ? network.subnetIds.map((s) => ({ id: s }))
+            : undefined,
+        },
+      },
+    },
+    {
+      dependsOn,
+      import: importUri,
+      ignoreChanges: [
+        "softDeleteRetentionInDays",
+        "enableSoftDelete",
+        "enablePurgeProtection",
+        ...ignoreChanges,
+      ],
+    },
+  );
+
   //To Vault Info
-  const toVaultInfo = () => ({
+  const info = () => ({
     name: vaultName,
     group,
     id: vault.id,
@@ -67,28 +122,16 @@ export default ({ name, group, network, ...others }: Props) => {
 
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>
-    createDiagnostic({
-      name,
-      targetResourceId: vault.id,
-      ...logInfo,
-      logsCategories: ["AuditEvent"],
-    });
+    createVaultDiagnostic({ vaultInfo: info(), logInfo });
 
   // Create Private Link
   const createPrivateLink = (props: PrivateLinkProps) =>
-    PrivateEndpoint({
-      name: getPrivateEndpointName(name),
-      group,
-      ...props,
-      resourceId: vault.id,
-      privateDnsZoneName: "privatelink.vaultcore.azure.net",
-      linkServiceGroupIds: ["keyVault"],
-    });
+    createVaultPrivateLink({ name, vaultInfo: info(), ...props });
 
   return {
     name: vaultName,
     vault,
-    toVaultInfo,
+    info,
     addDiagnostic,
     createPrivateLink,
   };

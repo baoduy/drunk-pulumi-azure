@@ -43,6 +43,7 @@ interface Props extends BasicResourceArgs {
 
   extensions?: Array<Omit<VmExtensionProps, "dependsOn" | "vmName" | "group">>;
 
+  //This need a lock
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
@@ -63,7 +64,7 @@ export default ({
   schedule = { timeZone: "Singapore Standard Time" },
   login,
   image,
-  lock = false,
+  lock = true,
   tags = {},
   dependsOn,
   ...others

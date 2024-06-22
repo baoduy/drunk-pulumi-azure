@@ -26,6 +26,7 @@ import {
   VnetBuilderProps,
   VnetBuilderResults,
   VpnGatewayCreationProps,
+  BuilderProps,
 } from "./types";
 import { getVnetInfo, parseVnetInfoFromId } from "../VNet/Helper";
 import Bastion from "../VNet/Bastion";
@@ -37,8 +38,8 @@ class VnetBuilder
   implements IGatewayFireWallBuilder, IVnetBuilder, IVnetBuilderStart
 {
   /** The Props */
-  private readonly _subnetProps: SubnetCreationProps | undefined = undefined;
-  private readonly _vnetProps: Partial<VnetBuilderProps>;
+  private _subnetProps: SubnetCreationProps | undefined = undefined;
+  private _vnetProps: Partial<VnetBuilderProps> = {};
   private _firewallProps: FirewallCreationProps | undefined = undefined;
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
@@ -59,21 +60,26 @@ class VnetBuilder
   private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
     undefined;
 
-  constructor({
-    subnets,
-    dnsServers,
-    addressSpaces,
-    ...commonProps
-  }: VnetBuilderProps) {
+  constructor(commonProps: BuilderProps) {
     super(commonProps);
-    this._subnetProps = subnets;
-    this._vnetProps = { dnsServers, addressSpaces };
   }
 
-  public asHub(): IPublicIpBuilder {
+  public asHub(props: VnetBuilderProps = {}): IPublicIpBuilder {
+    this._subnetProps = props.subnets;
+    this._vnetProps = {
+      dnsServers: props.dnsServers,
+      addressSpaces: props.addressSpaces,
+    };
+
     return this;
   }
-  public asSpoke(): IVnetBuilder {
+  public asSpoke(props: VnetBuilderProps = {}): IVnetBuilder {
+    this._subnetProps = props.subnets;
+    this._vnetProps = {
+      dnsServers: props.dnsServers,
+      addressSpaces: props.addressSpaces,
+    };
+
     return this;
   }
 
@@ -344,9 +350,9 @@ class VnetBuilder
     this.buildPeering();
 
     return {
+      ...this._vnetInstance!,
       publicIpAddress: this._ipAddressInstance,
       firewall: this._firewallInstance,
-      vnet: this._vnetInstance!,
       natGateway: this._natGatewayInstance,
       //peerings: this._peeringInstances,
       vnpGateway: this._vnpGatewayInstance,
@@ -354,5 +360,5 @@ class VnetBuilder
   }
 }
 
-export default (props: VnetBuilderProps) =>
+export default (props: BuilderProps) =>
   new VnetBuilder(props) as IVnetBuilderStart;

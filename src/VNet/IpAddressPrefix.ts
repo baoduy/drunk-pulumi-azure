@@ -20,6 +20,7 @@ export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
     allocationMethod?: network.IPAllocationMethod;
   };
   ipAddresses?: AddressNameType;
+  //This need a lock
   lock?: boolean;
 }
 

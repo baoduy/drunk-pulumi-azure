@@ -4,14 +4,11 @@ import { getManagedIdentityName } from "../Common/Naming";
 import Locker from "../Core/Locker";
 import { grantIdentityPermissions } from "./Helper";
 
-interface Props extends BasicResourceArgs, IdentityRoleAssignment {
-  lock?: boolean;
-}
+interface Props extends BasicResourceArgs, IdentityRoleAssignment {}
 
 export default ({
   name,
   group,
-  lock,
   roles,
   envRole,
   vaultInfo,
@@ -36,12 +33,6 @@ export default ({
     vaultInfo,
     principalId: managedIdentity.principalId,
   });
-
-  if (lock)
-    Locker({
-      name,
-      resource: managedIdentity,
-    });
 
   return managedIdentity;
 };

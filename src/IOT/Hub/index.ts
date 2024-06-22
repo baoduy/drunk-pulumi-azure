@@ -39,7 +39,6 @@ interface Props extends BasicResourceArgs {
     eventContainerName?: Input<string>;
   };
   vaultInfo?: KeyVaultInfo;
-  lock?: boolean;
 }
 
 export default ({
@@ -50,7 +49,6 @@ export default ({
   serviceBus,
   dependsOn,
   vaultInfo,
-  lock,
 }: Props) => {
   const hubName = getIotHubName(name);
   const busQueueEndpointName = "busQueue";
@@ -209,9 +207,6 @@ export default ({
     { dependsOn },
   );
 
-  if (lock) {
-    Locker({ name, resource: hub });
-  }
   //Connection Strings
   if (vaultInfo) {
     hub.id.apply(async (id) => {

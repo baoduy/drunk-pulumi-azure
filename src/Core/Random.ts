@@ -98,7 +98,7 @@ export const randomUserName = ({
 };
 
 export interface LoginProps extends UserNameProps {
-  passwordOptions?: Omit<RandomPassProps, "name">;
+  passwordOptions?: Omit<RandomPassProps, "name" | "vaultInfo">;
   vaultInfo?: KeyVaultInfo;
 }
 
@@ -110,7 +110,11 @@ export const randomLogin = ({
   vaultInfo,
 }: LoginProps) => {
   const userName = randomUserName({ name, loginPrefix, maxUserNameLength });
-  const password = randomPassword({ name, ...passwordOptions }).result;
+  const password = randomPassword({
+    name,
+    ...passwordOptions,
+    vaultInfo,
+  }).result;
 
   const userNameKey = `${name}-user`;
   const passwordKey = `${name}-password`;

@@ -2,20 +2,22 @@ import * as native from "@pulumi/azure-native";
 import { Input, all, Resource, output } from "@pulumi/pulumi";
 import * as global from "../Common/GlobalEnv";
 import { parseResourceInfoFromId } from "../Common/AzureEnv";
-import { BasicResourceArgs, ResourceGroupInfo } from "../types";
+import {
+  BasicResourceArgs,
+  BasicResourceResultProps,
+  ResourceGroupInfo,
+  ResourceInfo,
+} from "../types";
 
 interface RecordProps {
-  zoneName: Input<string>;
-  /**Default is Global Resource Group*/
-  group?: ResourceGroupInfo;
   recordName: string;
-  ipAddresses: Input<string[]>;
+  dnsInfo: ResourceInfo;
+  ipAddresses: Input<string>[] | Input<string[]>;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 export const addARecord = ({
-  zoneName,
-  group = global.groupInfo,
   recordName,
+  dnsInfo,
   ipAddresses,
   dependsOn,
 }: RecordProps) => {
@@ -29,8 +31,8 @@ export const addARecord = ({
         ? "Root-ARecord"
         : `${recordName}-ARecord`,
     {
-      privateZoneName: zoneName,
-      ...group,
+      privateZoneName: dnsInfo.resourceName,
+      ...dnsInfo.group,
       relativeRecordSetName: recordName,
       recordType: "A",
       aRecords: output(ipAddresses).apply((ips) =>
@@ -85,7 +87,9 @@ export default ({
   vnetIds,
   records,
   dependsOn,
-}: Props) => {
+}: Props): BasicResourceResultProps<native.network.PrivateZone> & {
+  toDnsInfo: () => ResourceInfo;
+} => {
   const zone = new native.network.PrivateZone(
     name,
     {
@@ -95,6 +99,8 @@ export default ({
     },
     { dependsOn },
   );
+
+  const toDnsInfo = () => ({ resourceName: name, group, id: zone.id });
 
   if (vnetIds) {
     all(vnetIds).apply((vn) =>
@@ -114,12 +120,16 @@ export default ({
   if (records) {
     if (records.aRecords) {
       records.aRecords.map((a) =>
-        addARecord({ ...a, group, zoneName: zone.name, dependsOn: zone }),
+        addARecord({ ...a, dnsInfo: toDnsInfo(), dependsOn: zone }),
       );
     }
   }
 
-  return zone;
+  return {
+    name,
+    resource: zone,
+    toDnsInfo,
+  };
 };
 
 export const getPrivateZone = ({

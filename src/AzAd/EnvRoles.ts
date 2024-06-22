@@ -83,7 +83,7 @@ export const createEnvRoles = () => {
 /** Get Single Env Role Object */
 export const getEnvRole = async (name: string, vaultInfo: KeyVaultInfo) => {
   const secretNames = getRoleSecretName(name);
-  console.log(`getEnvRole:`, secretNames);
+  //console.log(`getEnvRole:`, secretNames);
 
   const [objectId, displayName] = await Promise.all([
     getSecret({ name: secretNames.objectIdName, vaultInfo }),
