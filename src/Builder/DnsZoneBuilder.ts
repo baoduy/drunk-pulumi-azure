@@ -40,12 +40,12 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
 
     if (this._aRecords) {
       this._aRecords.forEach(
-        (a) =>
+        (a, index) =>
           new network.RecordSet(
             a.recordName === "*"
-              ? "All-ARecord"
+              ? `All-${index}-ARecord`
               : a.recordName === "@"
-                ? "Root-ARecord"
+                ? `Root-${index}-ARecord`
                 : `${a.recordName}-ARecord`,
             {
               zoneName: this._zoneInstance!.name,

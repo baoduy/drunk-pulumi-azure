@@ -40,12 +40,12 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
 
     if (this._aRecords) {
       this._aRecords.forEach(
-        (a) =>
+        (a, index) =>
           new network.PrivateRecordSet(
             a.recordName === "*"
-              ? "All-ARecord"
+              ? `All-${index}-ARecord`
               : a.recordName === "@"
-                ? "Root-ARecord"
+                ? `Root-${index}-ARecord`
                 : `${a.recordName}-ARecord`,
             {
               privateZoneName: this._zoneInstance!.name,
@@ -71,9 +71,9 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
           output(s).apply(getVnetIdFromSubnetId),
         ),
       ].map(
-        (v) =>
+        (v, i) =>
           new native.network.VirtualNetworkLink(
-            `${this.commonProps.name}-${index}-link`,
+            `${this.commonProps.name}-${index}-${i}-link`,
             {
               ...this.commonProps.group,
               privateZoneName: this._zoneInstance!.name,
