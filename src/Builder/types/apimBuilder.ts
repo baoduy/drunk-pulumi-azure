@@ -17,11 +17,13 @@ export type ApimPublisherBuilderType = {
     | "apimgmt-noreply@mail.windowsazure.com"
     | Input<string>;
 };
-export type ApimDomainBuilderType = {
-  domain: Input<string>;
+export type ApimCertBuilderType = {
   certificate: Input<string>;
   certificatePassword?: Input<string>;
 };
+export type ApimDomainBuilderType = {
+  domain: Input<string>;
+} & ApimCertBuilderType;
 export type ApimAdditionalLocationType = {
   disableGateway?: Input<boolean>;
   location: string;
@@ -46,6 +48,8 @@ export interface IApimPublisherBuilder {
   withPublisher(props: ApimPublisherBuilderType): IApimBuilder;
 }
 export interface IApimBuilder extends IBuilder<ResourceInfo> {
+  withCACert(props: ApimCertBuilderType): IApimBuilder;
+  withRootCert(props: ApimCertBuilderType): IApimBuilder;
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
   withInsightLog(props: AppInsightInfo): IApimBuilder;
   withAdditionalLocation(props: ApimAdditionalLocationType): IApimBuilder;

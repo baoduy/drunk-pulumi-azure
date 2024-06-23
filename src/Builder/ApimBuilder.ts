@@ -1,5 +1,6 @@
 import {
   ApimAdditionalLocationType,
+  ApimCertBuilderType,
   ApimDomainBuilderType,
   ApimPublisherBuilderType,
   ApimSkuBuilderType,
@@ -33,9 +34,10 @@ class ApimBuilder
   private _sku: ApimSkuBuilderType | undefined = undefined;
   private _additionalLocations: ApimAdditionalLocationType[] = [];
   private _zones: ApimZoneType | undefined = undefined;
-  //private _enableNatGateway: boolean = false;
   private _restoreFromDeleted: boolean = false;
   private _apimVnet: ApimVnetType | undefined = undefined;
+  private _rootCerts: ApimCertBuilderType[] = [];
+  private _caCerts: ApimCertBuilderType[] = [];
 
   private _instanceName: string | undefined = undefined;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
@@ -45,7 +47,14 @@ class ApimBuilder
   public constructor(props: BuilderProps) {
     super(props);
   }
-
+  public withCACert(props: ApimCertBuilderType): IApimBuilder {
+    this._rootCerts.push(props);
+    return this;
+  }
+  public withRootCert(props: ApimCertBuilderType): IApimBuilder {
+    this._rootCerts.push(props);
+    return this;
+  }
   public withSubnet(props: ApimVnetType): IApimBuilder {
     this._apimVnet = props;
     return this;
@@ -54,11 +63,6 @@ class ApimBuilder
     this._restoreFromDeleted = true;
     return this;
   }
-  // public enableNatGateway(): IApimBuilder {
-  //   this._enableNatGateway = true;
-  //   return this;
-  // }
-
   public withZones(props: ApimZoneType): IApimBuilder {
     this._zones = props;
     return this;
@@ -133,6 +137,19 @@ class ApimBuilder
 
         identity: { type: "SystemAssigned" },
         sku,
+
+        certificates: [
+          ...this._rootCerts.map((c) => ({
+            encodedCertificate: c.certificate,
+            certificatePassword: c.certificatePassword,
+            storeName: "Root",
+          })),
+          ...this._caCerts.map((c) => ({
+            encodedCertificate: c.certificate,
+            certificatePassword: c.certificatePassword,
+            storeName: "CertificateAuthority",
+          })),
+        ],
 
         enableClientCertificate: true,
         hostnameConfigurations: this._proxyDomain
