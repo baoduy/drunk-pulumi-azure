@@ -44,9 +44,10 @@ class VnetBuilder
   private _bastionProps: BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
   private _vpnGatewayProps: VpnGatewayCreationProps | undefined = undefined;
-  private _securityRules: CustomSecurityRuleArgs[] | undefined = undefined;
-  private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] | undefined =
-    undefined;
+  private _securityRules: CustomSecurityRuleArgs[] = [];
+  private _enableSG: boolean = false;
+  private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] = [];
+  private _enableRoute: boolean = false;
   private _peeringProps: PeeringProps[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
   private _ipType: "prefix" | "individual" = "prefix";
@@ -111,14 +112,14 @@ class VnetBuilder
   }
 
   public withSecurityRules(rules: CustomSecurityRuleArgs[]): IVnetBuilder {
-    if (!this._securityRules) this._securityRules = rules;
-    else this._securityRules.push(...rules);
+    this._securityRules.push(...rules);
+    this._enableSG = true;
     return this;
   }
 
   public withRouteRules(rules: RouteArgs[]): IVnetBuilder {
-    if (!this._routeRules) this._routeRules = rules;
-    else this._routeRules.push(...rules);
+    this._routeRules.push(...rules);
+    this._enableRoute = true;
     return this;
   }
 
@@ -211,14 +212,14 @@ class VnetBuilder
       features: {
         //Only create Security group when firewall is not there
         securityGroup: {
-          enabled: !this._firewallProps,
+          enabled: this._enableSG,
           allowOutboundInternetAccess:
             !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
           rules: this._securityRules,
         },
         //Route tables
         routeTable: {
-          enabled: this._routeRules && this._routeRules.length > 0,
+          enabled: this._enableRoute,
           rules: this._routeRules,
         },
         //Firewall
