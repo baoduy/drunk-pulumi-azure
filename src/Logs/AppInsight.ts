@@ -78,7 +78,6 @@ export const getAppInsightKey = async ({
 }): Promise<string> => {
   const key = await getSecret({
     name: resourceInfo.resourceName,
-    nameFormatted: true,
     vaultInfo,
   });
   return key?.value ?? "";
