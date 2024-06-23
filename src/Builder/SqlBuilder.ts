@@ -89,9 +89,6 @@ class SqlBuilder
   }
 
   private buildSql() {
-    if (!this._loginInfo) throw new Error("The LoginInfo is required.");
-    if (!this.commonProps.vaultInfo)
-      throw new Error("The VaultInfo is required.");
     if (
       this._vulnerabilityAssessment &&
       !this._vulnerabilityAssessment.logInfo.secrets

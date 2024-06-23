@@ -91,10 +91,6 @@ export interface KeyVaultInfo {
   id: Input<string>;
 }
 
-export interface AppInsightInfo extends ResourceInfo {
-  instrumentationKey: Input<string>;
-}
-
 export type IdentityRoleAssignment = {
   vaultInfo?: KeyVaultInfo;
   roles?: Array<{ name: string; scope: Input<string> }>;
