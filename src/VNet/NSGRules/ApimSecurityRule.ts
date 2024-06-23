@@ -1,11 +1,12 @@
 import { CustomSecurityRuleArgs } from "../types";
+import { currentRegionCode } from "../../Common/AzureEnv";
 
 interface Props {
-  startPriority: number;
+  startPriority?: number;
 }
 /** The Security group rules for Bastion */
 // https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
-export default ({ startPriority = 310 }: Props) => {
+export default ({ startPriority = 310 }: Props = {}) => {
   const rs = new Array<CustomSecurityRuleArgs>();
   //Inbound
   rs.push(
@@ -19,7 +20,7 @@ export default ({ startPriority = 310 }: Props) => {
 
       sourceAddressPrefix: "*",
       sourcePortRange: "*",
-      destinationAddressPrefix: "Microsoft.Storage",
+      destinationAddressPrefix: `Storage.${currentRegionCode}`,
       destinationPortRanges: ["443"],
     },
     {
@@ -32,7 +33,7 @@ export default ({ startPriority = 310 }: Props) => {
 
       sourceAddressPrefix: "*",
       sourcePortRange: "*",
-      destinationAddressPrefix: "Microsoft.KeyVault",
+      destinationAddressPrefix: `AzureKeyVault.${currentRegionCode}`,
       destinationPortRanges: ["443"],
     },
   );

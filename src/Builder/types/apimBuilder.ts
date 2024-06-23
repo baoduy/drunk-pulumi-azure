@@ -40,6 +40,19 @@ export type ApimVnetType = {
    * */
   type: "External" | "Internal";
 };
+export type ApimAuthType = {
+  clientId: Input<string>;
+  clientSecret: Input<string>;
+  authority?: Input<string>;
+  type:
+    | "facebook"
+    | "google"
+    | "microsoft"
+    | "twitter"
+    | "aad"
+    | "aadB2C"
+    | string;
+};
 
 export interface IApimSkuBuilder {
   withSku(props: ApimSkuBuilderType): IApimPublisherBuilder;
@@ -55,6 +68,7 @@ export interface IApimBuilder extends IBuilder<ResourceInfo> {
   withAdditionalLocation(props: ApimAdditionalLocationType): IApimBuilder;
   withZones(props: ApimZoneType): IApimBuilder;
   withSubnet(props: ApimVnetType): IApimBuilder;
-  //enableNatGateway(): IApimBuilder;
+  withEntraID(): IApimBuilder;
+  withAuth(props: ApimAuthType): IApimBuilder;
   restoreFomDeleted(): IApimBuilder;
 }

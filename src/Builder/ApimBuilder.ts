@@ -1,5 +1,6 @@
 import {
   ApimAdditionalLocationType,
+  ApimAuthType,
   ApimCertBuilderType,
   ApimDomainBuilderType,
   ApimPublisherBuilderType,
@@ -22,7 +23,9 @@ import { randomUuId } from "../Core/Random";
 import { AppInsightInfo } from "../Logs/Helpers";
 import * as network from "@pulumi/azure-native/network";
 import IpAddress from "../VNet/IpAddress";
-import { Input } from "@pulumi/pulumi";
+import Identity, { IdentityResult } from "../AzAd/Identity";
+import { tenantId } from "../Common/AzureEnv";
+import { interpolate } from "@pulumi/pulumi";
 
 class ApimBuilder
   extends Builder<ResourceInfo>
@@ -35,11 +38,14 @@ class ApimBuilder
   private _additionalLocations: ApimAdditionalLocationType[] = [];
   private _zones: ApimZoneType | undefined = undefined;
   private _restoreFromDeleted: boolean = false;
+  private _enableEntraID: boolean = false;
   private _apimVnet: ApimVnetType | undefined = undefined;
   private _rootCerts: ApimCertBuilderType[] = [];
   private _caCerts: ApimCertBuilderType[] = [];
+  private _auths: ApimAuthType[] = [];
 
   private _instanceName: string | undefined = undefined;
+  private _identityInstance: IdentityResult | undefined = undefined;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
   private _apimInstance: apimanagement.ApiManagementService | undefined =
     undefined;
@@ -47,8 +53,16 @@ class ApimBuilder
   public constructor(props: BuilderProps) {
     super(props);
   }
+  public withAuth(props: ApimAuthType): IApimBuilder {
+    this._auths.push(props);
+    return this;
+  }
+  public withEntraID(): IApimBuilder {
+    this._enableEntraID = true;
+    return this;
+  }
   public withCACert(props: ApimCertBuilderType): IApimBuilder {
-    this._rootCerts.push(props);
+    this._caCerts.push(props);
     return this;
   }
   public withRootCert(props: ApimCertBuilderType): IApimBuilder {
@@ -67,29 +81,24 @@ class ApimBuilder
     this._zones = props;
     return this;
   }
-
   public withAdditionalLocation(
     props: ApimAdditionalLocationType,
   ): IApimBuilder {
     this._additionalLocations.push(props);
     return this;
   }
-
   public withInsightLog(props: AppInsightInfo): IApimBuilder {
     this._insightLog = props;
     return this;
   }
-
   public withProxyDomain(props: ApimDomainBuilderType): IApimBuilder {
     this._proxyDomain = props;
     return this;
   }
-
   public withPublisher(props: ApimPublisherBuilderType): IApimBuilder {
     this._publisher = props;
     return this;
   }
-
   public withSku(props: ApimSkuBuilderType): IApimPublisherBuilder {
     this._sku = props;
     return this;
@@ -122,7 +131,7 @@ class ApimBuilder
       name: this._sku!.sku,
       capacity: this._sku!.sku === "Consumption" ? 0 : this._sku!.capacity ?? 1,
     };
-    const zones = sku.name === "Premium" ? this._zones : undefined;
+    const zones = sku.name === "Premium" ? this._zones : ["1"];
 
     this._apimInstance = new apimanagement.ApiManagementService(
       this._instanceName,
@@ -260,6 +269,46 @@ class ApimBuilder
     );
   }
 
+  private buildEntraID() {
+    if (!this._enableEntraID) return;
+    const identity = Identity({
+      ...this.commonProps,
+      name: `${this.commonProps.name}-apim`,
+      createClientSecret: true,
+    });
+
+    new apimanagement.IdentityProvider(
+      this.commonProps.name,
+      {
+        serviceName: this._apimInstance!.name,
+        ...this.commonProps.group,
+
+        clientId: identity.clientId,
+        clientSecret: identity.clientSecret!,
+        authority: interpolate`https://login.microsoftonline.com/${tenantId}/`,
+        type: "aad",
+        allowedTenants: [tenantId],
+        signinTenant: tenantId,
+      },
+      { dependsOn: this._apimInstance },
+    );
+  }
+
+  private buildAuths() {
+    this._auths.forEach(
+      (auth) =>
+        new apimanagement.IdentityProvider(
+          `${this.commonProps.name}-${auth.type}`,
+          {
+            serviceName: this._apimInstance!.name,
+            ...this.commonProps.group,
+            ...auth,
+          },
+          { dependsOn: this._apimInstance },
+        ),
+    );
+  }
+
   private buildInsightLog() {
     if (!this._insightLog) return;
     //App Insight Logs
@@ -285,6 +334,8 @@ class ApimBuilder
   public build(): ResourceInfo {
     this.buildPublicIpAddress();
     this.buildAPIM();
+    this.buildEntraID();
+    this.buildAuths();
     this.buildInsightLog();
 
     return {
