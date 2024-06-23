@@ -28,7 +28,6 @@
     "src/Apim/ApiProduct/index.ts",
     "src/Apim/Helpers.ts",
     "src/Apim/HookProxy/index.ts",
-    "src/Apim/index.ts",
     "src/Apps/LogicApp.ts",
     "src/Automation/index.ts",
     "src/AzAd/B2C.ts",

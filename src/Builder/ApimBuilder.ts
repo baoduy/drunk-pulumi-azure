@@ -1,7 +1,9 @@
 import {
+  ApimAdditionalLocationType,
   ApimDomainBuilderType,
   ApimPublisherBuilderType,
   ApimSkuBuilderType,
+  ApimZoneType,
   Builder,
   BuilderProps,
   IApimBuilder,
@@ -12,11 +14,13 @@ import { ResourceInfo } from "../types";
 import * as apimanagement from "@pulumi/azure-native/apimanagement";
 import { getApimName } from "../Common/Naming";
 import { organization } from "../Common/StackEnv";
-import { isPrd } from "../Common/AzureEnv";
 import { ApimSignUpSettingsResource } from "@drunk-pulumi/azure-providers/ApimSignUpSettings";
 import { ApimSignInSettingsResource } from "@drunk-pulumi/azure-providers/ApimSignInSettings";
 import { randomUuId } from "../Core/Random";
 import { AppInsightInfo } from "../Logs/Helpers";
+import * as network from "@pulumi/azure-native/network";
+import IpAddress from "../VNet/IpAddress";
+import { Input } from "@pulumi/pulumi";
 
 class ApimBuilder
   extends Builder<ResourceInfo>
@@ -26,8 +30,14 @@ class ApimBuilder
   private _publisher: ApimPublisherBuilderType | undefined = undefined;
   private _proxyDomain: ApimDomainBuilderType | undefined = undefined;
   private _sku: ApimSkuBuilderType | undefined = undefined;
+  private _additionalLocations: ApimAdditionalLocationType[] = [];
+  private _zones: ApimZoneType | undefined = undefined;
+  private _enableNatGateway: boolean = false;
+  private _restoreFromDeleted: boolean = false;
+  private _subnetId: Input<string> | undefined = undefined;
 
   private _instanceName: string | undefined = undefined;
+  private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
   private _apimInstance: apimanagement.ApiManagementService | undefined =
     undefined;
 
@@ -35,28 +45,80 @@ class ApimBuilder
     super(props);
   }
 
-  withInsightLog(props: AppInsightInfo): IApimBuilder {
+  public withSubnet(subnetId: Input<string>): IApimBuilder {
+    this._subnetId = subnetId;
+    return this;
+  }
+  public restoreFomDeleted(): IApimBuilder {
+    this._restoreFromDeleted = true;
+    return this;
+  }
+  public enableNatGateway(): IApimBuilder {
+    this._enableNatGateway = true;
+    return this;
+  }
+
+  public withZones(props: ApimZoneType): IApimBuilder {
+    this._zones = props;
+    return this;
+  }
+
+  public withAdditionalLocation(
+    props: ApimAdditionalLocationType,
+  ): IApimBuilder {
+    this._additionalLocations.push(props);
+    return this;
+  }
+
+  public withInsightLog(props: AppInsightInfo): IApimBuilder {
     this._insightLog = props;
     return this;
   }
 
-  withProxyDomain(props: ApimDomainBuilderType): IApimBuilder {
+  public withProxyDomain(props: ApimDomainBuilderType): IApimBuilder {
     this._proxyDomain = props;
     return this;
   }
 
-  withPublisher(props: ApimPublisherBuilderType): IApimBuilder {
+  public withPublisher(props: ApimPublisherBuilderType): IApimBuilder {
     this._publisher = props;
     return this;
   }
 
-  withSku(props: ApimSkuBuilderType): IApimPublisherBuilder {
+  public withSku(props: ApimSkuBuilderType): IApimPublisherBuilder {
     this._sku = props;
     return this;
   }
 
+  private buildPublicIpAddress() {
+    if (!this._subnetId) return;
+
+    const ipPros = {
+      ...this.commonProps,
+      name: `${this.commonProps.name}-apim`,
+      enableZone: this._sku!.sku === "Premium",
+    };
+
+    this._ipAddressInstances[this.commonProps.name] = IpAddress(ipPros);
+
+    if (this._additionalLocations) {
+      this._additionalLocations.forEach((j) => {
+        this._ipAddressInstances[j.location] = IpAddress({
+          ...ipPros,
+          name: `${this.commonProps.name}-${j.location}-apim`,
+        });
+      });
+    }
+  }
+
   private buildAPIM() {
     this._instanceName = getApimName(this.commonProps.name);
+    const sku = {
+      name: this._sku!.sku,
+      capacity: this._sku!.sku === "Consumption" ? 0 : this._sku!.capacity ?? 1,
+    };
+    const zones = sku.name === "Premium" ? this._zones : undefined;
+
     this._apimInstance = new apimanagement.ApiManagementService(
       this._instanceName,
       {
@@ -69,12 +131,9 @@ class ApimBuilder
           "apimgmt-noreply@mail.windowsazure.com",
 
         identity: { type: "SystemAssigned" },
-        sku: {
-          name: this._sku!.sku,
-          capacity:
-            this._sku!.sku === "Consumption" ? 0 : this._sku!.capacity ?? 1,
-        },
-        zones: isPrd ? [] : undefined,
+        sku,
+
+        enableClientCertificate: true,
         hostnameConfigurations: this._proxyDomain
           ? [
               {
@@ -87,6 +146,30 @@ class ApimBuilder
               },
             ]
           : undefined,
+
+        //Restore APIM from Deleted
+        restore: this._restoreFromDeleted,
+
+        //Only support when link to a virtual network
+        publicIpAddressId: this._subnetId
+          ? this._ipAddressInstances[this.commonProps.name]?.id
+          : undefined,
+        publicNetworkAccess: "Enabled", //Disable this if private endpoint is enabled
+        //NATGateway
+        natGatewayState: this._enableNatGateway ? "Enabled" : "Disabled",
+        virtualNetworkConfiguration: { subnetResourceId: this._subnetId },
+
+        //Only available for Premium
+        zones,
+        //Only available for Premium
+        additionalLocations:
+          sku.name === "Premium"
+            ? this._additionalLocations?.map((a) => ({
+                ...a,
+                sku,
+                zones,
+              }))
+            : undefined,
 
         customProperties: {
           "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2":
@@ -125,6 +208,7 @@ class ApimBuilder
             "false",
         },
       },
+      { dependsOn: this.commonProps.dependsOn, deleteBeforeReplace: true },
     );
 
     //Turn off Sign up setting
@@ -178,6 +262,7 @@ class ApimBuilder
   }
 
   public build(): ResourceInfo {
+    this.buildPublicIpAddress();
     this.buildAPIM();
     this.buildInsightLog();
 

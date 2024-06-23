@@ -22,6 +22,12 @@ export type ApimDomainBuilderType = {
   certificate: Input<string>;
   certificatePassword?: Input<string>;
 };
+export type ApimAdditionalLocationType = {
+  disableGateway?: Input<boolean>;
+  location: string;
+};
+
+export type ApimZoneType = ["1", "2"] | ["1", "2", "3"];
 
 export interface IApimSkuBuilder {
   withSku(props: ApimSkuBuilderType): IApimPublisherBuilder;
@@ -32,4 +38,9 @@ export interface IApimPublisherBuilder {
 export interface IApimBuilder extends IBuilder<ResourceInfo> {
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
   withInsightLog(props: AppInsightInfo): IApimBuilder;
+  withAdditionalLocation(props: ApimAdditionalLocationType): IApimBuilder;
+  withZones(props: ApimZoneType): IApimBuilder;
+  withSubnet(subnetId: Input<string>): IApimBuilder;
+  enableNatGateway(): IApimBuilder;
+  restoreFomDeleted(): IApimBuilder;
 }

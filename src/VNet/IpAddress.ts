@@ -29,7 +29,7 @@ export default ({
   enableZone = isPrd,
   allocationMethod = network.IPAllocationMethod.Static,
   tier = network.PublicIPAddressSkuTier.Regional,
-  lock = true,
+  lock = isPrd,
 }: Props) => {
   name = getIpName(name);
   const ipAddress = new network.PublicIPAddress(
