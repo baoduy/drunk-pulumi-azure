@@ -134,7 +134,7 @@ class ApimBuilder
     this._apimInstance = new apimanagement.ApiManagementService(
       this._instanceName,
       {
-        //serviceName: name,
+        serviceName: this._instanceName,
         ...this.commonProps.group,
         publisherEmail: this._publisher!.publisherEmail,
         publisherName: this._publisher!.publisherName ?? organization,
