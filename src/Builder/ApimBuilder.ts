@@ -131,7 +131,7 @@ class ApimBuilder
       name: this._sku!.sku,
       capacity: this._sku!.sku === "Consumption" ? 0 : this._sku!.capacity ?? 1,
     };
-    const zones = sku.name === "Premium" ? this._zones : ["1"];
+    const zones = sku.name === "Premium" ? this._zones : undefined;
 
     this._apimInstance = new apimanagement.ApiManagementService(
       this._instanceName,
