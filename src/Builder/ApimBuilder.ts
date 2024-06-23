@@ -45,7 +45,6 @@ class ApimBuilder
   private _auths: ApimAuthType[] = [];
 
   private _instanceName: string | undefined = undefined;
-  private _identityInstance: IdentityResult | undefined = undefined;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
   private _apimInstance: apimanagement.ApiManagementService | undefined =
     undefined;
@@ -124,7 +123,6 @@ class ApimBuilder
       });
     }
   }
-
   private buildAPIM() {
     this._instanceName = getApimName(this.commonProps.name);
     const sku = {
@@ -268,7 +266,6 @@ class ApimBuilder
       { dependsOn: this._apimInstance },
     );
   }
-
   private buildEntraID() {
     if (!this._enableEntraID) return;
     const identity = Identity({
@@ -293,7 +290,6 @@ class ApimBuilder
       { dependsOn: this._apimInstance },
     );
   }
-
   private buildAuths() {
     this._auths.forEach(
       (auth) =>
@@ -308,7 +304,6 @@ class ApimBuilder
         ),
     );
   }
-
   private buildInsightLog() {
     if (!this._insightLog) return;
     //App Insight Logs
