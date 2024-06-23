@@ -28,6 +28,11 @@ export type ApimAdditionalLocationType = {
 };
 
 export type ApimZoneType = ["1", "2"] | ["1", "2", "3"];
+export type ApimVnetType = {
+  enableGateway?: Input<boolean>;
+  subnetId: Input<string>;
+  type: "External" | "Internal";
+};
 
 export interface IApimSkuBuilder {
   withSku(props: ApimSkuBuilderType): IApimPublisherBuilder;
@@ -40,7 +45,7 @@ export interface IApimBuilder extends IBuilder<ResourceInfo> {
   withInsightLog(props: AppInsightInfo): IApimBuilder;
   withAdditionalLocation(props: ApimAdditionalLocationType): IApimBuilder;
   withZones(props: ApimZoneType): IApimBuilder;
-  withSubnet(subnetId: Input<string>): IApimBuilder;
-  enableNatGateway(): IApimBuilder;
+  withSubnet(props: ApimVnetType): IApimBuilder;
+  //enableNatGateway(): IApimBuilder;
   restoreFomDeleted(): IApimBuilder;
 }

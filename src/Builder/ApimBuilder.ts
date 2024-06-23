@@ -3,6 +3,7 @@ import {
   ApimDomainBuilderType,
   ApimPublisherBuilderType,
   ApimSkuBuilderType,
+  ApimVnetType,
   ApimZoneType,
   Builder,
   BuilderProps,
@@ -32,9 +33,9 @@ class ApimBuilder
   private _sku: ApimSkuBuilderType | undefined = undefined;
   private _additionalLocations: ApimAdditionalLocationType[] = [];
   private _zones: ApimZoneType | undefined = undefined;
-  private _enableNatGateway: boolean = false;
+  //private _enableNatGateway: boolean = false;
   private _restoreFromDeleted: boolean = false;
-  private _subnetId: Input<string> | undefined = undefined;
+  private _apimVnet: ApimVnetType | undefined = undefined;
 
   private _instanceName: string | undefined = undefined;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
@@ -45,18 +46,18 @@ class ApimBuilder
     super(props);
   }
 
-  public withSubnet(subnetId: Input<string>): IApimBuilder {
-    this._subnetId = subnetId;
+  public withSubnet(props: ApimVnetType): IApimBuilder {
+    this._apimVnet = props;
     return this;
   }
   public restoreFomDeleted(): IApimBuilder {
     this._restoreFromDeleted = true;
     return this;
   }
-  public enableNatGateway(): IApimBuilder {
-    this._enableNatGateway = true;
-    return this;
-  }
+  // public enableNatGateway(): IApimBuilder {
+  //   this._enableNatGateway = true;
+  //   return this;
+  // }
 
   public withZones(props: ApimZoneType): IApimBuilder {
     this._zones = props;
@@ -91,7 +92,7 @@ class ApimBuilder
   }
 
   private buildPublicIpAddress() {
-    if (!this._subnetId) return;
+    if (!this._apimVnet) return;
 
     const ipPros = {
       ...this.commonProps,
@@ -151,13 +152,16 @@ class ApimBuilder
         restore: this._restoreFromDeleted,
 
         //Only support when link to a virtual network
-        publicIpAddressId: this._subnetId
+        publicIpAddressId: this._apimVnet
           ? this._ipAddressInstances[this.commonProps.name]?.id
           : undefined,
         publicNetworkAccess: "Enabled", //Disable this if private endpoint is enabled
         //NATGateway
-        natGatewayState: this._enableNatGateway ? "Enabled" : "Disabled",
-        virtualNetworkConfiguration: { subnetResourceId: this._subnetId },
+        natGatewayState: this._apimVnet?.enableGateway ? "Enabled" : "Disabled",
+        virtualNetworkType: this._apimVnet?.type ?? "None",
+        virtualNetworkConfiguration: {
+          subnetResourceId: this._apimVnet!.subnetId,
+        },
 
         //Only available for Premium
         zones,
