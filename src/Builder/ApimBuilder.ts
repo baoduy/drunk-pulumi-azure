@@ -18,14 +18,16 @@ import { ResourceInfo } from "../types";
 import * as apimanagement from "@pulumi/azure-native/apimanagement";
 import { getApimName } from "../Common/Naming";
 import { organization } from "../Common/StackEnv";
-import { ApimSignUpSettingsResource } from "@drunk-pulumi/azure-providers/ApimSignUpSettings";
-import { ApimSignInSettingsResource } from "@drunk-pulumi/azure-providers/ApimSignInSettings";
+import {
+  ApimSignUpSettingsResource,
+  ApimSignInSettingsResource,
+} from "@drunk-pulumi/azure-providers";
 import { randomUuId } from "../Core/Random";
 import { AppInsightInfo } from "../Logs/Helpers";
 import * as network from "@pulumi/azure-native/network";
 import IpAddress from "../VNet/IpAddress";
 import Identity from "../AzAd/Identity";
-import { tenantId } from "../Common/AzureEnv";
+import { subscriptionId, tenantId } from "../Common/AzureEnv";
 import { interpolate } from "@pulumi/pulumi";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 
@@ -41,6 +43,7 @@ class ApimBuilder
   private _zones: ApimZoneType | undefined = undefined;
   private _restoreFromDeleted: boolean = false;
   private _enableEntraID: boolean = false;
+  private _disableSignIn: boolean = false;
   private _apimVnet: ApimVnetType | undefined = undefined;
   private _privateLink: ApimPrivateLinkType | undefined = undefined;
   private _rootCerts: ApimCertBuilderType[] = [];
@@ -55,12 +58,18 @@ class ApimBuilder
   public constructor(props: BuilderProps) {
     super(props);
   }
+  public disableSignIn(): IApimBuilder {
+    this._disableSignIn = true;
+    return this;
+  }
   public withAuth(props: ApimAuthType): IApimBuilder {
     this._auths.push(props);
+    this._disableSignIn = false;
     return this;
   }
   public withEntraID(): IApimBuilder {
     this._enableEntraID = true;
+    this._disableSignIn = false;
     return this;
   }
   public withCACert(props: ApimCertBuilderType): IApimBuilder {
@@ -249,13 +258,59 @@ class ApimBuilder
       },
       { dependsOn: this.commonProps.dependsOn, deleteBeforeReplace: true },
     );
+  }
+  private buildEntraID() {
+    if (!this._enableEntraID || this._disableSignIn) return;
+
+    const identity = Identity({
+      ...this.commonProps,
+      name: `${this.commonProps.name}-apim`,
+      createClientSecret: true,
+    });
+
+    new apimanagement.IdentityProvider(
+      this.commonProps.name,
+      {
+        ...this.commonProps.group,
+        serviceName: this._apimInstance!.name,
+        clientId: identity.clientId,
+        clientSecret: identity.clientSecret!,
+        authority: interpolate`https://login.microsoftonline.com/${tenantId}/`,
+        type: "aad",
+        identityProviderName: "aad",
+        allowedTenants: [tenantId],
+        signinTenant: tenantId,
+      },
+      { dependsOn: this._apimInstance },
+    );
+  }
+  private buildAuths() {
+    if (this._disableSignIn) return;
+
+    this._auths.forEach(
+      (auth) =>
+        new apimanagement.IdentityProvider(
+          `${this.commonProps.name}-${auth.type}`,
+          {
+            ...this.commonProps.group,
+            ...auth,
+            identityProviderName: auth.type,
+            serviceName: this._apimInstance!.name,
+          },
+          { dependsOn: this._apimInstance },
+        ),
+    );
+  }
+  private buildDisableSigIn() {
+    if (!this._disableSignIn) return;
 
     //Turn off Sign up setting
     new ApimSignUpSettingsResource(
-      this._instanceName,
+      this._instanceName!,
       {
-        serviceName: this._instanceName,
         ...this.commonProps.group,
+        serviceName: this._instanceName!,
+        subscriptionId,
         enabled: false,
         termsOfService: {
           consentRequired: false,
@@ -268,62 +323,25 @@ class ApimBuilder
 
     //Turn of the SignIn setting
     new ApimSignInSettingsResource(
-      this._instanceName,
+      this._instanceName!,
       {
-        serviceName: this._instanceName,
         ...this.commonProps.group,
+        serviceName: this._instanceName!,
+        subscriptionId,
         enabled: false,
       },
       { dependsOn: this._apimInstance, deleteBeforeReplace: true },
-    );
-  }
-  private buildEntraID() {
-    if (!this._enableEntraID) return;
-    const identity = Identity({
-      ...this.commonProps,
-      name: `${this.commonProps.name}-apim`,
-      createClientSecret: true,
-    });
-
-    new apimanagement.IdentityProvider(
-      this.commonProps.name,
-      {
-        serviceName: this._apimInstance!.name,
-        ...this.commonProps.group,
-
-        clientId: identity.clientId,
-        clientSecret: identity.clientSecret!,
-        authority: interpolate`https://login.microsoftonline.com/${tenantId}/`,
-        type: "aad",
-        allowedTenants: [tenantId],
-        signinTenant: tenantId,
-      },
-      { dependsOn: this._apimInstance },
-    );
-  }
-  private buildAuths() {
-    this._auths.forEach(
-      (auth) =>
-        new apimanagement.IdentityProvider(
-          `${this.commonProps.name}-${auth.type}`,
-          {
-            serviceName: this._apimInstance!.name,
-            ...this.commonProps.group,
-            ...auth,
-          },
-          { dependsOn: this._apimInstance },
-        ),
     );
   }
   private buildPrivateLink() {
     if (!this._privateLink) return;
     PrivateEndpoint({
       ...this.commonProps,
-      name: `${this.commonProps.name}-apim`,
+      name: this._instanceName!,
       resourceId: this._apimInstance!.id,
-      privateDnsZoneName: `${this._instanceName}.privatelink.azure-api.net`,
+      privateDnsZoneName: "privatelink.azure-api.net",
       subnetIds: this._privateLink.subnetIds,
-      linkServiceGroupIds: [""],
+      linkServiceGroupIds: ["Gateway"],
       dependsOn: this._apimInstance,
     });
   }
@@ -353,6 +371,7 @@ class ApimBuilder
     this.buildPublicIpAddress();
     this.buildAPIM();
     this.buildPrivateLink();
+    this.buildDisableSigIn();
     this.buildEntraID();
     this.buildAuths();
     this.buildInsightLog();

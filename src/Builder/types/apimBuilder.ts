@@ -42,7 +42,7 @@ export type ApimVnetType = {
 };
 export type ApimPrivateLinkType = {
   subnetIds: Input<string>[];
-  disablePublicAccess: boolean;
+  disablePublicAccess?: boolean;
 };
 export type ApimAuthType = {
   clientId: Input<string>;
@@ -64,7 +64,12 @@ export interface IApimSkuBuilder {
 export interface IApimPublisherBuilder {
   withPublisher(props: ApimPublisherBuilderType): IApimBuilder;
 }
-export interface IApimBuilder extends IBuilder<ResourceInfo> {
+export interface IApimAuthBuilder {
+  withEntraID(): IApimBuilder;
+  withAuth(props: ApimAuthType): IApimBuilder;
+  disableSignIn(): IApimBuilder;
+}
+export interface IApimBuilder extends IBuilder<ResourceInfo>, IApimAuthBuilder {
   withCACert(props: ApimCertBuilderType): IApimBuilder;
   withRootCert(props: ApimCertBuilderType): IApimBuilder;
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
@@ -74,7 +79,5 @@ export interface IApimBuilder extends IBuilder<ResourceInfo> {
   withZones(props: ApimZoneType): IApimBuilder;
   withSubnet(props: ApimVnetType): IApimBuilder;
   withPrivateLink(props: ApimPrivateLinkType): IApimBuilder;
-  withEntraID(): IApimBuilder;
-  withAuth(props: ApimAuthType): IApimBuilder;
   restoreFomDeleted(): IApimBuilder;
 }
