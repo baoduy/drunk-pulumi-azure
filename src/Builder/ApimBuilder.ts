@@ -3,6 +3,7 @@ import {
   ApimAuthType,
   ApimCertBuilderType,
   ApimDomainBuilderType,
+  ApimPrivateLinkType,
   ApimPublisherBuilderType,
   ApimSkuBuilderType,
   ApimVnetType,
@@ -23,9 +24,10 @@ import { randomUuId } from "../Core/Random";
 import { AppInsightInfo } from "../Logs/Helpers";
 import * as network from "@pulumi/azure-native/network";
 import IpAddress from "../VNet/IpAddress";
-import Identity, { IdentityResult } from "../AzAd/Identity";
+import Identity from "../AzAd/Identity";
 import { tenantId } from "../Common/AzureEnv";
 import { interpolate } from "@pulumi/pulumi";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
 
 class ApimBuilder
   extends Builder<ResourceInfo>
@@ -40,6 +42,7 @@ class ApimBuilder
   private _restoreFromDeleted: boolean = false;
   private _enableEntraID: boolean = false;
   private _apimVnet: ApimVnetType | undefined = undefined;
+  private _privateLink: ApimPrivateLinkType | undefined = undefined;
   private _rootCerts: ApimCertBuilderType[] = [];
   private _caCerts: ApimCertBuilderType[] = [];
   private _auths: ApimAuthType[] = [];
@@ -66,6 +69,10 @@ class ApimBuilder
   }
   public withRootCert(props: ApimCertBuilderType): IApimBuilder {
     this._rootCerts.push(props);
+    return this;
+  }
+  public withPrivateLink(props: ApimPrivateLinkType): IApimBuilder {
+    this._privateLink = props;
     return this;
   }
   public withSubnet(props: ApimVnetType): IApimBuilder {
@@ -179,13 +186,17 @@ class ApimBuilder
         publicIpAddressId: this._apimVnet
           ? this._ipAddressInstances[this.commonProps.name]?.id
           : undefined,
-        publicNetworkAccess: "Enabled", //Disable this if private endpoint is enabled
+        publicNetworkAccess: this._privateLink?.disablePublicAccess
+          ? "Disabled"
+          : "Enabled",
         //NATGateway
         natGatewayState: this._apimVnet?.enableGateway ? "Enabled" : "Disabled",
         virtualNetworkType: this._apimVnet?.type ?? "None",
-        virtualNetworkConfiguration: {
-          subnetResourceId: this._apimVnet!.subnetId,
-        },
+        virtualNetworkConfiguration: this._apimVnet
+          ? {
+              subnetResourceId: this._apimVnet.subnetId,
+            }
+          : undefined,
 
         //Only available for Premium
         zones,
@@ -243,27 +254,27 @@ class ApimBuilder
     new ApimSignUpSettingsResource(
       this._instanceName,
       {
-        serviceName: this._apimInstance!.name,
+        serviceName: this._instanceName,
         ...this.commonProps.group,
         enabled: false,
         termsOfService: {
           consentRequired: false,
           enabled: false,
-          text: "terms Of Service",
+          text: "Terms & Conditions Of Service",
         },
       },
-      { dependsOn: this._apimInstance },
+      { dependsOn: this._apimInstance, deleteBeforeReplace: true },
     );
 
     //Turn of the SignIn setting
     new ApimSignInSettingsResource(
       this._instanceName,
       {
-        serviceName: this._apimInstance!.name,
+        serviceName: this._instanceName,
         ...this.commonProps.group,
         enabled: false,
       },
-      { dependsOn: this._apimInstance },
+      { dependsOn: this._apimInstance, deleteBeforeReplace: true },
     );
   }
   private buildEntraID() {
@@ -304,6 +315,18 @@ class ApimBuilder
         ),
     );
   }
+  private buildPrivateLink() {
+    if (!this._privateLink) return;
+    PrivateEndpoint({
+      ...this.commonProps,
+      name: `${this.commonProps.name}-apim`,
+      resourceId: this._apimInstance!.id,
+      privateDnsZoneName: `${this._instanceName}.privatelink.azure-api.net`,
+      subnetIds: this._privateLink.subnetIds,
+      linkServiceGroupIds: [""],
+      dependsOn: this._apimInstance,
+    });
+  }
   private buildInsightLog() {
     if (!this._insightLog) return;
     //App Insight Logs
@@ -329,6 +352,7 @@ class ApimBuilder
   public build(): ResourceInfo {
     this.buildPublicIpAddress();
     this.buildAPIM();
+    this.buildPrivateLink();
     this.buildEntraID();
     this.buildAuths();
     this.buildInsightLog();

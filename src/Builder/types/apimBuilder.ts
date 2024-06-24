@@ -40,6 +40,10 @@ export type ApimVnetType = {
    * */
   type: "External" | "Internal";
 };
+export type ApimPrivateLinkType = {
+  subnetIds: Input<string>[];
+  disablePublicAccess: boolean;
+};
 export type ApimAuthType = {
   clientId: Input<string>;
   clientSecret: Input<string>;
@@ -65,9 +69,11 @@ export interface IApimBuilder extends IBuilder<ResourceInfo> {
   withRootCert(props: ApimCertBuilderType): IApimBuilder;
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
   withInsightLog(props: AppInsightInfo): IApimBuilder;
+  /**Allows multi locations*/
   withAdditionalLocation(props: ApimAdditionalLocationType): IApimBuilder;
   withZones(props: ApimZoneType): IApimBuilder;
   withSubnet(props: ApimVnetType): IApimBuilder;
+  withPrivateLink(props: ApimPrivateLinkType): IApimBuilder;
   withEntraID(): IApimBuilder;
   withAuth(props: ApimAuthType): IApimBuilder;
   restoreFomDeleted(): IApimBuilder;
