@@ -48,27 +48,25 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
       { dependsOn },
     );
 
-    if (this._aRecords) {
-      this._aRecords.forEach(
-        (a, index) =>
-          new network.RecordSet(
-            a.recordName === "*"
-              ? `All-${index}-ARecord`
-              : a.recordName === "@"
-                ? `Root-${index}-ARecord`
-                : `${a.recordName}-ARecord`,
-            {
-              zoneName: this._zoneInstance!.name,
-              ...group,
-              relativeRecordSetName: a.recordName,
-              recordType: "A",
-              aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
-              ttl: 3600,
-            },
-            { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
-          ),
-      );
-    }
+    this._aRecords.forEach(
+      (a, index) =>
+        new network.RecordSet(
+          a.recordName === "*"
+            ? `All-${index}-ARecord`
+            : a.recordName === "@"
+              ? `Root-${index}-ARecord`
+              : `${a.recordName}-ARecord`,
+          {
+            zoneName: this._zoneInstance!.name,
+            ...group,
+            relativeRecordSetName: a.recordName,
+            recordType: "A",
+            aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
+            ttl: 3600,
+          },
+          { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
+        ),
+    );
   }
 
   private buildChildren() {

@@ -9,7 +9,6 @@ import * as native from "@pulumi/azure-native";
 import { output } from "@pulumi/pulumi";
 import { getVnetIdFromSubnetId } from "../VNet/Helper";
 import { globalKeyName } from "../Common/GlobalEnv";
-import { currentRegionCode } from "../Common/AzureEnv";
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -49,27 +48,25 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       { dependsOn },
     );
 
-    if (this._aRecords) {
-      this._aRecords.forEach(
-        (a, index) =>
-          new network.PrivateRecordSet(
-            a.recordName === "*"
-              ? `All-${index}-ARecord`
-              : a.recordName === "@"
-                ? `Root-${index}-ARecord`
-                : `${a.recordName}-ARecord`,
-            {
-              privateZoneName: this._zoneInstance!.name,
-              ...group,
-              relativeRecordSetName: a.recordName,
-              recordType: "A",
-              aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
-              ttl: 3600,
-            },
-            { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
-          ),
-      );
-    }
+    this._aRecords.forEach(
+      (a, index) =>
+        new network.PrivateRecordSet(
+          a.recordName === "*"
+            ? `All-${index}-ARecord`
+            : a.recordName === "@"
+              ? `Root-${index}-ARecord`
+              : `${a.recordName}-ARecord`,
+          {
+            privateZoneName: this._zoneInstance!.name,
+            ...group,
+            relativeRecordSetName: a.recordName,
+            recordType: "A",
+            aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
+            ttl: 3600,
+          },
+          { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
+        ),
+    );
   }
 
   private buildVnetLinks() {

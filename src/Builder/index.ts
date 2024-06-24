@@ -1,5 +1,6 @@
 export { default as AksBuilder } from "./AksBuilder";
 export { default as ApimBuilder } from "./ApimBuilder";
+export { default as ApimPolicyBuilder } from "./ApimPolicyBuilder";
 export { default as DnsZoneBuilder } from "./DnsZoneBuilder";
 export { default as PrivateDnsZoneBuilder } from "./PrivateDnsZoneBuilder";
 export { default as ResourceBuilder } from "./ResourceBuilder";
