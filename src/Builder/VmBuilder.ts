@@ -13,7 +13,7 @@ import {
   VmSizeTypes,
 } from "./types";
 import { randomLogin } from "../Core/Random";
-import VM from "../VM";
+import VM, { VmScheduleType } from "../VM";
 import { VirtualMachine } from "@pulumi/azure-native/compute";
 
 class VmBuilder
@@ -32,13 +32,17 @@ class VmBuilder
   private _vmSize: VmSizeTypes | undefined = undefined;
   private _windowImage: VmOsBuilderWindowsProps | undefined = undefined;
   private _linuxImage: VmOsBuilderLinuxProps | undefined = undefined;
+  private _schedule: VmScheduleType | undefined = undefined;
 
   private _vmInstance: VirtualMachine | undefined = undefined;
 
   constructor(props: BuilderProps) {
     super(props);
   }
-
+  public withSchedule(props: VmScheduleType): IVmBuilder {
+    this._schedule = props;
+    return this;
+  }
   public withSubnetId(props: Input<string>): IVmBuilder {
     this._subnetProps = props;
     return this;
@@ -97,6 +101,7 @@ class VmBuilder
         userName: this._loginProps!.adminLogin!,
         password: this._loginProps!.password,
       },
+      schedule: this._schedule,
       tags: this._tagsProps,
     });
   }
