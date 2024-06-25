@@ -4,19 +4,17 @@ import { Input, Output } from "@pulumi/pulumi";
 import { getImportConfig } from "../Apim/ApiProduct/SwaggerHelper";
 import { organization } from "../Common/StackEnv";
 import ApimPolicyBuilder from "./ApimPolicyBuilder";
-import {
-  ApimApiRevisionProps,
-  BuilderAsync,
-  IApimApiRevisionBuilder,
-  VersionBuilderFunction,
-} from "./index";
+
 import {
   ApimApiKeysType,
   ApimApiServiceUrlType,
   ApimChildBuilderProps,
-  Builder,
   IApimApiBuilder,
   IApimApiServiceBuilder,
+  ApimApiRevisionProps,
+  BuilderAsync,
+  IApimApiRevisionBuilder,
+  VersionBuilderFunction,
 } from "./types";
 
 class ApimApiRevisionBuilder implements IApimApiRevisionBuilder {
