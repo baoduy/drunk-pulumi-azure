@@ -20,7 +20,7 @@ import {
   IApimPolicyBuilder,
 } from "./types";
 
-export class ApimPolicyBuilder implements IApimPolicyBuilder {
+export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   private _baseUrl: ApimBaseUrlType | undefined = undefined;
   private _rewriteUri: ApimRewriteUriType | undefined = undefined;
   private _rateLimit: ApimRateLimitType | undefined = undefined;

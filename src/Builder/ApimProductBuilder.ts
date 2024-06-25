@@ -4,16 +4,19 @@ import { getPasswordName } from "../Common/Naming";
 import { randomPassword } from "../Core/Random";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { ResourceInfo } from "../types";
+import ApimApiBuilder from "./ApimApiBuilder";
+import ApimPolicyBuilder from "./ApimPolicyBuilder";
 import {
   APimApiBuilderFunction,
+  ApimApiPolicyType,
   ApimChildBuilderProps,
   ApimProductSubscriptionBuilderType,
-  Builder,
+  BuilderAsync,
   IApimProductBuilder,
 } from "./types";
 
 export class ApimProductBuilder
-  extends Builder<ResourceInfo>
+  extends BuilderAsync<ResourceInfo>
   implements IApimProductBuilder
 {
   private _apis: APimApiBuilderFunction[] = [];
@@ -24,11 +27,16 @@ export class ApimProductBuilder
   private _productInstance: apim.Product | undefined = undefined;
   private _subInstance: apim.Subscription | undefined = undefined;
   private _productInstanceName: string | undefined = undefined;
+  private _policyString: string | undefined = undefined;
 
   public constructor(private props: ApimChildBuilderProps) {
     super(props);
   }
 
+  public withPolicies(props: ApimApiPolicyType): IApimProductBuilder {
+    this._policyString = props(new ApimPolicyBuilder()).build();
+    return this;
+  }
   public requiredSubscription(
     props: ApimProductSubscriptionBuilderType,
   ): IApimProductBuilder {
@@ -97,16 +105,26 @@ export class ApimProductBuilder
       dependsOn: this._subInstance,
     });
   }
-  private buildApis() {
-    this._apis.map((api) => {
-      const apiBuilder = ApimAPi;
-    });
+
+  private async buildApis() {
+    const tasks = this._apis.map((api) =>
+      api(
+        new ApimApiBuilder({
+          ...this.props,
+          productId: this._productInstance!.id,
+          requiredSubscription: Boolean(this._requiredSubscription),
+          policyString: this._policyString,
+          dependsOn: this._productInstance,
+        }),
+      ).build(),
+    );
+    await Promise.all(tasks);
   }
 
-  public build(): ResourceInfo {
+  public async build(): Promise<ResourceInfo> {
     this.buildProduct();
     this.buildSubscription();
-    this.buildApis();
+    await this.buildApis();
 
     return {
       resourceName: this._productInstanceName!,

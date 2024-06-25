@@ -6,20 +6,22 @@ import {
   IApimProductBuilder,
 } from "./types";
 
-export class ApimRootBuilder {
+export default class ApimRootBuilder {
   private constructor(private props: ApimChildBuilderProps) {}
+
   public static from(
     apimInfo: ResourceInfo,
-    props: BuilderProps,
+    props: Omit<BuilderProps, "group" | "name">,
   ): ApimRootBuilder {
     return new ApimRootBuilder({
       ...props,
+      name: apimInfo.resourceName,
       apimServiceName: apimInfo.resourceName,
       group: apimInfo.group,
     });
   }
 
-  public buildProduct(name: string): IApimProductBuilder {
+  public newProduct(name: string): IApimProductBuilder {
     return new ApimProductBuilder({ ...this.props, name });
   }
 }
