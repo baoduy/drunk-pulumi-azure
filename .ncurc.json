@@ -1,4 +1,4 @@
 {
   "upgrade": true,
-  "reject": ["mocha"]
+  "reject": ["mocha","replace-in-file"]
 }

@@ -58,7 +58,7 @@
     "nyc": "^17.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2",
-    "replace-in-file": "^8.0.0"
+    "replace-in-file": "7.2.0"
   },
   "dependencies": {
     "@drunk-pulumi/azure-providers": "^0.0.23",

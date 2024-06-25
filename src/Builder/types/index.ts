@@ -1,5 +1,6 @@
 export * from "./apimBuilder";
 export * from "./apimPolicyBuilder";
+export * from "./apimProductBuilder";
 export * from "./askBuilder";
 export * from "./dnsZoneBuilder";
 export * from "./genericBuilder";

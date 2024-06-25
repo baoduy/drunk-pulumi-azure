@@ -3,7 +3,7 @@
     "baseUrl": "./src",
     "outDir": "./.out-bin",
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "declaration": true,
     "inlineSourceMap": true,
@@ -14,6 +14,9 @@
     "noImplicitAny": true,
     "strict": true
   },
+  "ts-node": {
+    "experimentalResolver": true
+  },
   "files": [
     "src/Aks/Helper.ts",
     "src/Aks/Identity.ts",
@@ -22,7 +25,6 @@
     "src/Aks/index.ts",
     "src/Apim/ApiProduct/Api.ts",
     "src/Apim/ApiProduct/OpenApi.ts",
-    "src/Apim/ApiProduct/PolicyBuilder.ts",
     "src/Apim/ApiProduct/Product.ts",
     "src/Apim/ApiProduct/SwaggerHelper.ts",
     "src/Apim/ApiProduct/index.ts",
@@ -49,6 +51,8 @@
     "src/AzAd/UserAssignedIdentity.ts",
     "src/Builder/AksBuilder.ts",
     "src/Builder/ApimBuilder.ts",
+    "src/Builder/ApimPolicyBuilder.ts",
+    "src/Builder/ApimProductBuilder.ts",
     "src/Builder/DnsZoneBuilder.ts",
     "src/Builder/PrivateDnsZoneBuilder.ts",
     "src/Builder/ResourceBuilder.ts",
@@ -58,6 +62,8 @@
     "src/Builder/VnetBuilder.ts",
     "src/Builder/index.ts",
     "src/Builder/types/apimBuilder.ts",
+    "src/Builder/types/apimPolicyBuilder.ts",
+    "src/Builder/types/apimProductBuilder.ts",
     "src/Builder/types/askBuilder.ts",
     "src/Builder/types/dnsZoneBuilder.ts",
     "src/Builder/types/genericBuilder.ts",

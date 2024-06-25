@@ -1,4 +1,5 @@
 import { organization } from "../Common/StackEnv";
+import { getIpsRange } from "../VNet/Helper";
 import {
   SetHeaderTypes,
   ApimAuthCertType,
@@ -176,6 +177,11 @@ export class ApimPolicyBuilder implements IApimPolicyBuilder {
   }
   private buildCacheOptions() {
     if (!this._cacheOptions) return;
+    this._inboundPolicies.push(`      <cache-lookup vary-by-developer="false" 
+            vary-by-developer-groups="false" 
+            allow-private-response-caching="true" 
+            must-revalidate="true" 
+            downstream-caching-type="public" />`);
     this._outboundPolicies.push(
       `      <cache-store duration="${this._cacheOptions.duration ?? 60}" />`,
     );
@@ -218,7 +224,7 @@ export class ApimPolicyBuilder implements IApimPolicyBuilder {
       ? this._cors.origins.map((o) => `<origin>${o}</origin>`)
       : ["<origin>*</origin>"];
 
-    const cors = `<cors allow-credentials="true">
+    const cors = `<cors allow-credentials="${Array.isArray(this._cors.origins)}">
     <allowed-origins>
         ${orgs.join("\n")}
     </allowed-origins>
@@ -238,40 +244,134 @@ export class ApimPolicyBuilder implements IApimPolicyBuilder {
     this._inboundPolicies.push(`
     <set-header name="IpAddressValidation" exists-action="override">
       <value>@{
-				Boolean ipAddressValid = false;
-				string authHeader = context.Request.Headers.GetValueOrDefault("Authorization", "");
-				if (authHeader?.Length > 0)
+		Boolean ipAddressValid = false;
+		string authHeader = context.Request.Headers.GetValueOrDefault("Authorization", "");
+		if (authHeader?.Length > 0)
+		{
+			string[] authHeaderParts = authHeader.Split(' ');
+			if (authHeaderParts?.Length == 2 && authHeaderParts[0].Equals("Bearer", StringComparison.InvariantCultureIgnoreCase))
+			{
+				if (authHeaderParts[1].TryParseJwt(out Jwt jwt))
 				{
-					string[] authHeaderParts = authHeader.Split(' ');
-					if (authHeaderParts?.Length == 2 && authHeaderParts[0].Equals("Bearer", StringComparison.InvariantCultureIgnoreCase))
-					{
-						if (authHeaderParts[1].TryParseJwt(out Jwt jwt))
-						{
-							var ipsWhitelist = jwt.Claims.GetValueOrDefault("${claimKey}", "");
-              IEnumerable<string> ips = ipsWhitelist
-                .Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => p.Trim());
-
-              if(string.IsNullOrEmpty(ipsWhitelist) || ips.Contains(context.Request.IpAddress))
-              {
-                ipAddressValid = true;
-              }
-						}
-					}
+					var ipsWhitelist = jwt.Claims.GetValueOrDefault("${claimKey}", "");
+                    IEnumerable<string> ips = ipsWhitelist
+                        .Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(p => p.Trim());
+              
+                    if(string.IsNullOrEmpty(ipsWhitelist) || ips.Contains(context.Request.IpAddress))
+                    {
+                        ipAddressValid = true;
+                    }
+			    }
+			}
         }
         else
         {
-          ipAddressValid = true;
+           ipAddressValid = true;
         }
 				
         return ipAddressValid.ToString();
-			}</value>
-    </set-header>`);
+      }</value>
+  </set-header>`);
+  }
+  private buildWhiteListIps() {
+    if (!this._whitelistIps) return;
+    const ipAddresses = this._whitelistIps.flatMap((ip) => ip.ipAddresses);
+    const policy = `<ip-filter action="allow">\r\n${ipAddresses
+      .map((ip) => {
+        if (ip.includes("/")) {
+          const range = getIpsRange(ip);
+          return `<address-range from="${range.first}" to="${range.last}" />`;
+        }
+        return `<address>${ip}</address>`;
+      })
+      .join("\r\n")}\r\n</ip-filter>`;
+
+    this._inboundPolicies.push(policy);
+  }
+  private buildFindAndReplace() {
+    if (!this._findAndReplaces) return;
+    this._outboundPolicies.push(
+      ...this._findAndReplaces
+        .map((f) => ` <find-and-replace from="${f.from}" to="${f.to}" />`)
+        .join("\n"),
+    );
+  }
+  private buildCustomRules() {
+    if (this._inboundCustomPolicies) {
+      this._inboundPolicies.push(
+        ...this._inboundCustomPolicies.map((i) => i.policy),
+      );
+    }
+    if (this._outboundPolicies) {
+      this._outboundPolicies.push(
+        ...this._outboundCustomPolicies.map((i) => i.policy),
+      );
+    }
   }
 
   public build(): string {
-    return "";
+    this.buildHeaders();
+    this.buildBaseUrl();
+    this.buildRewriteUri();
+    this.buildCacheOptions();
+    this.buildMockResponse();
+    this.buildRateLimit();
+    this.buildBackendCert();
+    this.buildCors();
+    this.buildValidateJwtWhitelistIp();
+    this.buildWhiteListIps();
+    this.buildCheckHeaders();
+    this.buildFindAndReplace();
+    this.buildCustomRules();
+    //This must be a last rule
+    this.buildVerifyClientCert();
+
+    let backend = "<base />";
+    if (!this._mockResponses) {
+      backend =
+        '<forward-request timeout="120" follow-redirects="true" buffer-request-body="true" fail-on-error-status-code="true"/>';
+    }
+
+    return `<policies>
+  <inbound>
+      <base />
+      ${this._inboundPolicies.join("\n")}
+  </inbound>
+  <backend>
+      ${backend}
+  </backend>
+  <outbound>
+      <base />
+      <set-header name="Strict-Transport-Security" exists-action="override">    
+          <value>max-age=15724800; includeSubDomains</value>    
+      </set-header>    
+      <set-header name="X-XSS-Protection" exists-action="override">    
+          <value>1; mode=block</value>    
+      </set-header>    
+      <set-header name="Content-Security-Policy" exists-action="override">    
+          <value>default-src 'self' data: 'unsafe-inline' 'unsafe-eval'</value>    
+      </set-header>    
+      <set-header name="X-Frame-Options" exists-action="override">    
+          <value>Deny</value>    
+      </set-header>    
+      <set-header name="X-Content-Type-Options" exists-action="override">    
+          <value>nosniff</value>    
+      </set-header>    
+      <set-header name="Expect-Ct" exists-action="override">    
+          <value>max-age=604800,enforce</value>    
+      </set-header>    
+      <set-header name="Cache-Control" exists-action="override">    
+          <value>none</value>    
+      </set-header>    
+      <set-header name="X-Powered-By" exists-action="delete" />    
+      <set-header name="X-AspNet-Version" exists-action="delete" />
+      
+      ${this._outboundPolicies.join("\n")}
+  </outbound>
+  <on-error>
+      <base />
+  </on-error>
+</policies>`;
   }
 }
-
-export default () => new ApimPolicyBuilder();
