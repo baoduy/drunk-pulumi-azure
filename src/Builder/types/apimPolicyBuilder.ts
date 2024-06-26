@@ -26,9 +26,9 @@ export type ApimRewriteUriType = {
 };
 export type ApimRateLimitType = {
   /** Number of call */
-  call?: number;
+  calls?: number;
   /** in period (second) */
-  period?: number;
+  inSecond?: number;
   /** only applied to the success condition `@(context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)` */
   successConditionOnly?: boolean;
 };
@@ -85,8 +85,8 @@ export interface IApimPolicyBuilder {
   setFindAndReplaces(props: ApimFindAndReplaceType): IApimPolicyBuilder;
 
   //Custom Policies
-  withInboundPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder;
-  withOutPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder;
+  //withInboundPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder;
+  //withOutPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder;
 
   build(): string;
 }

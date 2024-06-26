@@ -8,6 +8,7 @@
     "declaration": true,
     "inlineSourceMap": true,
     "stripInternal": true,
+    "esModuleInterop": true,
     "experimentalDecorators": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,

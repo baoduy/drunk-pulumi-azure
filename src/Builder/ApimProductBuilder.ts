@@ -27,16 +27,24 @@ export class ApimProductBuilder
 
   private _productInstance: apim.Product | undefined = undefined;
   private _subInstance: apim.Subscription | undefined = undefined;
-  private _productInstanceName: string | undefined = undefined;
-  private _policyString: string | undefined = undefined;
+  private _productInstanceName: string;
+  private _policyString: string;
   private _state: apim.ProductState = "notPublished";
 
   public constructor(private props: ApimChildBuilderProps) {
     super(props);
+    this._productInstanceName = `${props.name}-product`;
+    //Empty Policy
+    this._policyString = new ApimPolicyBuilder({
+      ...props,
+      name: this._productInstanceName,
+    }).build();
   }
 
   public withPolicies(props: ApimApiPolicyType): IApimProductBuilder {
-    this._policyString = props(new ApimPolicyBuilder()).build();
+    this._policyString = props(
+      new ApimPolicyBuilder({ ...this.props, name: this._productInstanceName }),
+    ).build();
     return this;
   }
   public requiredSubscription(
@@ -55,8 +63,7 @@ export class ApimProductBuilder
   }
 
   private buildProduct() {
-    this._productInstanceName = `${this.props.name}-product`;
-    this._productInstance = new apim.Product(this._productInstanceName!, {
+    this._productInstance = new apim.Product(this._productInstanceName, {
       productId: this._productInstanceName,
       displayName: this._productInstanceName,
       description: this._productInstanceName,
@@ -73,6 +80,8 @@ export class ApimProductBuilder
     });
 
     if (this._policyString) {
+      console.log(this._productInstanceName, this._policyString);
+
       new apim.ProductPolicy(`${this._productInstanceName}-policy`, {
         serviceName: this.props.apimServiceName,
         resourceGroupName: this.props.group.resourceGroupName,
@@ -130,7 +139,7 @@ export class ApimProductBuilder
       api(
         new ApimApiBuilder({
           ...this.props,
-          productId: this._productInstanceName!,
+          productId: this._productInstanceName,
           requiredSubscription: Boolean(this._requiredSubscription),
           dependsOn: this._productInstance,
         }),
@@ -145,7 +154,7 @@ export class ApimProductBuilder
     await this.buildApis();
 
     return {
-      resourceName: this._productInstanceName!,
+      resourceName: this._productInstanceName,
       group: this.props.group,
       id: this._productInstance!.id,
     };

@@ -38,6 +38,7 @@ export default class ApimApiBuilder
   };
   private _apis: Record<string, ApimApiRevisionProps[]> = {};
 
+  private _apiInstanceName: string;
   private _apiSets: Record<string, apim.ApiVersionSet> = {};
   private _policyString: string | undefined = undefined;
 
@@ -48,9 +49,21 @@ export default class ApimApiBuilder
     },
   ) {
     super(props);
+    this._apiInstanceName = `${props.name}-api`;
+    //Empty Policy
+    this._policyString = new ApimPolicyBuilder({
+      ...props,
+      name: this._apiInstanceName,
+    }).build();
   }
+
   public withPolicies(props: ApimApiPolicyType): IApimApiBuilder {
-    this._policyString = props(new ApimPolicyBuilder()).build();
+    this._policyString = props(
+      new ApimPolicyBuilder({
+        ...this.props,
+        name: this._apiInstanceName,
+      }),
+    ).build();
     return this;
   }
   public withServiceUrl(props: ApimApiServiceUrlType): IApimApiBuilder {
@@ -178,8 +191,9 @@ export default class ApimApiBuilder
             );
 
             //Mock Operations
+            const opName = `${opsName}-policy`;
             new apim.ApiOperationPolicy(
-              `${opsName}-policy`,
+              opName,
               {
                 policyId: "policy",
                 operationId: ops.id,
@@ -187,7 +201,10 @@ export default class ApimApiBuilder
                 serviceName: this.props.apimServiceName,
                 resourceGroupName: this.props.group.resourceGroupName,
                 format: "xml",
-                value: new ApimPolicyBuilder()
+                value: new ApimPolicyBuilder({
+                  ...this.props,
+                  name: opName,
+                })
                   .mockResponse({
                     code: 200,
                     contentType: `Welcome to ${organization}`,

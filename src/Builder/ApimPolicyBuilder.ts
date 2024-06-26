@@ -1,5 +1,8 @@
+import * as apim from "@pulumi/azure-native/apimanagement";
 import { organization } from "../Common/StackEnv";
+import { ResourceInfo } from "../types";
 import { getIpsRange } from "../VNet/Helper";
+import xmlFormat from "xml-formatter";
 import {
   SetHeaderTypes,
   ApimAuthCertType,
@@ -18,6 +21,7 @@ import {
   ApimValidateJwtWhitelistIpType,
   ApimWhitelistIpType,
   IApimPolicyBuilder,
+  ApimChildBuilderProps,
 } from "./types";
 
 export default class ApimPolicyBuilder implements IApimPolicyBuilder {
@@ -35,11 +39,13 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   private _checkHeaders: ApimCheckHeaderType[] = [];
   private _whitelistIps: ApimWhitelistIpType[] = [];
   private _findAndReplaces: ApimFindAndReplaceType[] = [];
-  private _inboundCustomPolicies: ApimCustomPolicyType[] = [];
-  private _outboundCustomPolicies: ApimCustomPolicyType[] = [];
+  //private _inboundCustomPolicies: ApimCustomPolicyType[] = [];
+  //private _outboundCustomPolicies: ApimCustomPolicyType[] = [];
 
   private _inboundPolicies: string[] = [];
   private _outboundPolicies: string[] = [];
+
+  public constructor(private props: ApimChildBuilderProps) {}
 
   public setBaseUrl(props: ApimBaseUrlType): IApimPolicyBuilder {
     this._baseUrl = props;
@@ -108,19 +114,19 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   }
 
   //Custom Policies
-  public withInboundPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder {
-    this._inboundCustomPolicies.push(props);
-    return this;
-  }
-  public withOutPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder {
-    this._outboundCustomPolicies.push(props);
-    return this;
-  }
+  // public withInboundPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder {
+  //   this._inboundCustomPolicies.push(props);
+  //   return this;
+  // }
+  // public withOutPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder {
+  //   this._outboundCustomPolicies.push(props);
+  //   return this;
+  // }
 
   private buildBaseUrl() {
     if (!this._baseUrl) return;
     this._inboundPolicies.push(
-      `   <set-backend-service base-url="${this._baseUrl.url}" />`,
+      `<set-backend-service base-url="${this._baseUrl.url}" />`,
     );
   }
   private buildHeaders() {
@@ -152,49 +158,44 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     this._inboundPolicies.push(
       ...this._mockResponses.map(
         (m) =>
-          `      <mock-response status-code="${m.code ?? 200}" content-type="${m.contentType ?? "application/json"}" />`,
+          `<mock-response status-code="${m.code ?? 200}" content-type="${m.contentType ?? "application/json"}" />`,
       ),
     );
   }
   private buildRewriteUri() {
     if (!this._rewriteUri) return;
     this._inboundPolicies.push(
-      `      <rewrite-uri template="${this._rewriteUri.template ?? "/"}" />`,
+      `<rewrite-uri template="${this._rewriteUri.template ?? "/"}" />`,
     );
   }
   private buildRateLimit() {
     if (!this._rateLimit) return;
     this._inboundPolicies.push(
       this._rateLimit.successConditionOnly
-        ? `      <rate-limit-by-key calls="${this._rateLimit.call ?? 60}" 
-            renewal-period="${this._rateLimit.period ?? 60}" 
-            counter-key="@(context.Request.IpAddress)" 
-            increment-condition="@(context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)" />`
-        : `      <rate-limit-by-key calls="${this._rateLimit.call ?? 60}" 
-            renewal-period="${this._rateLimit.period ?? 60}" 
-            counter-key="@(context.Request.IpAddress)" />`,
+        ? `<rate-limit-by-key calls="${this._rateLimit.calls ?? 10}" renewal-period="${this._rateLimit.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" increment-condition="@(context.Response.StatusCode &gt;= 200 &amp;&amp; context.Response.StatusCode &lt; 300)" />`
+        : `<rate-limit-by-key calls="${this._rateLimit.calls ?? 10}" renewal-period="${this._rateLimit.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" />`,
     );
   }
   private buildCacheOptions() {
     if (!this._cacheOptions) return;
-    this._inboundPolicies.push(`      <cache-lookup vary-by-developer="false" 
+    this._inboundPolicies.push(`<cache-lookup vary-by-developer="false" 
             vary-by-developer-groups="false" 
             allow-private-response-caching="true" 
             must-revalidate="true" 
             downstream-caching-type="public" />`);
     this._outboundPolicies.push(
-      `      <cache-store duration="${this._cacheOptions.duration ?? 60}" />`,
+      `<cache-store duration="${this._cacheOptions.duration ?? 60}" />`,
     );
   }
   private buildBackendCert() {
     if (!this._backendCert) return;
     this._inboundPolicies.push(
-      `      <authentication-certificate thumbprint="${this._backendCert.thumbprint}" />`,
+      `<authentication-certificate thumbprint="${this._backendCert.thumbprint}" />`,
     );
   }
   private buildVerifyClientCert() {
     if (!this._verifyClientCert) return;
-    this._inboundPolicies.push(`   <choose>
+    this._inboundPolicies.push(`<choose>
         <when condition="@(context.Request.Certificate == null${
           this._verifyClientCert.verifyCert
             ? " || !context.Request.Certificate.VerifyNoRevocation()"
@@ -241,8 +242,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     if (!this._validateJwtWhitelistIp) return;
     const claimKey =
       this._validateJwtWhitelistIp.claimKey ?? "client_IpWhitelist";
-    this._inboundPolicies.push(`
-    <set-header name="IpAddressValidation" exists-action="override">
+    const setHeader = `<set-header name="IpAddressValidation" exists-action="override">
       <value>@{
 		Boolean ipAddressValid = false;
 		string authHeader = context.Request.Headers.GetValueOrDefault("Authorization", "");
@@ -272,10 +272,40 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
 				
         return ipAddressValid.ToString();
       }</value>
-  </set-header>`);
+  </set-header>`;
+    const checkHeader = `<choose>
+		<when condition="@(context.Request.Headers.GetValueOrDefault("IpAddressValidation", "").Equals(Boolean.FalseString))">
+        <return-response>
+            <set-status code="403" reason="Forbidden"/>
+              <set-body>@{
+                return new JObject(
+                  new JProperty("message","The IP does not match.")
+                ).ToString();
+              }</set-body>
+        </return-response>
+		 </when>
+</choose>`;
+
+    //Create Policy Fragment
+    const pfName = `${this.props.name}-PolicyFragment`;
+    new apim.PolicyFragment(pfName, {
+      id: pfName,
+      description: pfName,
+      serviceName: this.props.apimServiceName,
+      resourceGroupName: this.props.group.resourceGroupName,
+      format: "xml",
+      value: xmlFormat(`
+        <fragment>
+            ${setHeader}
+            ${checkHeader}
+        </fragment>
+      `),
+    });
+    this._inboundPolicies.push(`<include-fragment fragment-id="${pfName}" />`);
   }
   private buildWhiteListIps() {
-    if (!this._whitelistIps) return;
+    if (this._whitelistIps.length <= 0) return;
+
     const ipAddresses = this._whitelistIps.flatMap((ip) => ip.ipAddresses);
     const policy = `<ip-filter action="allow">\r\n${ipAddresses
       .map((ip) => {
@@ -285,7 +315,8 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
         }
         return `<address>${ip}</address>`;
       })
-      .join("\r\n")}\r\n</ip-filter>`;
+      .join("\r\n")}
+        </ip-filter>`;
 
     this._inboundPolicies.push(policy);
   }
@@ -293,22 +324,22 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     if (!this._findAndReplaces) return;
     this._outboundPolicies.push(
       ...this._findAndReplaces
-        .map((f) => ` <find-and-replace from="${f.from}" to="${f.to}" />`)
+        .map((f) => `<find-and-replace from="${f.from}" to="${f.to}" />`)
         .join("\n"),
     );
   }
-  private buildCustomRules() {
-    if (this._inboundCustomPolicies) {
-      this._inboundPolicies.push(
-        ...this._inboundCustomPolicies.map((i) => i.policy),
-      );
-    }
-    if (this._outboundPolicies) {
-      this._outboundPolicies.push(
-        ...this._outboundCustomPolicies.map((i) => i.policy),
-      );
-    }
-  }
+  // private buildCustomRules() {
+  //   if (this._inboundCustomPolicies) {
+  //     this._inboundPolicies.push(
+  //       ...this._inboundCustomPolicies.map((i) => i.policy),
+  //     );
+  //   }
+  //   if (this._outboundPolicies) {
+  //     this._outboundPolicies.push(
+  //       ...this._outboundCustomPolicies.map((i) => i.policy),
+  //     );
+  //   }
+  // }
 
   public build(): string {
     this.buildHeaders();
@@ -323,7 +354,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     this.buildWhiteListIps();
     this.buildCheckHeaders();
     this.buildFindAndReplace();
-    this.buildCustomRules();
+    //this.buildCustomRules();
     //This must be a last rule
     this.buildVerifyClientCert();
 
@@ -333,7 +364,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
         '<forward-request timeout="120" follow-redirects="true" buffer-request-body="true" fail-on-error-status-code="true"/>';
     }
 
-    return `<policies>
+    const xmlPolicy = `<policies>
   <inbound>
       <base />
       ${this._inboundPolicies.join("\n")}
@@ -373,5 +404,11 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       <base />
   </on-error>
 </policies>`;
+
+    return xmlFormat(xmlPolicy, {
+      strictMode: true,
+      throwOnFailure: true,
+      forceSelfClosingEmptyTag: true,
+    });
   }
 }
