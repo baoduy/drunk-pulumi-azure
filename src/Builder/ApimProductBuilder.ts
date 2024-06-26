@@ -73,13 +73,12 @@ export class ApimProductBuilder
     });
 
     if (this._policyString) {
-      const pName = `${this._productInstanceName}-policy`;
-      new apim.ProductPolicy(pName, {
-        policyId: pName,
+      new apim.ProductPolicy(`${this._productInstanceName}-policy`, {
         serviceName: this.props.apimServiceName,
         resourceGroupName: this.props.group.resourceGroupName,
         productId: this._productInstanceName,
         format: "xml",
+        policyId: "policy",
         value: this._policyString,
       });
     }

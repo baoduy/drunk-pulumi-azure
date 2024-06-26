@@ -145,9 +145,8 @@ export default class ApimApiBuilder
 
         //Apply Policy for the API
         if (this._policyString) {
-          const policyName = `${apiName}-policy`;
           new apim.ApiPolicy(
-            policyName,
+            `${apiName}-policy`,
             {
               serviceName: this.props.apimServiceName,
               resourceGroupName: this.props.group.resourceGroupName,
