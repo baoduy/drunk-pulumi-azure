@@ -1,9 +1,8 @@
 import { ResourceInfo } from "../types";
 import * as apim from "@pulumi/azure-native/apimanagement";
-import { ApimChildBuilderProps, Builder } from "./types";
-import { IApimWorkspaceBuilder } from "./types/apimWorkspaceBuilder";
+import { ApimChildBuilderProps, Builder, IApimWorkspaceBuilder } from "./types";
 
-class ApimWorkspaceBuilder
+export class ApimWorkspaceBuilder
   extends Builder<ResourceInfo>
   implements IApimWorkspaceBuilder
 {

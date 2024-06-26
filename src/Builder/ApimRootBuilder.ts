@@ -1,9 +1,11 @@
 import { ResourceInfo } from "../types";
 import { ApimProductBuilder } from "./ApimProductBuilder";
+import { ApimWorkspaceBuilder } from "./ApimWorkspaceBuilder";
 import {
   ApimChildBuilderProps,
   BuilderProps,
   IApimProductBuilder,
+  IApimWorkspaceBuilder,
 } from "./types";
 
 export default class ApimRootBuilder {
@@ -23,5 +25,9 @@ export default class ApimRootBuilder {
 
   public newProduct(name: string): IApimProductBuilder {
     return new ApimProductBuilder({ ...this.props, name });
+  }
+
+  public newWorkspace(name: string): IApimWorkspaceBuilder {
+    return new ApimWorkspaceBuilder({ ...this.props, name });
   }
 }
