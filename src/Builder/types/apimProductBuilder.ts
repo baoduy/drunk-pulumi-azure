@@ -31,7 +31,6 @@ export type VersionBuilderFunction = (
   builder: IApimApiRevisionBuilder,
 ) => IApimApiRevisionBuilder;
 export type ApimApiVersionType = "v1" | "v2" | "v3" | "v4" | "v5" | string;
-export type ApimApiRevisionType = "r1" | "r2" | "r3" | "r4" | "r5" | string;
 export type ApimApiOperationType = {
   name: string;
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
@@ -40,11 +39,11 @@ export type ApimApiOperationType = {
 };
 export type ApimApiRevisionProps =
   | {
-      revision: ApimApiRevisionType;
+      revision: number;
       swaggerUrl: string;
     }
   | {
-      revision: ApimApiRevisionType;
+      revision: number;
       operations: ApimApiOperationType[];
     };
 
@@ -57,6 +56,7 @@ export interface IApimApiServiceBuilder {
 }
 
 export interface IApimApiBuilder extends IBuilderAsync<void> {
+  withPolicies(props: ApimApiPolicyType): IApimApiBuilder;
   withKeys(props: ApimApiKeysType): IApimApiBuilder;
   withVersion(
     version: ApimApiVersionType,

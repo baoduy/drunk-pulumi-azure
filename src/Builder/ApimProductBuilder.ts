@@ -71,6 +71,18 @@ export class ApimProductBuilder
         : undefined,
       subscriptionsLimit: this._requiredSubscription?.subscriptionsLimit ?? 5,
     });
+
+    if (this._policyString) {
+      const pName = `${this._productInstanceName}-policy`;
+      new apim.ProductPolicy(pName, {
+        policyId: pName,
+        serviceName: this.props.apimServiceName,
+        resourceGroupName: this.props.group.resourceGroupName,
+        productId: this._productInstance.id,
+        format: "xml",
+        value: this._policyString,
+      });
+    }
   }
   private buildSubscription() {
     if (!this._productInstance) return;
@@ -119,9 +131,8 @@ export class ApimProductBuilder
       api(
         new ApimApiBuilder({
           ...this.props,
-          productId: this._productInstance!.id,
+          productId: this._productInstanceName!,
           requiredSubscription: Boolean(this._requiredSubscription),
-          policyString: this._policyString,
           dependsOn: this._productInstance,
         }),
       ).build(),

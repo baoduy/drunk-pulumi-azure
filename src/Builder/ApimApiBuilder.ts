@@ -1,6 +1,6 @@
 import * as apim from "@pulumi/azure-native/apimanagement";
 import { enums } from "@pulumi/azure-native/types";
-import { Input, Output } from "@pulumi/pulumi";
+import { Input } from "@pulumi/pulumi";
 import { getImportConfig } from "../Apim/ApiProduct/SwaggerHelper";
 import { organization } from "../Common/StackEnv";
 import ApimPolicyBuilder from "./ApimPolicyBuilder";
@@ -15,6 +15,7 @@ import {
   BuilderAsync,
   IApimApiRevisionBuilder,
   VersionBuilderFunction,
+  ApimApiPolicyType,
 } from "./types";
 
 class ApimApiRevisionBuilder implements IApimApiRevisionBuilder {
@@ -38,15 +39,19 @@ export default class ApimApiBuilder
   private _apis: Record<string, ApimApiRevisionProps[]> = {};
 
   private _apiSets: Record<string, apim.ApiVersionSet> = {};
+  private _policyString: string | undefined = undefined;
 
   public constructor(
     private props: ApimChildBuilderProps & {
       requiredSubscription: boolean;
-      productId: Output<string>;
-      policyString?: Input<string>;
+      productId: Input<string>;
     },
   ) {
     super(props);
+  }
+  public withPolicies(props: ApimApiPolicyType): IApimApiBuilder {
+    this._policyString = props(new ApimPolicyBuilder()).build();
+    return this;
   }
   public withServiceUrl(props: ApimApiServiceUrlType): IApimApiBuilder {
     this._serviceUrl = props;
@@ -70,7 +75,7 @@ export default class ApimApiBuilder
   public async build() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map((k) => {
-      const setName = `${this.props.name}-${k}-apiSet`;
+      const setName = `${this.props.name}-${k}-api`;
       //Create ApiSet
       const apiSet = new apim.ApiVersionSet(
         setName,
@@ -82,14 +87,14 @@ export default class ApimApiBuilder
           resourceGroupName: this.props.group.resourceGroupName,
           versioningScheme: enums.apimanagement.VersioningScheme.Segment,
         },
-        { dependsOn: this.props.dependsOn },
+        { dependsOn: this.props.dependsOn, deleteBeforeReplace: true },
       );
       this._apiSets[k] = apiSet;
 
       //Create Api
       const revisions = this._apis[k];
       return revisions.map(async (rv, index) => {
-        const apiName = `${this.props.name}-${k}-${rv.revision}-api`;
+        const apiName = `${setName};rev=${rv.revision}`;
         const api = new apim.Api(
           apiName,
           {
@@ -106,8 +111,8 @@ export default class ApimApiBuilder
             apiVersion: k,
             apiVersionDescription: k,
 
-            apiRevision: rv.revision,
-            apiRevisionDescription: `${rv.revision} ${date.toLocaleDateString()}`,
+            apiRevision: rv.revision.toString(),
+            apiRevisionDescription: `${apiName} ${date.toLocaleDateString()}`,
 
             apiVersionSetId: apiSet.id,
             subscriptionKeyParameterNames: this._keyParameters,
@@ -123,7 +128,7 @@ export default class ApimApiBuilder
                 ? await getImportConfig(rv.swaggerUrl, k)
                 : undefined,
           },
-          { dependsOn: apiSet },
+          { dependsOn: apiSet, deleteBeforeReplace: true },
         );
 
         //Link API to Product
@@ -132,24 +137,34 @@ export default class ApimApiBuilder
           {
             serviceName: this.props.apimServiceName,
             resourceGroupName: this.props.group.resourceGroupName,
-            apiId: api.id,
             productId: this.props.productId,
+            apiId: apiName,
+          },
+          { dependsOn: api },
+        );
+        new apim.ProductApiLink(
+          apiName,
+          {
+            serviceName: this.props.apimServiceName,
+            resourceGroupName: this.props.group.resourceGroupName,
+            productId: this.props.productId,
+            apiId: api.id,
           },
           { dependsOn: api },
         );
 
         //Apply Policy for the API
-        if (this.props.policyString) {
+        if (this._policyString) {
           const policyName = `${apiName}-policy`;
           new apim.ApiPolicy(
             policyName,
             {
               serviceName: this.props.apimServiceName,
               resourceGroupName: this.props.group.resourceGroupName,
-              apiId: api.id,
+              apiId: apiName,
               policyId: "policy",
               format: "xml",
-              value: this.props.policyString,
+              value: this._policyString,
             },
             { dependsOn: api },
           );
@@ -190,7 +205,7 @@ export default class ApimApiBuilder
                   })
                   .build(),
               },
-              { dependsOn: ops },
+              { dependsOn: ops, deleteBeforeReplace: true },
             );
           });
         }
