@@ -78,7 +78,7 @@ export class ApimProductBuilder
         policyId: pName,
         serviceName: this.props.apimServiceName,
         resourceGroupName: this.props.group.resourceGroupName,
-        productId: this._productInstance.id,
+        productId: this._productInstanceName,
         format: "xml",
         value: this._policyString,
       });
