@@ -1,7 +1,5 @@
-import { Input } from "@pulumi/pulumi";
-import { OpenAPI3 } from "./OpenApi";
-import axios from "axios";
 import { replaceAll } from "../../Common/Helpers";
+import { OpenAPI3 } from "./OpenApi";
 
 const removeVersion = (data: OpenAPI3, version: string): OpenAPI3 => {
   if (!data?.paths) {
@@ -21,22 +19,16 @@ const removeVersion = (data: OpenAPI3, version: string): OpenAPI3 => {
   return data;
 };
 
-export interface ApiImport {
-  contentFormat: Input<string>;
-  contentValue: Input<string>;
-}
-
 const downloadSpecFile = async (
   fileUrl: string,
 ): Promise<OpenAPI3 | undefined> => {
-  try {
-    //Get specs json from URL
-    const specs = await axios.get<OpenAPI3>(fileUrl);
-    return specs.data;
-  } catch {
-    console.error("Not able to get spec file from:", fileUrl);
-    return undefined;
-  }
+  //Get specs json from URL
+  return await fetch(fileUrl, { method: "GET" })
+    .then<OpenAPI3>((rs) => rs.json())
+    .catch((error) => {
+      console.error(`Not able to get spec file from: ${fileUrl}`, error);
+      return undefined;
+    });
 };
 
 export const getImportConfig = async (
@@ -44,11 +36,7 @@ export const getImportConfig = async (
   version: string,
 ): Promise<string | undefined> => {
   const spec = await downloadSpecFile(specUrl);
-
   if (!spec) return undefined;
-
-  //Validate
-  //if (!validateSpecFile(specUrl, spec)) return undefined;
 
   //Remove Version
   const data = removeVersion(spec, version);

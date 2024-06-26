@@ -18,7 +18,10 @@ export type APimApiBuilderFunction = (
   builder: IApimApiServiceBuilder,
 ) => IApimApiBuilder;
 
-export type ApimApiServiceUrlType = { url: Input<string> };
+export type ApimApiServiceUrlType = {
+  serviceUrl: Input<string>;
+  apiPath: Input<string>;
+};
 export type ApimApiKeysType = { header?: Input<string>; query?: Input<string> };
 export type ApimApiPolicyType = (
   builder: IApimPolicyBuilder,
@@ -68,4 +71,5 @@ export interface IApimProductBuilder extends IBuilderAsync<ResourceInfo> {
   /** Allows to add multi APIs */
   withApi(props: APimApiBuilderFunction): IApimProductBuilder;
   withPolicies(props: ApimApiPolicyType): IApimProductBuilder;
+  published(): IBuilderAsync<ResourceInfo>;
 }

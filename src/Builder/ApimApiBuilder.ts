@@ -31,7 +31,10 @@ export default class ApimApiBuilder
   implements IApimApiServiceBuilder, IApimApiBuilder
 {
   private _serviceUrl: ApimApiServiceUrlType | undefined = undefined;
-  private _keyParameters: ApimApiKeysType | undefined = undefined;
+  private _keyParameters: ApimApiKeysType | undefined = {
+    header: "x-api-key",
+    query: "api-key",
+  };
   private _apis: Record<string, ApimApiRevisionProps[]> = {};
 
   private _apiSets: Record<string, apim.ApiVersionSet> = {};
@@ -67,7 +70,7 @@ export default class ApimApiBuilder
   public async build() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map((k) => {
-      const setName = `${k}-apiSet`;
+      const setName = `${this.props.name}-${k}-apiSet`;
       //Create ApiSet
       const apiSet = new apim.ApiVersionSet(
         setName,
@@ -86,7 +89,7 @@ export default class ApimApiBuilder
       //Create Api
       const revisions = this._apis[k];
       return revisions.map(async (rv, index) => {
-        const apiName = `${k}-${rv.revision}-api`;
+        const apiName = `${this.props.name}-${k}-${rv.revision}-api`;
         const api = new apim.Api(
           apiName,
           {
@@ -108,8 +111,8 @@ export default class ApimApiBuilder
 
             apiVersionSetId: apiSet.id,
             subscriptionKeyParameterNames: this._keyParameters,
-            path: k,
-            serviceUrl: `${this._serviceUrl}/${k}`,
+            path: this._serviceUrl!.apiPath,
+            serviceUrl: `${this._serviceUrl!.serviceUrl}/${k}`,
 
             format:
               "swaggerUrl" in rv
@@ -117,10 +120,7 @@ export default class ApimApiBuilder
                 : undefined,
             value:
               "swaggerUrl" in rv
-                ? await getImportConfig(
-                    `${this._serviceUrl}/${rv.swaggerUrl}`,
-                    k,
-                  )
+                ? await getImportConfig(rv.swaggerUrl, k)
                 : undefined,
           },
           { dependsOn: apiSet },

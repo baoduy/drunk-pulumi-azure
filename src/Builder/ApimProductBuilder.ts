@@ -13,6 +13,7 @@ import {
   ApimProductSubscriptionBuilderType,
   BuilderAsync,
   IApimProductBuilder,
+  IBuilderAsync,
 } from "./types";
 
 export class ApimProductBuilder
@@ -28,6 +29,7 @@ export class ApimProductBuilder
   private _subInstance: apim.Subscription | undefined = undefined;
   private _productInstanceName: string | undefined = undefined;
   private _policyString: string | undefined = undefined;
+  private _state: apim.ProductState = "notPublished";
 
   public constructor(private props: ApimChildBuilderProps) {
     super(props);
@@ -47,6 +49,10 @@ export class ApimProductBuilder
     this._apis.push(props);
     return this;
   }
+  public published(): IBuilderAsync<ResourceInfo> {
+    this._state = "published";
+    return this;
+  }
 
   private buildProduct() {
     this._productInstanceName = `${this.props.name}-product`;
@@ -54,9 +60,11 @@ export class ApimProductBuilder
       productId: this._productInstanceName,
       displayName: this._productInstanceName,
       description: this._productInstanceName,
+
       serviceName: this.props.apimServiceName,
       resourceGroupName: this.props.group.resourceGroupName,
 
+      state: this._state,
       subscriptionRequired: Boolean(this._requiredSubscription),
       approvalRequired: this._requiredSubscription
         ? this._requiredSubscription?.approvalRequired
