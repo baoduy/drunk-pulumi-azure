@@ -1,5 +1,6 @@
+import { KeyVaultSecret } from "@azure/keyvault-secrets";
 import * as storage from "@pulumi/azure-native/storage";
-import { KeyVaultInfo, BasicResourceArgs } from "../types";
+import { KeyVaultInfo, BasicResourceArgs, ResourceInfo } from "../types";
 import { Input } from "@pulumi/pulumi";
 import { getSecret, getEncryptionKeyOutput } from "../KeyVault/Helper";
 import { isPrd } from "../Common/AzureEnv";
@@ -18,11 +19,30 @@ import {
 } from "./ManagementRules";
 import { grantIdentityPermissions } from "../AzAd/Helper";
 
-type ContainerProps = {
+export type ContainerProps = {
   name: string;
   public?: boolean;
   /** The management rule applied to Container level*/
   managementRules?: Array<ManagementRules>;
+};
+export type StorageFeatureType = {
+  allowSharedKeyAccess?: boolean;
+  /** Enable this storage as static website. */
+  enableStaticWebsite?: boolean;
+  /**Only available when static site using CDN*/
+  securityResponseHeaders?: Record<string, string>;
+  /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
+  forceUseCdn?: boolean;
+  /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
+  enableKeyVaultEncryption?: boolean;
+};
+export type StoragePolicyType = {
+  keyExpirationPeriodInDays?: number;
+  isBlobVersioningEnabled?: boolean;
+  //blobSoftDeleteDays?: number;
+  allowBlobPublicAccess?: boolean;
+  //containerSoftDeleteDays?: number;
+  //fileShareSoftDeleteDays?: number;
 };
 
 interface StorageProps extends BasicResourceArgs {
@@ -37,38 +57,17 @@ interface StorageProps extends BasicResourceArgs {
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
   fileShares?: Array<string>;
-
   //appInsight?: AppInsightInfo;
-
-  featureFlags?: {
-    allowSharedKeyAccess?: boolean;
-    /** Enable this storage as static website. */
-    enableStaticWebsite?: boolean;
-    /**Only available when static site using CDN*/
-    includesDefaultResponseHeaders?: boolean;
-    /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
-    forceUseCdn?: boolean;
-    /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
-    enableKeyVaultEncryption?: boolean;
-  };
-
-  policies?: {
-    keyExpirationPeriodInDays?: number;
-    isBlobVersioningEnabled?: boolean;
-    blobSoftDeleteDays?: number;
-    allowBlobPublicAccess?: boolean;
-    containerSoftDeleteDays?: number;
-    fileShareSoftDeleteDays?: number;
-  };
-
+  featureFlags?: StorageFeatureType;
+  policies?: StoragePolicyType;
   network?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
-
-  // onKeysLoaded?: (
-  //   keys: Array<{ name: string; key: string; connectionString: string }>,
-  //   storageName: Output<string>
-  // ) => Promise<void>;
   lock?: boolean;
 }
+
+export type StorageResults = ResourceInfo & {
+  instance: storage.StorageAccount;
+  getConnectionString: (name?: string) => Promise<KeyVaultSecret | undefined>;
+};
 
 /** Storage Creator */
 export default ({
@@ -81,12 +80,11 @@ export default ({
   containers = [],
   queues = [],
   fileShares = [],
-  //appInsight,
   network,
   featureFlags = {},
   policies = { keyExpirationPeriodInDays: 365 },
   lock = true,
-}: StorageProps) => {
+}: StorageProps): StorageResults => {
   name = getStorageName(name);
 
   const primaryKeyName = getKeyName(name, "primary");
@@ -176,42 +174,6 @@ export default ({
       : { defaultAction: "Allow" },
   });
 
-  //Soft Delete
-  if (policies) {
-    // new storage.BlobServiceProperties(
-    //   `${name}-Blob-Props`,
-    //   {
-    //     accountName: stg.name,
-    //     ...group,
-    //
-    //     deleteRetentionPolicy: policies.blobSoftDeleteDays
-    //       ? {
-    //           enabled: policies.blobSoftDeleteDays > 0,
-    //           days: policies.blobSoftDeleteDays,
-    //         }
-    //       : undefined,
-    //     isVersioningEnabled: policies.isBlobVersioningEnabled,
-    //   },
-    //   { dependsOn: stg }
-    // );
-    //
-    // new storage.FileServiceProperties(
-    //   `${name}-File-Props`,
-    //   {
-    //     accountName: stg.name,
-    //     ...group,
-    //
-    //     shareDeleteRetentionPolicy: policies.fileShareSoftDeleteDays
-    //       ? {
-    //           enabled: policies.fileShareSoftDeleteDays > 0,
-    //           days: policies.fileShareSoftDeleteDays,
-    //         }
-    //       : undefined,
-    //   },
-    //   { dependsOn: stg }
-    // );
-  }
-
   //Life Cycle Management
   if (defaultManagementRules) {
     createManagementRules({
@@ -238,13 +200,7 @@ export default ({
       },
       { dependsOn: stg },
     );
-
-    // if (appInsight && customDomain) {
-    //   addInsightMonitor({ name, appInsight, url: customDomain });
-    // }
   }
-
-  //createThreatProtection({ name, targetResourceId: stg.id });
 
   //Create Azure CDN if customDomain provided
   if (
@@ -258,8 +214,7 @@ export default ({
       origin,
       cors: allowsCors,
       httpsEnabled: true,
-      includesDefaultResponseHeaders:
-        featureFlags.includesDefaultResponseHeaders,
+      securityResponseHeaders: featureFlags.securityResponseHeaders,
     });
   }
 
@@ -355,16 +310,11 @@ export default ({
   });
 
   return {
-    storage: stg,
-    vaultNames: {
-      primaryKeyName,
-      secondaryKeyName,
-      primaryConnectionKeyName,
-      secondConnectionKeyName,
-    },
+    resourceName: name,
+    group,
+    id: stg.id,
+    instance: stg,
     getConnectionString: (name: string = primaryConnectionKeyName) =>
-      vaultInfo
-        ? getSecret({ name, nameFormatted: true, vaultInfo })
-        : undefined,
+      getSecret({ name, nameFormatted: true, vaultInfo }),
   };
 };

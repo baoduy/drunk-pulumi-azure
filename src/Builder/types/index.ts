@@ -7,5 +7,6 @@ export * from "./dnsZoneBuilder";
 export * from "./genericBuilder";
 export * from "./resourceBuilder";
 export * from "./sqlBuilder";
+export * from "./storageBuilder";
 export * from "./vmBuilder";
 export * from "./vnetBuilder";
