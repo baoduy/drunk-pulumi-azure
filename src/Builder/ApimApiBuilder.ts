@@ -142,16 +142,6 @@ export default class ApimApiBuilder
           },
           { dependsOn: api },
         );
-        new apim.ProductApiLink(
-          apiName,
-          {
-            serviceName: this.props.apimServiceName,
-            resourceGroupName: this.props.group.resourceGroupName,
-            productId: this.props.productId,
-            apiId: api.id,
-          },
-          { dependsOn: api },
-        );
 
         //Apply Policy for the API
         if (this._policyString) {
