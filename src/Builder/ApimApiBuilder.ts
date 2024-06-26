@@ -88,7 +88,7 @@ export default class ApimApiBuilder
   public async build() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map((k) => {
-      const setName = `${this.props.name}-${k}-api`;
+      const setName = `${this._apiInstanceName}-v${k}`;
       //Create ApiSet
       const apiSet = new apim.ApiVersionSet(
         setName,
