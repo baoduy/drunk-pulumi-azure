@@ -7,18 +7,19 @@ import {
   allowsCorsRules,
   getResponseHeadersRule,
 } from "./CdnRules";
-import { cdnProfileInfo } from "../Common/GlobalEnv";
+import { cdnProfileInfo as globalCdnProfileInfo } from "../Common/GlobalEnv";
 import { replaceAll } from "../Common/Helpers";
 import { getCdnEndpointName } from "../Common/Naming";
-import { BasicArgs } from "../types";
+import { BasicArgs, ResourceInfo } from "../types";
 
-interface Props extends BasicArgs {
+export interface CdnEndpointProps extends BasicArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];
   domainName: string;
   httpsEnabled?: boolean;
   securityResponseHeaders?: Record<string, string>;
+  cdnProfileInfo?: ResourceInfo;
 }
 
 export default ({
@@ -28,8 +29,9 @@ export default ({
   cors,
   httpsEnabled,
   securityResponseHeaders,
+  cdnProfileInfo = globalCdnProfileInfo,
   dependsOn,
-}: Props) => {
+}: CdnEndpointProps) => {
   name = getCdnEndpointName(name);
 
   const rules = [enforceHttpsRule, indexFileCacheRule];
@@ -47,7 +49,8 @@ export default ({
     name,
     {
       endpointName: name,
-      ...cdnProfileInfo,
+      ...cdnProfileInfo!.group,
+      profileName: cdnProfileInfo!.resourceName,
 
       origins: [{ name, hostName: origin }],
       originHostHeader: origin,
@@ -84,7 +87,8 @@ export default ({
       name,
       {
         endpointName: endpoint.name,
-        ...cdnProfileInfo,
+        ...cdnProfileInfo!.group,
+        profileName: cdnProfileInfo!.resourceName,
         customDomainName: replaceAll(domainName, ".", "-"),
         hostName: domainName,
       },

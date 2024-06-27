@@ -2,16 +2,18 @@ import { Input } from "@pulumi/pulumi";
 import {
   ContainerProps,
   StorageFeatureType,
+  StorageNetworkType,
   StoragePolicyType,
 } from "../../Storage";
-import { DefaultManagementRules } from "../../Storage/ManagementRules";
+import { CdnEndpointProps } from "../../Storage/CdnEndpoint";
 import { ResourceInfo } from "../../types";
 import { IBuilder } from "./genericBuilder";
 
-export type StorageNetworkBuilderType = {
-  subnetId?: Input<string>;
-  ipAddresses?: Array<string>;
-};
+export type StorageCdnType = Omit<
+  CdnEndpointProps,
+  "name" | "dependsOn" | "ignoreChanges" | "importUri"
+>;
+
 export type StorageFeatureBuilderType = Pick<
   StorageFeatureType,
   "enableKeyVaultEncryption" | "allowSharedKeyAccess"
@@ -22,7 +24,7 @@ export interface IStorageStarterBuilder {
 }
 
 export interface IStorageSharedBuilder {
-  withNetwork(props: StorageNetworkBuilderType): IStorageSharedBuilder;
+  withNetwork(props: StorageNetworkType): IStorageSharedBuilder;
   lock(): IStorageSharedBuilder;
 }
 export interface IStorageBuilder
@@ -32,14 +34,11 @@ export interface IStorageBuilder
   withQueue(name: string): IStorageBuilder;
   withFileShare(name: string): IStorageBuilder;
   withPolicies(props: StoragePolicyType): IStorageBuilder;
-  withRule(props: DefaultManagementRules): IStorageBuilder;
   withFeature(props: StorageFeatureBuilderType): IStorageBuilder;
 }
 
 export interface IStaticWebStorageBuilder
   extends IBuilder<ResourceInfo>,
     IStorageSharedBuilder {
-  withCustomDomain(domain: string): IStaticWebStorageBuilder;
-  withCors(origins: string[]): IStaticWebStorageBuilder;
-  withSecurityHeaders(props: Record<string, string>): IStaticWebStorageBuilder;
+  withCdn(props: StorageCdnType): IStaticWebStorageBuilder;
 }

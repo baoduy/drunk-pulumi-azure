@@ -4,7 +4,6 @@ import { KeyVaultInfo, BasicResourceArgs, ResourceInfo } from "../types";
 import { Input } from "@pulumi/pulumi";
 import { getSecret, getEncryptionKeyOutput } from "../KeyVault/Helper";
 import { isPrd } from "../Common/AzureEnv";
-import cdnCreator from "./CdnEndpoint";
 import {
   getConnectionName,
   getKeyName,
@@ -12,6 +11,7 @@ import {
 } from "../Common/Naming";
 import { addCustomSecrets } from "../KeyVault/CustomHelper";
 import Locker from "../Core/Locker";
+import privateEndpoint from "../VNet/PrivateEndpoint";
 import {
   createManagementRules,
   DefaultManagementRules,
@@ -29,30 +29,27 @@ export type StorageFeatureType = {
   allowSharedKeyAccess?: boolean;
   /** Enable this storage as static website. */
   enableStaticWebsite?: boolean;
-  /**Only available when static site using CDN*/
-  securityResponseHeaders?: Record<string, string>;
-  /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
-  forceUseCdn?: boolean;
   /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
   enableKeyVaultEncryption?: boolean;
 };
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
   isBlobVersioningEnabled?: boolean;
-  //blobSoftDeleteDays?: number;
   allowBlobPublicAccess?: boolean;
-  //containerSoftDeleteDays?: number;
-  //fileShareSoftDeleteDays?: number;
-};
-
-interface StorageProps extends BasicResourceArgs {
-  customDomain?: string;
-  allowsCors?: string[];
-  //This is required for encryption key
-  vaultInfo: KeyVaultInfo;
-
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
+};
+export type StorageNetworkType = {
+  defaultByPass?: "AzureServices" | "None";
+  vnet?: Array<{ subnetId?: Input<string>; ipAddresses?: Array<string> }>;
+  privateEndpoint?: {
+    subnetIds: Input<string>[];
+    type: "blob" | "table" | "queue" | "file" | "web" | "dfs";
+  };
+};
+interface StorageProps extends BasicResourceArgs {
+  //This is required for encryption key
+  vaultInfo: KeyVaultInfo;
 
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
@@ -60,7 +57,7 @@ interface StorageProps extends BasicResourceArgs {
   //appInsight?: AppInsightInfo;
   featureFlags?: StorageFeatureType;
   policies?: StoragePolicyType;
-  network?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
+  network?: StorageNetworkType;
   lock?: boolean;
 }
 
@@ -73,10 +70,7 @@ export type StorageResults = ResourceInfo & {
 export default ({
   name,
   group,
-  customDomain,
-  allowsCors,
   vaultInfo,
-  defaultManagementRules,
   containers = [],
   queues = [],
   fileShares = [],
@@ -142,45 +136,49 @@ export default ({
       sasExpirationPeriod: "00.00:30:00",
     },
 
-    customDomain:
-      customDomain && !featureFlags.enableStaticWebsite
-        ? { name: customDomain, useSubDomainName: true }
+    publicNetworkAccess: network?.privateEndpoint ? "Disabled" : "Enabled",
+    networkRuleSet: {
+      bypass: network?.defaultByPass ?? "AzureServices", // Logging,Metrics,AzureServices or None
+      defaultAction: "Allow",
+
+      virtualNetworkRules: network?.vnet
+        ? network.vnet
+            .filter((v) => v.subnetId)
+            .map((v) => ({
+              virtualNetworkResourceId: v.subnetId!,
+            }))
         : undefined,
 
-    // routingPreference: {
-    //   routingChoice: enableStaticWebsite
-    //     ? native.storage.RoutingChoice.InternetRouting
-    //     : native.storage.RoutingChoice.MicrosoftRouting,
-    //   publishInternetEndpoints: false,
-    //   publishMicrosoftEndpoints: false,
-    // },
-
-    networkRuleSet: network
-      ? {
-          bypass: "Logging, Metrics",
-          defaultAction: "Allow",
-
-          virtualNetworkRules: network.subnetId
-            ? [{ virtualNetworkResourceId: network.subnetId }]
-            : undefined,
-
-          ipRules: network.ipAddresses
-            ? network.ipAddresses.map((i) => ({
-                iPAddressOrRange: i,
-                action: "Allow",
-              }))
-            : undefined,
-        }
-      : { defaultAction: "Allow" },
+      ipRules: network?.vnet
+        ? network.vnet
+            .filter((v) => v.ipAddresses)
+            .flatMap((s) => s.ipAddresses)
+            .map((i) => ({
+              iPAddressOrRange: i!,
+              action: "Allow",
+            }))
+        : undefined,
+    },
   });
 
+  if (network?.privateEndpoint) {
+    //Create Private Endpoints
+    privateEndpoint({
+      name,
+      group,
+      resourceId: stg.id,
+      subnetIds: network.privateEndpoint.subnetIds,
+      privateDnsZoneName: `${name}.privatelink.${network.privateEndpoint.type}.core.windows.net`,
+      linkServiceGroupIds: [network.privateEndpoint.type],
+    });
+  }
   //Life Cycle Management
-  if (defaultManagementRules) {
+  if (policies?.defaultManagementRules) {
     createManagementRules({
       name,
-      storageAccount: stg,
       group,
-      rules: defaultManagementRules,
+      storageAccount: stg,
+      rules: policies.defaultManagementRules,
     });
   }
 
@@ -202,22 +200,6 @@ export default ({
     );
   }
 
-  //Create Azure CDN if customDomain provided
-  if (
-    (featureFlags.enableStaticWebsite && customDomain) ||
-    featureFlags.forceUseCdn
-  ) {
-    const origin = stg.name.apply((n) => `${n}.z23.web.core.windows.net`);
-    cdnCreator({
-      name,
-      domainName: customDomain!,
-      origin,
-      cors: allowsCors,
-      httpsEnabled: true,
-      securityResponseHeaders: featureFlags.securityResponseHeaders,
-    });
-  }
-
   //Create Containers
   containers.map((c) => {
     const container = new storage.BlobContainer(c.name, {
@@ -230,7 +212,7 @@ export default ({
 
     if (c.managementRules) {
       createManagementRules({
-        name,
+        name: `${name}-${c.name.toLowerCase()}`,
         storageAccount: stg,
         group,
         containerNames: [container.name],

@@ -71,7 +71,9 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
         group,
         name,
         vaultInfo,
-        defaultManagementRules: storage.storageRules ?? defaultStorageRules,
+        policies: {
+          defaultManagementRules: storage.storageRules ?? defaultStorageRules,
+        },
         featureFlags: { allowSharedKeyAccess: true },
       })
     : undefined;

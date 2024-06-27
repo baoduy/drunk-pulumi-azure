@@ -1,9 +1,11 @@
 import Storage, {
   ContainerProps,
+  StorageNetworkType,
   StoragePolicyType,
   StorageResults,
 } from "Storage";
 import { DefaultManagementRules } from "Storage/ManagementRules";
+import CdnEndpoint from "../Storage/CdnEndpoint";
 import { getDefaultResponseHeaders } from "../Storage/CdnRules";
 import { ResourceInfo } from "../types";
 import {
@@ -13,8 +15,8 @@ import {
   IStorageBuilder,
   IStorageSharedBuilder,
   IStorageStarterBuilder,
+  StorageCdnType,
   StorageFeatureBuilderType,
-  StorageNetworkBuilderType,
 } from "./types";
 
 class StorageBuilder
@@ -22,16 +24,13 @@ class StorageBuilder
   implements IStorageStarterBuilder, IStorageBuilder, IStaticWebStorageBuilder
 {
   private _type: "storage" | "staticWeb" = "storage";
-  private _securityHeaders: Record<string, string> | undefined = undefined;
-  private _cors: string[] | undefined = undefined;
-  private _domain: string | undefined = undefined;
   private _policies: StoragePolicyType | undefined = undefined;
   private _features: StorageFeatureBuilderType = {};
   private _containers: ContainerProps[] = [];
   private _queues: string[] = [];
   private _fileShares: string[] = [];
-  private _managementRules: DefaultManagementRules[] = [];
-  private _network: StorageNetworkBuilderType | undefined = undefined;
+  private _cdnProps: StorageCdnType | undefined = undefined;
+  private _network: StorageNetworkType | undefined = undefined;
   private _lock: boolean = false;
 
   private _storageInstance: StorageResults | undefined = undefined;
@@ -47,18 +46,8 @@ class StorageBuilder
     this._type = "staticWeb";
     return this;
   }
-  public withSecurityHeaders(
-    props: Record<string, string>,
-  ): IStaticWebStorageBuilder {
-    this._securityHeaders = props;
-    return this;
-  }
-  public withCors(origins: string[]): IStaticWebStorageBuilder {
-    this._cors = origins;
-    return this;
-  }
-  public withCustomDomain(domain: string): IStaticWebStorageBuilder {
-    this._domain = domain;
+  public withCdn(props: StorageCdnType): IStaticWebStorageBuilder {
+    this._cdnProps = props;
     return this;
   }
   public withContainer(props: ContainerProps): IStorageBuilder {
@@ -77,15 +66,11 @@ class StorageBuilder
     this._policies = props;
     return this;
   }
-  public withRule(props: DefaultManagementRules): IStorageBuilder {
-    this._managementRules.push(props);
-    return this;
-  }
   public withFeature(props: StorageFeatureBuilderType): IStorageBuilder {
     this._features = props;
     return this;
   }
-  public withNetwork(props: StorageNetworkBuilderType): IStorageSharedBuilder {
+  public withNetwork(props: StorageNetworkType): IStorageSharedBuilder {
     this._network = props;
     return this;
   }
@@ -94,19 +79,13 @@ class StorageBuilder
     return this;
   }
 
-  public build(): ResourceInfo {
-    if (!this._securityHeaders && this._domain)
-      this._securityHeaders = getDefaultResponseHeaders(this._domain);
-
+  private buildStorage() {
     this._storageInstance = Storage({
       ...this.commonProps,
-      customDomain: this._domain,
       network: this._network,
       containers: this._containers,
       queues: this._queues,
       fileShares: this._fileShares,
-      allowsCors: this._cors,
-      defaultManagementRules: this._managementRules,
       policies: this._policies,
       featureFlags: {
         ...this._features,
@@ -114,8 +93,29 @@ class StorageBuilder
       },
       lock: this._lock,
     });
+  }
 
-    return this._storageInstance;
+  private buildCDN() {
+    if (!this._cdnProps) return;
+    const securityHeaders =
+      this._cdnProps.securityResponseHeaders ??
+      getDefaultResponseHeaders(this._cdnProps.domainName);
+
+    //Create Azure CDN if customDomain provided
+    const origin = `${this._storageInstance!.resourceName}.z23.web.core.windows.net`;
+    CdnEndpoint({
+      name: this._storageInstance!.resourceName,
+      ...this._cdnProps,
+      origin,
+      httpsEnabled: true,
+    });
+  }
+
+  public build(): ResourceInfo {
+    this.buildStorage();
+    this.buildCDN();
+
+    return this._storageInstance!;
   }
 }
 
