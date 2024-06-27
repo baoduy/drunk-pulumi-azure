@@ -18,7 +18,7 @@ import {
   EnvRolesResults,
   getEnvRolesOutput,
 } from "../AzAd/EnvRoles";
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
 import { createVaultPrivateLink } from "../KeyVault";
@@ -56,7 +56,7 @@ class ResourceBuilder
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
   private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
-  private _otherInstances: Record<string, any> = {};
+  private _otherInstances: Record<string, ResourceInfo> = {};
   private _vnetInstance: VnetBuilderResults | undefined = undefined;
 
   constructor(public name: string) {}
@@ -211,6 +211,12 @@ class ResourceBuilder
   }
 
   private buildOthers() {
+    //Other resources
+    this._otherResources.forEach((b) => {
+      const rs = b(this.getResults());
+      this._otherInstances[rs.resourceName] = rs;
+    });
+
     //Other builders
     this._otherBuilders.forEach((b) => {
       const builder = b({
@@ -218,12 +224,6 @@ class ResourceBuilder
         dependsOn: this._vnetInstance?.vnet ?? this._RGInstance,
       });
       this._otherInstances[builder.commonProps.name] = builder.build();
-    });
-
-    //Other resources
-    this._otherResources.forEach((b) => {
-      const rs = b(this.getResults());
-      this._otherInstances[rs.resourceName] = rs;
     });
   }
 
