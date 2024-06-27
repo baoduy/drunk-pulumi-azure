@@ -107,6 +107,7 @@ class StorageBuilder
       ...this._cdnProps,
       origin,
       httpsEnabled: true,
+      dependsOn: this._storageInstance?.instance,
     });
   }
 

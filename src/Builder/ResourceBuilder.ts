@@ -183,13 +183,17 @@ class ResourceBuilder
         subnetIds: subIds,
       });
     } else {
-      new VaultNetworkResource(`${this.name}-vault`, {
-        vaultName: this._vaultInfo!.info()!.name,
-        resourceGroupName: this._vaultInfo!.info()!.group.resourceGroupName,
-        subscriptionId,
-        subnetIds: subIds,
-        ipAddresses: ipAddresses,
-      });
+      new VaultNetworkResource(
+        `${this.name}-vault`,
+        {
+          vaultName: this._vaultInfo!.info()!.name,
+          resourceGroupName: this._vaultInfo!.info()!.group.resourceGroupName,
+          subscriptionId,
+          subnetIds: subIds,
+          ipAddresses: ipAddresses,
+        },
+        { dependsOn: this._RGInstance ?? this._vnetInstance?.vnet },
+      );
     }
   }
 
@@ -230,6 +234,7 @@ class ResourceBuilder
       envRoles: this._envRoles!,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,
+      dependsOn: this._RGInstance,
     };
   }
 
