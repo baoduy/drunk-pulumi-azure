@@ -3,8 +3,7 @@ import Storage, {
   StorageNetworkType,
   StoragePolicyType,
   StorageResults,
-} from "Storage";
-import { DefaultManagementRules } from "Storage/ManagementRules";
+} from "../Storage";
 import CdnEndpoint from "../Storage/CdnEndpoint";
 import { getDefaultResponseHeaders } from "../Storage/CdnRules";
 import { ResourceInfo } from "../types";
