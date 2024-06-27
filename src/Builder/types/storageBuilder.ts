@@ -11,7 +11,7 @@ import { IBuilder } from "./genericBuilder";
 
 export type StorageCdnType = Omit<
   CdnEndpointProps,
-  "name" | "dependsOn" | "ignoreChanges" | "importUri"
+  "name" | "dependsOn" | "ignoreChanges" | "importUri" | "origin"
 >;
 
 export type StorageFeatureBuilderType = Pick<
