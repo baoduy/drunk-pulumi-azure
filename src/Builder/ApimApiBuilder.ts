@@ -1,8 +1,9 @@
 import * as apim from "@pulumi/azure-native/apimanagement";
 import { enums } from "@pulumi/azure-native/types";
-import { Input } from "@pulumi/pulumi";
+import { Input, interpolate } from "@pulumi/pulumi";
 import { getImportConfig } from "../Apim/ApiProduct/SwaggerHelper";
 import { organization } from "../Common/StackEnv";
+import { ResourceInfo } from "../types";
 import ApimPolicyBuilder from "./ApimPolicyBuilder";
 
 import {
@@ -28,7 +29,7 @@ class ApimApiRevisionBuilder implements IApimApiRevisionBuilder {
 }
 
 export default class ApimApiBuilder
-  extends BuilderAsync<void>
+  extends BuilderAsync<ResourceInfo>
   implements IApimApiServiceBuilder, IApimApiBuilder
 {
   private _serviceUrl: ApimApiServiceUrlType | undefined = undefined;
@@ -85,7 +86,7 @@ export default class ApimApiBuilder
     return this;
   }
 
-  public async build() {
+  private async buildApis() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map((k) => {
       const setName = `${this._apiInstanceName}-v${k}`;
@@ -219,5 +220,15 @@ export default class ApimApiBuilder
     });
 
     await Promise.all(tasks);
+  }
+
+  public async build(): Promise<ResourceInfo> {
+    await this.buildApis();
+
+    return {
+      resourceName: this._apiInstanceName,
+      group: this.props.group,
+      id: interpolate`${this.props.productId}`,
+    };
   }
 }

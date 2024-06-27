@@ -55,7 +55,7 @@ export interface IApimApiServiceBuilder {
   withServiceUrl(props: ApimApiServiceUrlType): IApimApiBuilder;
 }
 
-export interface IApimApiBuilder extends IBuilderAsync<void> {
+export interface IApimApiBuilder extends IBuilderAsync<ResourceInfo> {
   withPolicies(props: ApimApiPolicyType): IApimApiBuilder;
   withKeys(props: ApimApiKeysType): IApimApiBuilder;
   withVersion(

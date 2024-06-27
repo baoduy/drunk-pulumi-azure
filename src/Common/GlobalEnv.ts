@@ -25,7 +25,10 @@ export const groupInfo: ResourceGroupInfo = {
 const cdnProfileName = getCdnProfileName(globalKeyName);
 export const cdnProfileInfo: ResourceInfo = {
   resourceName: cdnProfileName,
-  group: groupInfo,
+  group: {
+    resourceGroupName: groupInfo.resourceGroupName,
+    location: globalKeyName,
+  },
   id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${groupInfo.resourceGroupName}/providers/microsoft.cdn/profiles/${cdnProfileName}`,
 };
 

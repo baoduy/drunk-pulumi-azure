@@ -1,7 +1,7 @@
 import * as network from "@pulumi/azure-native/network";
 import * as pulumi from "@pulumi/pulumi";
 import { output as outputs } from "@pulumi/azure-native/types";
-import { BasicResourceArgs } from "../types";
+import { BasicResourceArgs, ResourceInfo } from "../types";
 import { RouteArgs, CustomSecurityRuleArgs } from "./types";
 import {
   appGatewaySubnetName,
@@ -62,7 +62,7 @@ export interface VnetProps extends BasicResourceArgs {
   };
 }
 
-export type VnetResult = {
+export type VnetResult = ResourceInfo & {
   vnet: network.VirtualNetwork;
   appGatewaySubnet: pulumi.OutputInstance<
     outputs.network.SubnetResponse | undefined
@@ -217,7 +217,7 @@ export default ({
           routeTable: s.enableRouteTable === false ? undefined : routeTable,
         }),
       ),
-     
+
       enableDdosProtection: ddosId !== undefined,
       ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
     },
@@ -229,6 +229,9 @@ export default ({
 
   //Return the results
   return {
+    resourceName: vName,
+    group,
+    id: vnet.id,
     vnet,
     securityGroup,
     routeTable,
@@ -238,6 +241,6 @@ export default ({
     firewallManageSubnet: findSubnet(azFirewallManagementSubnet),
     appGatewaySubnet: findSubnet(appGatewaySubnetName),
     gatewaySubnet: findSubnet(gatewaySubnetName),
-    bastionSubnet:findSubnet(azBastionSubnetName),   
+    bastionSubnet: findSubnet(azBastionSubnetName),
   };
 };

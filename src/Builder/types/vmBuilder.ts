@@ -1,3 +1,4 @@
+import { ResourceInfo } from "../../types";
 import { VmScheduleType } from "../../VM";
 import { IBuilder, ILoginBuilder } from "./genericBuilder";
 import { Input } from "@pulumi/pulumi";
@@ -59,7 +60,7 @@ export interface IVmLoginBuilder extends ILoginBuilder<IVmVnetBuilder> {}
 export interface IVmVnetBuilder {
   withSubnetId(props: Input<string>): IVmBuilder;
 }
-export interface IVmBuilder extends IBuilder<VirtualMachine> {
+export interface IVmBuilder extends IBuilder<ResourceInfo> {
   withTags(props: Record<string, Input<string>>): IVmBuilder;
   withSchedule(props: VmScheduleType): IVmBuilder;
 }

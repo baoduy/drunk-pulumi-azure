@@ -1,4 +1,5 @@
 import { Input } from "@pulumi/pulumi";
+import { ResourceInfo } from "../types";
 import {
   Builder,
   BuilderProps,
@@ -17,7 +18,7 @@ import VM, { VmScheduleType } from "../VM";
 import { VirtualMachine } from "@pulumi/azure-native/compute";
 
 class VmBuilder
-  extends Builder<VirtualMachine>
+  extends Builder<ResourceInfo>
   implements
     IVmOsBuilder,
     IVmSizeBuilder,
@@ -106,11 +107,15 @@ class VmBuilder
     });
   }
 
-  public build(): VirtualMachine {
+  public build(): ResourceInfo {
     this.buildLogin();
     this.buildVm();
 
-    return this._vmInstance!;
+    return {
+      resourceName: this.commonProps.name,
+      group: this.commonProps.group,
+      id: this._vmInstance!.id,
+    };
   }
 }
 

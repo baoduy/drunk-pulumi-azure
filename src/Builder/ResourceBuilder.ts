@@ -6,6 +6,7 @@ import {
   IResourceRoleBuilder,
   IResourceVaultBuilder,
   ResourceBuilderResults,
+  ResourceFunction,
   ResourceGroupBuilderType,
   ResourceVaultLinkingBuilderType,
   ResourceVnetBuilderType,
@@ -50,6 +51,7 @@ class ResourceBuilder
   private _secrets: Record<string, Input<string>> = {};
   private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
     undefined;
+  private _otherResources: ResourceFunction[] = [];
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
@@ -106,6 +108,10 @@ class ResourceBuilder
   }
   public withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder {
     this._otherBuildersAsync.push(props);
+    return this;
+  }
+  public withResource(builder: ResourceFunction): IResourceBuilder {
+    this._otherResources.push(builder);
     return this;
   }
   public lock(): IResourceBuilder {
@@ -205,12 +211,19 @@ class ResourceBuilder
   }
 
   private buildOthers() {
+    //Other builders
     this._otherBuilders.forEach((b) => {
       const builder = b({
         ...this.getResults(),
         dependsOn: this._vnetInstance?.vnet ?? this._RGInstance,
       });
       this._otherInstances[builder.commonProps.name] = builder.build();
+    });
+
+    //Other resources
+    this._otherResources.forEach((b) => {
+      const rs = b(this.getResults());
+      this._otherInstances[rs.resourceName] = rs;
     });
   }
 
