@@ -1,6 +1,7 @@
 import { Input } from "@pulumi/pulumi";
 import * as native from "@pulumi/azure-native";
 import CdnHttpsEnable from "@drunk-pulumi/azure-providers/CdnHttpsEnable";
+import { subscriptionId } from "../Common/AzureEnv";
 import {
   enforceHttpsRule,
   indexFileCacheRule,
@@ -99,7 +100,11 @@ export default ({
       new CdnHttpsEnable(
         name,
         {
-          customDomainId: customDomain.id,
+          endpointName: endpoint.name,
+          ...cdnProfileInfo!.group,
+          profileName: cdnProfileInfo!.resourceName,
+          customDomainName: customDomain.name,
+          subscriptionId,
         },
         { dependsOn: customDomain },
       );
