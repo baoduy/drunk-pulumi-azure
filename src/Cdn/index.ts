@@ -17,7 +17,7 @@ export default ({
   name,
   group = global.groupInfo,
   //vaultAccess,
-}: Props): ResourceInfo => {
+}: Props): ResourceInfo & { instance: cdn.Profile } => {
   name = getCdnProfileName(name);
   const internalGroup = { ...group, location: "global" };
 
