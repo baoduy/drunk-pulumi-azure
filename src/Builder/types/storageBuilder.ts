@@ -23,7 +23,7 @@ export interface IStorageStarterBuilder {
   asStaticWebStorage(): IStaticWebStorageBuilder;
 }
 
-export interface IStorageSharedBuilder {
+export interface IStorageSharedBuilder extends IBuilder<ResourceInfo> {
   withNetwork(props: StorageNetworkType): IStorageSharedBuilder;
   lock(): IStorageSharedBuilder;
 }
