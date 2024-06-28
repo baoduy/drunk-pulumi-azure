@@ -1,11 +1,10 @@
-import { Input } from "@pulumi/pulumi";
 import {
   ContainerProps,
   StorageFeatureType,
   StorageNetworkType,
   StoragePolicyType,
 } from "../../Storage";
-import { CdnEndpointProps } from "../../Storage/CdnEndpoint";
+import { CdnEndpointProps } from "../../Cdn/CdnEndpoint";
 import { ResourceInfo } from "../../types";
 import { IBuilder } from "./genericBuilder";
 

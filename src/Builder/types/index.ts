@@ -3,6 +3,7 @@ export * from "./apimPolicyBuilder";
 export * from "./apimProductBuilder";
 export * from "./apimWorkspaceBuilder";
 export * from "./askBuilder";
+export * from "./cdnBuilder";
 export * from "./dnsZoneBuilder";
 export * from "./genericBuilder";
 export * from "./resourceBuilder";

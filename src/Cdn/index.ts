@@ -27,10 +27,13 @@ export default ({
   });
 
   if (envRoles) {
-    addMemberToGroup({
-      name,
-      objectId: profile.identity.apply((i) => i!.principalId),
-      groupObjectId: envRoles.readOnly.objectId,
+    profile.identity.apply((i) => {
+      if (!i) return;
+      addMemberToGroup({
+        name,
+        objectId: i.principalId,
+        groupObjectId: envRoles.readOnly.objectId,
+      });
     });
   }
 

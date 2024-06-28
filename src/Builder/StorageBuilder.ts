@@ -4,8 +4,8 @@ import Storage, {
   StoragePolicyType,
   StorageResults,
 } from "../Storage";
-import CdnEndpoint from "../Storage/CdnEndpoint";
-import { getDefaultResponseHeaders } from "../Storage/CdnRules";
+import CdnEndpoint from "../Cdn/CdnEndpoint";
+import { getDefaultResponseHeaders } from "../Cdn/CdnRules";
 import { ResourceInfo } from "../types";
 import {
   Builder,

@@ -1,55 +1,44 @@
-import * as AppConfiguration from '@pulumi/azure-native/appconfiguration';
-import { getAppConfigName, getPrivateEndpointName } from '../Common/Naming';
-import { KeyVaultInfo, PrivateLinkProps, ResourceGroupInfo } from '../types';
-import { AppConfigDisableAccessKeysResource } from '@drunk-pulumi/azure-providers/AppConfigDisableAccessKeys';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import * as AppConfiguration from "@pulumi/azure-native/appconfiguration";
+import { getAppConfigName, getPrivateEndpointName } from "../Common/Naming";
+import { KeyVaultInfo, PrivateLinkProps, ResourceGroupInfo } from "../types";
+import { AppConfigDisableAccessKeysResource } from "@drunk-pulumi/azure-providers/AppConfigDisableAccessKeys";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
-interface Props {
+export type AppConfigProps = {
   name: string;
   group: ResourceGroupInfo;
-  disabledAccessKeys?: boolean;
-  //enablePublicAccess?: boolean;
   privateLink?: PrivateLinkProps;
-  vaultInfo?: KeyVaultInfo;
-}
+  disableLocalAuth?: boolean;
+  vaultInfo: KeyVaultInfo;
+};
 
 export default ({
   group,
   name,
   vaultInfo,
-  disabledAccessKeys,
-  //enablePublicAccess,
+  disableLocalAuth,
   privateLink,
-}: Props) => {
+}: AppConfigProps) => {
   name = getAppConfigName(name);
   const readPrimaryConnectionStringKey = `${name}-read-primary-connection-string`;
   const readSecondaryConnectionStringKey = `${name}-read-secondary-connection-string`;
 
-  //Default is enable public access however will be not if private link is enabled.
-  // if (!enablePublicAccess && !privateLink) {
-  //   enablePublicAccess = true;
-  // }
-
   const appConfig = new AppConfiguration.ConfigurationStore(name, {
     configStoreName: name,
     ...group,
-    identity: { type: 'SystemAssigned' },
-    //This only able to disable when private link created.
-    // publicNetworkAccess: enablePublicAccess
-    //   ? AppConfiguration.PublicNetworkAccess.Enabled
-    //   : AppConfiguration.PublicNetworkAccess.Disabled,
-    sku: { name: 'Standard' },
+    identity: { type: "SystemAssigned" },
+
+    disableLocalAuth,
+    publicNetworkAccess: privateLink
+      ? AppConfiguration.PublicNetworkAccess.Disabled
+      : AppConfiguration.PublicNetworkAccess.Enabled,
+
+    sku: { name: "Standard" },
   });
 
   //Access Keys
-  if (disabledAccessKeys) {
-    new AppConfigDisableAccessKeysResource(
-      name,
-      { configStoreName: name, ...group },
-      { dependsOn: appConfig }
-    );
-  } else if (vaultInfo) {
+  if (vaultInfo && !disableLocalAuth) {
     appConfig.id.apply(async (id) => {
       if (!id) return;
       //Load the  keys from Azure
@@ -63,7 +52,7 @@ export default ({
           //Only Read Connection String here
           if (key.readOnly) {
             addCustomSecret({
-              name: key.name.includes('Primary')
+              name: key.name.includes("Primary")
                 ? readPrimaryConnectionStringKey
                 : readSecondaryConnectionStringKey,
               value: key.connectionString,
@@ -81,8 +70,8 @@ export default ({
     PrivateEndpoint({
       name: getPrivateEndpointName(name),
       group,
-      privateDnsZoneName: 'privatelink.azconfig.io',
-      linkServiceGroupIds: ['appConfig'],
+      privateDnsZoneName: `${name}.privatelink.azconfig.io`,
+      linkServiceGroupIds: ["appConfig"],
       resourceId: appConfig.id,
       ...privateLink,
     });
