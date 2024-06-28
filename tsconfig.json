@@ -167,6 +167,7 @@
     "src/Web/Helpers.ts",
     "src/Web/WebAppPlan.ts",
     "src/Web/types.ts",
+    "src/index.ts",
     "src/types.ts"
   ],
   "include": [

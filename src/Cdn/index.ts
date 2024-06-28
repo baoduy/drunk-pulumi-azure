@@ -1,22 +1,20 @@
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../types";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { addMemberToGroup } from "../AzAd/Group";
+import { ResourceGroupInfo, ResourceInfo } from "../types";
 import * as cdn from "@pulumi/azure-native/cdn";
-import * as azureAd from "@pulumi/azuread";
 import { getCdnProfileName } from "../Common/Naming";
 import { global } from "../Common";
 
 interface Props {
   name: string;
   group?: ResourceGroupInfo;
-  // vaultAccess?: {
-  //   enableRbacAccess?: boolean;
-  //   vaultInfo: KeyVaultInfo;
-  // };
+  envRoles: EnvRolesResults;
 }
 
 export default ({
   name,
   group = global.groupInfo,
-  //vaultAccess,
+  envRoles,
 }: Props): ResourceInfo & { instance: cdn.Profile } => {
   name = getCdnProfileName(name);
   const internalGroup = { ...group, location: "global" };
@@ -24,17 +22,17 @@ export default ({
   const profile = new cdn.Profile(name, {
     profileName: name,
     ...internalGroup,
+    identity: { type: cdn.ManagedServiceIdentityType.SystemAssigned },
     sku: { name: cdn.SkuName.Standard_Microsoft },
   });
 
-  // if (vaultAccess) {
-  //   //https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
-  //   const n = `${name}-sp`;
-  //
-  //   new azureAd.ServicePrincipal(n, {
-  //     clientId: "205478c0-bd83-4e1b-a9d6-db63a3e1e1c8",
-  //   });
-  // }
+  if (envRoles) {
+    addMemberToGroup({
+      name,
+      objectId: profile.identity.apply((i) => i!.principalId),
+      groupObjectId: envRoles.readOnly.objectId,
+    });
+  }
 
   return {
     resourceName: name,
