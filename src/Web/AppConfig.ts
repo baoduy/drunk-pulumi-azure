@@ -1,7 +1,12 @@
-import * as AppConfiguration from "@pulumi/azure-native/appconfiguration";
+import * as appConfig from "@pulumi/azure-native/appconfiguration";
+import { isPrd } from "../Common/AzureEnv";
 import { getAppConfigName, getPrivateEndpointName } from "../Common/Naming";
-import { KeyVaultInfo, PrivateLinkProps, ResourceGroupInfo } from "../types";
-import { AppConfigDisableAccessKeysResource } from "@drunk-pulumi/azure-providers/AppConfigDisableAccessKeys";
+import {
+  KeyVaultInfo,
+  PrivateLinkProps,
+  ResourceGroupInfo,
+  ResourceInfo,
+} from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 
@@ -19,30 +24,33 @@ export default ({
   vaultInfo,
   disableLocalAuth,
   privateLink,
-}: AppConfigProps) => {
+}: AppConfigProps): ResourceInfo & {
+  instance: appConfig.ConfigurationStore;
+} => {
   name = getAppConfigName(name);
   const readPrimaryConnectionStringKey = `${name}-read-primary-connection-string`;
   const readSecondaryConnectionStringKey = `${name}-read-secondary-connection-string`;
 
-  const appConfig = new AppConfiguration.ConfigurationStore(name, {
+  const app = new appConfig.ConfigurationStore(name, {
     configStoreName: name,
     ...group,
     identity: { type: "SystemAssigned" },
-
+    enablePurgeProtection: isPrd,
+    softDeleteRetentionInDays: isPrd ? 90 : 7,
     disableLocalAuth,
     publicNetworkAccess: privateLink
-      ? AppConfiguration.PublicNetworkAccess.Disabled
-      : AppConfiguration.PublicNetworkAccess.Enabled,
+      ? appConfig.PublicNetworkAccess.Disabled
+      : appConfig.PublicNetworkAccess.Enabled,
 
     sku: { name: "Standard" },
   });
 
   //Access Keys
   if (vaultInfo && !disableLocalAuth) {
-    appConfig.id.apply(async (id) => {
+    app.id.apply(async (id) => {
       if (!id) return;
       //Load the  keys from Azure
-      const keys = await AppConfiguration.listConfigurationStoreKeys({
+      const keys = await appConfig.listConfigurationStoreKeys({
         configStoreName: name,
         ...group,
       });
@@ -72,16 +80,15 @@ export default ({
       group,
       privateDnsZoneName: `${name}.privatelink.azconfig.io`,
       linkServiceGroupIds: ["appConfig"],
-      resourceId: appConfig.id,
+      resourceId: app.id,
       ...privateLink,
     });
   }
 
   return {
-    appConfig,
-    vaultNames: {
-      readPrimaryConnectionStringKey,
-      readSecondaryConnectionStringKey,
-    },
+    resourceName: name,
+    group,
+    id: app.id,
+    instance: app,
   };
 };
