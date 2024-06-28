@@ -1,4 +1,4 @@
-import CdnEndpoint, { CdnEndpointProps } from "Cdn/CdnEndpoint";
+import CdnEndpoint from "../Cdn/CdnEndpoint";
 import Cdn from "../Cdn";
 import { ResourceInfo } from "../types";
 import {
