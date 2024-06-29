@@ -36,7 +36,7 @@ export default ({
     ...group,
     identity: { type: "SystemAssigned" },
     enablePurgeProtection: isPrd,
-    softDeleteRetentionInDays: isPrd ? 90 : 7,
+    softDeleteRetentionInDays: isPrd ? 7 : 1,
     disableLocalAuth,
     publicNetworkAccess: privateLink
       ? appConfig.PublicNetworkAccess.Disabled
