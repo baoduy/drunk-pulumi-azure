@@ -8,6 +8,15 @@ import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import GlobalSchedule from "./GlobalSchedule";
 import Extension, { VmExtensionProps } from "./Extension";
 
+export type VmScheduleType = {
+  /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
+  timeZone?: "Singapore Standard Time" | Input<string>;
+  /** The format is ISO 8601 Standard ex: 2200 */
+  autoShutdownTime?: Input<string>;
+  /** The format is ISO 8601 Standard ex: 0900 */
+  //autoStartTime?: Input<string>;
+};
+
 //https://az-vm-image.info/
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
@@ -32,17 +41,8 @@ interface Props extends BasicResourceArgs {
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
   dataDiskSizeGB?: number;
-  schedule?: {
-    /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
-    timeZone?: "Singapore Standard Time" | Input<string>;
-    /** The format is ISO 8601 Standard ex: 2200 */
-    autoShutdownTime?: Input<string>;
-    /** The format is ISO 8601 Standard ex: 0900 */
-    //autoStartTime?: Input<string>;
-  };
-
+  schedule?: VmScheduleType;
   extensions?: Array<Omit<VmExtensionProps, "dependsOn" | "vmName" | "group">>;
-
   //This need a lock
   lock?: boolean;
   tags?: { [key: string]: Input<string> };

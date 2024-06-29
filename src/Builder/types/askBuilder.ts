@@ -12,10 +12,6 @@ import {
   DefaultAksNodePoolProps,
 } from "../../Aks";
 
-export type AskBuilderResults = {
-  ssh: SshResults;
-  aks: AksResults;
-};
 export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
 export type AksImportProps = { id: string; ignoreChanges?: string[] };
 
@@ -29,7 +25,7 @@ export interface IAksNetworkBuilder {
 export interface IAksDefaultNodePoolBuilder {
   withDefaultNodePool(props: DefaultAksNodePoolProps): IAksBuilder;
 }
-export interface IAksBuilder extends IBuilderAsync<AskBuilderResults> {
+export interface IAksBuilder extends IBuilderAsync<AksResults> {
   withAuth(props: Omit<AksAccessProps, "envRoles">): IAksBuilder;
   withNodePool(props: AksNodePoolProps): IAksBuilder;
   withAddon(props: AskAddonProps): IAksBuilder;

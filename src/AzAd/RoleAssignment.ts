@@ -8,36 +8,11 @@ type GetRoleProps = {
   roleName: string;
 };
 
-// interface AzureRestResult<T> {
-//   value: Array<T>;
-// }
-//
-// type RoleDefinitionProps = {
-//   name: string;
-//   id: string;
-//   type: string;
-//   properties: {
-//     roleName: string;
-//     type: 'BuiltInRole';
-//     description: string;
-//   };
-// };
-
 /** The result must be single item if not will return undefined. */
 export const getRoleDefinitionByName = ({ roleName }: GetRoleProps) => {
   const role = RolesBuiltIn.find((r) => r.properties.roleName === roleName);
   if (role) return role;
   throw new Error(`The role ${roleName} is not found.`);
-
-  // const axios = createAxios();
-  // const url = `/providers/Microsoft.Authorization/roleDefinitions?$filter=roleName eq '${roleName}'&api-version=2018-01-01-preview`;
-  //
-  // const rs = await axios
-  //   .get<AzureRestResult<RoleDefinitionProps>>(url)
-  //   .then((rs) => rs.data.value);
-  //
-  // if (rs.length <= 0) throw new Error(`Role ${roleName} not found`);
-  // return rs[0];
 };
 
 export type RoleAssignmentProps = {

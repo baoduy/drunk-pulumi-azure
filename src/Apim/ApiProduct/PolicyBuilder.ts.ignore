@@ -5,45 +5,45 @@ import { organization } from "../../Common/StackEnv";
 const defaultRateLimit = isPrd ? 60 : 120;
 const enableApimEventHub = false;
 
-interface MockProps {
+export type ApimMockProps = {
   code?: number;
   contentType?: string;
-}
+};
 
 const getInMockResponse = ({
   code = 200,
   contentType = "text/html",
-}: MockProps) =>
+}: ApimMockProps) =>
   `      <mock-response status-code="${code}" content-type="${contentType}" />`;
 
-interface RewriteUriProps {
+export type ApimRewriteUriProps = {
   template?: string;
-}
+};
 
-const getInRewriteUri = ({ template = "/" }: RewriteUriProps) =>
+const getInRewriteUri = ({ template = "/" }: ApimRewriteUriProps) =>
   `      <rewrite-uri template="${template}" />`;
 
-interface BaseUrlProps {
+export type ApimBaseUrlProps = {
   url: string;
-}
+};
 
-const setBaseUrl = ({ url }: BaseUrlProps) =>
+const setBaseUrl = ({ url }: ApimBaseUrlProps) =>
   `   <set-backend-service base-url="${url}" />`;
 
-interface RateLimitProps {
+export type ApimRateLimitProps = {
   /** Number of call */
   call?: number;
   /** in period (second) */
   period?: number;
   /** only applied to the success condition `@(context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)` */
   successConditionOnly?: boolean;
-}
+};
 
 const getInRateLimit = ({
   call = defaultRateLimit, //The number of call in
   period = 60, //1 minute
   successConditionOnly,
-}: RateLimitProps) =>
+}: ApimRateLimitProps) =>
   successConditionOnly
     ? `      <rate-limit-by-key calls="${call}" 
             renewal-period="${period}" 
@@ -60,31 +60,31 @@ const getInCache = () =>
             must-revalidate="true" 
             downstream-caching-type="public" />`;
 
-interface OutCacheProps {
+export type ApimOutCacheProps = {
   duration?: number;
-}
-const getOutCache = ({ duration = 60 }: OutCacheProps) =>
+};
+const getOutCache = ({ duration = 60 }: ApimOutCacheProps) =>
   `      <cache-store duration="${duration}" />`;
 
-interface AuthCertProps {
+export type ApimAuthCertProps = {
   thumbprint: string;
-}
+};
 
-const getInBackendCert = ({ thumbprint }: AuthCertProps) =>
+const getInBackendCert = ({ thumbprint }: ApimAuthCertProps) =>
   `      <authentication-certificate thumbprint="${thumbprint}" />`;
 
-export interface ClientCertProps extends Partial<AuthCertProps> {
+export type ApimClientCertProps = Partial<ApimAuthCertProps> & {
   issuer?: string;
   subject?: string;
   verifyCert?: boolean;
-}
+};
 
 const getInClientCertValidate = ({
   issuer,
   subject,
   thumbprint,
   verifyCert,
-}: ClientCertProps) =>
+}: ApimClientCertProps) =>
   `   <choose>
         <when condition="@(context.Request.Certificate == null${
           verifyCert
@@ -107,11 +107,11 @@ const getInClientCertValidate = ({
       </when>
     </choose>`;
 
-interface CorsProps {
+export type ApimCorsProps = {
   origins?: string[];
-}
+};
 
-const getCorsPolicy = ({ origins }: CorsProps) => {
+const getCorsPolicy = ({ origins }: ApimCorsProps) => {
   const orgs = origins
     ? origins.map((o) => `<origin>${o}</origin>`)
     : ["<origin>*</origin>"];
@@ -288,11 +288,11 @@ const getIPAddressFilterPolicy = () => {
   `;
 };
 
-interface WhitelistIpProps {
+export type ApimWhitelistIpProps = {
   ipAddresses: string[];
-}
+};
 
-const getIpWhitelistPolicy = ({ ipAddresses }: WhitelistIpProps) => {
+const getIpWhitelistPolicy = ({ ipAddresses }: ApimWhitelistIpProps) => {
   const policy = `<ip-filter action="allow">\r\n${ipAddresses
     .map((ip) => {
       if (ip.includes("/")) {
@@ -313,17 +313,17 @@ export enum SetHeaderTypes {
   append = "append",
 }
 
-interface SetHeaderProps {
+export type ApimSetHeaderProps = {
   name: string;
   value?: string;
   type: SetHeaderTypes;
-}
+};
 
 const setHeader = ({
   name,
   type = SetHeaderTypes.delete,
   value,
-}: SetHeaderProps) => {
+}: ApimSetHeaderProps) => {
   let rs = `<set-header name="${name}" exists-action="${type}">`;
 
   if (value) {
@@ -334,11 +334,11 @@ const setHeader = ({
   return rs;
 };
 
-interface CheckHeaders {
+export type ApimCheckHeaders = {
   checkHeaders: Array<{ name: string; value?: string[] }>;
-}
+};
 
-const checkHeaderPolicy = ({ checkHeaders }: CheckHeaders) => {
+const checkHeaderPolicy = ({ checkHeaders }: ApimCheckHeaders) => {
   return checkHeaders
     .map((c) => {
       return `<check-header name="${
@@ -368,16 +368,16 @@ const setFindAndReplaces = (
     .join("\n");
 
 export interface PoliciesProps {
-  setBaseUrl?: BaseUrlProps;
-  setHeaders?: Array<SetHeaderProps> | SetHeaderProps;
-  checkHeaders?: CheckHeaders;
-  mockResponse?: MockProps | boolean;
-  rewriteUri?: RewriteUriProps | boolean;
-  rateLimit?: RateLimitProps | boolean;
-  cache?: OutCacheProps | boolean;
-  backendCert?: AuthCertProps;
-  clientCert?: ClientCertProps;
-  cors?: CorsProps | boolean;
+  setBaseUrl?: ApimBaseUrlProps;
+  setHeaders?: Array<ApimSetHeaderProps> | ApimSetHeaderProps;
+  checkHeaders?: ApimCheckHeaders;
+  mockResponse?: ApimMockProps | boolean;
+  rewriteUri?: ApimRewriteUriProps | boolean;
+  rateLimit?: ApimRateLimitProps | boolean;
+  cache?: ApimOutCacheProps | boolean;
+  backendCert?: ApimAuthCertProps;
+  clientCert?: ApimClientCertProps;
+  cors?: ApimCorsProps | boolean;
   enableClientIpHeader?: boolean;
 
   logEventHubName?: string;

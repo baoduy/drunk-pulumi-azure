@@ -2,17 +2,12 @@ import { CustomSecurityRuleArgs } from "../types";
 
 interface Props {
   bastionAddressPrefix: string;
-  vmAddressPrefixes: string[];
   startPriority?: number;
 }
 
 /** The Security group rules for Bastion */
 // https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
-export default ({
-  bastionAddressPrefix,
-  vmAddressPrefixes,
-  startPriority = 3000,
-}: Props) => {
+export default ({ bastionAddressPrefix, startPriority = 3000 }: Props) => {
   const rs = new Array<CustomSecurityRuleArgs>();
   //Inbound
   rs.push(

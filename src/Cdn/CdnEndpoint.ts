@@ -1,24 +1,26 @@
 import { Input } from "@pulumi/pulumi";
 import * as native from "@pulumi/azure-native";
 import CdnHttpsEnable from "@drunk-pulumi/azure-providers/CdnHttpsEnable";
+import { subscriptionId } from "../Common/AzureEnv";
 import {
-  getDefaultResponseHeadersRule,
   enforceHttpsRule,
   indexFileCacheRule,
   allowsCorsRules,
+  getResponseHeadersRule,
 } from "./CdnRules";
-import { cdnProfileInfo } from "../Common/GlobalEnv";
+import { cdnProfileInfo as globalCdnProfileInfo } from "../Common/GlobalEnv";
 import { replaceAll } from "../Common/Helpers";
 import { getCdnEndpointName } from "../Common/Naming";
-import { BasicArgs } from "../types";
+import { BasicArgs, ResourceInfo } from "../types";
 
-interface Props extends BasicArgs {
+export interface CdnEndpointProps extends BasicArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];
   domainName: string;
   httpsEnabled?: boolean;
-  includesDefaultResponseHeaders?: boolean;
+  securityResponseHeaders?: Record<string, string>;
+  cdnProfileInfo?: ResourceInfo;
 }
 
 export default ({
@@ -27,14 +29,15 @@ export default ({
   origin,
   cors,
   httpsEnabled,
-  includesDefaultResponseHeaders,
+  securityResponseHeaders,
+  cdnProfileInfo = globalCdnProfileInfo,
   dependsOn,
-}: Props) => {
+}: CdnEndpointProps) => {
   name = getCdnEndpointName(name);
 
   const rules = [enforceHttpsRule, indexFileCacheRule];
-  if (includesDefaultResponseHeaders) {
-    rules.push(getDefaultResponseHeadersRule(domainName));
+  if (securityResponseHeaders) {
+    rules.push(getResponseHeadersRule(securityResponseHeaders));
   }
   if (cors) {
     rules.push(...allowsCorsRules(cors));
@@ -47,7 +50,8 @@ export default ({
     name,
     {
       endpointName: name,
-      ...cdnProfileInfo,
+      ...cdnProfileInfo!.group,
+      profileName: cdnProfileInfo!.resourceName,
 
       origins: [{ name, hostName: origin }],
       originHostHeader: origin,
@@ -84,7 +88,8 @@ export default ({
       name,
       {
         endpointName: endpoint.name,
-        ...cdnProfileInfo,
+        ...cdnProfileInfo!.group,
+        profileName: cdnProfileInfo!.resourceName,
         customDomainName: replaceAll(domainName, ".", "-"),
         hostName: domainName,
       },
@@ -95,7 +100,11 @@ export default ({
       new CdnHttpsEnable(
         name,
         {
-          customDomainId: customDomain.id,
+          endpointName: endpoint.name,
+          ...cdnProfileInfo!.group,
+          profileName: cdnProfileInfo!.resourceName,
+          customDomainName: customDomain.name,
+          subscriptionId,
         },
         { dependsOn: customDomain },
       );

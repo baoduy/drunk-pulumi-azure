@@ -1,59 +1,56 @@
-import * as AppConfiguration from '@pulumi/azure-native/appconfiguration';
-import { getAppConfigName, getPrivateEndpointName } from '../Common/Naming';
-import { KeyVaultInfo, PrivateLinkProps, ResourceGroupInfo } from '../types';
-import { AppConfigDisableAccessKeysResource } from '@drunk-pulumi/azure-providers/AppConfigDisableAccessKeys';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import * as appConfig from "@pulumi/azure-native/appconfiguration";
+import { isPrd } from "../Common/AzureEnv";
+import { getAppConfigName, getPrivateEndpointName } from "../Common/Naming";
+import {
+  KeyVaultInfo,
+  PrivateLinkProps,
+  ResourceGroupInfo,
+  ResourceInfo,
+} from "../types";
+import PrivateEndpoint from "../VNet/PrivateEndpoint";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
 
-interface Props {
+export type AppConfigProps = {
   name: string;
   group: ResourceGroupInfo;
-  disabledAccessKeys?: boolean;
-  //enablePublicAccess?: boolean;
   privateLink?: PrivateLinkProps;
-  vaultInfo?: KeyVaultInfo;
-}
+  disableLocalAuth?: boolean;
+  vaultInfo: KeyVaultInfo;
+};
 
 export default ({
   group,
   name,
   vaultInfo,
-  disabledAccessKeys,
-  //enablePublicAccess,
+  disableLocalAuth,
   privateLink,
-}: Props) => {
+}: AppConfigProps): ResourceInfo & {
+  instance: appConfig.ConfigurationStore;
+} => {
   name = getAppConfigName(name);
   const readPrimaryConnectionStringKey = `${name}-read-primary-connection-string`;
   const readSecondaryConnectionStringKey = `${name}-read-secondary-connection-string`;
 
-  //Default is enable public access however will be not if private link is enabled.
-  // if (!enablePublicAccess && !privateLink) {
-  //   enablePublicAccess = true;
-  // }
-
-  const appConfig = new AppConfiguration.ConfigurationStore(name, {
+  const app = new appConfig.ConfigurationStore(name, {
     configStoreName: name,
     ...group,
-    identity: { type: 'SystemAssigned' },
-    //This only able to disable when private link created.
-    // publicNetworkAccess: enablePublicAccess
-    //   ? AppConfiguration.PublicNetworkAccess.Enabled
-    //   : AppConfiguration.PublicNetworkAccess.Disabled,
-    sku: { name: 'Standard' },
+    identity: { type: "SystemAssigned" },
+    enablePurgeProtection: isPrd,
+    softDeleteRetentionInDays: isPrd ? 7 : 1,
+    disableLocalAuth,
+    publicNetworkAccess: privateLink
+      ? appConfig.PublicNetworkAccess.Disabled
+      : appConfig.PublicNetworkAccess.Enabled,
+
+    sku: { name: "Standard" },
   });
 
   //Access Keys
-  if (disabledAccessKeys) {
-    new AppConfigDisableAccessKeysResource(
-      name,
-      { configStoreName: name, ...group },
-      { dependsOn: appConfig }
-    );
-  } else if (vaultInfo) {
-    appConfig.id.apply(async (id) => {
+  if (vaultInfo && !disableLocalAuth) {
+    app.id.apply(async (id) => {
       if (!id) return;
       //Load the  keys from Azure
-      const keys = await AppConfiguration.listConfigurationStoreKeys({
+      const keys = await appConfig.listConfigurationStoreKeys({
         configStoreName: name,
         ...group,
       });
@@ -63,7 +60,7 @@ export default ({
           //Only Read Connection String here
           if (key.readOnly) {
             addCustomSecret({
-              name: key.name.includes('Primary')
+              name: key.name.includes("Primary")
                 ? readPrimaryConnectionStringKey
                 : readSecondaryConnectionStringKey,
               value: key.connectionString,
@@ -81,18 +78,17 @@ export default ({
     PrivateEndpoint({
       name: getPrivateEndpointName(name),
       group,
-      privateDnsZoneName: 'privatelink.azconfig.io',
-      linkServiceGroupIds: ['appConfig'],
-      resourceId: appConfig.id,
+      privateDnsZoneName: `${name}.privatelink.azconfig.io`,
+      linkServiceGroupIds: ["appConfig"],
+      resourceId: app.id,
       ...privateLink,
     });
   }
 
   return {
-    appConfig,
-    vaultNames: {
-      readPrimaryConnectionStringKey,
-      readSecondaryConnectionStringKey,
-    },
+    resourceName: name,
+    group,
+    id: app.id,
+    instance: app,
   };
 };

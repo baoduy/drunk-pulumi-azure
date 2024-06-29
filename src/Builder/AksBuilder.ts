@@ -1,6 +1,5 @@
 import {
   AksImportProps,
-  AskBuilderResults,
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,
@@ -22,7 +21,7 @@ import Aks, {
 } from "../Aks";
 
 class AksBuilder
-  extends BuilderAsync<AskBuilderResults>
+  extends BuilderAsync<AksResults>
   implements
     ISshBuilder,
     IAksNetworkBuilder,
@@ -116,10 +115,11 @@ class AksBuilder
     });
   }
 
-  public async build(): Promise<AskBuilderResults> {
+  public async build(): Promise<AksResults> {
     this.buildSsh();
     await this.buildAsk();
-    return { ssh: this._sshInstance!, aks: this._askInstance! };
+
+    return this._askInstance!;
   }
 }
 

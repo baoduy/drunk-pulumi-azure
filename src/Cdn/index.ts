@@ -1,59 +1,46 @@
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { addMemberToGroup } from "../AzAd/Group";
+import { ResourceGroupInfo, ResourceInfo } from "../types";
 import * as cdn from "@pulumi/azure-native/cdn";
-import * as azureAd from "@pulumi/azuread";
 import { getCdnProfileName } from "../Common/Naming";
 import { global } from "../Common";
-//import { grantVaultRbacPermission } from "../KeyVault/VaultPermissions";
 
 interface Props {
   name: string;
   group?: ResourceGroupInfo;
-  vaultAccess?: {
-    enableRbacAccess?: boolean;
-    vaultInfo: KeyVaultInfo;
-  };
+  envRoles: EnvRolesResults;
 }
 
-export default ({ name, group = global.groupInfo, vaultAccess }: Props) => {
+export default ({
+  name,
+  group = global.groupInfo,
+  envRoles,
+}: Props): ResourceInfo & { instance: cdn.Profile } => {
   name = getCdnProfileName(name);
+  const internalGroup = { ...group, location: "global" };
 
   const profile = new cdn.Profile(name, {
     profileName: name,
-    ...group,
-    location: "global",
+    ...internalGroup,
+    identity: { type: cdn.ManagedServiceIdentityType.SystemAssigned },
     sku: { name: cdn.SkuName.Standard_Microsoft },
   });
 
-  if (vaultAccess) {
-    //https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
-    const n = `${name}-sp`;
-
-    new azureAd.ServicePrincipal(n, {
-      //applicationId: '205478c0-bd83-4e1b-a9d6-db63a3e1e1c8',
-      clientId: "205478c0-bd83-4e1b-a9d6-db63a3e1e1c8",
+  if (envRoles) {
+    profile.identity.apply((i) => {
+      if (!i) return;
+      addMemberToGroup({
+        name,
+        objectId: i.principalId,
+        groupObjectId: envRoles.readOnly.objectId,
+      });
     });
-
-    if (vaultAccess.enableRbacAccess) {
-      //TODO migrate to RBAC group instead
-      // grantVaultRbacPermission({
-      //   name: n,
-      //   objectId: sp.objectId,
-      //   permission: 'ReadOnly',
-      //   applicationId: sp.clientId,
-      //   principalType: 'ServicePrincipal',
-      //   scope: vaultAccess.vaultInfo.id,
-      // });
-    }
-    // else
-    //   grantVaultAccessPolicy({
-    //     name: n,
-    //     objectId: sp.objectId,
-    //     permission: "ReadOnly",
-    //     applicationId: sp.applicationId,
-    //     principalType: "ServicePrincipal",
-    //     vaultInfo: vaultAccess.vaultInfo,
-    //   });
   }
 
-  return profile;
+  return {
+    resourceName: name,
+    group: internalGroup,
+    id: profile.id,
+    instance: profile,
+  };
 };

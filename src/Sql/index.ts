@@ -9,6 +9,7 @@ import {
   BasicResourceArgs,
   BasicResourceResultProps,
   KeyVaultInfo,
+  ResourceInfo,
 } from "../types";
 import { convertToIpRange } from "../VNet/Helper";
 import privateEndpointCreator from "../VNet/PrivateEndpoint";
@@ -80,8 +81,7 @@ export type SqlElasticPoolType = {
   capacity: ElasticPoolCapacityProps;
 };
 
-export type SqlResults = {
-  name: string;
+export type SqlResults = ResourceInfo & {
   resource: sql.Server;
   elasticPool?: BasicResourceResultProps<sql.ElasticPool>;
   databases?: Record<string, BasicResourceResultProps<sql.Database>>;
@@ -378,7 +378,9 @@ export default ({
   // }
 
   return {
-    name: sqlName,
+    resourceName: sqlName,
+    group,
+    id: sqlServer.id,
     resource: sqlServer,
     elasticPool: ep,
     databases: dbs,

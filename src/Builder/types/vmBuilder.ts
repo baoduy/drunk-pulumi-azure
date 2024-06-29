@@ -1,3 +1,5 @@
+import { ResourceInfo } from "../../types";
+import { VmScheduleType } from "../../VM";
 import { IBuilder, ILoginBuilder } from "./genericBuilder";
 import { Input } from "@pulumi/pulumi";
 import { VirtualMachine } from "@pulumi/azure-native/compute";
@@ -58,6 +60,7 @@ export interface IVmLoginBuilder extends ILoginBuilder<IVmVnetBuilder> {}
 export interface IVmVnetBuilder {
   withSubnetId(props: Input<string>): IVmBuilder;
 }
-export interface IVmBuilder extends IBuilder<VirtualMachine> {
+export interface IVmBuilder extends IBuilder<ResourceInfo> {
   withTags(props: Record<string, Input<string>>): IVmBuilder;
+  withSchedule(props: VmScheduleType): IVmBuilder;
 }

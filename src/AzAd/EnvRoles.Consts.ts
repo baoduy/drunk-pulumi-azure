@@ -110,8 +110,6 @@ export const getRoleNames = ({
 
 export const grantEnvRolesAccess = ({
   name,
-  dependsOn,
-  scope,
   envRoles,
   ...others
 }: RoleEnableTypes &
@@ -120,42 +118,45 @@ export const grantEnvRolesAccess = ({
   }) => {
   const roles = getRoleNames(others);
 
-  //ReadOnly
-  roles.readOnly.forEach((r) => {
-    const n = `${name}-readonly-${replaceAll(r, " ", "")}`;
-    roleAssignment({
-      name: n,
-      principalId: envRoles.readOnly.objectId,
-      principalType: "Group",
-      roleName: r,
-      scope,
-      dependsOn,
+  if (envRoles.readOnly.objectId) {
+    //ReadOnly
+    roles.readOnly.forEach((r) => {
+      const n = `${name}-readonly-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId: envRoles.readOnly.objectId,
+        principalType: "Group",
+        roleName: r,
+        ...others,
+      });
     });
-  });
+  }
 
-  //Contributors
-  roles.contributor.forEach((r) => {
-    const n = `${name}-contributor-${replaceAll(r, " ", "")}`;
-    roleAssignment({
-      name: n,
-      principalId: envRoles.contributor.objectId,
-      principalType: "Group",
-      roleName: r,
-      scope,
-      dependsOn,
+  if (envRoles.contributor.objectId) {
+    //Contributors
+    roles.contributor.forEach((r) => {
+      const n = `${name}-contributor-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId: envRoles.contributor.objectId,
+        principalType: "Group",
+        roleName: r,
+        ...others,
+      });
     });
-  });
+  }
 
-  //Admin
-  roles.admin.forEach((r) => {
-    const n = `${name}-admin-${replaceAll(r, " ", "")}`;
-    roleAssignment({
-      name: n,
-      principalId: envRoles.admin.objectId,
-      principalType: "Group",
-      roleName: r,
-      scope,
-      dependsOn,
+  if (envRoles.admin.objectId) {
+    //Admin
+    roles.admin.forEach((r) => {
+      const n = `${name}-admin-${replaceAll(r, " ", "")}`;
+      roleAssignment({
+        name: n,
+        principalId: envRoles.admin.objectId,
+        principalType: "Group",
+        roleName: r,
+        ...others,
+      });
     });
-  });
+  }
 };

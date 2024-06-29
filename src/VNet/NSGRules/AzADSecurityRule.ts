@@ -1,10 +1,10 @@
 import { CustomSecurityRuleArgs } from "../types";
 
 interface Props {
-  startPriority: number;
+  startPriority?: number;
 }
 
-export default ({ startPriority = 300 }: Props) => {
+export default ({ startPriority = 300 }: Props = {}) => {
   const rs = new Array<CustomSecurityRuleArgs>();
   //Allows RD
   rs.push(

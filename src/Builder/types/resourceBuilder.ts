@@ -1,6 +1,6 @@
 import { EnvRolesResults } from "../../AzAd/EnvRoles";
 import { RGPermissionType } from "../../Core/ResourceGroup";
-import { KeyVaultInfo, ResourceGroupInfo } from "../../types";
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../../types";
 import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
 import {
   IVnetBuilder,
@@ -24,7 +24,7 @@ export type BuilderAsyncFunctionType = (
 export type ResourceVnetBuilderType = (
   builder: IVnetBuilderStart,
 ) => IVnetBuilder;
-
+export type ResourceFunction = (props: BuilderProps) => ResourceInfo;
 export type ResourceVaultLinkingBuilderType = {
   subnetNames?: string[];
   ipAddresses?: Input<string>[];
@@ -63,5 +63,6 @@ export interface IResourceBuilder
   lock(): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
+  withResource(builder: ResourceFunction): IResourceBuilder;
   build(): Promise<ResourceBuilderResults>;
 }

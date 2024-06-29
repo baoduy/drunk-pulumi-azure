@@ -1,9 +1,9 @@
+import { KeyVaultSecret } from "@azure/keyvault-secrets";
 import * as storage from "@pulumi/azure-native/storage";
-import { KeyVaultInfo, BasicResourceArgs } from "../types";
+import { KeyVaultInfo, BasicResourceArgs, ResourceInfo } from "../types";
 import { Input } from "@pulumi/pulumi";
 import { getSecret, getEncryptionKeyOutput } from "../KeyVault/Helper";
 import { isPrd } from "../Common/AzureEnv";
-import cdnCreator from "./CdnEndpoint";
 import {
   getConnectionName,
   getKeyName,
@@ -11,6 +11,7 @@ import {
 } from "../Common/Naming";
 import { addCustomSecrets } from "../KeyVault/CustomHelper";
 import Locker from "../Core/Locker";
+import privateEndpoint from "../VNet/PrivateEndpoint";
 import {
   createManagementRules,
   DefaultManagementRules,
@@ -18,75 +19,66 @@ import {
 } from "./ManagementRules";
 import { grantIdentityPermissions } from "../AzAd/Helper";
 
-type ContainerProps = {
+export type ContainerProps = {
   name: string;
   public?: boolean;
   /** The management rule applied to Container level*/
   managementRules?: Array<ManagementRules>;
 };
-
-interface StorageProps extends BasicResourceArgs {
-  customDomain?: string;
-  allowsCors?: string[];
-  //This is required for encryption key
-  vaultInfo: KeyVaultInfo;
-
+export type StorageFeatureType = {
+  allowSharedKeyAccess?: boolean;
+  /** Enable this storage as static website. */
+  enableStaticWebsite?: boolean;
+  /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
+  enableKeyVaultEncryption?: boolean;
+};
+export type StoragePolicyType = {
+  keyExpirationPeriodInDays?: number;
+  isBlobVersioningEnabled?: boolean;
+  allowBlobPublicAccess?: boolean;
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
+};
+export type StorageNetworkType = {
+  defaultByPass?: "AzureServices" | "None";
+  vnet?: Array<{ subnetId?: Input<string>; ipAddresses?: Array<string> }>;
+  privateEndpoint?: {
+    subnetIds: Input<string>[];
+    type: "blob" | "table" | "queue" | "file" | "web" | "dfs";
+  };
+};
+interface StorageProps extends BasicResourceArgs {
+  //This is required for encryption key
+  vaultInfo: KeyVaultInfo;
 
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
   fileShares?: Array<string>;
-
   //appInsight?: AppInsightInfo;
-
-  featureFlags?: {
-    allowSharedKeyAccess?: boolean;
-    /** Enable this storage as static website. */
-    enableStaticWebsite?: boolean;
-    /**Only available when static site using CDN*/
-    includesDefaultResponseHeaders?: boolean;
-    /** The CDN is automatic enabled when the customDomain is provided. However, turn this on to force to enable CDN regardless to customDomain. */
-    forceUseCdn?: boolean;
-    /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
-    enableKeyVaultEncryption?: boolean;
-  };
-
-  policies?: {
-    keyExpirationPeriodInDays?: number;
-    isBlobVersioningEnabled?: boolean;
-    blobSoftDeleteDays?: number;
-    allowBlobPublicAccess?: boolean;
-    containerSoftDeleteDays?: number;
-    fileShareSoftDeleteDays?: number;
-  };
-
-  network?: { subnetId?: Input<string>; ipAddresses?: Array<string> };
-
-  // onKeysLoaded?: (
-  //   keys: Array<{ name: string; key: string; connectionString: string }>,
-  //   storageName: Output<string>
-  // ) => Promise<void>;
+  featureFlags?: StorageFeatureType;
+  policies?: StoragePolicyType;
+  network?: StorageNetworkType;
   lock?: boolean;
 }
+
+export type StorageResults = ResourceInfo & {
+  instance: storage.StorageAccount;
+  getConnectionString: (name?: string) => Promise<KeyVaultSecret | undefined>;
+};
 
 /** Storage Creator */
 export default ({
   name,
   group,
-  customDomain,
-  allowsCors,
   vaultInfo,
-  defaultManagementRules,
   containers = [],
   queues = [],
   fileShares = [],
-  //appInsight,
   network,
   featureFlags = {},
   policies = { keyExpirationPeriodInDays: 365 },
   lock = true,
-}: StorageProps) => {
+}: StorageProps): StorageResults => {
   name = getStorageName(name);
 
   const primaryKeyName = getKeyName(name, "primary");
@@ -144,81 +136,49 @@ export default ({
       sasExpirationPeriod: "00.00:30:00",
     },
 
-    customDomain:
-      customDomain && !featureFlags.enableStaticWebsite
-        ? { name: customDomain, useSubDomainName: true }
+    publicNetworkAccess: network?.privateEndpoint ? "Disabled" : "Enabled",
+    networkRuleSet: {
+      bypass: network?.defaultByPass ?? "AzureServices", // Logging,Metrics,AzureServices or None
+      defaultAction: "Allow",
+
+      virtualNetworkRules: network?.vnet
+        ? network.vnet
+            .filter((v) => v.subnetId)
+            .map((v) => ({
+              virtualNetworkResourceId: v.subnetId!,
+            }))
         : undefined,
 
-    // routingPreference: {
-    //   routingChoice: enableStaticWebsite
-    //     ? native.storage.RoutingChoice.InternetRouting
-    //     : native.storage.RoutingChoice.MicrosoftRouting,
-    //   publishInternetEndpoints: false,
-    //   publishMicrosoftEndpoints: false,
-    // },
-
-    networkRuleSet: network
-      ? {
-          bypass: "Logging, Metrics",
-          defaultAction: "Allow",
-
-          virtualNetworkRules: network.subnetId
-            ? [{ virtualNetworkResourceId: network.subnetId }]
-            : undefined,
-
-          ipRules: network.ipAddresses
-            ? network.ipAddresses.map((i) => ({
-                iPAddressOrRange: i,
-                action: "Allow",
-              }))
-            : undefined,
-        }
-      : { defaultAction: "Allow" },
+      ipRules: network?.vnet
+        ? network.vnet
+            .filter((v) => v.ipAddresses)
+            .flatMap((s) => s.ipAddresses)
+            .map((i) => ({
+              iPAddressOrRange: i!,
+              action: "Allow",
+            }))
+        : undefined,
+    },
   });
 
-  //Soft Delete
-  if (policies) {
-    // new storage.BlobServiceProperties(
-    //   `${name}-Blob-Props`,
-    //   {
-    //     accountName: stg.name,
-    //     ...group,
-    //
-    //     deleteRetentionPolicy: policies.blobSoftDeleteDays
-    //       ? {
-    //           enabled: policies.blobSoftDeleteDays > 0,
-    //           days: policies.blobSoftDeleteDays,
-    //         }
-    //       : undefined,
-    //     isVersioningEnabled: policies.isBlobVersioningEnabled,
-    //   },
-    //   { dependsOn: stg }
-    // );
-    //
-    // new storage.FileServiceProperties(
-    //   `${name}-File-Props`,
-    //   {
-    //     accountName: stg.name,
-    //     ...group,
-    //
-    //     shareDeleteRetentionPolicy: policies.fileShareSoftDeleteDays
-    //       ? {
-    //           enabled: policies.fileShareSoftDeleteDays > 0,
-    //           days: policies.fileShareSoftDeleteDays,
-    //         }
-    //       : undefined,
-    //   },
-    //   { dependsOn: stg }
-    // );
+  if (network?.privateEndpoint) {
+    //Create Private Endpoints
+    privateEndpoint({
+      name,
+      group,
+      resourceId: stg.id,
+      subnetIds: network.privateEndpoint.subnetIds,
+      privateDnsZoneName: `${name}.privatelink.${network.privateEndpoint.type}.core.windows.net`,
+      linkServiceGroupIds: [network.privateEndpoint.type],
+    });
   }
-
   //Life Cycle Management
-  if (defaultManagementRules) {
+  if (policies?.defaultManagementRules) {
     createManagementRules({
       name,
-      storageAccount: stg,
       group,
-      rules: defaultManagementRules,
+      storageAccount: stg,
+      rules: policies.defaultManagementRules,
     });
   }
 
@@ -238,29 +198,6 @@ export default ({
       },
       { dependsOn: stg },
     );
-
-    // if (appInsight && customDomain) {
-    //   addInsightMonitor({ name, appInsight, url: customDomain });
-    // }
-  }
-
-  //createThreatProtection({ name, targetResourceId: stg.id });
-
-  //Create Azure CDN if customDomain provided
-  if (
-    (featureFlags.enableStaticWebsite && customDomain) ||
-    featureFlags.forceUseCdn
-  ) {
-    const origin = stg.name.apply((n) => `${n}.z23.web.core.windows.net`);
-    cdnCreator({
-      name,
-      domainName: customDomain!,
-      origin,
-      cors: allowsCors,
-      httpsEnabled: true,
-      includesDefaultResponseHeaders:
-        featureFlags.includesDefaultResponseHeaders,
-    });
   }
 
   //Create Containers
@@ -275,7 +212,7 @@ export default ({
 
     if (c.managementRules) {
       createManagementRules({
-        name,
+        name: `${name}-${c.name.toLowerCase()}`,
         storageAccount: stg,
         group,
         containerNames: [container.name],
@@ -355,16 +292,11 @@ export default ({
   });
 
   return {
-    storage: stg,
-    vaultNames: {
-      primaryKeyName,
-      secondaryKeyName,
-      primaryConnectionKeyName,
-      secondConnectionKeyName,
-    },
+    resourceName: name,
+    group,
+    id: stg.id,
+    instance: stg,
     getConnectionString: (name: string = primaryConnectionKeyName) =>
-      vaultInfo
-        ? getSecret({ name, nameFormatted: true, vaultInfo })
-        : undefined,
+      getSecret({ name, nameFormatted: true, vaultInfo }),
   };
 };

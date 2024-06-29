@@ -71,7 +71,9 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
         group,
         name,
         vaultInfo,
-        defaultManagementRules: storage.storageRules ?? defaultStorageRules,
+        policies: {
+          defaultManagementRules: storage.storageRules ?? defaultStorageRules,
+        },
         featureFlags: { allowSharedKeyAccess: true },
       })
     : undefined;
@@ -82,10 +84,10 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
     appInsight,
     toLogInfo: (): BasicMonitorArgs => ({
       logWpId: logWp?.log.id,
-      logStorageId: logStorage?.storage.id,
+      logStorageId: logStorage?.id,
     }),
     toLogStorageInfo: (): BasicMonitorArgs => ({
-      logStorageId: logStorage?.storage.id,
+      logStorageId: logStorage?.id,
     }),
     toLogWpInfo: (): BasicMonitorArgs => ({
       logWpId: logWp?.log.id,

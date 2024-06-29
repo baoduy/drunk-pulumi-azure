@@ -6,6 +6,7 @@ import {
   IResourceRoleBuilder,
   IResourceVaultBuilder,
   ResourceBuilderResults,
+  ResourceFunction,
   ResourceGroupBuilderType,
   ResourceVaultLinkingBuilderType,
   ResourceVnetBuilderType,
@@ -17,7 +18,7 @@ import {
   EnvRolesResults,
   getEnvRolesOutput,
 } from "../AzAd/EnvRoles";
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../types";
 import RG from "../Core/ResourceGroup";
 import { ResourceGroup } from "@pulumi/azure-native/resources";
 import { createVaultPrivateLink } from "../KeyVault";
@@ -50,11 +51,12 @@ class ResourceBuilder
   private _secrets: Record<string, Input<string>> = {};
   private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
     undefined;
+  private _otherResources: ResourceFunction[] = [];
 
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
   private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
-  private _otherInstances: Record<string, any> = {};
+  private _otherInstances: Record<string, ResourceInfo> = {};
   private _vnetInstance: VnetBuilderResults | undefined = undefined;
 
   constructor(public name: string) {}
@@ -106,6 +108,10 @@ class ResourceBuilder
   }
   public withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder {
     this._otherBuildersAsync.push(props);
+    return this;
+  }
+  public withResource(builder: ResourceFunction): IResourceBuilder {
+    this._otherResources.push(builder);
     return this;
   }
   public lock(): IResourceBuilder {
@@ -183,13 +189,17 @@ class ResourceBuilder
         subnetIds: subIds,
       });
     } else {
-      new VaultNetworkResource(`${this.name}-vault`, {
-        vaultName: this._vaultInfo!.info()!.name,
-        resourceGroupName: this._vaultInfo!.info()!.group.resourceGroupName,
-        subscriptionId,
-        subnetIds: subIds,
-        ipAddresses: ipAddresses,
-      });
+      new VaultNetworkResource(
+        `${this.name}-vault`,
+        {
+          vaultName: this._vaultInfo!.info()!.name,
+          resourceGroupName: this._vaultInfo!.info()!.group.resourceGroupName,
+          subscriptionId,
+          subnetIds: subIds,
+          ipAddresses: ipAddresses,
+        },
+        { dependsOn: this._RGInstance ?? this._vnetInstance?.vnet },
+      );
     }
   }
 
@@ -201,6 +211,13 @@ class ResourceBuilder
   }
 
   private buildOthers() {
+    //Other resources
+    this._otherResources.forEach((b) => {
+      const rs = b(this.getResults());
+      this._otherInstances[rs.resourceName] = rs;
+    });
+
+    //Other builders
     this._otherBuilders.forEach((b) => {
       const builder = b({
         ...this.getResults(),
@@ -230,6 +247,7 @@ class ResourceBuilder
       envRoles: this._envRoles!,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,
+      dependsOn: this._RGInstance,
     };
   }
 

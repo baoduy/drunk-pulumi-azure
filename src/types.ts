@@ -27,7 +27,6 @@ export interface ConventionProps {
 
 export interface PrivateLinkProps {
   subnetIds: Input<string>[];
-  //useGlobalDnsZone?: boolean;
 }
 
 export interface NetworkRulesProps {
@@ -61,10 +60,6 @@ export interface ResourceInfo {
   id: Output<string>;
 }
 
-export interface ApimInfo extends Omit<ResourceInfo, "resourceName" | "id"> {
-  serviceName: string;
-}
-
 export interface BasicResourceArgs extends BasicArgs {
   name: string;
   group: ResourceGroupInfo;
@@ -89,10 +84,6 @@ export interface KeyVaultInfo {
   name: string;
   group: ResourceGroupInfo;
   id: Input<string>;
-}
-
-export interface AppInsightInfo extends ResourceInfo {
-  instrumentationKey: Input<string>;
 }
 
 export type IdentityRoleAssignment = {

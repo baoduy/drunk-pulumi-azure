@@ -1,8 +1,8 @@
-import * as native from '@pulumi/azure-native';
-import { AppInsightInfo } from '../types';
-import { randomUuId } from '../Core/Random';
-import { getWebTestName, getAlertName } from '../Common/Naming';
-import * as pulumi from '@pulumi/pulumi';
+import * as native from "@pulumi/azure-native";
+import { randomUuId } from "../Core/Random";
+import { getWebTestName, getAlertName } from "../Common/Naming";
+import * as pulumi from "@pulumi/pulumi";
+import { AppInsightInfo } from "./Helpers";
 
 interface InsightMonitorProps {
   name: string;
@@ -23,7 +23,7 @@ export const addInsightMonitor = ({
   frequency = 900,
 }: InsightMonitorProps) => {
   const guid = randomUuId(`${name}-WebTest`).result;
-  if (!url.includes('https')) url = `https://${url}`;
+  if (!url.includes("https")) url = `https://${url}`;
 
   pulumi.all([guid, appInsight.id]).apply(async ([g, id]) => {
     if (!g) return;
@@ -35,11 +35,11 @@ export const addInsightMonitor = ({
 
       description: `Health check ${name}`,
       webTestKind: native.insights.WebTestKind.Ping,
-      kind: 'ping',
+      kind: "ping",
       locations: [
-        { location: 'apac-sg-sin-azr' },
-        { location: 'apac-hk-hkn-azr' },
-        { location: 'emea-au-syd-edge' },
+        { location: "apac-sg-sin-azr" },
+        { location: "apac-hk-hkn-azr" },
+        { location: "emea-au-syd-edge" },
       ],
       enabled: true,
       retryEnabled: true,
@@ -58,7 +58,7 @@ export const addInsightMonitor = ({
       },
 
       tags: {
-        [`hidden-link:${id}`]: 'Resource',
+        [`hidden-link:${id}`]: "Resource",
       },
     });
 
@@ -72,15 +72,15 @@ export const addInsightMonitor = ({
         enabled: true,
         scopes: [webTest.id, appInsight.id],
         severity: 100,
-        evaluationFrequency: 'PT15M',
+        evaluationFrequency: "PT15M",
         criteria: {
           webTestId: webTest.id,
           componentId: id,
           failedLocationCount: webTest.locations.length,
           odataType:
-            'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria',
+            "Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria",
         },
-        windowSize: 'PT15M',
+        windowSize: "PT15M",
         actions: [{ actionGroupId: alertGroup.id }],
       });
     }

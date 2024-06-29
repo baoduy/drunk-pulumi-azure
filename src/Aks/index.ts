@@ -2,7 +2,7 @@ import * as native from "@pulumi/azure-native";
 import * as pulumi from "@pulumi/pulumi";
 import { Input, Output, output } from "@pulumi/pulumi";
 import vmsDiagnostic from "./VmSetMonitor";
-import { BasicResourceArgs, KeyVaultInfo } from "../types";
+import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from "../types";
 import {
   currentEnv,
   defaultScope,
@@ -174,7 +174,7 @@ export interface AksProps extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export type AksResults = {
+export type AksResults = ResourceInfo & {
   serviceIdentity: IdentityResult;
   aks: ManagedCluster;
   disableLocalAccounts?: boolean;
@@ -590,6 +590,9 @@ export default async ({
   });
 
   return {
+    resourceName: name,
+    group,
+    id: aks.id,
     aks,
     serviceIdentity,
     getKubeConfig: (): Output<string> =>
