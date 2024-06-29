@@ -69,6 +69,14 @@ export interface DefaultResourceArgs extends BasicArgs {
   monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
 }
 
+export type PrivateLinkType = { subnetIds: Input<string>[]; type: string };
+
+export type NetworkType = {
+  subnetId?: Input<string>;
+  ipAddresses?: Input<string>[];
+  privateLink?: PrivateLinkType;
+};
+
 export interface BasicResourceResultProps<TClass> {
   name: string;
   resource: TClass;

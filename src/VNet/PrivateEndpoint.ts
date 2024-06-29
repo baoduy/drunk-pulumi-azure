@@ -8,6 +8,7 @@ import { PrivateDnsZoneBuilder } from "../Builder";
 
 interface Props extends BasicResourceArgs, PrivateLinkProps {
   resourceId: Input<string>;
+  /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
   privateDnsZoneName: string;
   linkServiceGroupIds: string[];
 }

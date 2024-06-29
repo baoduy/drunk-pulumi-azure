@@ -76,9 +76,9 @@ export default ({
   //Private Link
   if (privateLink) {
     PrivateEndpoint({
-      name: getPrivateEndpointName(name),
+      name,
       group,
-      privateDnsZoneName: `${name}.privatelink.azconfig.io`,
+      privateDnsZoneName: "privatelink.azconfig.io",
       linkServiceGroupIds: ["appConfig"],
       resourceId: app.id,
       ...privateLink,

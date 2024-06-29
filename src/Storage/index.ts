@@ -168,7 +168,7 @@ export default ({
       group,
       resourceId: stg.id,
       subnetIds: network.privateEndpoint.subnetIds,
-      privateDnsZoneName: `${name}.privatelink.${network.privateEndpoint.type}.core.windows.net`,
+      privateDnsZoneName: `privatelink.${network.privateEndpoint.type}.core.windows.net`,
       linkServiceGroupIds: [network.privateEndpoint.type],
     });
   }
