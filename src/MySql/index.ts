@@ -1,4 +1,5 @@
-import { BasicResourceArgs, KeyVaultInfo } from "../types";
+import * as azure from "@pulumi/azure-native";
+import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from "../types";
 import { getMySqlName } from "../Common/Naming";
 import * as pulumi from "@pulumi/pulumi";
 import * as dbformysql from "@pulumi/azure-native/dbformysql";
@@ -11,6 +12,7 @@ import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
 import { RandomString } from "@pulumi/random";
+import { convertToIpRange } from "../VNet/Helper";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import Locker from "../Core/Locker";
 
@@ -26,15 +28,8 @@ export interface MySqlProps extends BasicResourceArgs {
   version?: dbformysql.ServerVersion;
   storageSizeGB?: number;
   databases?: Array<string>;
-  network?: {
+  network?: NetworkPropsType & {
     allowsPublicAccess?: boolean;
-    privateLink?: {
-      subnetId: pulumi.Input<string>;
-    };
-    firewallRules?: Array<{
-      startIpAddress: string;
-      endIpAddress: string;
-    }>;
   };
 }
 
@@ -159,15 +154,18 @@ export default ({
   }
 
   if (network) {
-    if (network.firewallRules) {
-      network.firewallRules.map(
-        (f, i) =>
-          new dbformysql.FirewallRule(`${name}-firewall-${i}`, {
-            firewallRuleName: `${name}-firewall-${i}`,
-            serverName: mySql.name,
-            ...group,
-            ...f,
-          }),
+    if (network.ipAddresses) {
+      pulumi.output(network.ipAddresses).apply((ips) =>
+        convertToIpRange(ips).map(
+          (f, i) =>
+            new azure.dbforpostgresql.FirewallRule(`${name}-firewall-${i}`, {
+              firewallRuleName: `${name}-firewall-${i}`,
+              serverName: mySql.name,
+              ...group,
+              startIpAddress: f.start,
+              endIpAddress: f.end,
+            }),
+        ),
       );
     }
 
@@ -182,12 +180,12 @@ export default ({
 
     if (network.privateLink) {
       PrivateEndpoint({
-        name,
-        group,
-        resourceId: mySql.id,
+        resourceInfo: { resourceName: name, group, id: mySql.id },
         privateDnsZoneName: "mysql.database.azure.com",
-        linkServiceGroupIds: ["mysql"],
-        subnetIds: [network.privateLink.subnetId],
+        linkServiceGroupIds: network.privateLink.type
+          ? [network.privateLink.type]
+          : ["mysql"],
+        subnetIds: network.privateLink.subnetIds,
       });
     }
   }

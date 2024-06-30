@@ -7,7 +7,7 @@ import {
   BasicResourceResultProps,
   DefaultResourceArgs,
   KeyVaultInfo,
-  PrivateLinkProps,
+  NetworkPropsType,
   ResourceGroupInfo,
 } from "../types";
 import {
@@ -462,11 +462,7 @@ interface Props
     alternateName: pulumi.Input<string>;
     partnerNamespace: pulumi.Input<string>;
   };
-  network?: {
-    whitelistIps?: Array<pulumi.Input<string>>;
-    enablePrivateLink?: boolean;
-    subnetId?: pulumi.Input<string>;
-  };
+  network?: NetworkPropsType;
   monitoring?: BasicMonitorArgs;
   sku?: bus.SkuName;
   vaultInfo?: KeyVaultInfo;
@@ -591,17 +587,14 @@ export default ({
   }
 
   if (network && sku === bus.SkuName.Premium) {
-    if (
-      !network.enablePrivateLink &&
-      (network.subnetId || network.whitelistIps)
-    ) {
+    if (network.subnetId || network.ipAddresses) {
       new bus.NamespaceNetworkRuleSet(name, {
         namespaceName: namespace.name,
         ...group,
         defaultAction: "Deny",
 
-        ipRules: network.whitelistIps
-          ? network.whitelistIps.map((i) => ({
+        ipRules: network.ipAddresses
+          ? network.ipAddresses.map((i) => ({
               ipMask: i,
               action: bus.NetworkRuleIPAction.Allow,
             }))
@@ -616,14 +609,15 @@ export default ({
             ]
           : undefined,
       });
-    } else if (network.enablePrivateLink && network.subnetId) {
+    }
+
+    if (network.privateLink) {
       PrivateEndpoint({
-        name: getPrivateEndpointName(name),
-        group,
-        subnetIds: [network.subnetId],
-        //useGlobalDnsZone: network.useGlobalDnsZone,
-        resourceId: namespace.id,
-        linkServiceGroupIds: ["namespace"],
+        resourceInfo: { resourceName: name, group, id: namespace.id },
+        subnetIds: network.privateLink.subnetIds,
+        linkServiceGroupIds: network.privateLink.type
+          ? [network.privateLink.type]
+          : ["namespace"],
         privateDnsZoneName: "privatelink.servicebus.windows.net",
       });
     }

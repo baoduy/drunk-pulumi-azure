@@ -1,4 +1,4 @@
-import { BasicResourceArgs, KeyVaultInfo } from "../types";
+import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from "../types";
 import { getPostgresqlName } from "../Common/Naming";
 import * as pulumi from "@pulumi/pulumi";
 import * as azure from "@pulumi/azure-native";
@@ -7,6 +7,7 @@ import { randomPassword } from "../Core/Random";
 import * as inputs from "@pulumi/azure-native/types/input";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 import { RandomString } from "@pulumi/random";
+import { convertToIpRange } from "../VNet/Helper";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import Locker from "../Core/Locker";
 
@@ -20,15 +21,8 @@ export interface PostgresProps extends BasicResourceArgs {
   version?: azure.dbforpostgresql.ServerVersion;
   storageSizeGB?: number;
   databases?: Array<string>;
-  network?: {
+  network?: NetworkPropsType & {
     allowsPublicAccess?: boolean;
-    privateLink?: {
-      subnetId: pulumi.Input<string>;
-    };
-    firewallRules?: Array<{
-      startIpAddress: string;
-      endIpAddress: string;
-    }>;
   };
   lock?: true;
 }
@@ -110,15 +104,18 @@ export default ({
   }
 
   if (network) {
-    if (network.firewallRules) {
-      network.firewallRules.map(
-        (f, i) =>
-          new azure.dbforpostgresql.FirewallRule(`${name}-firewall-${i}`, {
-            firewallRuleName: `${name}-firewall-${i}`,
-            serverName: postgres.name,
-            ...group,
-            ...f,
-          }),
+    if (network.ipAddresses) {
+      pulumi.output(network.ipAddresses).apply((ips) =>
+        convertToIpRange(ips).map(
+          (f, i) =>
+            new azure.dbforpostgresql.FirewallRule(`${name}-firewall-${i}`, {
+              firewallRuleName: `${name}-firewall-${i}`,
+              serverName: postgres.name,
+              ...group,
+              startIpAddress: f.start,
+              endIpAddress: f.end,
+            }),
+        ),
       );
     }
 
@@ -133,12 +130,12 @@ export default ({
 
     if (network.privateLink) {
       PrivateEndpoint({
-        name,
-        group,
-        resourceId: postgres.id,
+        resourceInfo: { resourceName: name, group, id: postgres.id },
         privateDnsZoneName: "postgres.database.azure.com",
-        linkServiceGroupIds: ["postgresql"],
-        subnetIds: [network.privateLink.subnetId],
+        linkServiceGroupIds: network.privateLink.type
+          ? [network.privateLink.type]
+          : ["postgresql"],
+        subnetIds: network.privateLink.subnetIds,
       });
     }
   }

@@ -160,6 +160,9 @@ export const getRouteName = (name: string) =>
 export const getRouteItemName = (name: string) =>
   getResourceName(name, { suffix: "", includeOrgName: false });
 
+export const getWorkflowName = (name: string) =>
+  getResourceName(name, { suffix: "wkp" });
+
 export const getNetworkSecurityGroupName = (name: string) =>
   getResourceName(name, { suffix: "nsg" });
 

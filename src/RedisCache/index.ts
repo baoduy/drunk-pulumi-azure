@@ -1,7 +1,7 @@
 import * as cache from "@pulumi/azure-native/cache";
 import * as pulumi from "@pulumi/pulumi";
 
-import { BasicResourceArgs, KeyVaultInfo, NetworkType } from "../types";
+import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from "../types";
 
 import { ToWords } from "to-words";
 import { convertToIpRange } from "../VNet/Helper";
@@ -14,7 +14,7 @@ const toWord = new ToWords();
 
 interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
-  network?: NetworkType;
+  network?: NetworkPropsType;
   sku?: {
     name: cache.SkuName | string;
     family: cache.SkuFamily | string;
@@ -61,9 +61,7 @@ export default ({
   //Private Link
   if (network?.privateLink) {
     privateEndpointCreator({
-      group,
-      name,
-      resourceId: redis.id,
+      resourceInfo: { resourceName: name, group, id: redis.id },
       privateDnsZoneName: "privatelink.redis.cache.windows.net",
       subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type

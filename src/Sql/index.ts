@@ -9,7 +9,7 @@ import {
   BasicResourceArgs,
   BasicResourceResultProps,
   KeyVaultInfo,
-  NetworkType,
+  NetworkPropsType,
   ResourceInfo,
 } from "../types";
 import { convertToIpRange } from "../VNet/Helper";
@@ -68,7 +68,7 @@ export type SqlAuthType = {
   password: Input<string>;
 };
 
-export type SqlNetworkType = NetworkType & {
+export type SqlNetworkType = NetworkPropsType & {
   //Enable this will add 0.0.0.0 to 255.255.255.255 to the DB whitelist
   acceptAllPublicConnect?: boolean;
 };
@@ -189,9 +189,7 @@ export default ({
   //Private Link
   if (network?.privateLink) {
     privateEndpointCreator({
-      group,
-      name,
-      resourceId: sqlServer.id,
+      resourceInfo: { resourceName: name, group, id: sqlServer.id },
       privateDnsZoneName: "privatelink.database.windows.net",
       subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
@@ -349,9 +347,9 @@ export default ({
       });
 
       if (vaultInfo) {
-        const connectionString = auth?.adminLogin
-          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
-          : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
+        const connectionString = auth?.azureAdOnlyAuthentication
+          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
+          : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
 
         addCustomSecret({
           name: d.name,

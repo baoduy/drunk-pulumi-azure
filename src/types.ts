@@ -25,16 +25,6 @@ export interface ConventionProps {
   includeOrgName?: boolean;
 }
 
-export interface PrivateLinkProps {
-  subnetIds: Input<string>[];
-}
-
-export interface NetworkRulesProps {
-  subnetId?: Input<string>;
-  privateLink?: Omit<PrivateLinkProps, "subnetIds">;
-  ipAddresses?: Input<string>[];
-}
-
 export interface BasicMonitorArgs extends BasicArgs {
   logWpId?: Input<string>;
   logStorageId?: Input<string>;
@@ -69,12 +59,15 @@ export interface DefaultResourceArgs extends BasicArgs {
   monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
 }
 
-export type PrivateLinkType = { subnetIds: Input<string>[]; type: string };
+export type PrivateLinkPropsType = {
+  subnetIds: Input<string>[];
+  type?: string;
+};
 
-export type NetworkType = {
+export type NetworkPropsType = {
   subnetId?: Input<string>;
   ipAddresses?: Input<string>[];
-  privateLink?: PrivateLinkType;
+  privateLink?: PrivateLinkPropsType;
 };
 
 export interface BasicResourceResultProps<TClass> {
@@ -91,7 +84,7 @@ export interface ResourceResultProps<TClass>
 export interface KeyVaultInfo {
   name: string;
   group: ResourceGroupInfo;
-  id: Input<string>;
+  id: Output<string>;
 }
 
 export type IdentityRoleAssignment = {

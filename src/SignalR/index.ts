@@ -2,7 +2,11 @@ import * as native from "@pulumi/azure-native";
 import * as pulumi from "@pulumi/pulumi";
 import { isDev } from "../Common/AzureEnv";
 import { getPrivateEndpointName, getSignalRName } from "../Common/Naming";
-import { BasicResourceArgs, KeyVaultInfo, PrivateLinkProps } from "../types";
+import {
+  BasicResourceArgs,
+  KeyVaultInfo,
+  PrivateLinkPropsType,
+} from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { addCustomSecret } from "../KeyVault/CustomHelper";
 
@@ -15,7 +19,7 @@ interface ResourceSkuArgs {
 interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
   allowedOrigins?: pulumi.Input<pulumi.Input<string>[]>;
-  privateLink?: PrivateLinkProps;
+  privateLink?: PrivateLinkPropsType;
   kind?: native.signalrservice.ServiceKind;
   sku?: pulumi.Input<ResourceSkuArgs>;
 }
@@ -33,7 +37,6 @@ export default ({
   },
   allowedOrigins,
 }: Props) => {
-  const privateEndpointName = getPrivateEndpointName(name);
   name = getSignalRName(name);
 
   const signalR = new native.signalrservice.SignalR(name, {
@@ -49,27 +52,16 @@ export default ({
     networkACLs: privateLink
       ? {
           defaultAction: native.signalrservice.ACLAction.Allow,
-          publicNetwork: isDev
-            ? {
-                allow: [
-                  native.signalrservice.SignalRRequestType.ClientConnection,
-                  native.signalrservice.SignalRRequestType.ServerConnection,
-                  native.signalrservice.SignalRRequestType.RESTAPI,
-                ],
-                //deny: [native.signalrservice.SignalRRequestType.RESTAPI],
-              }
-            : {
-                allow: [
-                  native.signalrservice.SignalRRequestType.ClientConnection,
-                ],
-                deny: [
-                  native.signalrservice.SignalRRequestType.ServerConnection,
-                  native.signalrservice.SignalRRequestType.RESTAPI,
-                ],
-              },
+          publicNetwork: {
+            allow: [native.signalrservice.SignalRRequestType.ClientConnection],
+            deny: [
+              native.signalrservice.SignalRRequestType.ServerConnection,
+              native.signalrservice.SignalRRequestType.RESTAPI,
+            ],
+          },
           privateEndpoints: [
             {
-              name: privateEndpointName,
+              name: getPrivateEndpointName(name),
               allow: [
                 native.signalrservice.SignalRRequestType.ClientConnection,
                 native.signalrservice.SignalRRequestType.ServerConnection,
@@ -78,19 +70,26 @@ export default ({
             },
           ],
         }
-      : undefined,
+      : {
+          defaultAction: native.signalrservice.ACLAction.Allow,
+          publicNetwork: {
+            allow: [
+              native.signalrservice.SignalRRequestType.ClientConnection,
+              native.signalrservice.SignalRRequestType.ServerConnection,
+              native.signalrservice.SignalRRequestType.RESTAPI,
+            ],
+          },
+        },
     sku,
   });
 
   if (privateLink) {
     //The Private Zone will create in Dev and reuse for sandbox and prd.
     PrivateEndpoint({
-      name: privateEndpointName,
-      group,
+      resourceInfo: { resourceName: name, group, id: signalR.id },
       privateDnsZoneName: "privatelink.service.signalr.net",
-      ...privateLink,
+      subnetIds: privateLink.subnetIds,
       linkServiceGroupIds: ["signalr"],
-      resourceId: signalR.id,
     });
   }
 
