@@ -10,6 +10,7 @@ import { VpnGatewayProps } from "../../VNet/VPNGateway";
 import { CustomSecurityRuleArgs, RouteArgs } from "../../VNet/types";
 import { LogInfoResults } from "../../Logs/Helpers";
 import { PublicIpAddressPrefixResult } from "../../VNet/IpAddressPrefix";
+import { IPrivateDnsZoneBuilder } from "./privateDnsZoneBuilder";
 
 //VNet Builder Types
 export type VnetBuilderResults = VnetResult & {
@@ -45,6 +46,10 @@ export type VpnGatewayCreationProps = Pick<
   "sku" | "vpnClientAddressPools"
 > & { subnetSpace: string };
 
+export type VnetPrivateDnsBuilderFunc = (
+  builder: IPrivateDnsZoneBuilder,
+) => IPrivateDnsZoneBuilder;
+
 //Starting Interface
 export interface IVnetBuilderStart {
   asHub(props?: VnetBuilderProps): IPublicIpBuilder;
@@ -64,9 +69,13 @@ export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
 
 export interface IVnetBuilder extends IBuilder<VnetBuilderResults> {
   withBastion(props: BastionCreationProps): IVnetBuilder;
-  peeringTo(props: PeeringProps): IVnetBuilder;
+  withPrivateDns(
+    domain: string,
+    builder?: VnetPrivateDnsBuilderFunc,
+  ): IVnetBuilder;
   withSecurityRules(rules: CustomSecurityRuleArgs[]): IVnetBuilder;
   withRouteRules(rules: RouteArgs[]): IVnetBuilder;
   withLogInfo(info: LogInfoResults): IVnetBuilder;
   withVpnGateway(props: VpnGatewayCreationProps): IVnetBuilder;
+  peeringTo(props: PeeringProps): IVnetBuilder;
 }
