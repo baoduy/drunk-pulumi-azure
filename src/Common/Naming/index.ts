@@ -23,8 +23,8 @@ export const getStorageName = (name: string): string => {
 
 /** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
 export const getSecretName = (name: string) => {
-  name = name.replace(`${stack}-`, "");
-  name = name.replace(stack, "");
+  name = replaceAll(name, `${stack}-`, "");
+  name = replaceAll(name, stack, "");
   name = replaceAll(name, " ", "-");
   name = replaceAll(name, ".", "-");
   return replaceAll(name, "_", "-").toLowerCase();
