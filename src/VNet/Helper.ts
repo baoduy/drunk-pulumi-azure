@@ -2,7 +2,7 @@ import * as network from "@pulumi/azure-native/network";
 import { Input, interpolate, output, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
 import {
-  currentRegionCode,
+  currentCountryCode,
   parseResourceInfoFromId,
   subscriptionId,
 } from "../Common/AzureEnv";
@@ -21,10 +21,7 @@ export const azFirewallSubnet = "AzureFirewallSubnet";
 export const azFirewallManagementSubnet = "AzureFirewallManagementSubnet";
 export const azBastionSubnetName = "AzureBastionSubnet";
 
-export const getIpsRange = (prefix: string) => {
-  //console.debug('getIpsRange', block);
-  return new netmask.Netmask(prefix);
-};
+export const getIpsRange = (prefix: string) => new netmask.Netmask(prefix);
 
 /** Convert IP address and IP address group into range */
 export const convertToIpRange = (
@@ -89,7 +86,7 @@ export const getIpAddressResource = ({
 
 export const getVnetInfo = (
   groupName: string,
-  region: string = currentRegionCode,
+  region: string = currentCountryCode,
 ): VnetInfoType => {
   const vnetName = getVnetName(groupName, { region });
   const rsName = getResourceGroupName(groupName, { region });
@@ -103,7 +100,7 @@ export const getVnetInfo = (
 
 export const getVnetIdByName = (
   groupName: string,
-  region: string = currentRegionCode,
+  region: string = currentCountryCode,
 ) => {
   const info = getVnetInfo(groupName, region);
   return interpolate`/subscriptions/${info.subscriptionId}/resourceGroups/${info.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
