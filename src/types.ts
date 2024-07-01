@@ -5,6 +5,15 @@ import * as pulumi from "@pulumi/pulumi";
 import { input as inputs, enums } from "@pulumi/azure-native/types";
 import { EnvRoleKeyTypes } from "./AzAd/EnvRoles";
 
+export interface ResourceInfoArg {
+  /**If name and provider of the resource is not provided then the Id will be resource group Id*/
+  name?: Input<string>;
+  /**The provider name of the resource ex: "Microsoft.Network/virtualNetworks" or "Microsoft.Network/networkSecurityGroups"*/
+  provider?: string;
+  group: ResourceGroupInfo;
+  subscriptionId?: Input<string>;
+}
+
 export interface BasicArgs {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
   importUri?: string;

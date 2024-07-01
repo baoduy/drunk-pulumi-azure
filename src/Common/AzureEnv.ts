@@ -1,9 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
 import { authorization } from "@pulumi/azure-native";
 import { registerAutoTags } from "./AutoTags";
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfoArg } from "../types";
 import { getKeyVaultName, getResourceGroupName } from "./Naming";
-import { ResourceInfoArg } from "./ResourceEnv";
 import { organization, projectName, stack } from "./StackEnv";
 import { getCountryCode, getRegionCode } from "./Location";
 
