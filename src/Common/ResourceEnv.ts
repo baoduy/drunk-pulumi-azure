@@ -6,8 +6,8 @@ import { currentCountryCode } from "./AzureEnv";
 
 export const resourceConvention: ConventionProps = {
   prefix: stack,
-  includeRegion: true,
-  suffix: undefined, //This may be specified by each resource name
+  region: currentCountryCode,
+  suffix: undefined,
 };
 
 /** ==================== Resources Variables ========================= */
@@ -21,11 +21,8 @@ const getName = (name: string, convention: ConventionProps): string => {
     name = name + "-" + organization;
 
   //Region
-  if (
-    convention.includeRegion &&
-    !name.includes(currentCountryCode.toLowerCase())
-  )
-    name = name + "-" + currentCountryCode;
+  if (convention.region && !name.includes(convention.region.toLowerCase()))
+    name = name + "-" + convention.region;
 
   //Add prefix
   if (convention.prefix && !name.startsWith(convention.prefix.toLowerCase()))

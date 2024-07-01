@@ -4,8 +4,12 @@ import { getResourceName } from "../ResourceEnv";
 import { organization, stack } from "../StackEnv";
 
 /** The method to get Resource group Name*/
-export const getResourceGroupName = (name: string): string =>
+export const getResourceGroupName = (
+  name: string,
+  convention: ConventionProps = {},
+): string =>
   getResourceName(name, {
+    ...convention,
     suffix: organization ? `grp-${organization}` : "grp",
   });
 
@@ -142,8 +146,8 @@ export const getNICName = (name: string) =>
 export const getVpnName = (name: string) =>
   getResourceName(name, { suffix: "vpn" });
 
-export const getVnetName = (name: string) =>
-  getResourceName(name, { suffix: "vnt" });
+export const getVnetName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: "vnt" });
 
 export const getWanName = (name: string) =>
   getResourceName(name, { suffix: "wan" });

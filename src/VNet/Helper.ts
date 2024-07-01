@@ -2,7 +2,7 @@ import * as network from "@pulumi/azure-native/network";
 import { Input, interpolate, output, Output } from "@pulumi/pulumi";
 import * as netmask from "netmask";
 import {
-  currentRegionName,
+  currentRegionCode,
   parseResourceInfoFromId,
   subscriptionId,
 } from "../Common/AzureEnv";
@@ -87,9 +87,12 @@ export const getIpAddressResource = ({
   });
 };
 
-export const getVnetInfo = (groupName: string): VnetInfoType => {
-  const vnetName = getVnetName(groupName);
-  const rsName = getResourceGroupName(groupName);
+export const getVnetInfo = (
+  groupName: string,
+  region: string = currentRegionCode,
+): VnetInfoType => {
+  const vnetName = getVnetName(groupName, { region });
+  const rsName = getResourceGroupName(groupName, { region });
 
   return {
     vnetName,
@@ -98,8 +101,11 @@ export const getVnetInfo = (groupName: string): VnetInfoType => {
   };
 };
 
-export const getVnetIdByName = (groupName: string) => {
-  const info = getVnetInfo(groupName);
+export const getVnetIdByName = (
+  groupName: string,
+  region: string = currentRegionCode,
+) => {
+  const info = getVnetInfo(groupName, region);
   return interpolate`/subscriptions/${info.subscriptionId}/resourceGroups/${info.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
 };
 
