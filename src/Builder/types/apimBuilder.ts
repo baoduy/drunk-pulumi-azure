@@ -1,7 +1,7 @@
 import { SkuType } from "@pulumi/azure-native/apimanagement";
 import { Input } from "@pulumi/pulumi";
 import { IBuilder } from "./genericBuilder";
-import { ResourceInfo } from "../../types";
+import { PrivateLinkPropsType, ResourceInfo } from "../../types";
 import { AppInsightInfo } from "../../Logs/Helpers";
 
 export type ApimSkuBuilderType = {
@@ -40,8 +40,7 @@ export type ApimVnetType = {
    * */
   type: "External" | "Internal";
 };
-export type ApimPrivateLinkType = {
-  subnetIds: Input<string>[];
+export type ApimPrivateLinkType = PrivateLinkPropsType & {
   disablePublicAccess?: boolean;
 };
 export type ApimAuthType = {

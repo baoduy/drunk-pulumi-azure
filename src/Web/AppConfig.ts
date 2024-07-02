@@ -3,7 +3,7 @@ import { isPrd } from "../Common/AzureEnv";
 import { getAppConfigName, getPrivateEndpointName } from "../Common/Naming";
 import {
   KeyVaultInfo,
-  PrivateLinkProps,
+  PrivateLinkPropsType,
   ResourceGroupInfo,
   ResourceInfo,
 } from "../types";
@@ -13,7 +13,7 @@ import { addCustomSecret } from "../KeyVault/CustomHelper";
 export type AppConfigProps = {
   name: string;
   group: ResourceGroupInfo;
-  privateLink?: PrivateLinkProps;
+  privateLink?: PrivateLinkPropsType;
   disableLocalAuth?: boolean;
   vaultInfo: KeyVaultInfo;
 };
@@ -76,11 +76,9 @@ export default ({
   //Private Link
   if (privateLink) {
     PrivateEndpoint({
-      name: getPrivateEndpointName(name),
-      group,
-      privateDnsZoneName: `${name}.privatelink.azconfig.io`,
+      resourceInfo: { resourceName: name, group, id: app.id },
+      privateDnsZoneName: "privatelink.azconfig.io",
       linkServiceGroupIds: ["appConfig"],
-      resourceId: app.id,
       ...privateLink,
     });
   }

@@ -34,14 +34,17 @@ export const roleAssignment = ({
   dependsOn,
 }: RoleAssignmentProps) => {
   const role = getRoleDefinitionByName({ roleName });
-  return new native.authorization.RoleAssignment(
-    `${name}-${roleName.split(" ").join("")}`,
-    {
-      principalId,
-      principalType,
-      roleDefinitionId: role.id,
-      scope,
-    },
-    { dependsOn },
-  );
+  return pulumi.output(principalId).apply((id) => {
+    if (!id) return undefined;
+    return new native.authorization.RoleAssignment(
+      `${name}-${roleName.split(" ").join("")}`,
+      {
+        principalId,
+        principalType,
+        roleDefinitionId: role.id,
+        scope,
+      },
+      { dependsOn },
+    );
+  });
 };

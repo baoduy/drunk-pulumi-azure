@@ -1,3 +1,4 @@
+import { ResourceInfo } from "../types";
 import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
 } from "../VNet/IpAddressPrefix";
@@ -12,6 +13,7 @@ import { input as inputs } from "@pulumi/azure-native/types";
 import NetworkPeering from "../VNet/NetworkPeering";
 import { LogInfoResults } from "../Logs/Helpers";
 import VPNGateway from "../VNet/VPNGateway";
+import PrivateDnsZoneBuilder from "./PrivateDnsZoneBuilder";
 import {
   BastionCreationProps,
   FirewallCreationProps,
@@ -27,6 +29,7 @@ import {
   VnetBuilderResults,
   VpnGatewayCreationProps,
   BuilderProps,
+  VnetPrivateDnsBuilderFunc,
 } from "./types";
 import { getVnetInfo, parseVnetInfoFromId } from "../VNet/Helper";
 import Bastion from "../VNet/Bastion";
@@ -51,6 +54,8 @@ class VnetBuilder
   private _peeringProps: PeeringProps[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
   private _ipType: "prefix" | "individual" = "prefix";
+  private _privateDns: Record<string, VnetPrivateDnsBuilderFunc | undefined> =
+    {};
 
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
@@ -60,6 +65,7 @@ class VnetBuilder
   private _natGatewayInstance: network.NatGateway | undefined = undefined;
   private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
     undefined;
+  private _privateDnsInstances: Record<string, ResourceInfo> = {};
 
   constructor(commonProps: BuilderProps) {
     super(commonProps);
@@ -122,6 +128,13 @@ class VnetBuilder
     this._enableRoute = true;
     return this;
   }
+  public withPrivateDns(
+    domain: string,
+    builder?: VnetPrivateDnsBuilderFunc,
+  ): IVnetBuilder {
+    this._privateDns[domain] = builder;
+    return this;
+  }
 
   public peeringTo(props: PeeringProps): IVnetBuilder {
     this._peeringProps.push(props);
@@ -134,20 +147,6 @@ class VnetBuilder
   }
 
   /** Builders methods */
-  // private validate() {
-  //   if (this._firewallProps) {
-  //     if (!this._firewallProps.sku)
-  //       this._firewallProps.sku = this._natGatewayEnabled
-  //         ? { tier: "Basic", name: "AZFW_VNet" }
-  //         : { tier: "Basic", name: "AZFW_VNet" };
-  //
-  //     // if (this._natGatewayEnabled && this._firewallProps.sku.tier === "Basic")
-  //     //   throw new Error(
-  //     //     'The Firewall tier "Basic" is not support Nat Gateway.',
-  //     //   );
-  //   }
-  // }
-
   private buildIpAddress() {
     const ipNames = [];
 
@@ -316,6 +315,22 @@ class VnetBuilder
     });
   }
 
+  private buildPrivateDns() {
+    Object.keys(this._privateDns).forEach((k) => {
+      const bFunc = this._privateDns[k];
+      const builder = PrivateDnsZoneBuilder({
+        ...this.commonProps,
+        name: k,
+      }).linkTo({
+        vnetIds: [this._vnetInstance!.id],
+        registrationEnabled: false,
+      });
+
+      if (bFunc) bFunc(builder);
+      this._privateDnsInstances[k] = builder.build();
+    });
+  }
+
   private buildPeering() {
     if (!this._peeringProps || !this._vnetInstance) return;
 
@@ -348,6 +363,7 @@ class VnetBuilder
     this.buildFirewall();
     this.buildVpnGateway();
     this.buildBastion();
+    this.buildPrivateDns();
     this.buildPeering();
 
     return {

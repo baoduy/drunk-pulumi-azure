@@ -1,42 +1,34 @@
 import * as keyvault from "@pulumi/azure-native/keyvault";
 import { enums } from "@pulumi/azure-native/types";
 import { Input } from "@pulumi/pulumi";
-import { isPrd, tenantId } from "../Common/AzureEnv";
-import { getKeyVaultName, getPrivateEndpointName } from "../Common/Naming";
+import { tenantId } from "../Common/AzureEnv";
+import { getKeyVaultName } from "../Common/Naming";
 import { createDiagnostic } from "../Logs/Helpers";
 import {
   BasicMonitorArgs,
   KeyVaultInfo,
-  PrivateLinkProps,
-  ResourceGroupInfo,
+  NetworkPropsType,
+  PrivateLinkPropsType,
 } from "../types";
 import PrivateEndpoint from "../VNet/PrivateEndpoint";
 import { BasicResourceArgs } from "../types";
 
 export interface KeyVaultProps extends BasicResourceArgs {
   softDeleteRetentionInDays?: Input<number>;
-  network?: {
-    //allowsAzureService?: boolean;
-    ipAddresses?: Array<Input<string>>;
-    subnetIds?: Array<Input<string>>;
-  };
+  network?: NetworkPropsType;
 }
 
 export const createVaultPrivateLink = ({
-  name,
   vaultInfo,
   ...props
-}: PrivateLinkProps & {
-  name: string;
+}: PrivateLinkPropsType & {
   vaultInfo: KeyVaultInfo;
 }) =>
   PrivateEndpoint({
-    name: getPrivateEndpointName(name),
+    resourceInfo: { ...vaultInfo, resourceName: vaultInfo.name },
     ...props,
-    group: vaultInfo.group,
-    resourceId: vaultInfo.id,
     privateDnsZoneName: "privatelink.vaultcore.azure.net",
-    linkServiceGroupIds: ["keyVault"],
+    linkServiceGroupIds: props.type ? [props.type] : ["keyVault"],
   });
 
 export const createVaultDiagnostic = ({
@@ -95,8 +87,8 @@ export default ({
             ? network.ipAddresses.map((i) => ({ value: i }))
             : [],
 
-          virtualNetworkRules: network?.subnetIds
-            ? network.subnetIds.map((s) => ({ id: s }))
+          virtualNetworkRules: network?.subnetId
+            ? [{ id: network.subnetId }]
             : undefined,
         },
       },
@@ -120,13 +112,18 @@ export default ({
     id: vault.id,
   });
 
+  // Create Private Link
+  const createPrivateLink = (props: PrivateLinkPropsType) =>
+    createVaultPrivateLink({ vaultInfo: info(), ...props });
+
+  //Create Private Link
+  if (network?.privateLink) {
+    createPrivateLink(network!.privateLink);
+  }
+
   //Add Diagnostic
   const addDiagnostic = (logInfo: BasicMonitorArgs) =>
     createVaultDiagnostic({ vaultInfo: info(), logInfo });
-
-  // Create Private Link
-  const createPrivateLink = (props: PrivateLinkProps) =>
-    createVaultPrivateLink({ name, vaultInfo: info(), ...props });
 
   return {
     name: vaultName,

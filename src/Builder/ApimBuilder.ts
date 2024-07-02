@@ -336,12 +336,17 @@ class ApimBuilder
   private buildPrivateLink() {
     if (!this._privateLink) return;
     PrivateEndpoint({
-      ...this.commonProps,
-      name: this._instanceName!,
-      resourceId: this._apimInstance!.id,
+      resourceInfo: {
+        resourceName: this._instanceName!,
+        group: this.commonProps.group,
+        id: this._apimInstance!.id,
+      },
+
       privateDnsZoneName: "privatelink.azure-api.net",
       subnetIds: this._privateLink.subnetIds,
-      linkServiceGroupIds: ["Gateway"],
+      linkServiceGroupIds: this._privateLink.type
+        ? [this._privateLink.type]
+        : ["Gateway"],
       dependsOn: this._apimInstance,
     });
   }

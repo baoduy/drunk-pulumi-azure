@@ -184,7 +184,6 @@ class ResourceBuilder
 
     if (asPrivateLink && subIds.length > 0) {
       createVaultPrivateLink({
-        name: `${this.name}-vault`,
         vaultInfo: this._vaultInfo!.info(),
         subnetIds: subIds,
       });

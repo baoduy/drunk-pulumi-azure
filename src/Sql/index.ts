@@ -9,6 +9,7 @@ import {
   BasicResourceArgs,
   BasicResourceResultProps,
   KeyVaultInfo,
+  NetworkPropsType,
   ResourceInfo,
 } from "../types";
 import { convertToIpRange } from "../VNet/Helper";
@@ -67,13 +68,9 @@ export type SqlAuthType = {
   password: Input<string>;
 };
 
-export type SqlNetworkType = {
+export type SqlNetworkType = NetworkPropsType & {
   //Enable this will add 0.0.0.0 to 255.255.255.255 to the DB whitelist
   acceptAllPublicConnect?: boolean;
-  subnetId?: Input<string>;
-  ipAddresses?: Input<string>[];
-  /** To enable Private Link need to ensure the subnetId is provided. */
-  asPrivateLink?: boolean;
 };
 
 export type SqlElasticPoolType = {
@@ -151,7 +148,7 @@ export default ({
         sid: adminGroup?.objectId,
         login: adminGroup?.displayName,
       },
-      publicNetworkAccess: network?.asPrivateLink
+      publicNetworkAccess: network?.privateLink
         ? sql.ServerNetworkAccessFlag.Disabled
         : sql.ServerNetworkAccessFlag.Enabled,
     },
@@ -177,27 +174,28 @@ export default ({
       })
     : undefined;
 
+  //Subnet
   if (network?.subnetId) {
-    if (network.asPrivateLink) {
-      privateEndpointCreator({
-        group,
-        name,
-        resourceId: sqlServer.id,
-        privateDnsZoneName: "privatelink.database.windows.net",
-        subnetIds: [network.subnetId],
-        linkServiceGroupIds: ["sqlServer"],
-      });
-    } else {
-      //Link to Vnet
-      new sql.VirtualNetworkRule(sqlName, {
-        virtualNetworkRuleName: `${sqlName}-vnetRule`,
-        serverName: sqlServer.name,
-        ...group,
+    //Link to Vnet
+    new sql.VirtualNetworkRule(sqlName, {
+      virtualNetworkRuleName: `${sqlName}-vnetRule`,
+      serverName: sqlServer.name,
+      ...group,
 
-        virtualNetworkSubnetId: network.subnetId,
-        ignoreMissingVnetServiceEndpoint: false,
-      });
-    }
+      virtualNetworkSubnetId: network.subnetId,
+      ignoreMissingVnetServiceEndpoint: false,
+    });
+  }
+  //Private Link
+  if (network?.privateLink) {
+    privateEndpointCreator({
+      resourceInfo: { resourceName: name, group, id: sqlServer.id },
+      privateDnsZoneName: "privatelink.database.windows.net",
+      subnetIds: network.privateLink.subnetIds,
+      linkServiceGroupIds: network.privateLink.type
+        ? [network.privateLink.type]
+        : ["sqlServer"],
+    });
   }
 
   //Allow Public Ip Accessing
@@ -237,7 +235,6 @@ export default ({
       });
     }
 
-    //Default Alert Policy
     //ServerSecurityAlertPolicy
     const alertPolicy = new sql.ServerSecurityAlertPolicy(
       name,
@@ -350,9 +347,9 @@ export default ({
       });
 
       if (vaultInfo) {
-        const connectionString = auth?.adminLogin
-          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
-          : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
+        const connectionString = auth?.azureAdOnlyAuthentication
+          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
+          : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
 
         addCustomSecret({
           name: d.name,

@@ -35,7 +35,6 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
   public privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults {
     createVaultPrivateLink({
-      name: `${this.vaultInfo.name}-vault`,
       vaultInfo: this.vaultInfo,
       subnetIds,
     });

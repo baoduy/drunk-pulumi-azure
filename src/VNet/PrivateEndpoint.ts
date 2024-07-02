@@ -1,42 +1,45 @@
 import * as network from "@pulumi/azure-native/network";
-import { Input, output } from "@pulumi/pulumi";
-import { BasicResourceArgs, PrivateLinkProps } from "../types";
-import { getVnetIdFromSubnetId } from "./Helper";
+import { output } from "@pulumi/pulumi";
+import { BasicArgs, PrivateLinkPropsType, ResourceInfo } from "../types";
 import { parseResourceInfoFromId } from "../Common/AzureEnv";
 import { getPrivateEndpointName } from "../Common/Naming";
 import { PrivateDnsZoneBuilder } from "../Builder";
 
-interface Props extends BasicResourceArgs, PrivateLinkProps {
-  resourceId: Input<string>;
-  privateDnsZoneName: string;
-  linkServiceGroupIds: string[];
-}
+export type PrivateEndpointProps = Pick<PrivateLinkPropsType, "subnetIds"> &
+  Pick<BasicArgs, "dependsOn"> & {
+    resourceInfo: ResourceInfo;
+    /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
+    privateDnsZoneName: string;
+    linkServiceGroupIds: string[];
+  };
 
 export default ({
-  name,
-  group,
-  resourceId,
+  resourceInfo,
   subnetIds,
   privateDnsZoneName,
   linkServiceGroupIds,
-}: Props) => {
-  name = getPrivateEndpointName(name);
+  dependsOn,
+}: PrivateEndpointProps) => {
+  const name = getPrivateEndpointName(resourceInfo.resourceName);
 
   const endpoints = subnetIds.map(
     (s, index) =>
-      new network.PrivateEndpoint(`${name}-${index}`, {
-        privateEndpointName: `${name}-${index}`,
-        ...group,
-
-        subnet: { id: s },
-        privateLinkServiceConnections: [
-          {
-            groupIds: linkServiceGroupIds,
-            name: `${name}-conn`,
-            privateLinkServiceId: resourceId,
-          },
-        ],
-      }),
+      new network.PrivateEndpoint(
+        `${name}-${index}`,
+        {
+          privateEndpointName: `${name}-${index}`,
+          ...resourceInfo.group,
+          subnet: { id: s },
+          privateLinkServiceConnections: [
+            {
+              groupIds: linkServiceGroupIds,
+              name: `${name}-conn`,
+              privateLinkServiceId: resourceInfo.id,
+            },
+          ],
+        },
+        { dependsOn },
+      ),
   );
 
   //Get IpAddress in
@@ -46,11 +49,12 @@ export default ({
     ),
   ).apply((a) => a.flatMap((i) => i!));
 
-  output([resourceId, ipAddresses]).apply(([id, ip]) => {
+  output([resourceInfo.id, ipAddresses]).apply(([id, ip]) => {
     const resourceInfo = parseResourceInfoFromId(id as string);
     return PrivateDnsZoneBuilder({
       name: `${resourceInfo!.name}.${privateDnsZoneName}`,
-      group,
+      group: resourceInfo!.group,
+      dependsOn,
     })
       .withARecord({ ipAddresses: ip as string[], recordName: "@" })
       .linkTo({ subnetIds, registrationEnabled: false })

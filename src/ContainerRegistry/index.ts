@@ -2,7 +2,7 @@ import * as containerregistry from "@pulumi/azure-native/containerregistry";
 import {
   DefaultResourceArgs,
   KeyVaultInfo,
-  NetworkRulesProps,
+  NetworkPropsType,
   ResourceGroupInfo,
 } from "../types";
 import creator from "../Core/ResourceCreator";
@@ -23,7 +23,7 @@ interface Props extends DefaultResourceArgs {
   vaultInfo?: KeyVaultInfo;
   sku?: containerregistry.SkuName;
   /**Only support Premium sku*/
-  network?: NetworkRulesProps;
+  network?: NetworkPropsType;
 }
 
 /** The Azure Container Registry will be created at the GLobal Group.
@@ -68,15 +68,14 @@ export default ({
     ...others,
   } as containerregistry.RegistryArgs & DefaultResourceArgs);
 
-  if (sku === "Premium" && network?.privateLink && network?.subnetId) {
+  if (sku === "Premium" && network?.privateLink) {
     PrivateEndpoint({
-      name: getPrivateEndpointName(name),
-      group,
+      resourceInfo: { resourceName: name, group, id: resource.id },
       privateDnsZoneName: "privatelink.azurecr.io",
-      subnetIds: [network.subnetId],
-      ...network.privateLink,
-      linkServiceGroupIds: ["azurecr"],
-      resourceId: resource.id,
+      subnetIds: network.privateLink.subnetIds,
+      linkServiceGroupIds: network.privateLink.type
+        ? [network.privateLink.type]
+        : ["azurecr"],
     });
   }
 

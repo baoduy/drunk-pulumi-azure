@@ -4,8 +4,12 @@ import { getResourceName } from "../ResourceEnv";
 import { organization, stack } from "../StackEnv";
 
 /** The method to get Resource group Name*/
-export const getResourceGroupName = (name: string): string =>
+export const getResourceGroupName = (
+  name: string,
+  convention: ConventionProps = {},
+): string =>
   getResourceName(name, {
+    ...convention,
     suffix: organization ? `grp-${organization}` : "grp",
   });
 
@@ -19,8 +23,8 @@ export const getStorageName = (name: string): string => {
 
 /** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
 export const getSecretName = (name: string) => {
-  name = name.replace(`${stack}-`, "");
-  name = name.replace(stack, "");
+  name = replaceAll(name, `${stack}-`, "");
+  name = replaceAll(name, stack, "");
   name = replaceAll(name, " ", "-");
   name = replaceAll(name, ".", "-");
   return replaceAll(name, "_", "-").toLowerCase();
@@ -142,8 +146,8 @@ export const getNICName = (name: string) =>
 export const getVpnName = (name: string) =>
   getResourceName(name, { suffix: "vpn" });
 
-export const getVnetName = (name: string) =>
-  getResourceName(name, { suffix: "vnt" });
+export const getVnetName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: "vnt" });
 
 export const getWanName = (name: string) =>
   getResourceName(name, { suffix: "wan" });
@@ -159,6 +163,9 @@ export const getRouteName = (name: string) =>
 
 export const getRouteItemName = (name: string) =>
   getResourceName(name, { suffix: "", includeOrgName: false });
+
+export const getWorkflowName = (name: string) =>
+  getResourceName(name, { suffix: "wkp" });
 
 export const getNetworkSecurityGroupName = (name: string) =>
   getResourceName(name, { suffix: "nsg" });

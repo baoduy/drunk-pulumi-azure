@@ -53,6 +53,7 @@
     "src/Builder/ApimProductBuilder.ts",
     "src/Builder/ApimRootBuilder.ts",
     "src/Builder/ApimWorkspaceBuilder.ts",
+    "src/Builder/CdnBuilder.ts",
     "src/Builder/DnsZoneBuilder.ts",
     "src/Builder/PrivateDnsZoneBuilder.ts",
     "src/Builder/ResourceBuilder.ts",

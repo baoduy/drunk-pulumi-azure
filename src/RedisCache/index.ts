@@ -1,60 +1,72 @@
-import * as native from '@pulumi/azure-native';
-import * as pulumi from '@pulumi/pulumi';
+import * as cache from "@pulumi/azure-native/cache";
+import * as pulumi from "@pulumi/pulumi";
 
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from "../types";
 
-import { ToWords } from 'to-words';
-import { convertToIpRange } from '../VNet/Helper';
-import { getRedisCacheName } from '../Common/Naming';
-import { isPrd } from '../Common/AzureEnv';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { ToWords } from "to-words";
+import { convertToIpRange } from "../VNet/Helper";
+import { getRedisCacheName } from "../Common/Naming";
+import { isPrd } from "../Common/AzureEnv";
+import { addCustomSecret } from "../KeyVault/CustomHelper";
+import privateEndpointCreator from "../VNet/PrivateEndpoint";
 
 const toWord = new ToWords();
 
 interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
-  allowsIpAddresses?: string[];
-  sku?: native.types.input.cache.SkuArgs;
+  network?: NetworkPropsType;
+  sku?: {
+    name: cache.SkuName | string;
+    family: cache.SkuFamily | string;
+    capacity: number;
+  };
 }
 
 export default ({
   name,
   group,
-  allowsIpAddresses,
+  network,
   vaultInfo,
-  sku = { name: 'Basic', family: 'C', capacity: 0 },
+  sku = { name: "Basic", family: "C", capacity: 0 },
 }: Props) => {
   name = getRedisCacheName(name);
-  const redis = new native.cache.Redis(name, {
+  const redis = new cache.Redis(name, {
     name,
     ...group,
-    minimumTlsVersion: '1.2',
+    minimumTlsVersion: "1.2",
+    enableNonSslPort: false,
+    identity: { type: cache.ManagedServiceIdentityType.SystemAssigned },
     sku,
-    zones: isPrd && sku.name === 'Premium' ? ['1', '2', '3'] : undefined,
+    zones: isPrd && sku.name === "Premium" ? ["1", "2", "3"] : undefined,
+    subnetId: network?.subnetId,
+    publicNetworkAccess: network?.privateLink ? "Disabled" : "Enabled",
   });
 
-  // new native.cache.PatchSchedule(
-  //   name,
-  //   {
-  //     name: 'default',
-  //     ...group,
-  //     scheduleEntries: [
-  //       { dayOfWeek: 'Everyday', startHourUtc: 0, maintenanceWindow: 'PT5H' },
-  //     ],
-  //   },
-  //   { dependsOn: redis }
-  // );
-
-  if (allowsIpAddresses) {
-    convertToIpRange(allowsIpAddresses).map((range, i) => {
-      const n = `allow_Ip_${toWord.convert(i)}`.toLowerCase();
-      return new native.cache.FirewallRule(n, {
-        ruleName: n,
-        cacheName: redis.name,
-        ...group,
-        startIP: range.start,
-        endIP: range.end,
+  //Whitelist IpAddress
+  if (network?.ipAddresses) {
+    pulumi.output(network.ipAddresses).apply((ips) => {
+      convertToIpRange(ips).map((range, i) => {
+        const n = `allow_Ip_${toWord.convert(i)}`.toLowerCase();
+        return new cache.FirewallRule(n, {
+          ruleName: n,
+          cacheName: redis.name,
+          ...group,
+          startIP: range.start,
+          endIP: range.end,
+        });
       });
+    });
+  }
+
+  //Private Link
+  if (network?.privateLink) {
+    privateEndpointCreator({
+      resourceInfo: { resourceName: name, group, id: redis.id },
+      privateDnsZoneName: "privatelink.redis.cache.windows.net",
+      subnetIds: network.privateLink.subnetIds,
+      linkServiceGroupIds: network.privateLink.type
+        ? [network.privateLink.type]
+        : ["redisCache"],
     });
   }
 
@@ -62,7 +74,7 @@ export default ({
     pulumi.all([redis.name, redis.hostName]).apply(async ([n, h]) => {
       if (!h) return;
 
-      const keys = await native.cache.listRedisKeys({
+      const keys = await cache.listRedisKeys({
         name: n,
         resourceGroupName: group.resourceGroupName,
       });
@@ -71,28 +83,28 @@ export default ({
         name: `${name}-primary-key`,
         value: keys.primaryKey,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
 
       addCustomSecret({
         name: `${name}-secondary-key`,
         value: keys.secondaryKey,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
 
       addCustomSecret({
         name: `${name}-primary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
 
       addCustomSecret({
         name: `${name}-secondary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
         vaultInfo,
-        contentType: 'Redis Cache',
+        contentType: "Redis Cache",
       });
     });
   }
