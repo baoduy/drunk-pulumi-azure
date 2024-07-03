@@ -9,5 +9,6 @@ export * from "./genericBuilder";
 export * from "./resourceBuilder";
 export * from "./sqlBuilder";
 export * from "./storageBuilder";
+export * from "./vdiBuilder";
 export * from "./vmBuilder";
 export * from "./vnetBuilder";

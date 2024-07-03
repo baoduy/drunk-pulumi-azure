@@ -143,6 +143,9 @@ export const getVMName = (name: string) =>
 export const getNICName = (name: string) =>
   getResourceName(name, { suffix: "nic" });
 
+export const getVdiName = (name: string) =>
+  getResourceName(name, { suffix: "vdi" });
+
 export const getVpnName = (name: string) =>
   getResourceName(name, { suffix: "vpn" });
 
