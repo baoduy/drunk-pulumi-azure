@@ -222,7 +222,10 @@ export default ({
         ipProtocols: ["TCP"],
         sourceAddresses: subnetSpaces,
         //destinationFqdns: ["azkms.core.windows.net"],
-        destinationAddresses: ["40.83.235.53", "2a01:111:f100:3000::a83e:1b30"],
+        destinationAddresses: [
+          "40.83.235.53",
+          //"2a01:111:f100:3000::a83e:1b30"
+        ],
         destinationPorts: ["1688"],
       },
       {
