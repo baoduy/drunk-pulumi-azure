@@ -21,6 +21,8 @@ interface Props {
   allowsWindows365?: boolean;
 }
 
+//https://www.robtex.com/dns-lookup/global.azure-devices-provisioning.net
+
 export default ({
   name = "cloud-pc",
   priority,
@@ -211,6 +213,7 @@ export default ({
       fqdnTags: ["Windows365", "MicrosoftIntune"],
       protocols: [{ protocolType: "Https", port: 443 }],
     });
+
     netRules.push(
       {
         ruleType: "NetworkRule",
@@ -218,7 +221,8 @@ export default ({
         description: "CloudPc allows Windows 365 windows.net",
         ipProtocols: ["TCP"],
         sourceAddresses: subnetSpaces,
-        destinationFqdns: ["azkms.core.windows.net"],
+        //destinationFqdns: ["azkms.core.windows.net"],
+        destinationAddresses: ["40.83.235.53", "2a01:111:f100:3000::a83e:1b30"],
         destinationPorts: ["1688"],
       },
       {
@@ -227,9 +231,30 @@ export default ({
         description: "CloudPc allows Windows 365 azure-devices",
         ipProtocols: ["TCP"],
         sourceAddresses: subnetSpaces,
-        destinationFqdns: [
-          "global.azure-devices-provisioning.net",
-          "*.azure-devices.net",
+        // destinationFqdns: [
+        //   "global.azure-devices-provisioning.net",
+        //   "hm-iot-in-prod-preu01.azure-devices.net",
+        //   "hm-iot-in-prod-prap01.azure-devices.net",
+        //   "hm-iot-in-prod-prna01.azure-devices.net",
+        //   "hm-iot-in-prod-prau01.azure-devices.net",
+        //   "hm-iot-in-prod-prna02.azure-devices.net",
+        //   "hm-iot-in-2-prod-prna01.azure-devices.net",
+        //   "hm-iot-in-3-prod-prna01.azure-devices.net",
+        //   "hm-iot-in-2-prod-preu01.azure-devices.net",
+        //   "hm-iot-in-3-prod-preu01.azure-devices.net",
+        //   "hm-iot-in-4-prod-prna01.azure-devices.net",
+        // ],
+        destinationAddresses: [
+          "23.98.104.204",
+          "40.78.238.4",
+          "20.150.179.224",
+          "52.236.189.131",
+          "13.69.71.14",
+          "13.69.71.2",
+          "13.70.74.193",
+          "13.86.221.39",
+          "13.86.221.36",
+          "13.86.221.43",
         ],
         destinationPorts: ["443", "5671"],
       },
