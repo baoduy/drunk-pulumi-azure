@@ -18,6 +18,7 @@ interface Props {
   allowsK8sTools?: boolean;
   allowsSearch?: boolean;
   allowsOffice365?: boolean;
+  allowsWindows365?: boolean;
 }
 
 export default ({
@@ -25,6 +26,7 @@ export default ({
   priority,
   subnetSpaces,
   allowsOffice365,
+  allowsWindows365,
   allowsAzure,
   allowsAzDevOps,
   allowsK8sTools,
@@ -199,6 +201,48 @@ export default ({
       fqdnTags: ["Office365", "Office365.SharePoint"],
       protocols: [{ protocolType: "Https", port: 443 }],
     });
+  }
+  if (allowsWindows365) {
+    appRules.push({
+      ruleType: "ApplicationRule",
+      name: `${name}-app-allow-win365`,
+      description: "Allows Windows365",
+      sourceAddresses: subnetSpaces,
+      fqdnTags: ["Windows365", "MicrosoftIntune"],
+      protocols: [{ protocolType: "Https", port: 443 }],
+    });
+    netRules.push(
+      {
+        ruleType: "NetworkRule",
+        name: `${name}-net-allow-win365-windows-net`,
+        description: "CloudPc allows Windows 365 windows.net",
+        ipProtocols: ["TCP"],
+        sourceAddresses: subnetSpaces,
+        destinationFqdns: ["azkms.core.windows.net"],
+        destinationPorts: ["1688"],
+      },
+      {
+        ruleType: "NetworkRule",
+        name: `${name}-net-allow-win365-azure-devices`,
+        description: "CloudPc allows Windows 365 azure-devices",
+        ipProtocols: ["TCP"],
+        sourceAddresses: subnetSpaces,
+        destinationFqdns: [
+          "global.azure-devices-provisioning.net",
+          "*.azure-devices.net",
+        ],
+        destinationPorts: ["443", "5671"],
+      },
+      {
+        ruleType: "NetworkRule",
+        name: `${name}-net-allow-win365-udp-tcp`,
+        description: "CloudPc allows Windows 365 udp tcp",
+        ipProtocols: ["UDP", "TCP"],
+        sourceAddresses: subnetSpaces,
+        destinationAddresses: ["20.202.0.0/16"],
+        destinationPorts: ["443", "3478"],
+      },
+    );
   }
 
   if (allowsSearch) {
