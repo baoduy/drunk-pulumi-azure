@@ -2,13 +2,13 @@ import { EnvRolesResults } from "../AzAd/EnvRoles";
 import { addMemberToGroup } from "../AzAd/Group";
 import { ResourceGroupInfo, ResourceInfo } from "../types";
 import * as cdn from "@pulumi/azure-native/cdn";
-import { getCdnProfileName } from "../Common/Naming";
+import { getCdnProfileName } from "../Common";
 import { global } from "../Common";
 
 interface Props {
   name: string;
   group?: ResourceGroupInfo;
-  envRoles: EnvRolesResults;
+  envRoles?: EnvRolesResults;
 }
 
 export default ({

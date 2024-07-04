@@ -8,6 +8,7 @@ export { default as ResourceBuilder } from "./ResourceBuilder";
 export { default as SqlBuilder } from "./SqlBuilder";
 export { default as StorageBuilder } from "./StorageBuilder";
 export { default as VaultBuilder } from "./VaultBuilder";
+export { default as VdiBuilder } from "./VdiBuilder";
 export { default as VmBuilder } from "./VmBuilder";
 export { default as VnetBuilder } from "./VnetBuilder";
 
