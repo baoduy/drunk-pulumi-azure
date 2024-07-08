@@ -2,6 +2,7 @@ import { currentCountryCode } from "./AzureEnv";
 import { replaceAll } from "./Helpers";
 import { ConventionProps } from "../types";
 import { organization, stack } from "./StackEnv";
+import * as config from "../config";
 
 /** ==================== Resources Variables ========================= */
 
@@ -27,8 +28,10 @@ const getName = (name: string, convention: ConventionProps): string => {
   }
 
   //Region
-  if (convention.region && !name.includes(convention.region.toLowerCase())) {
-    rs.push(convention.region.toLowerCase());
+  if (!config.env.DPA_NAMING_DISABLE_REGION) {
+    if (convention.region && !name.includes(convention.region.toLowerCase())) {
+      rs.push(convention.region.toLowerCase());
+    }
   }
 
   //Add the suffix
