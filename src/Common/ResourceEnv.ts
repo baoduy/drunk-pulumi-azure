@@ -2,9 +2,7 @@ import { currentCountryCode } from "./AzureEnv";
 import { replaceAll } from "./Helpers";
 import { ConventionProps } from "../types";
 import { organization, stack } from "./StackEnv";
-
-let disableRegion = false;
-export const setDisableRegion = (disabled: boolean=true) => disableRegion=disabled;
+import * as config from "../config";
 
 /** ==================== Resources Variables ========================= */
 
@@ -30,7 +28,7 @@ const getName = (name: string, convention: ConventionProps): string => {
   }
 
   //Region
-  if(!disableRegion) {
+  if (!config.env.DPA_NAMING_DISABLE_REGION) {
     if (convention.region && !name.includes(convention.region.toLowerCase())) {
       rs.push(convention.region.toLowerCase());
     }
