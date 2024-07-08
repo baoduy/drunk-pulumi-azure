@@ -63,9 +63,12 @@ registerAutoTags({
 });
 
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
-export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
-  const vaultName = getKeyVaultName(groupName);
-  const resourceGroupName = getResourceGroupName(groupName);
+export const getKeyVaultInfo = (
+  groupName: string,
+  region: string = currentCountryCode,
+): KeyVaultInfo => {
+  const vaultName = getKeyVaultName(groupName, { region });
+  const resourceGroupName = getResourceGroupName(groupName, { region });
 
   return {
     name: vaultName,
