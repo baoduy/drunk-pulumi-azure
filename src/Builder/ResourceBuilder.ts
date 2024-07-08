@@ -11,24 +11,24 @@ import {
   ResourceVaultLinkingBuilderType,
   ResourceVnetBuilderType,
   VnetBuilderResults,
-} from "./types";
+} from './types';
 import {
   createEnvRoles,
   CreateEnvRolesType,
   EnvRolesResults,
   getEnvRolesOutput,
-} from "../AzAd/EnvRoles";
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../types";
-import RG from "../Core/ResourceGroup";
-import { ResourceGroup } from "@pulumi/azure-native/resources";
-import { createVaultPrivateLink } from "../KeyVault";
-import { Input } from "@pulumi/pulumi";
-import VnetBuilder from "./VnetBuilder";
-import { VaultNetworkResource } from "@drunk-pulumi/azure-providers";
-import { subscriptionId } from "../Common/AzureEnv";
-import { IVaultBuilderResults } from "./types/vaultBuilder";
-import { VaultBuilderResults } from "./VaultBuilder";
-import VaultBuilder from "./VaultBuilder";
+} from '../AzAd/EnvRoles';
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../types';
+import RG from '../Core/ResourceGroup';
+import { ResourceGroup } from '@pulumi/azure-native/resources';
+import { createVaultPrivateLink } from '../KeyVault';
+import { Input } from '@pulumi/pulumi';
+import VnetBuilder from './VnetBuilder';
+import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
+import { subscriptionId } from '../Common/AzureEnv';
+import { IVaultBuilderResults } from './types/vaultBuilder';
+import { VaultBuilderResults } from './VaultBuilder';
+import VaultBuilder from './VaultBuilder';
 
 class ResourceBuilder
   implements
@@ -42,6 +42,7 @@ class ResourceBuilder
   private _lock: boolean = false;
   private _createRole: boolean = false;
   private _createVault: boolean = false;
+  private _createVaultName: string | undefined = undefined;
   private _loadRolesFromVault: boolean = false;
   private _envRoles: EnvRolesResults | undefined = undefined;
   private _otherBuilders = new Array<BuilderFunctionType>();
@@ -81,8 +82,9 @@ class ResourceBuilder
     this._RGInfo = props;
     return this;
   }
-  public createVault(): IResourceBuilder {
+  public createVault(name: string | undefined = undefined): IResourceBuilder {
     this._createVault = true;
+    this._createVaultName = name;
     return this;
   }
   public withVault(props: KeyVaultInfo): IResourceBuilder {
@@ -126,7 +128,7 @@ class ResourceBuilder
     } else if (this._loadRolesFromVault) {
       if (!this._vaultInfo)
         throw new Error(
-          "The KeyVaultInfo needs to be defined to load environment Roles info.",
+          'The KeyVaultInfo needs to be defined to load environment Roles info.',
         );
       this._envRoles = getEnvRolesOutput(this._vaultInfo!.info());
     }
@@ -151,7 +153,7 @@ class ResourceBuilder
     //Create Vault
     if (this._createVault) {
       this._vaultInfo = VaultBuilder({
-        name: this.name,
+        name: this._createVaultName ?? this.name,
         group: this._RGInfo!,
         envRoles: this._envRoles!,
         dependsOn: this._RGInstance,
@@ -164,7 +166,7 @@ class ResourceBuilder
 
     if (!this._vaultInfo)
       throw new Error(
-        "VaultInfo needs to be provided to be continuing to create other resources.",
+        'VaultInfo needs to be provided to be continuing to create other resources.',
       );
 
     //Add Secrets to Vaults
