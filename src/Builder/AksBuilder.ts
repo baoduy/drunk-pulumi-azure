@@ -7,9 +7,9 @@ import {
   BuilderAsync,
   SshBuilderProps,
   BuilderProps,
-} from "./types";
-import { generateSsh, SshResults } from "../Core/KeyGenetators";
-import { ManagedClusterSKUTier } from "@pulumi/azure-native/containerservice";
+} from './types';
+import { generateSsh, SshResults } from '../Core/KeyGenerators';
+import { ManagedClusterSKUTier } from '@pulumi/azure-native/containerservice';
 import Aks, {
   AksNodePoolProps,
   AskAddonProps,
@@ -18,7 +18,7 @@ import Aks, {
   AksNetworkProps,
   DefaultAksNodePoolProps,
   AksResults,
-} from "../Aks";
+} from '../Aks';
 
 class AksBuilder
   extends BuilderAsync<AksResults>
@@ -37,7 +37,7 @@ class AksBuilder
   private _nodePoolsProps: AksNodePoolProps[] = [];
   private _addonProps: AskAddonProps | undefined = undefined;
   private _featureProps: AskFeatureProps | undefined = undefined;
-  private _authProps: Omit<AksAccessProps, "envRoles"> | undefined = {};
+  private _authProps: Omit<AksAccessProps, 'envRoles'> | undefined = {};
   private _tier: ManagedClusterSKUTier = ManagedClusterSKUTier.Free;
   private _networkProps: AksNetworkProps | undefined = undefined;
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
@@ -65,7 +65,7 @@ class AksBuilder
     this._featureProps = props;
     return this;
   }
-  public withAuth(props: Omit<AksAccessProps, "envRoles">): IAksBuilder {
+  public withAuth(props: Omit<AksAccessProps, 'envRoles'>): IAksBuilder {
     this._authProps = props;
     return this;
   }

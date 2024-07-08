@@ -3,16 +3,16 @@ import {
   ResourceGroupInfo,
   ResourceResultProps,
   BasicResourceArgs,
-} from "../types";
+} from '../types';
 import {
   ResourceGroup,
   ResourceGroupArgs,
-} from "@pulumi/azure-native/resources";
-import ResourceCreator from "./ResourceCreator";
-import { getResourceGroupName } from "../Common/Naming";
-import { EnvRolesResults } from "../AzAd/EnvRoles";
-import { currentRegionName } from "../Common/AzureEnv";
-import { grantEnvRolesAccess } from "../AzAd/EnvRoles.Consts";
+} from '@pulumi/azure-native/resources';
+import ResourceCreator from './ResourceCreator';
+import { getResourceGroupName } from '../Common';
+import { EnvRolesResults } from '../AzAd/EnvRoles';
+import { currentRegionName } from '../Common/AzureEnv';
+import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
 
 export type RGPermissionType = {
   envRoles: EnvRolesResults;
@@ -23,8 +23,8 @@ export type RGPermissionType = {
 };
 
 interface Props
-  extends Omit<DefaultResourceArgs, "monitoring">,
-    Omit<BasicResourceArgs, "group"> {
+  extends Omit<DefaultResourceArgs, 'monitoring'>,
+    Omit<BasicResourceArgs, 'group'> {
   formattedName?: boolean;
   location?: string;
   /** Grant permission of this group into Environment Roles groups*/

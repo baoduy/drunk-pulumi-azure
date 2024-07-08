@@ -1,7 +1,7 @@
 //AKS Builder types
-import * as native from "@pulumi/azure-native";
-import { SshGenerationProps, SshResults } from "../../Core/KeyGenetators";
-import { IBuilderAsync } from "./genericBuilder";
+import * as native from '@pulumi/azure-native';
+import { SshGenerationProps, SshResults } from '../../Core/KeyGenerators';
+import { IBuilderAsync } from './genericBuilder';
 import {
   AksAccessProps,
   AksNetworkProps,
@@ -10,9 +10,9 @@ import {
   AskAddonProps,
   AskFeatureProps,
   DefaultAksNodePoolProps,
-} from "../../Aks";
+} from '../../Aks';
 
-export type SshBuilderProps = Omit<SshGenerationProps, "vaultInfo" | "name">;
+export type SshBuilderProps = Omit<SshGenerationProps, 'vaultInfo' | 'name'>;
 export type AksImportProps = { id: string; ignoreChanges?: string[] };
 
 export interface ISshBuilder {
@@ -26,7 +26,7 @@ export interface IAksDefaultNodePoolBuilder {
   withDefaultNodePool(props: DefaultAksNodePoolProps): IAksBuilder;
 }
 export interface IAksBuilder extends IBuilderAsync<AksResults> {
-  withAuth(props: Omit<AksAccessProps, "envRoles">): IAksBuilder;
+  withAuth(props: Omit<AksAccessProps, 'envRoles'>): IAksBuilder;
   withNodePool(props: AksNodePoolProps): IAksBuilder;
   withAddon(props: AskAddonProps): IAksBuilder;
   withFeature(props: AskFeatureProps): IAksBuilder;
