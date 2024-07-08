@@ -1,4 +1,5 @@
 import { enums, input as inputs } from "@pulumi/azure-native/types";
+import { AzureFirewallApplicationRuleProtocolType } from "@pulumi/azure-native/types/enums/network";
 import { Input, Output } from "@pulumi/pulumi";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -56,6 +57,13 @@ export interface NatRuleArgs {
   translatedPort?: Input<string>;
 }
 
+interface FirewallPolicyRuleApplicationProtocolArgs {
+  port?: pulumi.Input<number>;
+  protocolType?: pulumi.Input<
+    string | enums.network.AzureFirewallApplicationRuleProtocolType
+  >;
+}
+
 export interface NetworkRuleArgs {
   description?: Input<string>;
   destinationAddresses?: Input<Input<string>[]>;
@@ -79,9 +87,7 @@ export interface ApplicationRuleArgs {
     Input<inputs.network.FirewallPolicyHttpHeaderToInsertArgs>[]
   >;
   name?: Input<string>;
-  protocols?: Input<
-    Input<inputs.network.FirewallPolicyRuleApplicationProtocolArgs>[]
-  >;
+  protocols?: Input<Input<FirewallPolicyRuleApplicationProtocolArgs>[]>;
   ruleType: Input<"ApplicationRule">;
   sourceAddresses?: Input<Input<string>[]>;
   sourceIpGroups?: Input<Input<string>[]>;
