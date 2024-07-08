@@ -67,7 +67,11 @@ export const getKeyVaultInfo = (
   groupName: string,
   region: string = currentCountryCode,
 ): KeyVaultInfo => {
-  const vaultName = getKeyVaultName(groupName, { region });
+  const vaultName = getKeyVaultName(groupName, {
+    region,
+    suffix: "vlt",
+    includeOrgName: true,
+  });
   const resourceGroupName = getResourceGroupName(groupName, { region });
 
   return {
