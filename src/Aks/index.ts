@@ -209,6 +209,7 @@ export default async ({
   const secretName = `${aksName}-config`;
   const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
+
   //Auto detect and disable Local Account
   if (aksAccess.disableLocalAccounts === undefined) {
     aksAccess.disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
@@ -216,7 +217,14 @@ export default async ({
       .catch(() => false);
   }
 
-  ignoreChanges!.push("privateLinkResources", "networkProfile", "linuxProfile");
+  if (ignoreChanges.length <= 0) {
+    ignoreChanges.push(
+      "privateLinkResources",
+      "networkProfile",
+      "linuxProfile",
+      "windowsProfile",
+    );
+  }
 
   const serviceIdentity = aksIdentityCreator({
     name: aksName,

@@ -191,17 +191,13 @@ export const getBastionName = (name: string) =>
 /**Key vault allow to disable or custom the convention. The max length of vault name is 24*/
 export const getKeyVaultName = (
   name: string,
-  convention: ConventionProps | false = {
+  convention: ConventionProps = {},
+) =>
+  getResourceName(name, {
+    ...convention,
     suffix: "vlt",
     includeOrgName: true,
-  },
-) =>
-  getResourceName(
-    name,
-    convention == false
-      ? { prefix: "", suffix: "", includeOrgName: true }
-      : convention,
-  ).substring(0, 24);
+  }).substring(0, 24);
 
 export const getCdnEndpointName = (name: string) =>
   getResourceName(name, { suffix: "cdn" });

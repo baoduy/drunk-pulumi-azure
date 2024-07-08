@@ -63,15 +63,22 @@ registerAutoTags({
 });
 
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
-export const getKeyVaultInfo = (groupName: string): KeyVaultInfo => {
-  const vaultName = getKeyVaultName(groupName);
-  const resourceGroupName = getResourceGroupName(groupName);
+export const getKeyVaultInfo = (
+  groupName: string,
+  region: string = currentCountryCode,
+): KeyVaultInfo => {
+  const vaultName = getKeyVaultName(groupName, {
+    region,
+    suffix: "vlt",
+    includeOrgName: true,
+  });
+  const resourceGroupName = getResourceGroupName(groupName, { region });
 
   return {
     name: vaultName,
     group: {
       resourceGroupName: resourceGroupName,
-      location: currentRegionName,
+      location: region === currentCountryCode ? currentRegionName : undefined,
     },
     id: pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
   };
