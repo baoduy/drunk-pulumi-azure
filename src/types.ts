@@ -1,9 +1,15 @@
-import { Input, Output, Resource } from "@pulumi/pulumi";
-import * as authorization from "@pulumi/azure-native/authorization";
-import { DiagnosticSetting } from "@pulumi/azure-native/aadiam/diagnosticSetting";
-import * as pulumi from "@pulumi/pulumi";
-import { input as inputs, enums } from "@pulumi/azure-native/types";
-import { EnvRoleKeyTypes } from "./AzAd/EnvRoles";
+import { Input, Output, Resource } from '@pulumi/pulumi';
+import * as authorization from '@pulumi/azure-native/authorization';
+import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
+import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
+
+export declare namespace NodeJS {
+  interface ProcessEnv {
+    DPA_NAMING_DISABLE_PREFIX?: string;
+    DPA_NAMING_DISABLE_REGION?: string;
+    DPA_NAMING_DISABLE_SUFFIX?: string;
+  }
+}
 
 export interface ResourceInfoArg {
   /**If name and provider of the resource is not provided then the Id will be resource group Id*/
@@ -65,7 +71,7 @@ export interface BasicResourceArgs extends BasicArgs {
 }
 
 export interface DefaultResourceArgs extends BasicArgs {
-  monitoring?: Omit<DiagnosticProps, "name" | "targetResourceId">;
+  monitoring?: Omit<DiagnosticProps, 'name' | 'targetResourceId'>;
 }
 
 export type PrivateLinkPropsType = {

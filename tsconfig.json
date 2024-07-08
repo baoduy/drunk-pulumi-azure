@@ -101,7 +101,7 @@
     "src/ContainerRegistry/Helper.ts",
     "src/ContainerRegistry/index.ts",
     "src/Core/Helper.ts",
-    "src/Core/KeyGenetators.ts",
+    "src/Core/KeyGenerators.ts",
     "src/Core/Locker.ts",
     "src/Core/Random.ts",
     "src/Core/ResourceCreator.ts",
@@ -171,7 +171,6 @@
     "src/Web/Helpers.ts",
     "src/Web/WebAppPlan.ts",
     "src/Web/types.ts",
-    "src/config.ts",
     "src/index.ts",
     "src/types.ts"
   ],

@@ -1,20 +1,20 @@
-import { EnvRolesResults } from "../../AzAd/EnvRoles";
-import { RGPermissionType } from "../../Core/ResourceGroup";
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../../types";
-import { IBuilder, IBuilderAsync, BuilderProps } from "./genericBuilder";
+import { EnvRolesResults } from '../../AzAd/EnvRoles';
+import { RGPermissionType } from '../../Core/ResourceGroup';
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
+import { IBuilder, IBuilderAsync, BuilderProps } from './genericBuilder';
 import {
   IVnetBuilder,
   IVnetBuilderStart,
   VnetBuilderResults,
-} from "./vnetBuilder";
-import { Input } from "@pulumi/pulumi";
+} from './vnetBuilder';
+import { Input } from '@pulumi/pulumi';
 
 export type ResourceBuilderResults = BuilderProps & {
   envRoles: EnvRolesResults;
   vnetInstance?: VnetBuilderResults;
   otherInstances: Record<string, any>;
 };
-export type ResourceGroupBuilderType = Omit<RGPermissionType, "envRoles">;
+export type ResourceGroupBuilderType = Omit<RGPermissionType, 'envRoles'>;
 export type BuilderFunctionType = (
   props: ResourceBuilderResults,
 ) => IBuilder<any>;
@@ -43,7 +43,7 @@ export interface IResourceGroupBuilder {
 }
 
 export interface IResourceVaultBuilder {
-  createVault(): IResourceBuilder;
+  createVault(name: string | undefined): IResourceBuilder;
   withVault(props: KeyVaultInfo): IResourceBuilder;
 }
 

@@ -1,8 +1,8 @@
-import * as native from "@pulumi/azure-native";
-import * as pulumi from "@pulumi/pulumi";
-import { Input, Output, output } from "@pulumi/pulumi";
-import vmsDiagnostic from "./VmSetMonitor";
-import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from "../types";
+import * as native from '@pulumi/azure-native';
+import * as pulumi from '@pulumi/pulumi';
+import { Input, Output, output } from '@pulumi/pulumi';
+import vmsDiagnostic from './VmSetMonitor';
+import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
 import {
   currentEnv,
   defaultScope,
@@ -11,20 +11,20 @@ import {
   parseResourceInfoFromId,
   isPrd,
   tenantId,
-} from "../Common/AzureEnv";
-import Locker from "../Core/Locker";
-import aksIdentityCreator from "./Identity";
-import { stack } from "../Common/StackEnv";
-import { createDiagnostic } from "../Logs/Helpers";
-import { getAksName, getResourceGroupName } from "../Common/Naming";
-import { roleAssignment } from "../AzAd/RoleAssignment";
-import { EnvRolesResults } from "../AzAd/EnvRoles";
-import { getAksConfig } from "./Helper";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import * as inputs from "@pulumi/azure-native/types/input";
-import { getKeyVaultBase } from "@drunk-pulumi/azure-providers/AzBase/KeyVaultBase";
-import { IdentityResult } from "../AzAd/Identity";
-import { ManagedCluster } from "@pulumi/azure-native/containerservice";
+} from '../Common/AzureEnv';
+import Locker from '../Core/Locker';
+import aksIdentityCreator from './Identity';
+import { stack } from '../Common/StackEnv';
+import { createDiagnostic } from '../Logs/Helpers';
+import { getAksName, getResourceGroupName } from '../Common';
+import { roleAssignment } from '../AzAd/RoleAssignment';
+import { EnvRolesResults } from '../AzAd/EnvRoles';
+import { getAksConfig } from './Helper';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import * as inputs from '@pulumi/azure-native/types/input';
+import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import { IdentityResult } from '../AzAd/Identity';
+import { ManagedCluster } from '@pulumi/azure-native/containerservice';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -32,7 +32,7 @@ const autoScaleFor = ({
   env,
 }: {
   env: Environments;
-  nodeType: "Default" | "System" | "User";
+  nodeType: 'Default' | 'System' | 'User';
   enableAutoScaling?: boolean;
 }) => {
   const nodeCount = 1;
@@ -41,12 +41,12 @@ const autoScaleFor = ({
 
   if (env === Environments.Prd) {
     switch (nodeType) {
-      case "User":
+      case 'User':
         maxCount = 5;
         break;
 
-      case "Default":
-      case "System":
+      case 'Default':
+      case 'System':
       default:
         maxCount = 3;
         break;
@@ -62,9 +62,9 @@ const autoScaleFor = ({
 };
 
 const defaultNodePoolProps = {
-  availabilityZones: isPrd ? ["1", "2", "3"] : undefined,
+  availabilityZones: isPrd ? ['1', '2', '3'] : undefined,
   type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
-  vmSize: "Standard_B2s",
+  vmSize: 'Standard_B2s',
 
   maxPods: 50,
   enableFIPS: false,
@@ -83,25 +83,25 @@ const defaultNodePoolProps = {
 
 export enum VmSizes {
   /** 32G RAM - 4CPU - $221.92 */
-  Standard_E4as_v4 = "Standard_E4as_v4",
+  Standard_E4as_v4 = 'Standard_E4as_v4',
   /** 8G RAM - 2CPU - $77.38 */
-  Standard_B2ms = "Standard_B2ms",
+  Standard_B2ms = 'Standard_B2ms',
   /** 16G RAM - 4CPU - $154.03 */
-  Standard_B4ms = "Standard_B4ms",
+  Standard_B4ms = 'Standard_B4ms',
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2as_v4 = "Standard_D2as_v4",
+  Standard_D2as_v4 = 'Standard_D2as_v4',
   /** 8G RAM - 2CPU - 87.60 */
-  Standard_D2s_v3 = "Standard_D2s_v3",
+  Standard_D2s_v3 = 'Standard_D2s_v3',
   /** 8G RAM - 4CPU - 182.5 */
-  Standard_D4s_v3 = "Standard_D4s_v3",
+  Standard_D4s_v3 = 'Standard_D4s_v3',
   /** 16G RAM - 4CPU - $175.20 */
-  Standard_D4as_v4 = "Standard_D4as_v4",
+  Standard_D4as_v4 = 'Standard_D4as_v4',
   /** 4G RAM - 2CPU - $69.35 */
-  Standard_A2_v2 = "Standard_A2_v2",
+  Standard_A2_v2 = 'Standard_A2_v2',
   /** 8G RAM - 4CPU - $144.54 */
-  Standard_A4_v2 = "Standard_A4_v2",
+  Standard_A4_v2 = 'Standard_A4_v2',
   /** 32G RAM - 4CPU - $205.13 */
-  Standard_A4m_v2 = "Standard_A4m_v2",
+  Standard_A4m_v2 = 'Standard_A4m_v2',
 }
 
 export interface NodePoolProps
@@ -144,8 +144,8 @@ export type AksNetworkProps = {
   };
 };
 
-export type AksNodePoolProps = Omit<NodePoolProps, "subnetId" | "aksId">;
-export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, "name" | "mode">;
+export type AksNodePoolProps = Omit<NodePoolProps, 'subnetId' | 'aksId'>;
+export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
 
 export interface AksProps extends BasicResourceArgs {
   //nodeResourceGroup?: string;
@@ -219,10 +219,10 @@ export default async ({
 
   if (ignoreChanges.length <= 0) {
     ignoreChanges.push(
-      "privateLinkResources",
-      "networkProfile",
-      "linuxProfile",
-      "windowsProfile",
+      'privateLinkResources',
+      'networkProfile',
+      'linuxProfile',
+      'windowsProfile',
     );
   }
 
@@ -256,14 +256,14 @@ export default async ({
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
         enablePrivateClusterPublicFQDN: true,
-        privateDNSZone: "system",
+        privateDNSZone: 'system',
       },
 
       addonProfiles: {
         azureKeyvaultSecretsProvider: {
           config: addon.enableAzureKeyVault
             ? {
-                enableSecretRotation: "true",
+                enableSecretRotation: 'true',
               }
             : undefined,
           enabled: Boolean(addon.enableAzureKeyVault),
@@ -312,7 +312,7 @@ export default async ({
           ...defaultNodePool,
           ...autoScaleFor({
             env: currentEnv,
-            nodeType: "System",
+            nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
             // powerState: {
             //   code: "Running",
@@ -322,13 +322,13 @@ export default async ({
             // },
           }),
 
-          name: "defaultnodes",
-          mode: "System",
+          name: 'defaultnodes',
+          mode: 'System',
           count: 1,
           vnetSubnetID: network.subnetId,
-          kubeletDiskType: "OS",
-          osSKU: "Ubuntu",
-          osType: "Linux",
+          kubeletDiskType: 'OS',
+          osSKU: 'Ubuntu',
+          osType: 'Linux',
         },
       ],
       linuxProfile: linux
@@ -339,27 +339,27 @@ export default async ({
         : undefined,
       //This is not inuse
       windowsProfile: {
-        adminUsername: "azureuser",
+        adminUsername: 'azureuser',
         enableCSIProxy: true,
       },
       autoScalerProfile: {
-        balanceSimilarNodeGroups: "true",
-        expander: "random",
-        maxEmptyBulkDelete: "10",
-        maxGracefulTerminationSec: "600",
-        maxNodeProvisionTime: "15m",
-        maxTotalUnreadyPercentage: "45",
-        newPodScaleUpDelay: "0s",
-        okTotalUnreadyCount: "3",
-        scaleDownDelayAfterAdd: "30m",
-        scaleDownDelayAfterDelete: "60s",
-        scaleDownDelayAfterFailure: "10m",
-        scaleDownUnneededTime: "10m",
-        scaleDownUnreadyTime: "20m",
-        scaleDownUtilizationThreshold: "0.5",
-        scanInterval: "60s",
-        skipNodesWithLocalStorage: "false",
-        skipNodesWithSystemPods: "true",
+        balanceSimilarNodeGroups: 'true',
+        expander: 'random',
+        maxEmptyBulkDelete: '10',
+        maxGracefulTerminationSec: '600',
+        maxNodeProvisionTime: '15m',
+        maxTotalUnreadyPercentage: '45',
+        newPodScaleUpDelay: '0s',
+        okTotalUnreadyCount: '3',
+        scaleDownDelayAfterAdd: '30m',
+        scaleDownDelayAfterDelete: '60s',
+        scaleDownDelayAfterFailure: '10m',
+        scaleDownUnneededTime: '10m',
+        scaleDownUnreadyTime: '20m',
+        scaleDownUtilizationThreshold: '0.5',
+        scanInterval: '60s',
+        skipNodesWithLocalStorage: 'false',
+        skipNodesWithSystemPods: 'true',
       },
 
       //Still under preview
@@ -432,7 +432,7 @@ export default async ({
             ? native.containerservice.OutboundType.UserDefinedRouting
             : native.containerservice.OutboundType.LoadBalancer,
 
-        loadBalancerSku: "Standard",
+        loadBalancerSku: 'Standard',
         loadBalancerProfile: network.outboundIpAddress
           ? {
               outboundIPs: network.outboundIpAddress.ipAddressId
@@ -463,7 +463,7 @@ export default async ({
   new native.containerservice.MaintenanceConfiguration(
     `${aksName}-MaintenanceConfiguration`,
     {
-      configName: "default",
+      configName: 'default',
       // notAllowedTime: [
       //   {
       //     end: "2020-11-30T12:00:00Z",
@@ -502,12 +502,12 @@ export default async ({
             enableAutoScaling: features.enableAutoScale,
           }),
 
-          count: p.mode === "System" ? 1 : 0,
+          count: p.mode === 'System' ? 1 : 0,
           //orchestratorVersion: kubernetesVersion,
           vnetSubnetID: network.subnetId,
-          kubeletDiskType: "OS",
-          osSKU: "Ubuntu",
-          osType: "Linux",
+          kubeletDiskType: 'OS',
+          osSKU: 'Ubuntu',
+          osType: 'Linux',
         }),
     );
   }
@@ -520,18 +520,18 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile, network.subnetId])
       .apply(([identity, identityProfile, sId]) => {
-        if (acrScope && identityProfile && identityProfile["kubeletidentity"]) {
+        if (acrScope && identityProfile && identityProfile['kubeletidentity']) {
           roleAssignment({
             name: `${name}-aks-identity-profile-pull`,
-            principalId: identityProfile["kubeletidentity"].objectId!,
-            principalType: "ServicePrincipal",
-            roleName: "AcrPull",
+            principalId: identityProfile['kubeletidentity'].objectId!,
+            principalType: 'ServicePrincipal',
+            roleName: 'AcrPull',
             scope: acrScope,
           });
 
           addCustomSecret({
             name: `${name}-identity-clientId`,
-            value: identityProfile["kubeletidentity"].clientId!,
+            value: identityProfile['kubeletidentity'].clientId!,
             dependsOn: aks,
             contentType: name,
             vaultInfo,
@@ -542,8 +542,8 @@ export default async ({
           roleAssignment({
             name: `${name}-system-net`,
             principalId: identity.principalId,
-            roleName: "Contributor",
-            principalType: "ServicePrincipal",
+            roleName: 'Contributor',
+            principalType: 'ServicePrincipal',
             scope: getResourceIdFromInfo({
               group: parseResourceInfoFromId(sId)!.group,
             }),
@@ -577,12 +577,12 @@ export default async ({
         targetResourceId: id,
         logWpId,
         logsCategories: [
-          "guard",
-          "kube-controller-manager",
-          "kube-audit-admin",
-          "kube-audit",
-          "kube-scheduler",
-          "cluster-autoscaler",
+          'guard',
+          'kube-controller-manager',
+          'kube-audit-admin',
+          'kube-audit',
+          'kube-scheduler',
+          'cluster-autoscaler',
         ],
         dependsOn: aks,
       });
