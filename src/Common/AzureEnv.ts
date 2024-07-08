@@ -74,7 +74,7 @@ export const getKeyVaultInfo = (
     name: vaultName,
     group: {
       resourceGroupName: resourceGroupName,
-      location: currentRegionName,
+      location: region === currentCountryCode ? currentRegionName : undefined,
     },
     id: pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.KeyVault/vaults/${vaultName}`,
   };
