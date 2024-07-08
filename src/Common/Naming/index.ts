@@ -1,4 +1,5 @@
 import { ConventionProps } from "../../types";
+import {currentCountryCode} from "../AzureEnv";
 import { replaceAll } from "../Helpers";
 import { getResourceName } from "../ResourceEnv";
 import { organization, stack } from "../StackEnv";
@@ -208,7 +209,7 @@ export const getCdnProfileName = (name: string) =>
 
 /**The Azure Container Registry is created to Global group so no prefix*/
 export const getAcrName = (name: string) =>
-  replaceAll(getResourceName(name, { prefix: "", suffix: "acr" }), "-", "");
+  replaceAll(getResourceName(name, { prefix: "", suffix: "acr", region:currentCountryCode }), "-", "").substring(0,24);
 
 /**The App Cert Order is created to Global group so no prefix*/
 export const getCertOrderName = (name: string) =>
