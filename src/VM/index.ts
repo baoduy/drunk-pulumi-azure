@@ -1,16 +1,16 @@
-import { Input, Resource } from "@pulumi/pulumi";
-import * as compute from "@pulumi/azure-native/compute";
-import * as network from "@pulumi/azure-native/network";
-import { BasicResourceArgs, KeyVaultInfo } from "../types";
-import { getNICName, getVMName } from "../Common/Naming";
-import Locker from "../Core/Locker";
-import { getEncryptionKeyOutput } from "../KeyVault/Helper";
-import GlobalSchedule from "./GlobalSchedule";
-import Extension, { VmExtensionProps } from "./Extension";
+import { Input, Resource } from '@pulumi/pulumi';
+import * as compute from '@pulumi/azure-native/compute';
+import * as network from '@pulumi/azure-native/network';
+import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { getNICName, getVMName } from '../Common/Naming';
+import Locker from '../Core/Locker';
+import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import GlobalSchedule from './GlobalSchedule';
+import Extension, { VmExtensionProps } from './Extension';
 
 export type VmScheduleType = {
   /** The time zone ID: https://stackoverflow.com/questions/7908343/list-of-timezone-ids-for-use-with-findtimezonebyid-in-c */
-  timeZone?: "Singapore Standard Time" | Input<string>;
+  timeZone?: 'Singapore Standard Time' | Input<string>;
   /** The format is ISO 8601 Standard ex: 2200 */
   autoShutdownTime?: Input<string>;
   /** The format is ISO 8601 Standard ex: 0900 */
@@ -25,24 +25,24 @@ interface Props extends BasicResourceArgs {
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
   login: { userName: Input<string>; password?: Input<string> };
-  osType?: "Windows" | "Linux";
+  osType?: 'Windows' | 'Linux';
   image: {
-    offer: "WindowsServer" | "CentOS" | "Windows-10" | "windows-11" | string;
+    offer: 'WindowsServer' | 'CentOS' | 'Windows-10' | 'windows-11' | string;
     publisher:
-      | "MicrosoftWindowsServer"
-      | "MicrosoftWindowsDesktop"
-      | "Canonical"
+      | 'MicrosoftWindowsServer'
+      | 'MicrosoftWindowsDesktop'
+      | 'Canonical'
       | string;
-    sku: "2019-Datacenter" | "21h1-pro" | "win11-23h2-pro" | string;
+    sku: '2019-Datacenter' | '21h1-pro' | 'win11-23h2-pro' | string;
   };
 
   enableEncryption?: boolean;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
   dataDiskSizeGB?: number;
   schedule?: VmScheduleType;
-  extensions?: Array<Omit<VmExtensionProps, "dependsOn" | "vmName" | "group">>;
+  extensions?: Array<Omit<VmExtensionProps, 'dependsOn' | 'vmName' | 'group'>>;
   //This need a lock
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
@@ -53,15 +53,15 @@ export default ({
   name,
   group,
   subnetId,
-  osType = "Windows",
-  vmSize = "Standard_B2s",
+  osType = 'Windows',
+  vmSize = 'Standard_B2s',
   extensions,
   storageAccountType = compute.StorageAccountTypes.Premium_LRS,
   osDiskSizeGB = 128,
   dataDiskSizeGB,
   enableEncryption,
   vaultInfo,
-  schedule = { timeZone: "Singapore Standard Time" },
+  schedule = { timeZone: 'Singapore Standard Time' },
   login,
   image,
   lock = true,
@@ -76,7 +76,7 @@ export default ({
     networkInterfaceName: nicName,
     ...group,
     ipConfigurations: [
-      { name: "ipconfig", subnet: { id: subnetId }, primary: true },
+      { name: 'ipconfig', subnet: { id: subnetId }, primary: true },
     ],
     nicType: network.NetworkInterfaceNicType.Standard,
   });
@@ -97,8 +97,8 @@ export default ({
       ...others,
 
       hardwareProfile: { vmSize },
-      identity: { type: "SystemAssigned" },
-      licenseType: "None",
+      identity: { type: 'SystemAssigned' },
+      licenseType: 'None',
       networkProfile: {
         networkInterfaces: [{ id: nic.id, primary: true }],
       },
@@ -111,7 +111,7 @@ export default ({
         //Need to be enabled at subscription level
         //requireGuestProvisionSignal: true,
         linuxConfiguration:
-          osType === "Linux"
+          osType === 'Linux'
             ? {
                 //ssh: { publicKeys: [{ keyData: linux.sshPublicKey! }] },
                 disablePasswordAuthentication: false,
@@ -131,7 +131,7 @@ export default ({
             : undefined,
 
         windowsConfiguration:
-          osType === "Windows"
+          osType === 'Windows'
             ? {
                 enableAutomaticUpdates: true,
                 provisionVMAgent: true,
@@ -148,35 +148,36 @@ export default ({
       storageProfile: {
         imageReference: {
           ...image,
-          version: "latest",
+          version: 'latest',
         },
         osDisk: {
           name: `${name}osdisk`,
           diskSizeGB: osDiskSizeGB,
-          caching: "ReadWrite",
-          createOption: "FromImage",
+          caching: 'ReadWrite',
+          createOption: 'FromImage',
           osType,
-          encryptionSettings: enableEncryption
-            ? {
-                diskEncryptionKey: diskEncryption
-                  ? {
-                      secretUrl: diskEncryption.url,
-                      sourceVault: {
-                        id: vaultInfo.id,
-                      },
-                    }
-                  : undefined,
-                keyEncryptionKey: keyEncryption
-                  ? {
-                      keyUrl: keyEncryption.url,
-                      sourceVault: {
-                        id: vaultInfo.id,
-                      },
-                    }
-                  : undefined,
-                enabled: enableEncryption,
-              }
-            : undefined,
+          encryptionSettings:
+            enableEncryption && vaultInfo
+              ? {
+                  diskEncryptionKey: diskEncryption
+                    ? {
+                        secretUrl: diskEncryption.url,
+                        sourceVault: {
+                          id: vaultInfo.id,
+                        },
+                      }
+                    : undefined,
+                  keyEncryptionKey: keyEncryption
+                    ? {
+                        keyUrl: keyEncryption.url,
+                        sourceVault: {
+                          id: vaultInfo.id,
+                        },
+                      }
+                    : undefined,
+                  enabled: enableEncryption,
+                }
+              : undefined,
           managedDisk: {
             //Changes storage account type need to be done manually through portal.
             storageAccountType,
@@ -206,9 +207,9 @@ export default ({
     {
       dependsOn,
       ignoreChanges: [
-        "storageProfile.osDisk.managedDisk.storageAccountType",
-        "storageProfile.osDisk.managedDisk.id",
-        "osDisk.osType",
+        'storageProfile.osDisk.managedDisk.storageAccountType',
+        'storageProfile.osDisk.managedDisk.id',
+        'osDisk.osType',
       ],
     },
   );
@@ -235,7 +236,7 @@ export default ({
       time: schedule.autoShutdownTime,
       timeZone: schedule.timeZone,
       targetResourceId: vm.id,
-      task: "ComputeVmShutdownTask", //LabVmsShutdownTask,LabVmsStartupTask,LabVmReclamationTask,ComputeVmShutdownTask
+      task: 'ComputeVmShutdownTask', //LabVmsShutdownTask,LabVmsStartupTask,LabVmReclamationTask,ComputeVmShutdownTask
       dependsOn: vm,
     });
   }

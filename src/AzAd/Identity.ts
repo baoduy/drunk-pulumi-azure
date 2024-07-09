@@ -1,17 +1,17 @@
-import * as azureAD from "@pulumi/azuread";
-import { ServicePrincipal } from "@pulumi/azuread";
-import * as pulumi from "@pulumi/pulumi";
-import { Output } from "@pulumi/pulumi";
-import { getIdentityName } from "../Common/Naming";
+import * as azureAD from '@pulumi/azuread';
+import { ServicePrincipal } from '@pulumi/azuread';
+import * as pulumi from '@pulumi/pulumi';
+import { Output } from '@pulumi/pulumi';
+import { getIdentityName } from '../Common/Naming';
 import {
   ApplicationApiOauth2PermissionScope,
   ApplicationAppRole,
-  ApplicationRequiredResourceAccess,
   ApplicationOptionalClaims,
-} from "@pulumi/azuread/types/input";
-import { BasicArgs, IdentityRoleAssignment, KeyVaultInfo } from "../types";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { getIdentitySecretNames, grantIdentityPermissions } from "./Helper";
+  ApplicationRequiredResourceAccess,
+} from '@pulumi/azuread/types/input';
+import { BasicArgs, IdentityRoleAssignment, KeyVaultInfo } from '../types';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
 
 type PreAuthApplicationProps = {
   appId: string;
@@ -27,7 +27,7 @@ interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
   publicClient?: boolean;
   createPrincipal?: boolean;
   replyUrls?: pulumi.Input<pulumi.Input<string>[]>;
-  appType?: "spa" | "web" | "api";
+  appType?: 'spa' | 'web' | 'api';
   allowMultiOrg?: boolean;
   appRoles?: pulumi.Input<pulumi.Input<ApplicationAppRole>[]>;
   oauth2Permissions?: pulumi.Input<
@@ -39,7 +39,7 @@ interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
     pulumi.Input<ApplicationRequiredResourceAccess>[]
   >;
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 }
 
 export type IdentityResult = {
@@ -58,7 +58,7 @@ export default ({
   createClientSecret = false,
   createPrincipal = false,
   replyUrls,
-  appType = "spa",
+  appType = 'spa',
   allowMultiOrg = false,
   appRoles,
   appRoleAssignmentRequired,
@@ -87,21 +87,21 @@ export default ({
 
       owners,
       appRoles,
-      signInAudience: allowMultiOrg ? "AzureADMultipleOrgs" : "AzureADMyOrg",
-      groupMembershipClaims: ["SecurityGroup"],
+      signInAudience: allowMultiOrg ? 'AzureADMultipleOrgs' : 'AzureADMyOrg',
+      groupMembershipClaims: ['SecurityGroup'],
       identifierUris,
 
       publicClient: publicClient ? { redirectUris: replyUrls } : undefined,
 
       singlePageApplication:
-        appType === "spa"
+        appType === 'spa'
           ? {
               redirectUris: replyUrls,
             }
           : undefined,
 
       web:
-        appType === "web"
+        appType === 'web'
           ? {
               redirectUris: replyUrls,
               implicitGrant: {
@@ -112,7 +112,7 @@ export default ({
           : undefined,
 
       api:
-        appType === "api"
+        appType === 'api'
           ? {
               oauth2PermissionScopes: oauth2Permissions,
               mappedClaimsEnabled: true,
@@ -131,19 +131,21 @@ export default ({
     { dependsOn },
   );
 
-  addCustomSecret({
-    name: secretNames.objectIdName,
-    value: app.objectId,
-    vaultInfo,
-    contentType: "Identity",
-  });
+  if (vaultInfo) {
+    addCustomSecret({
+      name: secretNames.objectIdName,
+      value: app.objectId,
+      vaultInfo,
+      contentType: 'Identity',
+    });
 
-  addCustomSecret({
-    name: secretNames.clientIdKeyName,
-    value: app.clientId,
-    vaultInfo,
-    contentType: "Identity",
-  });
+    addCustomSecret({
+      name: secretNames.clientIdKeyName,
+      value: app.clientId,
+      vaultInfo,
+      contentType: 'Identity',
+    });
+  }
 
   let clientSecret: Output<string> | undefined = undefined;
   if (createClientSecret) {
@@ -152,17 +154,19 @@ export default ({
       {
         displayName: name,
         applicationId: app.id,
-        endDateRelative: "43800h",
+        endDateRelative: '43800h',
       },
-      { ignoreChanges: ["applicationId", "applicationObjectId"] },
+      { ignoreChanges: ['applicationId', 'applicationObjectId'] },
     ).value;
 
-    addCustomSecret({
-      name: secretNames.clientSecretKeyName,
-      value: clientSecret,
-      vaultInfo,
-      contentType: "Identity",
-    });
+    if (vaultInfo) {
+      addCustomSecret({
+        name: secretNames.clientSecretKeyName,
+        value: clientSecret,
+        vaultInfo,
+        contentType: 'Identity',
+      });
+    }
   }
 
   let principal: ServicePrincipal | undefined;
@@ -176,13 +180,13 @@ export default ({
         appRoleAssignmentRequired,
         clientId: app.clientId,
       },
-      { ignoreChanges: ["clientId", "applicationId"] },
+      { ignoreChanges: ['clientId', 'applicationId'] },
     );
 
     principalSecret = new azureAD.ServicePrincipalPassword(name, {
       displayName: name,
       servicePrincipalId: principal.objectId,
-      endDateRelative: "43800h",
+      endDateRelative: '43800h',
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
@@ -194,19 +198,21 @@ export default ({
       principalId: principal.objectId,
     });
 
-    addCustomSecret({
-      name: secretNames.principalIdKeyName,
-      value: principal.objectId,
-      vaultInfo,
-      contentType: "Identity",
-    });
+    if (vaultInfo) {
+      addCustomSecret({
+        name: secretNames.principalIdKeyName,
+        value: principal.objectId,
+        vaultInfo,
+        contentType: 'Identity',
+      });
 
-    addCustomSecret({
-      name: secretNames.principalSecretKeyName,
-      value: principalSecret,
-      vaultInfo,
-      contentType: "Identity",
-    });
+      addCustomSecret({
+        name: secretNames.principalSecretKeyName,
+        value: principalSecret,
+        vaultInfo,
+        contentType: 'Identity',
+      });
+    }
   }
 
   return {

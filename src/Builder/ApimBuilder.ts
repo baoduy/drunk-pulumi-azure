@@ -13,23 +13,23 @@ import {
   IApimBuilder,
   IApimPublisherBuilder,
   IApimSkuBuilder,
-} from "./types";
-import { ResourceInfo } from "../types";
-import * as apimanagement from "@pulumi/azure-native/apimanagement";
-import { getApimName } from "../Common/Naming";
-import { organization } from "../Common/StackEnv";
+} from './types';
+import { ResourceInfo } from '../types';
+import * as apim from '@pulumi/azure-native/apimanagement';
+import { getApimName } from '../Common';
+import { organization } from '../Common/StackEnv';
 import {
-  ApimSignUpSettingsResource,
   ApimSignInSettingsResource,
-} from "@drunk-pulumi/azure-providers";
-import { randomUuId } from "../Core/Random";
-import { AppInsightInfo } from "../Logs/Helpers";
-import * as network from "@pulumi/azure-native/network";
-import IpAddress from "../VNet/IpAddress";
-import Identity from "../AzAd/Identity";
-import { subscriptionId, tenantId } from "../Common/AzureEnv";
-import { interpolate } from "@pulumi/pulumi";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
+  ApimSignUpSettingsResource,
+} from '@drunk-pulumi/azure-providers';
+import { randomUuId } from '../Core/Random';
+import { AppInsightInfo } from '../Logs/Helpers';
+import * as network from '@pulumi/azure-native/network';
+import IpAddress from '../VNet/IpAddress';
+import Identity from '../AzAd/Identity';
+import { subscriptionId, tenantId } from '../Common/AzureEnv';
+import { interpolate } from '@pulumi/pulumi';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
 class ApimBuilder
   extends Builder<ResourceInfo>
@@ -52,8 +52,7 @@ class ApimBuilder
 
   private _instanceName: string | undefined = undefined;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
-  private _apimInstance: apimanagement.ApiManagementService | undefined =
-    undefined;
+  private _apimInstance: apim.ApiManagementService | undefined = undefined;
 
   public constructor(props: BuilderProps) {
     super(props);
@@ -125,7 +124,7 @@ class ApimBuilder
     const ipPros = {
       ...this.commonProps,
       name: `${this.commonProps.name}-apim`,
-      enableZone: this._sku!.sku === "Premium",
+      enableZone: this._sku!.sku === 'Premium',
     };
 
     this._ipAddressInstances[this.commonProps.name] = IpAddress(ipPros);
@@ -143,11 +142,11 @@ class ApimBuilder
     this._instanceName = getApimName(this.commonProps.name);
     const sku = {
       name: this._sku!.sku,
-      capacity: this._sku!.sku === "Consumption" ? 0 : this._sku!.capacity ?? 1,
+      capacity: this._sku!.sku === 'Consumption' ? 0 : this._sku!.capacity ?? 1,
     };
-    const zones = sku.name === "Premium" ? this._zones : undefined;
+    const zones = sku.name === 'Premium' ? this._zones : undefined;
 
-    this._apimInstance = new apimanagement.ApiManagementService(
+    this._apimInstance = new apim.ApiManagementService(
       this._instanceName,
       {
         serviceName: this._instanceName,
@@ -156,21 +155,21 @@ class ApimBuilder
         publisherName: this._publisher!.publisherName ?? organization,
         notificationSenderEmail:
           this._publisher?.notificationSenderEmail ??
-          "apimgmt-noreply@mail.windowsazure.com",
+          'apimgmt-noreply@mail.windowsazure.com',
 
-        identity: { type: "SystemAssigned" },
+        identity: { type: 'SystemAssigned' },
         sku,
 
         certificates: [
           ...this._rootCerts.map((c) => ({
             encodedCertificate: c.certificate,
             certificatePassword: c.certificatePassword,
-            storeName: "Root",
+            storeName: 'Root',
           })),
           ...this._caCerts.map((c) => ({
             encodedCertificate: c.certificate,
             certificatePassword: c.certificatePassword,
-            storeName: "CertificateAuthority",
+            storeName: 'CertificateAuthority',
           })),
         ],
 
@@ -178,7 +177,7 @@ class ApimBuilder
         hostnameConfigurations: this._proxyDomain
           ? [
               {
-                type: "Proxy",
+                type: 'Proxy',
                 hostName: this._proxyDomain.domain,
                 encodedCertificate: this._proxyDomain.certificate,
                 certificatePassword: this._proxyDomain.certificatePassword,
@@ -196,11 +195,11 @@ class ApimBuilder
           ? this._ipAddressInstances[this.commonProps.name]?.id
           : undefined,
         publicNetworkAccess: this._privateLink?.disablePublicAccess
-          ? "Disabled"
-          : "Enabled",
+          ? 'Disabled'
+          : 'Enabled',
         //NATGateway
-        natGatewayState: this._apimVnet?.enableGateway ? "Enabled" : "Disabled",
-        virtualNetworkType: this._apimVnet?.type ?? "None",
+        natGatewayState: this._apimVnet?.enableGateway ? 'Enabled' : 'Disabled',
+        virtualNetworkType: this._apimVnet?.type ?? 'None',
         virtualNetworkConfiguration: this._apimVnet
           ? {
               subnetResourceId: this._apimVnet.subnetId,
@@ -211,7 +210,7 @@ class ApimBuilder
         zones,
         //Only available for Premium
         additionalLocations:
-          sku.name === "Premium"
+          sku.name === 'Premium'
             ? this._additionalLocations?.map((a) => ({
                 ...a,
                 sku,
@@ -220,40 +219,40 @@ class ApimBuilder
             : undefined,
 
         customProperties: {
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2":
-            "true",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_CBC_SHA":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_CBC_SHA256":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_GCM_SHA256":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_CBC_SHA":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_CBC_SHA256":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10":
-            "false",
-          "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11":
-            "false",
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2':
+            'true',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_CBC_SHA':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_CBC_SHA256':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_GCM_SHA256':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_CBC_SHA':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_CBC_SHA256':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10':
+            'false',
+          'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11':
+            'false',
         },
       },
       { dependsOn: this.commonProps.dependsOn, deleteBeforeReplace: true },
@@ -268,7 +267,7 @@ class ApimBuilder
       createClientSecret: true,
     });
 
-    new apimanagement.IdentityProvider(
+    new apim.IdentityProvider(
       this.commonProps.name,
       {
         ...this.commonProps.group,
@@ -276,8 +275,8 @@ class ApimBuilder
         clientId: identity.clientId,
         clientSecret: identity.clientSecret!,
         authority: interpolate`https://login.microsoftonline.com/${tenantId}/`,
-        type: "aad",
-        identityProviderName: "aad",
+        type: 'aad',
+        identityProviderName: 'aad',
         allowedTenants: [tenantId],
         signinTenant: tenantId,
       },
@@ -289,7 +288,7 @@ class ApimBuilder
 
     this._auths.forEach(
       (auth) =>
-        new apimanagement.IdentityProvider(
+        new apim.IdentityProvider(
           `${this.commonProps.name}-${auth.type}`,
           {
             ...this.commonProps.group,
@@ -315,7 +314,7 @@ class ApimBuilder
         termsOfService: {
           consentRequired: false,
           enabled: false,
-          text: "Terms & Conditions Of Service",
+          text: 'Terms & Conditions Of Service',
         },
       },
       { dependsOn: this._apimInstance, deleteBeforeReplace: true },
@@ -342,25 +341,25 @@ class ApimBuilder
         id: this._apimInstance!.id,
       },
 
-      privateDnsZoneName: "privatelink.azure-api.net",
+      privateDnsZoneName: 'privatelink.azure-api.net',
       subnetIds: this._privateLink.subnetIds,
       linkServiceGroupIds: this._privateLink.type
         ? [this._privateLink.type]
-        : ["Gateway"],
+        : ['Gateway'],
       dependsOn: this._apimInstance,
     });
   }
   private buildInsightLog() {
     if (!this._insightLog) return;
     //App Insight Logs
-    new apimanagement.Logger(
+    new apim.Logger(
       `${this._instanceName}-insight`,
       {
         serviceName: this._apimInstance!.name,
         ...this.commonProps.group,
 
-        loggerType: apimanagement.LoggerType.ApplicationInsights,
-        description: "App Insight Logger",
+        loggerType: apim.LoggerType.ApplicationInsights,
+        description: 'App Insight Logger',
         loggerId: randomUuId(this._instanceName!).result,
         resourceId: this._insightLog.id,
         credentials: {

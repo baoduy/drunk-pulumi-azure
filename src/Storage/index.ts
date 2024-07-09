@@ -1,23 +1,19 @@
-import { KeyVaultSecret } from "@azure/keyvault-secrets";
-import * as storage from "@pulumi/azure-native/storage";
-import { KeyVaultInfo, BasicResourceArgs, ResourceInfo } from "../types";
-import { Input } from "@pulumi/pulumi";
-import { getSecret, getEncryptionKeyOutput } from "../KeyVault/Helper";
-import { isPrd } from "../Common/AzureEnv";
-import {
-  getConnectionName,
-  getKeyName,
-  getStorageName,
-} from "../Common/Naming";
-import { addCustomSecrets } from "../KeyVault/CustomHelper";
-import Locker from "../Core/Locker";
-import privateEndpoint from "../VNet/PrivateEndpoint";
+import { KeyVaultSecret } from '@azure/keyvault-secrets';
+import * as storage from '@pulumi/azure-native/storage';
+import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
+import { Input } from '@pulumi/pulumi';
+import { getEncryptionKeyOutput, getSecret } from '../KeyVault/Helper';
+import { isPrd } from '../Common/AzureEnv';
+import { getConnectionName, getKeyName, getStorageName } from '../Common';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import Locker from '../Core/Locker';
+import privateEndpoint from '../VNet/PrivateEndpoint';
 import {
   createManagementRules,
   DefaultManagementRules,
   ManagementRules,
-} from "./ManagementRules";
-import { grantIdentityPermissions } from "../AzAd/Helper";
+} from './ManagementRules';
+import { grantIdentityPermissions } from '../AzAd/Helper';
 
 export type ContainerProps = {
   name: string;
@@ -40,16 +36,16 @@ export type StoragePolicyType = {
   defaultManagementRules?: Array<DefaultManagementRules>;
 };
 export type StorageNetworkType = {
-  defaultByPass?: "AzureServices" | "None";
+  defaultByPass?: 'AzureServices' | 'None';
   vnet?: Array<{ subnetId?: Input<string>; ipAddresses?: Array<string> }>;
   privateEndpoint?: {
     subnetIds: Input<string>[];
-    type: "blob" | "table" | "queue" | "file" | "web" | "dfs";
+    type: 'blob' | 'table' | 'queue' | 'file' | 'web' | 'dfs';
   };
 };
 interface StorageProps extends BasicResourceArgs {
   //This is required for encryption key
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
@@ -63,7 +59,7 @@ interface StorageProps extends BasicResourceArgs {
 
 export type StorageResults = ResourceInfo & {
   instance: storage.StorageAccount;
-  getConnectionString: (name?: string) => Promise<KeyVaultSecret | undefined>;
+  getConnectionString?: (name?: string) => Promise<KeyVaultSecret | undefined>;
 };
 
 /** Storage Creator */
@@ -81,10 +77,10 @@ export default ({
 }: StorageProps): StorageResults => {
   name = getStorageName(name);
 
-  const primaryKeyName = getKeyName(name, "primary");
-  const secondaryKeyName = getKeyName(name, "secondary");
-  const primaryConnectionKeyName = getConnectionName(name, "primary");
-  const secondConnectionKeyName = getConnectionName(name, "secondary");
+  const primaryKeyName = getKeyName(name, 'primary');
+  const secondaryKeyName = getKeyName(name, 'secondary');
+  const primaryConnectionKeyName = getConnectionName(name, 'primary');
+  const secondConnectionKeyName = getConnectionName(name, 'secondary');
   const encryptionKey = featureFlags.enableKeyVaultEncryption
     ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
@@ -100,14 +96,14 @@ export default ({
         ? storage.SkuName.Standard_ZRS //Zone redundant in PRD
         : storage.SkuName.Standard_LRS,
     },
-    accessTier: "Hot",
+    accessTier: 'Hot',
 
     isHnsEnabled: true,
     enableHttpsTrafficOnly: true,
     allowBlobPublicAccess: policies?.allowBlobPublicAccess,
     allowSharedKeyAccess: featureFlags.allowSharedKeyAccess,
-    identity: { type: "SystemAssigned" },
-    minimumTlsVersion: "TLS1_2",
+    identity: { type: 'SystemAssigned' },
+    minimumTlsVersion: 'TLS1_2',
 
     //1 Year Months
     keyPolicy: {
@@ -126,20 +122,20 @@ export default ({
               keyType: storage.KeyType.Account,
             },
           },
-          keySource: "Microsoft.KeyVault",
+          keySource: 'Microsoft.KeyVault',
           keyVaultProperties: encryptionKey,
         }
       : undefined,
 
     sasPolicy: {
       expirationAction: storage.ExpirationAction.Log,
-      sasExpirationPeriod: "00.00:30:00",
+      sasExpirationPeriod: '00.00:30:00',
     },
 
-    publicNetworkAccess: network?.privateEndpoint ? "Disabled" : "Enabled",
+    publicNetworkAccess: network?.privateEndpoint ? 'Disabled' : 'Enabled',
     networkRuleSet: {
-      bypass: network?.defaultByPass ?? "AzureServices", // Logging,Metrics,AzureServices or None
-      defaultAction: "Allow",
+      bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
+      defaultAction: 'Allow',
 
       virtualNetworkRules: network?.vnet
         ? network.vnet
@@ -155,7 +151,7 @@ export default ({
             .flatMap((s) => s.ipAddresses)
             .map((i) => ({
               iPAddressOrRange: i!,
-              action: "Allow",
+              action: 'Allow',
             }))
         : undefined,
     },
@@ -191,8 +187,8 @@ export default ({
       {
         accountName: stg.name,
         ...group,
-        indexDocument: "index.html",
-        error404Document: "index.html",
+        indexDocument: 'index.html',
+        error404Document: 'index.html',
       },
       { dependsOn: stg },
     );
@@ -205,7 +201,7 @@ export default ({
       ...group,
       accountName: stg.name,
       //denyEncryptionScopeOverride: true,
-      publicAccess: c.public ? "Blob" : "None",
+      publicAccess: c.public ? 'Blob' : 'None',
     });
 
     if (c.managementRules) {
@@ -246,7 +242,7 @@ export default ({
     grantIdentityPermissions({
       name,
       vaultInfo,
-      envRole: "readOnly",
+      envRole: 'readOnly',
       principalId: stg.identity.apply((s) => s!.principalId),
     });
 
@@ -265,7 +261,7 @@ export default ({
       //Keys
       addCustomSecrets({
         vaultInfo,
-        contentType: "Storage",
+        contentType: 'Storage',
         formattedName: true,
         items: [
           {
@@ -294,7 +290,9 @@ export default ({
     group,
     id: stg.id,
     instance: stg,
-    getConnectionString: (name: string = primaryConnectionKeyName) =>
-      getSecret({ name, nameFormatted: true, vaultInfo }),
+    getConnectionString: vaultInfo
+      ? (name: string = primaryConnectionKeyName) =>
+          getSecret({ name, nameFormatted: true, vaultInfo })
+      : undefined,
   };
 };

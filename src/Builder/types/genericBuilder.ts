@@ -1,15 +1,17 @@
 //Common Builder Types
-import { Input, Resource } from "@pulumi/pulumi";
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from "../../types";
-import { EnvRolesResults } from "../../AzAd/EnvRoles";
+import { Input, Resource } from '@pulumi/pulumi';
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
+import { EnvRolesResults } from '../../AzAd/EnvRoles';
 
 export type BuilderProps = {
   name: string;
   group: ResourceGroupInfo;
-  envRoles: EnvRolesResults;
-  vaultInfo: KeyVaultInfo;
+  /** the below are optionals property and will be available depend on the situation*/
+  envRoles?: EnvRolesResults;
+  vaultInfo?: KeyVaultInfo;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
+
 export type CommonOmit<T> = Omit<T, keyof BuilderProps>;
 export type LoginBuilderProps = {
   adminLogin: Input<string>;
@@ -36,7 +38,7 @@ export abstract class Builder<TResults extends ResourceInfo>
 
 //Asynchronous
 export interface IBuilderAsync<TResults extends ResourceInfo>
-  extends Omit<IBuilder<TResults>, "build"> {
+  extends Omit<IBuilder<TResults>, 'build'> {
   build(): Promise<TResults>;
 }
 
