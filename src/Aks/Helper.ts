@@ -1,5 +1,5 @@
-import * as containerservice from '@pulumi/azure-native/containerservice';
-import { getAksName, getResourceGroupName } from '../Common/Naming';
+import * as cs from '@pulumi/azure-native/containerservice';
+import { getAksName, getResourceGroupName } from '../Common';
 import { KeyVaultInfo, ResourceInfo, ResourceType } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate, Output } from '@pulumi/pulumi';
@@ -21,11 +21,11 @@ export const getAksConfig = async ({
   const group = formattedName ? groupName : getResourceGroupName(groupName);
 
   const aks = disableLocalAccounts
-    ? await containerservice.listManagedClusterUserCredentials({
+    ? await cs.listManagedClusterUserCredentials({
         resourceName: aksName,
         resourceGroupName: group,
       })
-    : await containerservice.listManagedClusterAdminCredentials({
+    : await cs.listManagedClusterAdminCredentials({
         resourceName: aksName,
         resourceGroupName: group,
       });

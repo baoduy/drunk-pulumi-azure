@@ -17,7 +17,7 @@ interface Props extends DefaultResourceArgs {
   adminUserEnabled?: boolean;
   enableStorageAccount?: boolean;
   vaultInfo?: KeyVaultInfo;
-  sku?: registry.SkuName;
+  sku?: registry.SkuName | string;
   /**Only support Premium sku*/
   network?: Omit<NetworkPropsType, 'subnetId'>;
 }
