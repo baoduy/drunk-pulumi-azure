@@ -1,23 +1,23 @@
 import {
   AksImportProps,
+  BuilderAsync,
+  BuilderProps,
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,
   ISshBuilder,
-  BuilderAsync,
   SshBuilderProps,
-  BuilderProps,
 } from './types';
 import { generateSsh, SshResults } from '../Core/KeyGenerators';
 import { ManagedClusterSKUTier } from '@pulumi/azure-native/containerservice';
 import Aks, {
-  AksNodePoolProps,
-  AskAddonProps,
-  AskFeatureProps,
   AksAccessProps,
   AksNetworkProps,
-  DefaultAksNodePoolProps,
+  AksNodePoolProps,
   AksResults,
+  AskAddonProps,
+  AskFeatureProps,
+  DefaultAksNodePoolProps,
 } from '../Aks';
 
 class AksBuilder
@@ -87,9 +87,14 @@ class AksBuilder
   }
   //Build Methods
   private buildSsh() {
+    const vaultInfo = this.commonProps.vaultInfo;
+    if (!vaultInfo)
+      throw new Error(`${this.commonProps.name} requires vaultInfo.`);
+
     this._sshInstance = generateSsh({
       ...this.commonProps,
       ...this._sshProps,
+      vaultInfo,
     });
   }
 

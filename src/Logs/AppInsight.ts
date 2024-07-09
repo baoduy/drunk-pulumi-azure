@@ -1,10 +1,10 @@
-import * as native from "@pulumi/azure-native";
+import * as native from '@pulumi/azure-native';
 
-import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from "../types";
-import { getSecret } from "../KeyVault/Helper";
-import { getAppInsightName } from "../Common/Naming";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { Input } from "@pulumi/pulumi";
+import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
+import { getSecret } from '../KeyVault/Helper';
+import { getAppInsightName } from '../Common';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { Input } from '@pulumi/pulumi';
 
 interface Props extends BasicResourceArgs {
   dailyCapGb?: number;
@@ -29,10 +29,10 @@ export default ({
     resourceName: name,
     ...group,
 
-    kind: "web",
+    kind: 'web',
     disableIpMasking: true,
-    applicationType: "web",
-    flowType: "Bluefield",
+    applicationType: 'web',
+    flowType: 'Bluefield',
 
     //samplingPercentage: isPrd ? 100 : 50,
     retentionInDays: 30,
@@ -47,7 +47,7 @@ export default ({
   new native.insights.ComponentCurrentBillingFeature(
     `${name}-CurrentBillingFeature`,
     {
-      currentBillingFeatures: ["Basic"], // ['Basic', 'Application Insights Enterprise'],
+      currentBillingFeatures: ['Basic'], // ['Basic', 'Application Insights Enterprise'],
       dataVolumeCap: {
         cap: dailyCapGb,
         stopSendNotificationWhenHitCap: true,
@@ -62,7 +62,7 @@ export default ({
       name,
       value: appInsight.instrumentationKey,
       vaultInfo,
-      contentType: "AppInsight",
+      contentType: 'AppInsight',
     });
   }
 
@@ -77,8 +77,8 @@ export const getAppInsightKey = async ({
   vaultInfo: KeyVaultInfo;
 }): Promise<string> => {
   const key = await getSecret({
-    name: resourceInfo.resourceName,
+    name: resourceInfo.name,
     vaultInfo,
   });
-  return key?.value ?? "";
+  return key?.value ?? '';
 };

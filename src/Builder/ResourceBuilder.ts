@@ -27,8 +27,7 @@ import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
 import { subscriptionId } from '../Common/AzureEnv';
 import { IVaultBuilderResults } from './types/vaultBuilder';
-import { VaultBuilderResults } from './VaultBuilder';
-import VaultBuilder from './VaultBuilder';
+import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
 
 class ResourceBuilder
   implements
@@ -215,7 +214,7 @@ class ResourceBuilder
     //Other resources
     this._otherResources.forEach((b) => {
       const rs = b(this.getResults());
-      this._otherInstances[rs.resourceName] = rs;
+      this._otherInstances[rs.name] = rs;
     });
 
     //Other builders

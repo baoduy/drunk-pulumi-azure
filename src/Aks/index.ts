@@ -8,8 +8,8 @@ import {
   defaultScope,
   Environments,
   getResourceIdFromInfo,
-  parseResourceInfoFromId,
   isPrd,
+  parseResourceInfoFromId,
   tenantId,
 } from '../Common/AzureEnv';
 import Locker from '../Core/Locker';
@@ -130,7 +130,7 @@ export type AskFeatureProps = {
 };
 
 export type AksAccessProps = {
-  envRoles: EnvRolesResults;
+  envRoles?: EnvRolesResults;
   authorizedIPRanges?: Input<string>[];
   disableLocalAccounts?: boolean;
 };
@@ -168,7 +168,7 @@ export interface AksProps extends BasicResourceArgs {
   //kubernetesVersion?: Input<string>;
   nodePools?: Array<AksNodePoolProps>;
 
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
   logWpId?: Input<string>;
   /**Lock resource from delete*/
   lock?: boolean;
@@ -178,7 +178,7 @@ export type AksResults = ResourceInfo & {
   serviceIdentity: IdentityResult;
   aks: ManagedCluster;
   disableLocalAccounts?: boolean;
-  getKubeConfig: () => Output<string>;
+  getKubeConfig: () => Output<string> | undefined;
 };
 
 //Using this to enable the preview feature https://azurecloudai.blog/2019/10/16/aks-enabling-and-using-preview-features-such-as-nodepools-using-cli/
@@ -211,7 +211,7 @@ export default async ({
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
 
   //Auto detect and disable Local Account
-  if (aksAccess.disableLocalAccounts === undefined) {
+  if (aksAccess.disableLocalAccounts === undefined && vaultInfo) {
     aksAccess.disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
       .checkSecretExist(secretName)
       .catch(() => false);
@@ -401,12 +401,14 @@ export default async ({
       },
       disableLocalAccounts: Boolean(aksAccess.disableLocalAccounts),
       enableRBAC: true,
-      aadProfile: {
-        enableAzureRBAC: true,
-        managed: true,
-        adminGroupObjectIDs: [aksAccess.envRoles.admin.objectId],
-        tenantID: tenantId,
-      },
+      aadProfile: aksAccess.envRoles
+        ? {
+            enableAzureRBAC: true,
+            managed: true,
+            adminGroupObjectIDs: [aksAccess.envRoles.admin.objectId],
+            tenantID: tenantId,
+          }
+        : undefined,
       oidcIssuerProfile: { enabled: false },
       storageProfile: {
         blobCSIDriver: {
@@ -529,13 +531,15 @@ export default async ({
             scope: acrScope,
           });
 
-          addCustomSecret({
-            name: `${name}-identity-clientId`,
-            value: identityProfile['kubeletidentity'].clientId!,
-            dependsOn: aks,
-            contentType: name,
-            vaultInfo,
-          });
+          if (vaultInfo) {
+            addCustomSecret({
+              name: `${name}-identity-clientId`,
+              value: identityProfile['kubeletidentity'].clientId!,
+              dependsOn: aks,
+              contentType: name,
+              vaultInfo,
+            });
+          }
         }
 
         if (network.subnetId && identity) {
@@ -559,16 +563,18 @@ export default async ({
       disableLocalAccounts: aksAccess.disableLocalAccounts,
     });
 
-    addCustomSecret({
-      name: secretName,
-      value: config,
-      formattedName: true,
-      dependsOn: aks,
-      contentType: aksAccess.disableLocalAccounts
-        ? `${name}-UserCredentials`
-        : `${name}-AdminCredentials`,
-      vaultInfo,
-    });
+    if (vaultInfo) {
+      addCustomSecret({
+        name: secretName,
+        value: config,
+        formattedName: true,
+        dependsOn: aks,
+        contentType: aksAccess.disableLocalAccounts
+          ? `${name}-UserCredentials`
+          : `${name}-AdminCredentials`,
+        vaultInfo,
+      });
+    }
 
     //Diagnostic
     if (features.enableDiagnosticSetting && logWpId) {
@@ -587,27 +593,31 @@ export default async ({
         dependsOn: aks,
       });
 
-      //Apply monitoring for VMScale Sets
-      vmsDiagnostic({
-        group: { resourceGroupName: nodeResourceGroup },
-        logWpId,
-        vaultInfo,
-        dependsOn: aks,
-      });
+      if (vaultInfo) {
+        //Apply monitoring for VMScale Sets
+        vmsDiagnostic({
+          group: { resourceGroupName: nodeResourceGroup },
+          logWpId,
+          vaultInfo,
+          dependsOn: aks,
+        });
+      }
     }
   });
 
   return {
-    resourceName: name,
+    name,
     group,
     id: aks.id,
     aks,
     serviceIdentity,
-    getKubeConfig: (): Output<string> =>
-      output(
-        getKeyVaultBase(vaultInfo.name)
-          .getSecret(secretName)
-          .then((s) => s!.value!),
-      ),
+    getKubeConfig: (): Output<string> | undefined =>
+      vaultInfo
+        ? output(
+            getKeyVaultBase(vaultInfo.name)
+              .getSecret(secretName)
+              .then((s) => s!.value!),
+          )
+        : undefined,
   };
 };

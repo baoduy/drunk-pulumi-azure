@@ -2,7 +2,7 @@ import * as native from '@pulumi/azure-native';
 import { findVMScaleSet } from '../../Core/Helper';
 import * as fs from 'fs';
 import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../../types';
-import { Input, all, Resource } from '@pulumi/pulumi';
+import { all, Input, Resource } from '@pulumi/pulumi';
 import { replaceAll } from '../../Common/Helpers';
 import { getLogWpSecretsById } from '../../Logs/Helpers';
 import { getAccountSAS, getStorageSecretsById } from '../../Storage/Helper';
@@ -46,7 +46,7 @@ export default ({
       settings = replaceAll(
         settings,
         '__DIAGNOSTIC_STORAGE_ACCOUNT__',
-        logStorage.info!.name
+        logStorage.info!.name,
       );
       settings = replaceAll(settings, '__VM_OR_VMSS_RESOURCE_ID__', vm.id);
 
@@ -66,13 +66,13 @@ export default ({
           protectedSettings: `{
           "storageAccountName": "${logStorage.info!.name}",
           "storageAccountSasToken": "${logSAS.accountSasToken.substring(
-            logSAS.accountSasToken.indexOf('?') + 1
+            logSAS.accountSasToken.indexOf('?') + 1,
           )}"
         }`,
           settings,
         },
         //Ignore changes on this field as API never returns it back
-        { ignoreChanges: ['protectedSettings'], dependsOn }
+        { ignoreChanges: ['protectedSettings'], dependsOn },
       );
 
       const oms = new native.compute.VirtualMachineScaleSetExtension(
@@ -94,7 +94,7 @@ export default ({
           settings: `{"workspaceId": "${logWp.info!.id}"}`,
         },
         //Ignore changes on this field as API never returns it back
-        { ignoreChanges: ['protectedSettings'], dependsOn }
+        { ignoreChanges: ['protectedSettings'], dependsOn },
       );
 
       return { diag, oms };

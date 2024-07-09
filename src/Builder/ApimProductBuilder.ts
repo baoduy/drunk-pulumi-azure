@@ -1,11 +1,11 @@
-import * as apim from "@pulumi/azure-native/apimanagement";
-import { interpolate } from "@pulumi/pulumi";
-import { getPasswordName } from "../Common/Naming";
-import { randomPassword } from "../Core/Random";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { ResourceInfo } from "../types";
-import ApimApiBuilder from "./ApimApiBuilder";
-import ApimPolicyBuilder from "./ApimPolicyBuilder";
+import * as apim from '@pulumi/azure-native/apimanagement';
+import { interpolate } from '@pulumi/pulumi';
+import { getPasswordName } from '../Common';
+import { randomPassword } from '../Core/Random';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { ResourceInfo } from '../types';
+import ApimApiBuilder from './ApimApiBuilder';
+import ApimPolicyBuilder from './ApimPolicyBuilder';
 import {
   APimApiBuilderFunction,
   ApimApiPolicyType,
@@ -14,7 +14,7 @@ import {
   BuilderAsync,
   IApimProductBuilder,
   IBuilderAsync,
-} from "./types";
+} from './types';
 
 export class ApimProductBuilder
   extends BuilderAsync<ResourceInfo>
@@ -29,7 +29,7 @@ export class ApimProductBuilder
   private _subInstance: apim.Subscription | undefined = undefined;
   private _productInstanceName: string;
   private _policyString: string;
-  private _state: apim.ProductState = "notPublished";
+  private _state: apim.ProductState = 'notPublished';
 
   public constructor(private props: ApimChildBuilderProps) {
     super(props);
@@ -58,7 +58,7 @@ export class ApimProductBuilder
     return this;
   }
   public published(): IBuilderAsync<ResourceInfo> {
-    this._state = "published";
+    this._state = 'published';
     return this;
   }
 
@@ -84,8 +84,8 @@ export class ApimProductBuilder
         serviceName: this.props.apimServiceName,
         resourceGroupName: this.props.group.resourceGroupName,
         productId: this._productInstanceName,
-        format: "xml",
-        policyId: "policy",
+        format: 'xml',
+        policyId: 'policy',
         value: this._policyString,
       });
     }
@@ -93,8 +93,8 @@ export class ApimProductBuilder
   private buildSubscription() {
     if (!this._productInstance) return;
     const subName = `${this.props.name}-sub`;
-    const primaryKey = getPasswordName(subName, "primary");
-    const secondaryKey = getPasswordName(subName, "secondary");
+    const primaryKey = getPasswordName(subName, 'primary');
+    const secondaryKey = getPasswordName(subName, 'secondary');
 
     const primaryPass = randomPassword({ name: primaryKey }).result;
     const secondaryPass = randomPassword({ name: secondaryKey }).result;
@@ -113,23 +113,25 @@ export class ApimProductBuilder
       { dependsOn: this._productInstance },
     );
 
-    addCustomSecret({
-      name: primaryKey,
-      formattedName: true,
-      value: primaryPass,
-      contentType: subName,
-      vaultInfo: this.props.vaultInfo,
-      dependsOn: this._subInstance,
-    });
+    if (this.props.vaultInfo) {
+      addCustomSecret({
+        name: primaryKey,
+        formattedName: true,
+        value: primaryPass,
+        contentType: subName,
+        vaultInfo: this.props.vaultInfo,
+        dependsOn: this._subInstance,
+      });
 
-    addCustomSecret({
-      name: secondaryKey,
-      formattedName: true,
-      value: secondaryPass,
-      contentType: subName,
-      vaultInfo: this.props.vaultInfo,
-      dependsOn: this._subInstance,
-    });
+      addCustomSecret({
+        name: secondaryKey,
+        formattedName: true,
+        value: secondaryPass,
+        contentType: subName,
+        vaultInfo: this.props.vaultInfo,
+        dependsOn: this._subInstance,
+      });
+    }
   }
 
   private async buildApis() {
@@ -152,7 +154,7 @@ export class ApimProductBuilder
     await this.buildApis();
 
     return {
-      resourceName: this._productInstanceName,
+      name: this._productInstanceName,
       group: this.props.group,
       id: this._productInstance!.id,
     };

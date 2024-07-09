@@ -1,25 +1,25 @@
-import * as network from "@pulumi/azure-native/network";
-import { Input, interpolate, output, Output } from "@pulumi/pulumi";
-import * as netmask from "netmask";
+import * as network from '@pulumi/azure-native/network';
+import { Input, interpolate, output, Output } from '@pulumi/pulumi';
+import * as netmask from 'netmask';
 import {
   currentCountryCode,
   parseResourceInfoFromId,
   subscriptionId,
-} from "../Common/AzureEnv";
+} from '../Common/AzureEnv';
 import {
   getFirewallName,
   getIpAddressName,
   getResourceGroupName,
   getVnetName,
-} from "../Common/Naming";
-import { ResourceGroupInfo } from "../types";
-import { VnetInfoType } from "./types";
+} from '../Common';
+import { ResourceGroupInfo } from '../types';
+import { VnetInfoType } from './types';
 
-export const appGatewaySubnetName = "app-gateway";
-export const gatewaySubnetName = "GatewaySubnet";
-export const azFirewallSubnet = "AzureFirewallSubnet";
-export const azFirewallManagementSubnet = "AzureFirewallManagementSubnet";
-export const azBastionSubnetName = "AzureBastionSubnet";
+export const appGatewaySubnetName = 'app-gateway';
+export const gatewaySubnetName = 'GatewaySubnet';
+export const azFirewallSubnet = 'AzureFirewallSubnet';
+export const azFirewallManagementSubnet = 'AzureFirewallManagementSubnet';
+export const azBastionSubnetName = 'AzureBastionSubnet';
 
 export const getIpsRange = (prefix: string) => new netmask.Netmask(prefix);
 
@@ -28,7 +28,7 @@ export const convertToIpRange = (
   ipAddress: string[],
 ): Array<{ start: string; end: string }> =>
   ipAddress.map((ip) => {
-    if (ip.includes("/")) {
+    if (ip.includes('/')) {
       const range = getIpsRange(ip);
       return { start: range.base, end: range.broadcast };
     }
@@ -37,7 +37,7 @@ export const convertToIpRange = (
 
 export const getVnetIdFromSubnetId = (subnetId: string) => {
   //The sample SubnetId is /subscriptions/63a31b41-eb5d-4160-9fc9-d30fc00286c9/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-vnet-trans/subnets/aks-main-nodes
-  return subnetId.split("/subnets")[0];
+  return subnetId.split('/subnets')[0];
 };
 
 interface SubnetProps {

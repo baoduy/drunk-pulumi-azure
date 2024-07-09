@@ -1,8 +1,7 @@
-import { BasicResourceArgs, ResourceInfo } from "../types";
-import { DnsZoneARecordType, IDnsZoneBuilder } from "./types";
-import * as network from "@pulumi/azure-native/network";
-import { output } from "@pulumi/pulumi";
-import { globalKeyName } from "../Common/GlobalEnv";
+import { BasicResourceArgs, ResourceInfo } from '../types';
+import { DnsZoneARecordType, IDnsZoneBuilder } from './types';
+import * as network from '@pulumi/azure-native/network';
+import { globalKeyName } from '../Common/GlobalEnv';
 
 class DnsZoneBuilder implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -51,16 +50,16 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
     this._aRecords.forEach(
       (a, index) =>
         new network.RecordSet(
-          a.recordName === "*"
+          a.recordName === '*'
             ? `All-${index}-ARecord`
-            : a.recordName === "@"
+            : a.recordName === '@'
               ? `Root-${index}-ARecord`
               : `${a.recordName}-ARecord`,
           {
             zoneName: this._zoneInstance!.name,
             ...group,
             relativeRecordSetName: a.recordName,
-            recordType: "A",
+            recordType: 'A',
             aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
             ttl: 3600,
           },
@@ -91,7 +90,7 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
               zoneName: this._zoneInstance!.name,
               ...group,
               relativeRecordSetName: cc!.name,
-              recordType: "NS",
+              recordType: 'NS',
               nsRecords: ns.map((s) => ({ nsdname: s })),
               ttl: 3600,
             },
@@ -107,7 +106,7 @@ class DnsZoneBuilder implements IDnsZoneBuilder {
     this.buildChildren();
 
     return {
-      resourceName: this.commonProps.name,
+      name: this.commonProps.name,
       group: this.commonProps.group,
       id: this._zoneInstance!.id,
     };

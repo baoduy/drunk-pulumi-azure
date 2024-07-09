@@ -1,17 +1,17 @@
-import { Input } from "@pulumi/pulumi";
-import * as native from "@pulumi/azure-native";
-import CdnHttpsEnable from "@drunk-pulumi/azure-providers/CdnHttpsEnable";
-import { subscriptionId } from "../Common/AzureEnv";
+import { Input } from '@pulumi/pulumi';
+import * as native from '@pulumi/azure-native';
+import CdnHttpsEnable from '@drunk-pulumi/azure-providers/CdnHttpsEnable';
+import { subscriptionId } from '../Common/AzureEnv';
 import {
-  enforceHttpsRule,
-  indexFileCacheRule,
   allowsCorsRules,
+  enforceHttpsRule,
   getResponseHeadersRule,
-} from "./CdnRules";
-import { cdnProfileInfo as globalCdnProfileInfo } from "../Common/GlobalEnv";
-import { replaceAll } from "../Common/Helpers";
-import { getCdnEndpointName } from "../Common/Naming";
-import { BasicArgs, ResourceInfo } from "../types";
+  indexFileCacheRule,
+} from './CdnRules';
+import { cdnProfileInfo as globalCdnProfileInfo } from '../Common/GlobalEnv';
+import { replaceAll } from '../Common/Helpers';
+import { getCdnEndpointName } from '../Common';
+import { BasicArgs, ResourceInfo } from '../types';
 
 export interface CdnEndpointProps extends BasicArgs {
   name: string;
@@ -51,30 +51,30 @@ export default ({
     {
       endpointName: name,
       ...cdnProfileInfo!.group,
-      profileName: cdnProfileInfo!.resourceName,
+      profileName: cdnProfileInfo!.name,
 
       origins: [{ name, hostName: origin }],
       originHostHeader: origin,
 
-      optimizationType: "GeneralWebDelivery",
-      queryStringCachingBehavior: "IgnoreQueryString",
+      optimizationType: 'GeneralWebDelivery',
+      queryStringCachingBehavior: 'IgnoreQueryString',
 
       deliveryPolicy: {
         rules,
-        description: "Static Website Rules",
+        description: 'Static Website Rules',
       },
 
       isCompressionEnabled: true,
       contentTypesToCompress: [
-        "text/plain",
-        "text/html",
-        "text/xml",
-        "text/css",
-        "application/xml",
-        "application/xhtml+xml",
-        "application/rss+xml",
-        "application/javascript",
-        "application/x-javascript",
+        'text/plain',
+        'text/html',
+        'text/xml',
+        'text/css',
+        'application/xml',
+        'application/xhtml+xml',
+        'application/rss+xml',
+        'application/javascript',
+        'application/x-javascript',
       ],
 
       isHttpAllowed: true,
@@ -89,8 +89,8 @@ export default ({
       {
         endpointName: endpoint.name,
         ...cdnProfileInfo!.group,
-        profileName: cdnProfileInfo!.resourceName,
-        customDomainName: replaceAll(domainName, ".", "-"),
+        profileName: cdnProfileInfo!.name,
+        customDomainName: replaceAll(domainName, '.', '-'),
         hostName: domainName,
       },
       { dependsOn: endpoint },
@@ -102,7 +102,7 @@ export default ({
         {
           endpointName: endpoint.name,
           ...cdnProfileInfo!.group,
-          profileName: cdnProfileInfo!.resourceName,
+          profileName: cdnProfileInfo!.name,
           customDomainName: customDomain.name,
           subscriptionId,
         },
