@@ -1,11 +1,11 @@
-import * as containerregistry from '@pulumi/azure-native/containerregistry';
+import * as registry from '@pulumi/azure-native/containerregistry';
 import {
   DefaultResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
   ResourceGroupInfo,
+  ResourceInfoWithInstance,
 } from '../types';
-import creator from '../Core/ResourceCreator';
 import * as global from '../Common/GlobalEnv';
 import { getAcrName, getPasswordName } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -17,9 +17,9 @@ interface Props extends DefaultResourceArgs {
   adminUserEnabled?: boolean;
   enableStorageAccount?: boolean;
   vaultInfo?: KeyVaultInfo;
-  sku?: containerregistry.SkuName;
+  sku?: registry.SkuName;
   /**Only support Premium sku*/
-  network?: NetworkPropsType;
+  network?: Omit<NetworkPropsType, 'subnetId'>;
 }
 
 /** The Azure Container Registry will be created at the GLobal Group.
@@ -28,12 +28,13 @@ interface Props extends DefaultResourceArgs {
 export default ({
   name,
   group = global.groupInfo,
-  sku = containerregistry.SkuName.Basic,
+  sku = registry.SkuName.Basic,
   adminUserEnabled = true,
   vaultInfo,
   network,
-  ...others
-}: Props) => {
+  dependsOn,
+  ignoreChanges,
+}: Props): ResourceInfoWithInstance<registry.Registry> => {
   name = getAcrName(name);
 
   const urlKey = `${name}-url`;
@@ -41,28 +42,29 @@ export default ({
   const primaryPasswordKey = getPasswordName(name, 'primary');
   const secondaryPasswordKey = getPasswordName(name, 'secondary');
 
-  const { resource, diagnostic } = creator(containerregistry.Registry, {
-    registryName: name,
-    ...group,
+  const resource = new registry.Registry(
+    name,
+    {
+      registryName: name,
+      ...group,
 
-    adminUserEnabled,
-    sku: { name: sku },
-    networkRuleSet:
-      sku === 'Premium' && network
-        ? {
-            defaultAction: containerregistry.DefaultAction.Allow,
+      sku: { name: sku },
+      adminUserEnabled,
+      publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
 
-            ipRules: network.ipAddresses
-              ? network.ipAddresses.map((ip) => ({ iPAddressOrRange: ip }))
-              : undefined,
+      networkRuleSet:
+        sku === 'Premium' && network
+          ? {
+              defaultAction: registry.DefaultAction.Allow,
 
-            virtualNetworkRules: network.subnetId
-              ? [{ virtualNetworkResourceId: network.subnetId }]
-              : undefined,
-          }
-        : undefined,
-    ...others,
-  } as containerregistry.RegistryArgs & DefaultResourceArgs);
+              ipRules: network.ipAddresses
+                ? network.ipAddresses.map((ip) => ({ iPAddressOrRange: ip }))
+                : undefined,
+            }
+          : undefined,
+    },
+    { dependsOn, ignoreChanges },
+  );
 
   if (sku === 'Premium' && network?.privateLink) {
     PrivateEndpoint({
@@ -80,7 +82,7 @@ export default ({
       //The Resource is not created in Azure yet.
       if (!id) return;
       //Only able to gert the secret once the resource is created.
-      const keys = await containerregistry.listRegistryCredentials({
+      const keys = await registry.listRegistryCredentials({
         registryName: name,
         resourceGroupName: global.groupInfo.resourceGroupName,
       });
@@ -123,13 +125,8 @@ export default ({
 
   return {
     name,
-    registry: resource as containerregistry.Registry,
-    vaultKeyNames: {
-      userNameKey,
-      primaryPasswordKey,
-      secondaryPasswordKey,
-      urlKey,
-    },
-    diagnostic,
+    group,
+    id: resource.id,
+    instance: resource as registry.Registry,
   };
 };

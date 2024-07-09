@@ -11,6 +11,10 @@ export declare namespace NodeJS {
   }
 }
 
+export type NamedResourceType = {
+  name: string;
+};
+
 export interface ResourceInfoArg {
   /**If name and provider of the resource is not provided then the Id will be resource group Id*/
   name?: Input<string>;
@@ -20,30 +24,30 @@ export interface ResourceInfoArg {
   subscriptionId?: Input<string>;
 }
 
-export interface BasicArgs {
+export type BasicArgs = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
   importUri?: string;
   ignoreChanges?: string[];
-}
+};
 
-export interface ResourceGroupInfo {
+export type ResourceGroupInfo = {
   resourceGroupName: string;
   location?: Input<string>;
-}
+};
 
-export interface ConventionProps {
+export type ConventionProps = {
   prefix?: string;
   suffix?: string;
   /**Whether include the Azure Region name at the end of the name or not*/
   region?: string;
   /**Whether include the organization name at the end of the name or not*/
   includeOrgName?: boolean;
-}
+};
 
-export interface BasicMonitorArgs extends BasicArgs {
+export type BasicMonitorArgs = BasicArgs & {
   logWpId?: Input<string>;
   logStorageId?: Input<string>;
-}
+};
 
 export interface DiagnosticProps extends BasicMonitorArgs {
   name: string;
@@ -59,10 +63,15 @@ export type ResourceType = {
   formattedName?: boolean;
 };
 
-export interface ResourceInfo {
-  name: string;
+export type ResourceInfo = NamedResourceType & {
   group: ResourceGroupInfo;
   id: Output<string>;
+};
+
+export type KeyVaultInfo = ResourceInfo;
+
+export interface ResourceInfoWithInstance<InstanceType> extends ResourceInfo {
+  instance: InstanceType;
 }
 
 export interface BasicResourceArgs extends BasicArgs {
@@ -85,8 +94,7 @@ export type NetworkPropsType = {
   privateLink?: PrivateLinkPropsType;
 };
 
-export interface BasicResourceResultProps<TClass> {
-  name: string;
+export interface BasicResourceResultProps<TClass> extends NamedResourceType {
   resource: TClass;
 }
 
@@ -94,12 +102,6 @@ export interface ResourceResultProps<TClass>
   extends BasicResourceResultProps<TClass> {
   locker?: authorization.ManagementLockByScope;
   diagnostic?: DiagnosticSetting;
-}
-
-export interface KeyVaultInfo {
-  name: string;
-  group: ResourceGroupInfo;
-  id: Output<string>;
 }
 
 export type IdentityRoleAssignment = {
