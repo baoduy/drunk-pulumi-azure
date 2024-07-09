@@ -336,7 +336,7 @@ class ApimBuilder
     if (!this._privateLink) return;
     PrivateEndpoint({
       resourceInfo: {
-        resourceName: this._instanceName!,
+        name: this._instanceName!,
         group: this.commonProps.group,
         id: this._apimInstance!.id,
       },
@@ -381,7 +381,7 @@ class ApimBuilder
     this.buildInsightLog();
 
     return {
-      resourceName: this._instanceName!,
+      name: this._instanceName!,
       group: this.commonProps.group,
       id: this._apimInstance!.id,
     };

@@ -1,12 +1,12 @@
-import * as network from "@pulumi/azure-native/network";
-import { output } from "@pulumi/pulumi";
-import { BasicArgs, PrivateLinkPropsType, ResourceInfo } from "../types";
-import { parseResourceInfoFromId } from "../Common/AzureEnv";
-import { getPrivateEndpointName } from "../Common/Naming";
-import { PrivateDnsZoneBuilder } from "../Builder";
+import * as network from '@pulumi/azure-native/network';
+import { output } from '@pulumi/pulumi';
+import { BasicArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
+import { parseResourceInfoFromId } from '../Common/AzureEnv';
+import { getPrivateEndpointName } from '../Common';
+import { PrivateDnsZoneBuilder } from '../Builder';
 
-export type PrivateEndpointProps = Pick<PrivateLinkPropsType, "subnetIds"> &
-  Pick<BasicArgs, "dependsOn"> & {
+export type PrivateEndpointProps = Pick<PrivateLinkPropsType, 'subnetIds'> &
+  Pick<BasicArgs, 'dependsOn'> & {
     resourceInfo: ResourceInfo;
     /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
     privateDnsZoneName: string;
@@ -20,7 +20,7 @@ export default ({
   linkServiceGroupIds,
   dependsOn,
 }: PrivateEndpointProps) => {
-  const name = getPrivateEndpointName(resourceInfo.resourceName);
+  const name = getPrivateEndpointName(resourceInfo.name);
 
   const endpoints = subnetIds.map(
     (s, index) =>
@@ -56,7 +56,7 @@ export default ({
       group: resourceInfo!.group,
       dependsOn,
     })
-      .withARecord({ ipAddresses: ip as string[], recordName: "@" })
+      .withARecord({ ipAddresses: ip as string[], recordName: '@' })
       .linkTo({ subnetIds, registrationEnabled: false })
       .build();
   });

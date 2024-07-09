@@ -1,14 +1,14 @@
-import * as cache from "@pulumi/azure-native/cache";
-import * as pulumi from "@pulumi/pulumi";
+import * as cache from '@pulumi/azure-native/cache';
+import * as pulumi from '@pulumi/pulumi';
 
-import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from "../types";
+import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from '../types';
 
-import { ToWords } from "to-words";
-import { convertToIpRange } from "../VNet/Helper";
-import { getRedisCacheName } from "../Common/Naming";
-import { isPrd } from "../Common/AzureEnv";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import privateEndpointCreator from "../VNet/PrivateEndpoint";
+import { ToWords } from 'to-words';
+import { convertToIpRange } from '../VNet/Helper';
+import { getRedisCacheName } from '../Common';
+import { isPrd } from '../Common/AzureEnv';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import privateEndpointCreator from '../VNet/PrivateEndpoint';
 
 const toWord = new ToWords();
 
@@ -27,19 +27,19 @@ export default ({
   group,
   network,
   vaultInfo,
-  sku = { name: "Basic", family: "C", capacity: 0 },
+  sku = { name: 'Basic', family: 'C', capacity: 0 },
 }: Props) => {
   name = getRedisCacheName(name);
   const redis = new cache.Redis(name, {
     name,
     ...group,
-    minimumTlsVersion: "1.2",
+    minimumTlsVersion: '1.2',
     enableNonSslPort: false,
     identity: { type: cache.ManagedServiceIdentityType.SystemAssigned },
     sku,
-    zones: isPrd && sku.name === "Premium" ? ["1", "2", "3"] : undefined,
+    zones: isPrd && sku.name === 'Premium' ? ['1', '2', '3'] : undefined,
     subnetId: network?.subnetId,
-    publicNetworkAccess: network?.privateLink ? "Disabled" : "Enabled",
+    publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
   });
 
   //Whitelist IpAddress
@@ -61,12 +61,12 @@ export default ({
   //Private Link
   if (network?.privateLink) {
     privateEndpointCreator({
-      resourceInfo: { resourceName: name, group, id: redis.id },
-      privateDnsZoneName: "privatelink.redis.cache.windows.net",
+      resourceInfo: { name, group, id: redis.id },
+      privateDnsZoneName: 'privatelink.redis.cache.windows.net',
       subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
         ? [network.privateLink.type]
-        : ["redisCache"],
+        : ['redisCache'],
     });
   }
 
@@ -83,28 +83,28 @@ export default ({
         name: `${name}-primary-key`,
         value: keys.primaryKey,
         vaultInfo,
-        contentType: "Redis Cache",
+        contentType: 'Redis Cache',
       });
 
       addCustomSecret({
         name: `${name}-secondary-key`,
         value: keys.secondaryKey,
         vaultInfo,
-        contentType: "Redis Cache",
+        contentType: 'Redis Cache',
       });
 
       addCustomSecret({
         name: `${name}-primary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
         vaultInfo,
-        contentType: "Redis Cache",
+        contentType: 'Redis Cache',
       });
 
       addCustomSecret({
         name: `${name}-secondary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
         vaultInfo,
-        contentType: "Redis Cache",
+        contentType: 'Redis Cache',
       });
     });
   }

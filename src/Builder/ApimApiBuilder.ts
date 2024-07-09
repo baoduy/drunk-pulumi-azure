@@ -1,23 +1,23 @@
-import * as apim from "@pulumi/azure-native/apimanagement";
-import { enums } from "@pulumi/azure-native/types";
-import { Input, interpolate } from "@pulumi/pulumi";
-import { getImportConfig } from "../Apim/ApiProduct/SwaggerHelper";
-import { organization } from "../Common/StackEnv";
-import { ResourceInfo } from "../types";
-import ApimPolicyBuilder from "./ApimPolicyBuilder";
+import * as apim from '@pulumi/azure-native/apimanagement';
+import { enums } from '@pulumi/azure-native/types';
+import { Input, interpolate } from '@pulumi/pulumi';
+import { getImportConfig } from '../Apim/ApiProduct/SwaggerHelper';
+import { organization } from '../Common/StackEnv';
+import { ResourceInfo } from '../types';
+import ApimPolicyBuilder from './ApimPolicyBuilder';
 
 import {
   ApimApiKeysType,
+  ApimApiPolicyType,
+  ApimApiRevisionProps,
   ApimApiServiceUrlType,
   ApimChildBuilderProps,
-  IApimApiBuilder,
-  IApimApiServiceBuilder,
-  ApimApiRevisionProps,
   BuilderAsync,
+  IApimApiBuilder,
   IApimApiRevisionBuilder,
+  IApimApiServiceBuilder,
   VersionBuilderFunction,
-  ApimApiPolicyType,
-} from "./types";
+} from './types';
 
 class ApimApiRevisionBuilder implements IApimApiRevisionBuilder {
   public revisions: ApimApiRevisionProps[] = [];
@@ -34,8 +34,8 @@ export default class ApimApiBuilder
 {
   private _serviceUrl: ApimApiServiceUrlType | undefined = undefined;
   private _keyParameters: ApimApiKeysType | undefined = {
-    header: "x-api-key",
-    query: "api-key",
+    header: 'x-api-key',
+    query: 'api-key',
   };
   private _apis: Record<string, ApimApiRevisionProps[]> = {};
 
@@ -134,11 +134,11 @@ export default class ApimApiBuilder
             serviceUrl: `${this._serviceUrl!.serviceUrl}/${k}`,
 
             format:
-              "swaggerUrl" in rv
+              'swaggerUrl' in rv
                 ? enums.apimanagement.ContentFormat.Openapi_json
                 : undefined,
             value:
-              "swaggerUrl" in rv
+              'swaggerUrl' in rv
                 ? await getImportConfig(rv.swaggerUrl, k)
                 : undefined,
           },
@@ -165,8 +165,8 @@ export default class ApimApiBuilder
               serviceName: this.props.apimServiceName,
               resourceGroupName: this.props.group.resourceGroupName,
               apiId: apiName,
-              policyId: "policy",
-              format: "xml",
+              policyId: 'policy',
+              format: 'xml',
               value: this._policyString,
             },
             { dependsOn: api },
@@ -174,7 +174,7 @@ export default class ApimApiBuilder
         }
 
         //Create Aoi Operations
-        if ("operations" in rv) {
+        if ('operations' in rv) {
           rv.operations.forEach((op) => {
             const opsName = `${apiName}-${op.name}`;
             const ops = new apim.ApiOperation(
@@ -196,12 +196,12 @@ export default class ApimApiBuilder
             new apim.ApiOperationPolicy(
               opName,
               {
-                policyId: "policy",
+                policyId: 'policy',
                 operationId: ops.id,
                 apiId: api.id,
                 serviceName: this.props.apimServiceName,
                 resourceGroupName: this.props.group.resourceGroupName,
-                format: "xml",
+                format: 'xml',
                 value: new ApimPolicyBuilder({
                   ...this.props,
                   name: opName,
@@ -226,7 +226,7 @@ export default class ApimApiBuilder
     await this.buildApis();
 
     return {
-      resourceName: this._apiInstanceName,
+      name: this._apiInstanceName,
       group: this.props.group,
       id: interpolate`${this.props.productId}`,
     };

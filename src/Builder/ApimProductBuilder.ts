@@ -154,7 +154,7 @@ export class ApimProductBuilder
     await this.buildApis();
 
     return {
-      resourceName: this._productInstanceName,
+      name: this._productInstanceName,
       group: this.props.group,
       id: this._productInstance!.id,
     };

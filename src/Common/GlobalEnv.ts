@@ -1,14 +1,8 @@
-import {
-  ConventionProps,
-  KeyVaultInfo,
-  ResourceGroupInfo,
-  ResourceInfo,
-} from '../types';
+import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../types';
 import { subscriptionId } from './AzureEnv';
 import { getCdnProfileName, getKeyVaultName } from './Naming';
 import { getResourceName } from './ResourceEnv';
 import { interpolate } from '@pulumi/pulumi';
-import { organization } from './StackEnv';
 
 export const globalKeyName = 'global';
 
@@ -18,7 +12,7 @@ export const groupInfo: ResourceGroupInfo = {
 
 const cdnProfileName = getCdnProfileName(globalKeyName);
 export const cdnProfileInfo: ResourceInfo = {
-  resourceName: cdnProfileName,
+  name: cdnProfileName,
   group: {
     resourceGroupName: groupInfo.resourceGroupName,
     location: globalKeyName,

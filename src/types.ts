@@ -60,7 +60,7 @@ export type ResourceType = {
 };
 
 export interface ResourceInfo {
-  resourceName: string;
+  name: string;
   group: ResourceGroupInfo;
   id: Output<string>;
 }

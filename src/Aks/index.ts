@@ -606,7 +606,7 @@ export default async ({
   });
 
   return {
-    resourceName: name,
+    name,
     group,
     id: aks.id,
     aks,

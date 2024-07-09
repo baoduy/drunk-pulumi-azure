@@ -1,14 +1,14 @@
-import { DnsZoneARecordType } from "./types";
-import { BasicResourceArgs, ResourceInfo } from "../types";
-import * as network from "@pulumi/azure-native/network";
+import { DnsZoneARecordType } from './types';
+import { BasicResourceArgs, ResourceInfo } from '../types';
+import * as network from '@pulumi/azure-native/network';
 import {
   IPrivateDnsZoneBuilder,
   PrivateDnsZoneVnetLinkingType,
-} from "./types/privateDnsZoneBuilder";
-import * as native from "@pulumi/azure-native";
-import { output } from "@pulumi/pulumi";
-import { getVnetIdFromSubnetId } from "../VNet/Helper";
-import { globalKeyName } from "../Common/GlobalEnv";
+} from './types/privateDnsZoneBuilder';
+import * as native from '@pulumi/azure-native';
+import { output } from '@pulumi/pulumi';
+import { getVnetIdFromSubnetId } from '../VNet/Helper';
+import { globalKeyName } from '../Common/GlobalEnv';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -51,16 +51,16 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
     this._aRecords.forEach(
       (a, index) =>
         new network.PrivateRecordSet(
-          a.recordName === "*"
+          a.recordName === '*'
             ? `All-${index}-ARecord`
-            : a.recordName === "@"
+            : a.recordName === '@'
               ? `Root-${index}-ARecord`
               : `${a.recordName}-ARecord`,
           {
             privateZoneName: this._zoneInstance!.name,
             ...group,
             relativeRecordSetName: a.recordName,
-            recordType: "A",
+            recordType: 'A',
             aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
             ttl: 3600,
           },
@@ -81,7 +81,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
         //output(v).apply((i) => console.log(this.commonProps.name, i));
 
         return new native.network.VirtualNetworkLink(
-          `${this.commonProps.name.split(".")[0]}-${index}-${i}-link`,
+          `${this.commonProps.name.split('.')[0]}-${index}-${i}-link`,
           {
             ...this.commonProps.group,
             privateZoneName: this._zoneInstance!.name,
@@ -99,7 +99,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
     this.buildVnetLinks();
 
     return {
-      resourceName: this.commonProps.name,
+      name: this.commonProps.name,
       group: this.commonProps.group,
       id: this._zoneInstance!.id,
     };

@@ -1,14 +1,14 @@
-import * as storage from "@pulumi/azure-native/storage";
+import * as storage from '@pulumi/azure-native/storage';
 
 import {
   getConnectionName,
   getKeyName,
   getSecretName,
   getStorageName,
-} from "../Common/Naming";
-import { getSecret } from "../KeyVault/Helper";
-import { BasicResourceArgs, KeyVaultInfo } from "../types";
-import { parseResourceInfoFromId } from "../Common/AzureEnv";
+} from '../Common';
+import { getSecret } from '../KeyVault/Helper';
+import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { parseResourceInfoFromId } from '../Common/AzureEnv';
 
 export type StorageConnectionInfo = {
   primaryConnection: string;
@@ -35,10 +35,10 @@ export const getStorageSecrets = async ({
   vaultInfo: KeyVaultInfo;
 }): Promise<StorageConnectionInfo> => {
   name = nameFormatted ? name : getStorageName(name);
-  const primaryKeyName = getKeyName(name, "primary");
-  const secondaryKeyName = getKeyName(name, "secondary");
-  const primaryConnectionKeyName = getConnectionName(name, "primary");
-  const secondConnectionKeyName = getConnectionName(name, "secondary");
+  const primaryKeyName = getKeyName(name, 'primary');
+  const secondaryKeyName = getKeyName(name, 'secondary');
+  const primaryConnectionKeyName = getConnectionName(name, 'primary');
+  const secondConnectionKeyName = getConnectionName(name, 'secondary');
 
   const [primaryConnection, secondaryConnection, primaryKey, secondaryKey] =
     await Promise.all(

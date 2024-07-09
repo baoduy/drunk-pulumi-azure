@@ -1,9 +1,8 @@
-import { EnvRolesResults } from "../AzAd/EnvRoles";
-import { addMemberToGroup } from "../AzAd/Group";
-import { ResourceGroupInfo, ResourceInfo } from "../types";
-import * as cdn from "@pulumi/azure-native/cdn";
-import { getCdnProfileName } from "../Common";
-import { global } from "../Common";
+import { EnvRolesResults } from '../AzAd/EnvRoles';
+import { addMemberToGroup } from '../AzAd/Group';
+import { ResourceGroupInfo, ResourceInfo } from '../types';
+import * as cdn from '@pulumi/azure-native/cdn';
+import { getCdnProfileName, global } from '../Common';
 
 interface Props {
   name: string;
@@ -17,7 +16,7 @@ export default ({
   envRoles,
 }: Props): ResourceInfo & { instance: cdn.Profile } => {
   name = getCdnProfileName(name);
-  const internalGroup = { ...group, location: "global" };
+  const internalGroup = { ...group, location: 'global' };
 
   const profile = new cdn.Profile(name, {
     profileName: name,
@@ -38,7 +37,7 @@ export default ({
   }
 
   return {
-    resourceName: name,
+    name,
     group: internalGroup,
     id: profile.id,
     instance: profile,

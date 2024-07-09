@@ -1,19 +1,15 @@
-import * as containerregistry from "@pulumi/azure-native/containerregistry";
+import * as containerregistry from '@pulumi/azure-native/containerregistry';
 import {
   DefaultResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
   ResourceGroupInfo,
-} from "../types";
-import creator from "../Core/ResourceCreator";
-import * as global from "../Common/GlobalEnv";
-import {
-  getAcrName,
-  getPasswordName,
-  getPrivateEndpointName,
-} from "../Common/Naming";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
+} from '../types';
+import creator from '../Core/ResourceCreator';
+import * as global from '../Common/GlobalEnv';
+import { getAcrName, getPasswordName } from '../Common';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 interface Props extends DefaultResourceArgs {
   name: string;
@@ -42,8 +38,8 @@ export default ({
 
   const urlKey = `${name}-url`;
   const userNameKey = `${name}-user-name`;
-  const primaryPasswordKey = getPasswordName(name, "primary");
-  const secondaryPasswordKey = getPasswordName(name, "secondary");
+  const primaryPasswordKey = getPasswordName(name, 'primary');
+  const secondaryPasswordKey = getPasswordName(name, 'secondary');
 
   const { resource, diagnostic } = creator(containerregistry.Registry, {
     registryName: name,
@@ -52,7 +48,7 @@ export default ({
     adminUserEnabled,
     sku: { name: sku },
     networkRuleSet:
-      sku === "Premium" && network
+      sku === 'Premium' && network
         ? {
             defaultAction: containerregistry.DefaultAction.Allow,
 
@@ -68,14 +64,14 @@ export default ({
     ...others,
   } as containerregistry.RegistryArgs & DefaultResourceArgs);
 
-  if (sku === "Premium" && network?.privateLink) {
+  if (sku === 'Premium' && network?.privateLink) {
     PrivateEndpoint({
-      resourceInfo: { resourceName: name, group, id: resource.id },
-      privateDnsZoneName: "privatelink.azurecr.io",
+      resourceInfo: { name, group, id: resource.id },
+      privateDnsZoneName: 'privatelink.azurecr.io',
       subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
         ? [network.privateLink.type]
-        : ["azurecr"],
+        : ['azurecr'],
     });
   }
 
@@ -93,7 +89,7 @@ export default ({
         name: urlKey,
         value: `https://${name}.azurecr.io`,
         vaultInfo,
-        contentType: "Container Registry",
+        contentType: 'Container Registry',
         dependsOn: resource,
       });
 
@@ -101,7 +97,7 @@ export default ({
         name: userNameKey,
         value: keys.username!,
         vaultInfo,
-        contentType: "Container Registry",
+        contentType: 'Container Registry',
         dependsOn: resource,
       });
 
@@ -110,7 +106,7 @@ export default ({
         formattedName: true,
         value: keys.passwords![0].value!,
         vaultInfo,
-        contentType: "Container Registry",
+        contentType: 'Container Registry',
         dependsOn: resource,
       });
 
@@ -119,7 +115,7 @@ export default ({
         formattedName: true,
         value: keys.passwords![1].value!,
         vaultInfo,
-        contentType: "Container Registry",
+        contentType: 'Container Registry',
         dependsOn: resource,
       });
     });

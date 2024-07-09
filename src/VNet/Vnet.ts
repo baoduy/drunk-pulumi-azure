@@ -1,24 +1,24 @@
-import * as network from "@pulumi/azure-native/network";
-import * as pulumi from "@pulumi/pulumi";
-import { output as outputs } from "@pulumi/azure-native/types";
-import { BasicResourceArgs, ResourceInfo } from "../types";
-import { RouteArgs, CustomSecurityRuleArgs } from "./types";
+import * as network from '@pulumi/azure-native/network';
+import * as pulumi from '@pulumi/pulumi';
+import { output as outputs } from '@pulumi/azure-native/types';
+import { BasicResourceArgs, ResourceInfo } from '../types';
+import { CustomSecurityRuleArgs, RouteArgs } from './types';
 import {
   appGatewaySubnetName,
   azBastionSubnetName,
   azFirewallManagementSubnet,
   azFirewallSubnet,
   gatewaySubnetName,
-} from "./Helper";
-import { getVnetName } from "../Common/Naming";
-import CreateSubnet, { SubnetProps } from "./Subnet";
-import SecurityGroup from "./SecurityGroup";
-import RouteTable from "./RouteTable";
-import AppGatewaySecurityRule from "./NSGRules/AppGatewaySecurityRule";
+} from './Helper';
+import { getVnetName } from '../Common';
+import CreateSubnet, { SubnetProps } from './Subnet';
+import SecurityGroup from './SecurityGroup';
+import RouteTable from './RouteTable';
+import AppGatewaySecurityRule from './NSGRules/AppGatewaySecurityRule';
 
 export type DelegateServices =
-  | "Microsoft.ContainerInstance/containerGroups"
-  | "Microsoft.Web/serverFarms";
+  | 'Microsoft.ContainerInstance/containerGroups'
+  | 'Microsoft.Web/serverFarms';
 
 export interface VnetProps extends BasicResourceArgs {
   ddosId?: pulumi.Input<string>;
@@ -40,7 +40,7 @@ export interface VnetProps extends BasicResourceArgs {
 
     appGatewaySubnet?: {
       addressPrefix: string;
-      version: "v1" | "v2";
+      version: 'v1' | 'v2';
     };
 
     gatewaySubnet?: {
@@ -164,14 +164,14 @@ export default ({
     //Allow outbound internet
     if (!features.securityGroup.allowOutboundInternetAccess) {
       securityRules.push({
-        name: "DefaultDeniedInternetOutbound",
-        sourceAddressPrefix: "*",
-        sourcePortRange: "*",
-        destinationAddressPrefix: "Internet",
-        destinationPortRange: "*",
-        protocol: "*",
-        access: "Deny",
-        direction: "Outbound",
+        name: 'DefaultDeniedInternetOutbound',
+        sourceAddressPrefix: '*',
+        sourcePortRange: '*',
+        destinationAddressPrefix: 'Internet',
+        destinationPortRange: '*',
+        protocol: '*',
+        access: 'Deny',
+        direction: 'Outbound',
         priority: 4096, //The last rule in the list;
       });
     }
@@ -221,7 +221,7 @@ export default ({
       enableDdosProtection: ddosId !== undefined,
       ddosProtectionPlan: ddosId ? { id: ddosId } : undefined,
     },
-    { dependsOn, ignoreChanges: ["virtualNetworkPeerings"] },
+    { dependsOn, ignoreChanges: ['virtualNetworkPeerings'] },
   );
 
   const findSubnet = (name: string) =>
@@ -229,7 +229,7 @@ export default ({
 
   //Return the results
   return {
-    resourceName: vName,
+    name: vName,
     group,
     id: vnet.id,
     vnet,

@@ -1,34 +1,34 @@
-import * as native from "@pulumi/azure-native";
-import { Input, interpolate, Output, output } from "@pulumi/pulumi";
+import * as native from '@pulumi/azure-native';
+import { Input, interpolate, Output, output } from '@pulumi/pulumi';
 import {
   currentRegionName,
   parseResourceInfoFromId,
   subscriptionId,
-} from "../Common/AzureEnv";
+} from '../Common/AzureEnv';
 import {
   getAppInsightName,
   getKeyName,
   getLogWpName,
   getResourceGroupName,
   getStorageName,
-} from "../Common/Naming";
-import { getSecret } from "../KeyVault/Helper";
-import { getStorageSecrets, StorageConnectionInfo } from "../Storage/Helper";
+} from '../Common';
+import { getSecret } from '../KeyVault/Helper';
+import { getStorageSecrets, StorageConnectionInfo } from '../Storage/Helper';
 import {
   DiagnosticProps,
   KeyVaultInfo,
   ResourceGroupInfo,
   ResourceInfo,
-} from "../types";
-import { getResourceName } from "../Common/ResourceEnv";
-import { getAppInsightKey } from "./AppInsight";
+} from '../types';
+import { getResourceName } from '../Common/ResourceEnv';
+import { getAppInsightKey } from './AppInsight';
 
 export const createDiagnostic = ({
   name,
   targetResourceId,
   logWpId,
   logStorageId,
-  metricsCategories = ["AllMetrics"],
+  metricsCategories = ['AllMetrics'],
   logsCategories,
   dependsOn,
 }: DiagnosticProps) => {
@@ -52,7 +52,7 @@ export const createDiagnostic = ({
     {
       name: n,
       resourceUri: targetResourceId,
-      logAnalyticsDestinationType: "AzureDiagnostics",
+      logAnalyticsDestinationType: 'AzureDiagnostics',
 
       workspaceId: logWpId,
       storageAccountId: logWpId ? undefined : logStorageId,
@@ -90,7 +90,7 @@ export const createThreatProtection = ({
   new native.security.AdvancedThreatProtection(name, {
     isEnabled: true,
     resourceId: targetResourceId,
-    settingName: "current",
+    settingName: 'current',
   });
 
 //========================Log WP===========================
@@ -103,8 +103,8 @@ export const getLogWpSecrets = async ({
   vaultInfo: KeyVaultInfo;
 }) => {
   const workspaceIdKeyName = `${fullName}-Id`;
-  const primaryKeyName = getKeyName(fullName, "primary");
-  const secondaryKeyName = getKeyName(fullName, "secondary");
+  const primaryKeyName = getKeyName(fullName, 'primary');
+  const secondaryKeyName = getKeyName(fullName, 'secondary');
 
   const [wpId, primaryKey, secondaryKey] = await Promise.all([
     getSecret({ name: workspaceIdKeyName, vaultInfo }).then((i) => i?.value),
@@ -158,7 +158,7 @@ export const getLogWpInfo = ({
     ? output(getLogWpSecrets({ fullName: n, vaultInfo }))
     : undefined;
 
-  return { resourceName: n, group, id, secrets };
+  return { name: n, group, id, secrets };
 };
 
 //========================Log Storage===========================
@@ -182,7 +182,7 @@ export const getLogStorageInfo = ({
     ? output(getStorageSecrets({ name: n, nameFormatted: true, vaultInfo }))
     : undefined;
 
-  return { resourceName: n, group, id, secrets };
+  return { name: n, group, id, secrets };
 };
 
 //========================App Insight===========================
@@ -205,13 +205,13 @@ export const getAppInsightInfo = ({
   const instrumentationKey = vaultInfo
     ? output(
         getAppInsightKey({
-          resourceInfo: { resourceName: n, group, id },
+          resourceInfo: { name: n, group, id },
           vaultInfo,
         }),
       )
     : undefined;
 
-  return { resourceName: n, group, id, instrumentationKey };
+  return { name: n, group, id, instrumentationKey };
 };
 
 export type LogInfoResults = {
@@ -225,7 +225,7 @@ export const getLogInfo = (
   vaultInfo: KeyVaultInfo | undefined = undefined,
 ): LogInfoResults => {
   const rgName = getResourceGroupName(groupName);
-  const name = getResourceName(groupName, { suffix: "logs" });
+  const name = getResourceName(groupName, { suffix: 'logs' });
   const group = { resourceGroupName: rgName, location: currentRegionName };
 
   const logWp = getLogWpInfo({

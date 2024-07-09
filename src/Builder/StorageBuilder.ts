@@ -3,10 +3,10 @@ import Storage, {
   StorageNetworkType,
   StoragePolicyType,
   StorageResults,
-} from "../Storage";
-import CdnEndpoint from "../Cdn/CdnEndpoint";
-import { getDefaultResponseHeaders } from "../Cdn/CdnRules";
-import { ResourceInfo } from "../types";
+} from '../Storage';
+import CdnEndpoint from '../Cdn/CdnEndpoint';
+import { getDefaultResponseHeaders } from '../Cdn/CdnRules';
+import { ResourceInfo } from '../types';
 import {
   Builder,
   BuilderProps,
@@ -16,13 +16,13 @@ import {
   IStorageStarterBuilder,
   StorageCdnType,
   StorageFeatureBuilderType,
-} from "./types";
+} from './types';
 
 class StorageBuilder
   extends Builder<ResourceInfo>
   implements IStorageStarterBuilder, IStorageBuilder, IStaticWebStorageBuilder
 {
-  private _type: "storage" | "staticWeb" = "storage";
+  private _type: 'storage' | 'staticWeb' = 'storage';
   private _policies: StoragePolicyType | undefined = undefined;
   private _features: StorageFeatureBuilderType = {};
   private _containers: ContainerProps[] = [];
@@ -38,11 +38,11 @@ class StorageBuilder
     super(props);
   }
   public asStorage(): IStorageBuilder {
-    this._type = "storage";
+    this._type = 'storage';
     return this;
   }
   public asStaticWebStorage(): IStaticWebStorageBuilder {
-    this._type = "staticWeb";
+    this._type = 'staticWeb';
     return this;
   }
   public withCdn(props: StorageCdnType): IStaticWebStorageBuilder {
@@ -88,7 +88,7 @@ class StorageBuilder
       policies: this._policies,
       featureFlags: {
         ...this._features,
-        enableStaticWebsite: this._type === "staticWeb",
+        enableStaticWebsite: this._type === 'staticWeb',
       },
       lock: this._lock,
     });
@@ -101,9 +101,9 @@ class StorageBuilder
       getDefaultResponseHeaders(this._cdnProps.domainName);
 
     //Create Azure CDN if customDomain provided
-    const origin = `${this._storageInstance!.resourceName}.z23.web.core.windows.net`;
+    const origin = `${this._storageInstance!.name}.z23.web.core.windows.net`;
     CdnEndpoint({
-      name: this._storageInstance!.resourceName,
+      name: this._storageInstance!.name,
       ...this._cdnProps,
       origin,
       httpsEnabled: true,

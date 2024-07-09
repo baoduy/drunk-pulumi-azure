@@ -1,6 +1,6 @@
-import { ResourceInfo } from "../types";
-import * as apim from "@pulumi/azure-native/apimanagement";
-import { ApimChildBuilderProps, Builder, IApimWorkspaceBuilder } from "./types";
+import { ResourceInfo } from '../types';
+import * as apim from '@pulumi/azure-native/apimanagement';
+import { ApimChildBuilderProps, Builder, IApimWorkspaceBuilder } from './types';
 
 export class ApimWorkspaceBuilder
   extends Builder<ResourceInfo>
@@ -29,7 +29,7 @@ export class ApimWorkspaceBuilder
     this.buildWp();
 
     return {
-      resourceName: this._wpInstanceName,
+      name: this._wpInstanceName,
       group: this.props.group,
       id: this._wpInstance!.id,
     };

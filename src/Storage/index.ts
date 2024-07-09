@@ -160,7 +160,7 @@ export default ({
   if (network?.privateEndpoint) {
     //Create Private Endpoints
     privateEndpoint({
-      resourceInfo: { resourceName: name, group, id: stg.id },
+      resourceInfo: { name, group, id: stg.id },
       subnetIds: network.privateEndpoint.subnetIds,
       privateDnsZoneName: `privatelink.${network.privateEndpoint.type}.core.windows.net`,
       linkServiceGroupIds: [network.privateEndpoint.type],
@@ -286,7 +286,7 @@ export default ({
   });
 
   return {
-    resourceName: name,
+    name,
     group,
     id: stg.id,
     instance: stg,

@@ -1,17 +1,17 @@
-import * as keyvault from "@pulumi/azure-native/keyvault";
-import { enums } from "@pulumi/azure-native/types";
-import { Input } from "@pulumi/pulumi";
-import { tenantId } from "../Common/AzureEnv";
-import { getKeyVaultName } from "../Common/Naming";
-import { createDiagnostic } from "../Logs/Helpers";
+import * as keyvault from '@pulumi/azure-native/keyvault';
+import { enums } from '@pulumi/azure-native/types';
+import { Input } from '@pulumi/pulumi';
+import { tenantId } from '../Common/AzureEnv';
+import { getKeyVaultName } from '../Common';
+import { createDiagnostic } from '../Logs/Helpers';
 import {
   BasicMonitorArgs,
+  BasicResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
   PrivateLinkPropsType,
-} from "../types";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import { BasicResourceArgs } from "../types";
+} from '../types';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
 export interface KeyVaultProps extends BasicResourceArgs {
   softDeleteRetentionInDays?: Input<number>;
@@ -25,10 +25,10 @@ export const createVaultPrivateLink = ({
   vaultInfo: KeyVaultInfo;
 }) =>
   PrivateEndpoint({
-    resourceInfo: { ...vaultInfo, resourceName: vaultInfo.name },
+    resourceInfo: vaultInfo,
     ...props,
-    privateDnsZoneName: "privatelink.vaultcore.azure.net",
-    linkServiceGroupIds: props.type ? [props.type] : ["keyVault"],
+    privateDnsZoneName: 'privatelink.vaultcore.azure.net',
+    linkServiceGroupIds: props.type ? [props.type] : ['keyVault'],
   });
 
 export const createVaultDiagnostic = ({
@@ -42,7 +42,7 @@ export const createVaultDiagnostic = ({
     name: `${vaultInfo.name}-vault`,
     targetResourceId: vaultInfo.id,
     ...logInfo,
-    logsCategories: ["AuditEvent"],
+    logsCategories: ['AuditEvent'],
   });
 
 export default ({
@@ -66,8 +66,8 @@ export default ({
 
       properties: {
         tenantId,
-        sku: { name: "standard", family: "A" },
-        createMode: "default",
+        sku: { name: 'standard', family: 'A' },
+        createMode: 'default',
 
         enableRbacAuthorization: true,
         accessPolicies: undefined,
@@ -80,7 +80,7 @@ export default ({
         enabledForDiskEncryption: true,
 
         networkAcls: {
-          bypass: "AzureServices",
+          bypass: 'AzureServices',
           defaultAction: enums.keyvault.NetworkRuleAction.Allow,
 
           ipRules: network?.ipAddresses
@@ -97,9 +97,9 @@ export default ({
       dependsOn,
       import: importUri,
       ignoreChanges: [
-        "softDeleteRetentionInDays",
-        "enableSoftDelete",
-        "enablePurgeProtection",
+        'softDeleteRetentionInDays',
+        'enableSoftDelete',
+        'enablePurgeProtection',
         ...ignoreChanges,
       ],
     },

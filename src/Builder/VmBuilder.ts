@@ -1,5 +1,5 @@
-import { Input } from "@pulumi/pulumi";
-import { ResourceInfo } from "../types";
+import { Input } from '@pulumi/pulumi';
+import { ResourceInfo } from '../types';
 import {
   Builder,
   BuilderProps,
@@ -12,10 +12,10 @@ import {
   VmOsBuilderLinuxProps,
   VmOsBuilderWindowsProps,
   VmSizeTypes,
-} from "./types";
-import { randomLogin } from "../Core/Random";
-import VM, { VmScheduleType } from "../VM";
-import { VirtualMachine } from "@pulumi/azure-native/compute";
+} from './types';
+import { randomLogin } from '../Core/Random';
+import VM, { VmScheduleType } from '../VM';
+import { VirtualMachine } from '@pulumi/azure-native/compute';
 
 class VmBuilder
   extends Builder<ResourceInfo>
@@ -82,7 +82,7 @@ class VmBuilder
       maxUserNameLength: 25,
       passwordOptions: {
         length: 50,
-        policy: "yearly",
+        policy: 'yearly',
         options: { lower: true, upper: true, special: true, numeric: true },
       },
       vaultInfo: this.commonProps.vaultInfo,
@@ -96,7 +96,7 @@ class VmBuilder
       ...this.commonProps,
       subnetId: this._subnetProps!,
       vmSize: this._vmSize!,
-      osType: Boolean(this._linuxImage) ? "Linux" : "Windows",
+      osType: Boolean(this._linuxImage) ? 'Linux' : 'Windows',
       image: this._linuxImage ?? this._windowImage!,
       login: {
         userName: this._loginProps!.adminLogin!,
@@ -112,7 +112,7 @@ class VmBuilder
     this.buildVm();
 
     return {
-      resourceName: this.commonProps.name,
+      name: this.commonProps.name,
       group: this.commonProps.group,
       id: this._vmInstance!.id,
     };

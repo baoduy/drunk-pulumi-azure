@@ -1,14 +1,14 @@
-import * as appConfig from "@pulumi/azure-native/appconfiguration";
-import { isPrd } from "../Common/AzureEnv";
-import { getAppConfigName, getPrivateEndpointName } from "../Common/Naming";
+import * as appConfig from '@pulumi/azure-native/appconfiguration';
+import { isPrd } from '../Common/AzureEnv';
+import { getAppConfigName } from '../Common/Naming';
 import {
   KeyVaultInfo,
   PrivateLinkPropsType,
   ResourceGroupInfo,
   ResourceInfo,
-} from "../types";
-import PrivateEndpoint from "../VNet/PrivateEndpoint";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
+} from '../types';
+import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 export type AppConfigProps = {
   name: string;
@@ -34,7 +34,7 @@ export default ({
   const app = new appConfig.ConfigurationStore(name, {
     configStoreName: name,
     ...group,
-    identity: { type: "SystemAssigned" },
+    identity: { type: 'SystemAssigned' },
     enablePurgeProtection: isPrd,
     softDeleteRetentionInDays: isPrd ? 7 : 1,
     disableLocalAuth,
@@ -42,7 +42,7 @@ export default ({
       ? appConfig.PublicNetworkAccess.Disabled
       : appConfig.PublicNetworkAccess.Enabled,
 
-    sku: { name: "Standard" },
+    sku: { name: 'Standard' },
   });
 
   //Access Keys
@@ -60,7 +60,7 @@ export default ({
           //Only Read Connection String here
           if (key.readOnly) {
             addCustomSecret({
-              name: key.name.includes("Primary")
+              name: key.name.includes('Primary')
                 ? readPrimaryConnectionStringKey
                 : readSecondaryConnectionStringKey,
               value: key.connectionString,
@@ -76,15 +76,15 @@ export default ({
   //Private Link
   if (privateLink) {
     PrivateEndpoint({
-      resourceInfo: { resourceName: name, group, id: app.id },
-      privateDnsZoneName: "privatelink.azconfig.io",
-      linkServiceGroupIds: ["appConfig"],
+      resourceInfo: { name, group, id: app.id },
+      privateDnsZoneName: 'privatelink.azconfig.io',
+      linkServiceGroupIds: ['appConfig'],
       ...privateLink,
     });
   }
 
   return {
-    resourceName: name,
+    name,
     group,
     id: app.id,
     instance: app,

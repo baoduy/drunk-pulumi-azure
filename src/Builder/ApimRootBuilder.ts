@@ -1,24 +1,24 @@
-import { ResourceInfo } from "../types";
-import { ApimProductBuilder } from "./ApimProductBuilder";
-import { ApimWorkspaceBuilder } from "./ApimWorkspaceBuilder";
+import { ResourceInfo } from '../types';
+import { ApimProductBuilder } from './ApimProductBuilder';
+import { ApimWorkspaceBuilder } from './ApimWorkspaceBuilder';
 import {
   ApimChildBuilderProps,
   BuilderProps,
   IApimProductBuilder,
   IApimWorkspaceBuilder,
-} from "./types";
+} from './types';
 
 export default class ApimRootBuilder {
   private constructor(private props: ApimChildBuilderProps) {}
 
   public static from(
     apimInfo: ResourceInfo,
-    props: Omit<BuilderProps, "group" | "name">,
+    props: Omit<BuilderProps, 'group' | 'name'>,
   ): ApimRootBuilder {
     return new ApimRootBuilder({
       ...props,
-      name: apimInfo.resourceName,
-      apimServiceName: apimInfo.resourceName,
+      name: apimInfo.name,
+      apimServiceName: apimInfo.name,
       group: apimInfo.group,
     });
   }

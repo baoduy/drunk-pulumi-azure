@@ -1,9 +1,4 @@
-import Sql, {
-  SqlElasticPoolType,
-  SqlNetworkType,
-  SqlResults,
-  SqlVulnerabilityAssessmentType,
-} from "../Sql";
+import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import {
   Builder,
   BuilderProps,
@@ -15,8 +10,8 @@ import {
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
-} from "./types";
-import { randomLogin } from "../Core/Random";
+} from './types';
+import { randomLogin } from '../Core/Random';
 
 class SqlBuilder
   extends Builder<SqlResults>
@@ -79,7 +74,7 @@ class SqlBuilder
       maxUserNameLength: 25,
       passwordOptions: {
         length: 50,
-        policy: "yearly",
+        policy: 'yearly',
         options: { lower: true, upper: true, special: false, numeric: true },
       },
       vaultInfo: this.commonProps.vaultInfo,

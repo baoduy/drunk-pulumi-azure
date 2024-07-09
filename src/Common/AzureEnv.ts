@@ -1,29 +1,29 @@
-import * as pulumi from "@pulumi/pulumi";
-import { authorization } from "@pulumi/azure-native";
-import { registerAutoTags } from "./AutoTags";
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfoArg } from "../types";
-import { getKeyVaultName, getResourceGroupName } from "./Naming";
-import { organization, projectName, stack } from "./StackEnv";
-import { getCountryCode, getRegionCode } from "./Location";
+import * as pulumi from '@pulumi/pulumi';
+import { authorization } from '@pulumi/azure-native';
+import { registerAutoTags } from './AutoTags';
+import { KeyVaultInfo, ResourceInfo, ResourceInfoArg } from '../types';
+import { getKeyVaultName, getResourceGroupName } from './Naming';
+import { organization, projectName, stack } from './StackEnv';
+import { getCountryCode, getRegionCode } from './Location';
 
 const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);
 export const subscriptionId = config.apply((c) => c.subscriptionId);
 export const currentPrincipal = config.apply((c) => c.objectId);
 
-const env = JSON.parse(process.env.PULUMI_CONFIG ?? "{}");
-export const currentRegionName = (env["azure-native:config:location"] ??
-  "SoutheastAsia") as string;
+const env = JSON.parse(process.env.PULUMI_CONFIG ?? '{}');
+export const currentRegionName = (env['azure-native:config:location'] ??
+  'SoutheastAsia') as string;
 export const currentRegionCode = getRegionCode(currentRegionName);
 export const currentCountryCode = getCountryCode(currentRegionName);
 export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 export enum Environments {
-  Global = "global",
-  Local = "local",
-  Dev = "dev",
-  Sandbox = "sandbox",
-  Prd = "prd",
+  Global = 'global',
+  Local = 'local',
+  Dev = 'dev',
+  Sandbox = 'sandbox',
+  Prd = 'prd',
 }
 
 export const isEnv = (env: Environments) => stack.includes(env);
@@ -59,7 +59,7 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
 registerAutoTags({
   environment: stack,
   organization: organization,
-  "pulumi-project": projectName,
+  'pulumi-project': projectName,
 });
 
 /** Get Key Vault by Group Name. Group Name is the name use to create the resource and resource group together. */
@@ -69,7 +69,7 @@ export const getKeyVaultInfo = (
 ): KeyVaultInfo => {
   const vaultName = getKeyVaultName(groupName, {
     region,
-    suffix: "vlt",
+    suffix: 'vlt',
     includeOrgName: true,
   });
   const resourceGroupName = getResourceGroupName(groupName, { region });
@@ -94,38 +94,33 @@ export const getResourceIdFromInfo = ({
   else if (name && provider)
     return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
 
-  throw new Error("Resource Info is invalid.");
+  throw new Error('Resource Info is invalid.');
 };
 
-/**Get Resource Info from Resource ID. Sample ID is "/subscriptions/01af663e-76dd-45ac-9e57-9c8e0d3ee350/resourceGroups/sandbox-codehbd-group-hbd/providers/Microsoft.Network/virtualNetworks/sandbox-codehbd-vnet-hbd"*/
-export interface ResourceInfo {
-  name: string;
-  group: ResourceGroupInfo;
-  subscriptionId: string;
-  id: string;
-}
-
+export type ParsedResourceInfo = ResourceInfo & {
+  subscriptionId: pulumi.Input<string>;
+};
 export const parseResourceInfoFromId = (
   id: string,
-): ResourceInfo | undefined => {
+): ParsedResourceInfo | undefined => {
   if (!id) return undefined;
 
-  const details = id.split("/");
-  let name = "";
-  let groupName = "";
-  let subscriptionId = "";
+  const details = id.split('/');
+  let name = '';
+  let groupName = '';
+  let subId = '';
 
   details.forEach((d, index) => {
-    if (d === "subscriptions") subscriptionId = details[index + 1];
-    if (d === "resourceGroups" || d === "resourcegroups")
+    if (d === 'subscriptions') subId = details[index + 1];
+    if (d === 'resourceGroups' || d === 'resourcegroups')
       groupName = details[index + 1];
     if (index === details.length - 1) name = d;
   });
 
   return {
     name,
-    id,
+    id: pulumi.output(id),
     group: { resourceGroupName: groupName, location: currentRegionName },
-    subscriptionId,
+    subscriptionId: subId ?? subscriptionId,
   };
 };

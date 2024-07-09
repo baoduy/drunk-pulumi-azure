@@ -193,7 +193,7 @@ export default ({
   //Private Link
   if (network?.privateLink) {
     privateEndpointCreator({
-      resourceInfo: { resourceName: name, group, id: sqlServer.id },
+      resourceInfo: { name, group, id: sqlServer.id },
       privateDnsZoneName: 'privatelink.database.windows.net',
       subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
@@ -379,7 +379,7 @@ export default ({
   // }
 
   return {
-    resourceName: sqlName,
+    name: sqlName,
     group,
     id: sqlServer.id,
     resource: sqlServer,
