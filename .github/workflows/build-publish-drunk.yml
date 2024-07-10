@@ -25,7 +25,7 @@ jobs:
 
       - name: Print the version
         run: |
-          echo ${{ NEXT_VERSION }}
+          echo ${{ env.NEXT_VERSION }}
 
       #- uses: actions-ecosystem/action-bump-semver@v1
       #  id: bump-semver
