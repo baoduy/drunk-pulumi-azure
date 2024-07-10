@@ -255,7 +255,11 @@ class ApimBuilder
             'false',
         },
       },
-      { dependsOn: this.commonProps.dependsOn, deleteBeforeReplace: true },
+      {
+        dependsOn: this.commonProps.dependsOn,
+        deleteBeforeReplace: true,
+        ignoreChanges: ['publicNetworkAccess'],
+      },
     );
   }
   private buildEntraID() {
