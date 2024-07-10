@@ -23,6 +23,7 @@ jobs:
           tag_pattern: 'v[0-9]*.[0-9]*.[0-9]*'
           increment: 'patch'
           auto_increment: 'true'
+          remove_prefix: 'true'
 
       - name: Print the version
         run: |
@@ -67,7 +68,7 @@ jobs:
       - name: Update version in package.json
         run: |
           cd .out-bin
-          sed -i 's/"version": "0.0.1"/"version": "${{ steps.version.outputs.version }}"/' package.json
+          sed -i 's/"version": "0.0.1"/"version": "${{ env.NEXT_VERSION }}"/' package.json
 
       # Create Release
       - name: Create Release
@@ -77,8 +78,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
+          tag_name: v${{ env.NEXT_VERSION }}
+          release_name: Release v${{ env.NEXT_VERSION }}
           draft: false
           prerelease: false
 
