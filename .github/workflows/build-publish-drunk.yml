@@ -9,7 +9,7 @@ on:
     #  - src/**
 
 env:
-  Enable_Release: 'true'
+  Enable_Release: 'false'
 
 jobs:
   build:
@@ -17,22 +17,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-        # Versioning
-      - name: Get version and version code
-        uses: xom9ikk/version-by-tag@v1
-        id: versioning
+      # Versioning
+      - uses: rmeneely/git-next-version@v1
         with:
-          isUseGithubRunNumber: true
+          tag_pattern: 'v[0-9]*.[0-9]*.[0-9]*'
+          increment: 'patch'
+          auto_increment: 'true'
+          remove_prefix: 'true'
 
-      - uses: actions-ecosystem/action-bump-semver@v1
-        id: bump-semver
-        with:
-          current_version: ${{ steps.versioning.outputs.semver }}
-          level: patch
-
-      - name: Print Variables
+      - name: Print the version
         run: |
-          echo "New version: ${{ steps.bump-semver.outputs.new_version }}"
+          echo ${{ env.NEXT_VERSION }}
+
+      #- uses: actions-ecosystem/action-bump-semver@v1
+      #  id: bump-semver
+      #  with:
+      #    current_version: ${{ steps.versioning.outputs.semver }}
+      #    level: patch
 
       - name: Cache node modules
         id: cache-npm
@@ -67,7 +68,7 @@ jobs:
       - name: Update version in package.json
         run: |
           cd .out-bin
-          sed -i 's/"version": "0.0.1"/"version": "${{ steps.bump-semver.outputs.new_version }}"/' package.json
+          sed -i 's/"version": "0.0.1"/"version": "${{ env.NEXT_VERSION }}"/' package.json
 
       # Create Release
       - name: Create Release
@@ -77,8 +78,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.bump-semver.outputs.new_version }}
-          release_name: Release ${{ steps.bump-semver.outputs.new_version }}
+          tag_name: v${{ env.NEXT_VERSION }}
+          release_name: Release v${{ env.NEXT_VERSION }}
           draft: false
           prerelease: false
 
