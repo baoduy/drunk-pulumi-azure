@@ -331,10 +331,11 @@ export default async ({
           }
         : undefined,
       //This is not inuse
-      windowsProfile: {
-        adminUsername: 'azureuser',
-        enableCSIProxy: true,
-      },
+      windowsProfile: undefined,
+      // windowsProfile: {
+      //   adminUsername: 'azureuser',
+      //   enableCSIProxy: true,
+      // },
       autoScalerProfile: {
         balanceSimilarNodeGroups: 'true',
         expander: 'random',
