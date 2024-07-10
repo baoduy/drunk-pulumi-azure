@@ -9,7 +9,7 @@ on:
     #  - src/**
 
 env:
-  Enable_Release: 'false'
+  Enable_Release: 'true'
 
 jobs:
   build:
