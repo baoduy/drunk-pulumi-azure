@@ -84,6 +84,7 @@ const StorageRoleNames: Record<EnvRoleKeyTypes, string[]> = {
     'Storage File Data Privileged Contributor',
   ],
 };
+
 export type RoleEnableTypes = {
   enableRGRoles?: boolean;
   enableAksRoles?: boolean;

@@ -1,3 +1,4 @@
+import { RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
 import {
   BuilderAsyncFunctionType,
   BuilderFunctionType,
@@ -7,7 +8,6 @@ import {
   IResourceVaultBuilder,
   ResourceBuilderResults,
   ResourceFunction,
-  ResourceGroupBuilderType,
   ResourceVaultLinkingBuilderType,
   ResourceVnetBuilderType,
   VnetBuilderResults,
@@ -37,7 +37,7 @@ class ResourceBuilder
     IResourceVaultBuilder,
     IResourceBuilder
 {
-  private _createRGProps: ResourceGroupBuilderType | undefined = undefined;
+  private _createRGProps: RoleEnableTypes | undefined = undefined;
   private _createRG: boolean = false;
   private _RGInfo: ResourceGroupInfo | undefined = undefined;
   private _lock: boolean = false;
@@ -76,7 +76,7 @@ class ResourceBuilder
     return this;
   }
   public createRG(
-    props: ResourceGroupBuilderType | undefined = undefined,
+    props: RoleEnableTypes | undefined = undefined,
   ): IResourceVaultBuilder {
     this._createRGProps = props;
     this._createRG = true;
