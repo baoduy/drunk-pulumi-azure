@@ -144,14 +144,19 @@ export default ({
     }
 
     const adminGroup = auth.envRoles.contributor;
-    new dbformysql.AzureADAdministrator(name, {
-      serverName: mySql.name,
-      ...group,
-      login: username,
-      administratorType: 'ActiveDirectory',
-      sid: adminGroup.objectId,
-      tenantId,
-    });
+    new dbformysql.AzureADAdministrator(
+      name,
+      {
+        administratorName: name,
+        serverName: mySql.name,
+        ...group,
+        login: username,
+        administratorType: 'ActiveDirectory',
+        sid: adminGroup.objectId,
+        tenantId,
+      },
+      { ignoreChanges: ['administratorName'] },
+    );
   }
 
   if (network) {
