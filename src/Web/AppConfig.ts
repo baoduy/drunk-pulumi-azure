@@ -1,6 +1,6 @@
 import * as appConfig from '@pulumi/azure-native/appconfiguration';
 import { isPrd } from '../Common/AzureEnv';
-import { getAppConfigName } from '../Common/Naming';
+import { getAppConfigName } from '../Common';
 import {
   KeyVaultInfo,
   PrivateLinkPropsType,
@@ -15,7 +15,7 @@ export type AppConfigProps = {
   group: ResourceGroupInfo;
   privateLink?: PrivateLinkPropsType;
   disableLocalAuth?: boolean;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 };
 
 export default ({
