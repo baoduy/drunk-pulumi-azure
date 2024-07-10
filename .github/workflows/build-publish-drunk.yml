@@ -20,6 +20,7 @@ jobs:
       # Versioning
       - uses: rmeneely/git-next-version@v1
         with:
+          tag_pattern: '[0-9]*.[0-9]*.[0-9]*'
           increment: 'patch'
           auto_increment: 'true'
 
