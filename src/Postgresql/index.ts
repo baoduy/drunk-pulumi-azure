@@ -90,6 +90,8 @@ export default ({
       dependsOn,
       protect: lock,
       ignoreChanges: [
+        'resourceGroupName',
+        'location',
         'serverName',
         'highAvailability',
         'availabilityZone',

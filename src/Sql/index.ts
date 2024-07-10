@@ -113,7 +113,12 @@ export default ({
   vaultInfo,
   network,
   vulnerabilityAssessment,
-  ignoreChanges = ['administratorLogin', 'administrators'],
+  ignoreChanges = [
+    'administratorLogin',
+    'administrators',
+    'resourceGroupName',
+    'location',
+  ],
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption

@@ -121,6 +121,8 @@ export default ({
     {
       dependsOn,
       ignoreChanges: [
+        'resourceGroupName',
+        'location',
         'serverName',
         'highAvailability',
         'availabilityZone',
