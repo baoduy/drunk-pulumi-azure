@@ -28,6 +28,7 @@ import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
 import { subscriptionId } from '../Common/AzureEnv';
 import { IVaultBuilderResults } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
+import { getKeyVaultInfo } from '../Common/AzureEnv';
 
 class ResourceBuilder
   implements
@@ -93,6 +94,9 @@ class ResourceBuilder
   public withVault(props: KeyVaultInfo): IResourceBuilder {
     this._vaultInfo = VaultBuilderResults.from(props);
     return this;
+  }
+  public getVaultInfoBy(name: string): IResourceBuilder {
+    return this.withVault(getKeyVaultInfo(name));
   }
   public linkVaultTo(props: ResourceVaultLinkingBuilderType): IResourceBuilder {
     this._vaultLinkingProps = props;
