@@ -253,7 +253,7 @@ class ResourceBuilder
     return {
       name: this.name,
       group: this._RGInfo!,
-      vaultInfo: this._vaultInfo!,
+      vaultInfo: this._vaultInfo!.info(),
       envRoles: this._envRoles!,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,

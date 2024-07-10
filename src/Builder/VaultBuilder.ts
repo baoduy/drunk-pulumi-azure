@@ -25,10 +25,9 @@ export class VaultBuilderResults implements IVaultBuilderResults {
   public get id(): Output<string> {
     return this.vaultInfo.id;
   }
-
-  // public info(): KeyVaultInfo {
-  //   return this.vaultInfo;
-  // }
+  public info(): KeyVaultInfo {
+    return this.vaultInfo;
+  }
 
   public linkTo(props: {
     subnetIds: Input<string>[];

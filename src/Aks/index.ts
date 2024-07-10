@@ -116,8 +116,6 @@ export interface NodePoolProps
 
 export type AskAddonProps = {
   enableAzureKeyVault?: boolean;
-  enableAzurePolicy?: boolean;
-  enableKubeDashboard?: boolean;
   enableVirtualHost?: boolean;
   applicationGateway?: { gatewaySubnetId: pulumi.Input<string> };
 };
@@ -126,6 +124,7 @@ export type AskFeatureProps = {
   enablePrivateCluster?: boolean;
   enableAutoScale?: boolean;
   enablePodIdentity?: boolean;
+  enableWorkloadIdentity?: boolean;
   enableDiagnosticSetting?: boolean;
 };
 
@@ -154,7 +153,16 @@ export interface AksProps extends BasicResourceArgs {
   addon?: AskAddonProps;
   features?: AskFeatureProps;
   aksAccess: AksAccessProps;
-
+  storageProfile?: {
+    blobCSIDriver: {
+      enabled: boolean;
+    };
+    diskCSIDriver: {
+      enabled: boolean;
+    };
+    fileCSIDriver: { enabled: boolean };
+    snapshotController: { enabled: boolean };
+  };
   //Azure Registry Container
   acr?: { enable: boolean; id: Input<string> };
 
@@ -194,10 +202,9 @@ export default async ({
   aksAccess,
   vaultInfo,
   features = { enableDiagnosticSetting: true },
+  storageProfile,
   addon = {
-    enableAzurePolicy: true,
     enableAzureKeyVault: false,
-    enableKubeDashboard: false,
   },
   tier = native.containerservice.ManagedClusterSKUTier.Free,
   lock = true,
@@ -217,26 +224,20 @@ export default async ({
       .catch(() => false);
   }
 
-  if (ignoreChanges.length <= 0) {
-    ignoreChanges.push(
-      'privateLinkResources',
-      'networkProfile',
-      'linuxProfile',
-      'windowsProfile',
-    );
-  }
+  //Add Default Ignoring properties
+  ignoreChanges.push(
+    'privateLinkResources',
+    'networkProfile',
+    'nodeResourceGroup',
+    'linuxProfile',
+    'windowsProfile',
+  );
 
   const serviceIdentity = aksIdentityCreator({
     name: aksName,
     vaultInfo,
     dependsOn,
   });
-
-  //=================Validate ===================================/
-  // if (!linux?.sshKeys || !linux.sshKeys[0]) {
-  //   console.error("Aks sshKeys is required:", name);
-  //   return undefined;
-  // }
 
   //Create AKS Cluster
   const aks = new native.containerservice.ManagedCluster(
@@ -246,8 +247,6 @@ export default async ({
       ...group,
       nodeResourceGroup,
       dnsPrefix: aksName,
-      //fqdnSubdomain: '',
-      //kubernetesVersion,
 
       apiServerAccessProfile: {
         authorizedIPRanges: features?.enablePrivateCluster
@@ -256,7 +255,7 @@ export default async ({
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
         enablePrivateClusterPublicFQDN: true,
-        privateDNSZone: 'system',
+        privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
       },
 
       addonProfiles: {
@@ -269,8 +268,8 @@ export default async ({
           enabled: Boolean(addon.enableAzureKeyVault),
         },
 
-        azurePolicy: { enabled: Boolean(addon.enableAzurePolicy) },
-        kubeDashboard: { enabled: Boolean(addon.enableKubeDashboard) },
+        azurePolicy: { enabled: true },
+        kubeDashboard: { enabled: false },
         httpApplicationRouting: { enabled: false },
 
         aciConnectorLinux: {
@@ -314,12 +313,6 @@ export default async ({
             env: currentEnv,
             nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
-            // powerState: {
-            //   code: "Running",
-            // },
-            // upgradeSettings: {
-            //   maxSurge: "10%",
-            // },
           }),
 
           name: 'defaultnodes',
@@ -361,7 +354,6 @@ export default async ({
         skipNodesWithLocalStorage: 'false',
         skipNodesWithSystemPods: 'true',
       },
-
       //Still under preview
       // workloadAutoScalerProfile: enableAutoScale
       //   ? { keda: { enabled: true } }
@@ -374,6 +366,7 @@ export default async ({
         clientId: serviceIdentity.clientId,
         secret: serviceIdentity.clientSecret,
       },
+      oidcIssuerProfile: { enabled: Boolean(features?.enableWorkloadIdentity) },
       securityProfile: {
         defender:
           logWpId && isPrd
@@ -383,7 +376,9 @@ export default async ({
               }
             : undefined,
         imageCleaner: { enabled: true, intervalHours: 24 },
-        workloadIdentity: { enabled: false },
+        workloadIdentity: {
+          enabled: Boolean(features?.enableWorkloadIdentity),
+        },
       },
       podIdentityProfile: features.enablePodIdentity
         ? {
@@ -409,17 +404,7 @@ export default async ({
             tenantID: tenantId,
           }
         : undefined,
-      oidcIssuerProfile: { enabled: false },
-      storageProfile: {
-        blobCSIDriver: {
-          enabled: true,
-        },
-        diskCSIDriver: {
-          enabled: true,
-        },
-        fileCSIDriver: { enabled: true },
-        snapshotController: { enabled: true },
-      },
+      storageProfile,
       networkProfile: {
         networkMode: native.containerservice.NetworkMode.Transparent,
         networkPolicy: native.containerservice.NetworkPolicy.Azure,
