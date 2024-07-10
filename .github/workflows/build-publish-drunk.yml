@@ -9,7 +9,7 @@ on:
     #  - src/**
 
 env:
-  Enable_Release: 'true'
+  Enable_Release: 'false'
 
 jobs:
   build:
@@ -17,14 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-        # Versioning
-      - name: Git Version
-        id: version
-        uses: codacy/git-version@2.7.1
-      
+      # Versioning
+      - uses: rmeneely/git-next-version@v1
+        with:
+          increment: 'patch'
+          auto_increment: 'true'
+
       - name: Print the version
         run: |
-          echo ${{ steps.version.outputs.version }}
+          echo ${{ NEXT_VERSION }}
 
       #- uses: actions-ecosystem/action-bump-semver@v1
       #  id: bump-semver
