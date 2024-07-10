@@ -1,7 +1,7 @@
-import * as operationalinsights from "@pulumi/azure-native/operationalinsights";
-import { KeyVaultInfo, ResourceGroupInfo } from "../types";
-import { getKeyName, getLogWpName } from "../Common/Naming";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
+import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
+import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { getKeyName, getLogWpName } from '../Common';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 interface Props {
   name: string;
@@ -20,15 +20,15 @@ export default ({
 }: Props) => {
   name = getLogWpName(name);
   const workspaceIdKeyName = `${name}-Id`;
-  const primaryKeyName = getKeyName(name, "primary");
-  const secondaryKeyName = getKeyName(name, "secondary");
+  const primaryKeyName = getKeyName(name, 'primary');
+  const secondaryKeyName = getKeyName(name, 'secondary');
 
   const log = new operationalinsights.Workspace(name, {
     workspaceName: name,
     ...group,
 
-    publicNetworkAccessForIngestion: "Enabled",
-    publicNetworkAccessForQuery: "Enabled",
+    publicNetworkAccessForIngestion: 'Enabled',
+    publicNetworkAccessForQuery: 'Enabled',
     features: {
       //clusterResourceId?: pulumi.Input<string>;
       //disableLocalAuth: true,
@@ -58,7 +58,7 @@ export default ({
       addCustomSecret({
         name: workspaceIdKeyName,
         value: id,
-        contentType: "Log Analytics",
+        contentType: 'Log Analytics',
         vaultInfo,
       });
 
@@ -66,7 +66,7 @@ export default ({
         name: primaryKeyName,
         formattedName: true,
         value: keys.primarySharedKey!,
-        contentType: "Log Analytics",
+        contentType: 'Log Analytics',
         vaultInfo,
       });
 
@@ -74,7 +74,7 @@ export default ({
         name: secondaryKeyName,
         formattedName: true,
         value: keys.secondarySharedKey!,
-        contentType: "Log Analytics",
+        contentType: 'Log Analytics',
         vaultInfo,
       });
     });

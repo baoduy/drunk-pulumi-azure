@@ -1,10 +1,10 @@
-import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from "../types";
-import * as operationalinsights from "@pulumi/azure-native/operationalinsights";
-import LogWp from "./LogAnalytics";
-import Storage from "../Storage";
-import { getResourceName } from "../Common/ResourceEnv";
-import { DefaultManagementRules } from "../Storage/ManagementRules";
-import AppInsight from "./AppInsight";
+import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
+import LogWp from './LogAnalytics';
+import Storage from '../Storage';
+import { getResourceName } from '../Common/ResourceEnv';
+import { DefaultManagementRules } from '../Storage/ManagementRules';
+import AppInsight from './AppInsight';
 
 type WorkspaceType = {
   createAppInsight?: boolean;
@@ -21,7 +21,7 @@ const defaultLogWorkspace: WorkspaceType = {
 const defaultStorageRules: Array<DefaultManagementRules> = [
   {
     actions: { baseBlob: { delete: { daysAfterModificationGreaterThan: 30 } } },
-    filters: { blobTypes: ["blockBlob"] },
+    filters: { blobTypes: ['blockBlob'] },
   },
 ];
 
@@ -37,7 +37,7 @@ interface Props {
 }
 
 export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
-  name = getResourceName(name, { suffix: "logs" });
+  name = getResourceName(name, { suffix: 'logs' });
 
   const createWp: WorkspaceType | undefined = workspace
     ? { ...defaultLogWorkspace, ...workspace }
@@ -61,7 +61,7 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
           dailyCapGb: createWp.dailyQuotaGb,
           immediatePurgeDataOn30Days: true,
           workspaceResourceId: logWp.log.id,
-          ingestionMode: "LogAnalytics",
+          ingestionMode: 'LogAnalytics',
           vaultInfo,
         })
       : undefined;
@@ -74,7 +74,7 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
         policies: {
           defaultManagementRules: storage.storageRules ?? defaultStorageRules,
         },
-        featureFlags: { allowSharedKeyAccess: true },
+        features: { allowSharedKeyAccess: true },
       })
     : undefined;
 

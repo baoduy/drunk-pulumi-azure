@@ -1,6 +1,6 @@
 import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import * as automation from "@pulumi/azure-native/automation";
-import { getAutomationAccountName } from "../Common/Naming";
+import { getAutomationAccountName } from "../Common";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
 import { defaultScope } from "../Common/AzureEnv";
