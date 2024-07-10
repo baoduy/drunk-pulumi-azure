@@ -1,16 +1,12 @@
-import * as network from "@pulumi/azure-native/network";
-import { enums, input as inputs } from "@pulumi/azure-native/types";
-import { Input, Resource } from "@pulumi/pulumi";
-import {
-  BasicResourceArgs,
-  DefaultResourceArgs,
-  ResourceGroupInfo,
-} from "../types";
-import { getFirewallPolicyName } from "../Common/Naming";
+import * as network from '@pulumi/azure-native/network';
+import { enums, input as inputs } from '@pulumi/azure-native/types';
+import { Input, Resource } from '@pulumi/pulumi';
+import { BasicResourceArgs, ResourceGroupInfo } from '../types';
+import { getFirewallPolicyName } from '../Common';
 import {
   FirewallPolicyResults,
   FirewallPolicyRuleCollectionResults,
-} from "./types";
+} from './types';
 
 interface PolicyRulesProps {
   group: ResourceGroupInfo;
@@ -43,8 +39,7 @@ export const linkRulesToPolicy = ({
 
 interface Props
   extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, "monitoring">,
-    Omit<PolicyRulesProps, "firewallPolicyName" | "rules"> {
+    Omit<PolicyRulesProps, 'firewallPolicyName' | 'rules'> {
   basePolicyId?: Input<string>;
 
   dnsSettings?: Input<inputs.network.DnsSettingsArgs>;
@@ -85,7 +80,7 @@ export const FirewallPolicyGroup = ({
       action: {
         type: enums.network.FirewallPolicyNatRuleCollectionActionType.DNAT,
       },
-      ruleCollectionType: "FirewallPolicyNatRuleCollection",
+      ruleCollectionType: 'FirewallPolicyNatRuleCollection',
       rules: policy.dnatRules,
     });
   }
@@ -98,7 +93,7 @@ export const FirewallPolicyGroup = ({
       action: {
         type: action,
       },
-      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
       rules: policy.netRules,
     });
   }
@@ -111,7 +106,7 @@ export const FirewallPolicyGroup = ({
       action: {
         type: action,
       },
-      ruleCollectionType: "FirewallPolicyFilterRuleCollection",
+      ruleCollectionType: 'FirewallPolicyFilterRuleCollection',
       rules: policy.appRules,
     });
   }
@@ -145,8 +140,8 @@ export default ({
       dnsSettings,
       snat: {
         //Auto learn need a Route Server
-        autoLearnPrivateRanges: "Enabled",
-        privateRanges: ["IANAPrivateRanges"],
+        autoLearnPrivateRanges: 'Enabled',
+        privateRanges: ['IANAPrivateRanges'],
       },
       sql: {
         allowSqlRedirect: true,

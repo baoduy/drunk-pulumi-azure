@@ -129,7 +129,7 @@ class ResourceBuilder
         throw new Error(
           'The KeyVaultInfo needs to be defined to load environment Roles info.',
         );
-      this._envRoles = getEnvRolesOutput(this._vaultInfo!.info());
+      this._envRoles = getEnvRolesOutput(this._vaultInfo!);
     }
   }
 
@@ -145,7 +145,7 @@ class ResourceBuilder
       lock: this._lock,
     });
     this._RGInfo = rs.info();
-    this._RGInstance = rs.resource;
+    this._RGInstance = rs.instance;
   }
 
   private buildVault() {
@@ -160,7 +160,7 @@ class ResourceBuilder
 
       //Add Environment Roles to Vault
       if (this._envRolesInstance)
-        this._envRolesInstance.addRolesToVault(this._vaultInfo!.info());
+        this._envRolesInstance.addRolesToVault(this._vaultInfo!);
     }
 
     if (!this._vaultInfo)
@@ -185,15 +185,15 @@ class ResourceBuilder
 
     if (asPrivateLink && subIds.length > 0) {
       createVaultPrivateLink({
-        vaultInfo: this._vaultInfo!.info(),
+        vaultInfo: this._vaultInfo!,
         subnetIds: subIds,
       });
     } else {
       new VaultNetworkResource(
         `${this.name}-vault`,
         {
-          vaultName: this._vaultInfo!.info()!.name,
-          resourceGroupName: this._vaultInfo!.info()!.group.resourceGroupName,
+          vaultName: this._vaultInfo!.name,
+          resourceGroupName: this._vaultInfo!.group.resourceGroupName,
           subscriptionId,
           subnetIds: subIds,
           ipAddresses: ipAddresses,
@@ -243,7 +243,7 @@ class ResourceBuilder
     return {
       name: this.name,
       group: this._RGInfo!,
-      vaultInfo: this._vaultInfo!.info(),
+      vaultInfo: this._vaultInfo!,
       envRoles: this._envRoles!,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,

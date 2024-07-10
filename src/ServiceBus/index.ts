@@ -4,11 +4,10 @@ import {
   BasicArgs,
   BasicMonitorArgs,
   BasicResourceArgs,
-  BasicResourceResultProps,
-  DefaultResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
   ResourceGroupInfo,
+  ResourceInfoWithInstance,
 } from '../types';
 import {
   BusConnectionTypes,
@@ -280,7 +279,7 @@ const topicCreator = ({
     // });
   }
 
-  let subs: Array<BasicResourceResultProps<bus.Subscription>> | undefined =
+  let subs: Array<ResourceInfoWithInstance<bus.Subscription>> | undefined =
     undefined;
 
   //Create Subscriptions
@@ -323,7 +322,7 @@ const subscriptionCreator = ({
   namespaceFullName,
   enableSession,
   dependsOn,
-}: SubProps) => {
+}: SubProps): ResourceInfoWithInstance<bus.Subscription> => {
   const name = getSubscriptionName(shortName);
 
   const resource = new bus.Subscription(
@@ -342,7 +341,9 @@ const subscriptionCreator = ({
 
   return {
     name,
-    resource,
+    group,
+    id: resource.id,
+    instance: resource,
   };
 };
 
@@ -361,7 +362,7 @@ interface QueueProps
 interface TopicResultProps {
   name: string;
   topic: bus.Topic;
-  subs?: Array<BasicResourceResultProps<bus.Subscription>>;
+  subs?: Array<ResourceInfoWithInstance<bus.Subscription>>;
 }
 
 interface QueueResultProps {
@@ -502,7 +503,7 @@ export default ({
           logsCategories: ['OperationalLogs'],
         }
       : undefined,
-  } as bus.NamespaceArgs & DefaultResourceArgs);
+  } as bus.NamespaceArgs & BasicArgs);
 
   const namespace = resource as bus.Namespace;
 

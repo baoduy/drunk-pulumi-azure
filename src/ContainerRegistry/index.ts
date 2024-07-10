@@ -1,6 +1,6 @@
 import * as registry from '@pulumi/azure-native/containerregistry';
 import {
-  DefaultResourceArgs,
+  BasicArgs,
   KeyVaultInfo,
   NetworkPropsType,
   ResourceGroupInfo,
@@ -11,7 +11,7 @@ import { getAcrName, getPasswordName } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
-interface Props extends DefaultResourceArgs {
+interface Props extends BasicArgs {
   name: string;
   group?: ResourceGroupInfo;
   adminUserEnabled?: boolean;

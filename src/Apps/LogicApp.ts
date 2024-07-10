@@ -1,10 +1,9 @@
-import * as logic from "@pulumi/azure-native/logic";
-import { BasicResourceArgs, DefaultResourceArgs } from "../types";
-import { getWorkflowName } from "../Common/Naming";
+import * as logic from '@pulumi/azure-native/logic';
+import { BasicResourceArgs } from '../types';
+import { getWorkflowName } from '../Common';
 
 export type WorkflowProps = BasicResourceArgs &
-  DefaultResourceArgs &
-  Pick<logic.WorkflowArgs, "accessControl">;
+  Pick<logic.WorkflowArgs, 'accessControl'>;
 
 export default ({
   name,
@@ -16,7 +15,7 @@ export default ({
 }: WorkflowProps) => {
   const n = getWorkflowName(name);
 
-  const workFlow = new logic.Workflow(
+  return new logic.Workflow(
     name,
     {
       workflowName: n,
@@ -27,6 +26,4 @@ export default ({
     },
     { dependsOn, ignoreChanges, import: importUri },
   );
-
-  return workFlow;
 };

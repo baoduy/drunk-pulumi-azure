@@ -1,8 +1,8 @@
 import {
-  DefaultResourceArgs,
-  ResourceGroupInfo,
-  ResourceResultProps,
+  BasicArgs,
   BasicResourceArgs,
+  BasicResourceInfoWithInstance,
+  ResourceGroupInfo,
 } from '../types';
 import {
   ResourceGroup,
@@ -22,9 +22,7 @@ export type RGPermissionType = {
   enableVaultRoles?: boolean;
 };
 
-interface Props
-  extends Omit<DefaultResourceArgs, 'monitoring'>,
-    Omit<BasicResourceArgs, 'group'> {
+interface Props extends Omit<BasicResourceArgs, 'group'> {
   formattedName?: boolean;
   location?: string;
   /** Grant permission of this group into Environment Roles groups*/
@@ -38,7 +36,7 @@ export default ({
   formattedName,
   permissions,
   ...others
-}: Props): ResourceResultProps<ResourceGroup> & {
+}: Props): BasicResourceInfoWithInstance<ResourceGroup> & {
   info: () => ResourceGroupInfo;
 } => {
   name = formattedName ? name : getResourceGroupName(name);
@@ -46,7 +44,7 @@ export default ({
   const { resource, locker, diagnostic } = ResourceCreator(ResourceGroup, {
     resourceGroupName: name,
     ...others,
-  } as ResourceGroupArgs & DefaultResourceArgs);
+  } as ResourceGroupArgs & BasicArgs);
 
   if (permissions) {
     grantEnvRolesAccess({
@@ -59,9 +57,8 @@ export default ({
 
   return {
     name,
-    resource: resource as ResourceGroup,
-    locker,
-    diagnostic,
+    instance: resource as ResourceGroup,
+    id: resource.id,
     info: () => ({
       resourceGroupName: name,
       location: currentRegionName,

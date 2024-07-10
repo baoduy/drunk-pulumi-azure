@@ -1,11 +1,10 @@
 /* eslint  @typescript-eslint/no-explicit-any: "off" */
-
-import * as authorization from "@pulumi/azure-native/authorization";
-import * as pulumi from "@pulumi/pulumi";
-import { DefaultResourceArgs } from "../types";
-import { DiagnosticSetting } from "@pulumi/azure-native/aadiam/diagnosticSetting";
-import Locker from "./Locker";
-import { createDiagnostic } from "../Logs/Helpers";
+import * as authorization from '@pulumi/azure-native/authorization';
+import * as pulumi from '@pulumi/pulumi';
+import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
+import Locker from './Locker';
+import { createDiagnostic } from '../Logs/Helpers';
+import { BasicArgs, DiagnosticProps } from '../types';
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
   const rs = props as {
@@ -23,14 +22,14 @@ const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
 
   const keys = Object.keys(rs);
   //Try to find the name that is not a resourceGroupName
-  const key = keys.find((k) => k.endsWith("Name") && k !== "resourceGroupName");
+  const key = keys.find((k) => k.endsWith('Name') && k !== 'resourceGroupName');
 
   if (key) {
     name = rs[key] as string;
   }
 
   if (!name)
-    throw new Error("Name is not able to find in: " + JSON.stringify(props));
+    throw new Error('Name is not able to find in: ' + JSON.stringify(props));
 
   return name;
 };
@@ -44,10 +43,10 @@ type ClassOf = new (
   urn: pulumi.Output<string>;
 };
 
-export type DefaultCreatorProps = Omit<
-  DefaultResourceArgs,
-  "name" | "group"
-> & { lock?: boolean };
+export type DefaultCreatorProps = BasicArgs & {
+  monitoring?: Omit<DiagnosticProps, 'name' | 'targetResourceId'>;
+  lock?: boolean;
+};
 
 /** Create Resource with Locker */
 export default function <
@@ -57,7 +56,7 @@ export default function <
   Class: TClass,
   { lock, monitoring, dependsOn, ignoreChanges, importUri, ...props }: TProps,
 ) {
-  const isResourceGroup = Class.name.endsWith("ResourceGroup");
+  const isResourceGroup = Class.name.endsWith('ResourceGroup');
   const name = tryFindName(props, isResourceGroup);
 
   const resource = new Class(

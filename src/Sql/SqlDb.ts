@@ -1,23 +1,22 @@
-import * as sql from "@pulumi/azure-native/sql";
+import * as sql from '@pulumi/azure-native/sql';
 
-import { BasicResourceArgs, BasicResourceResultProps } from "../types";
-import { Input, Output, Resource } from "@pulumi/pulumi";
+import { BasicResourceArgs, ResourceInfoWithInstance } from '../types';
+import { Input, Output, Resource } from '@pulumi/pulumi';
 
-import { isPrd } from "../Common/AzureEnv";
-import { getSqlDbName } from "../Common/Naming";
-import Locker from "../Core/Locker";
+import { isPrd } from '../Common/AzureEnv';
+import { getSqlDbName } from '../Common';
 
 export type SqlDbSku =
-  | "Basic"
-  | "S0"
-  | "S1"
-  | "S2"
-  | "S3"
-  | "P1"
-  | "P2"
-  | "P4"
-  | "P6"
-  | "P11";
+  | 'Basic'
+  | 'S0'
+  | 'S1'
+  | 'S2'
+  | 'S3'
+  | 'P1'
+  | 'P2'
+  | 'P4'
+  | 'P6'
+  | 'P11';
 
 export interface SqlDbProps extends BasicResourceArgs {
   sqlServerName: Input<string>;
@@ -33,16 +32,16 @@ export default ({
   name,
   sqlServerName,
   elasticPoolId,
-  sku = "S0",
+  sku = 'S0',
   dependsOn,
-}: SqlDbProps): BasicResourceResultProps<sql.Database> => {
+}: SqlDbProps): ResourceInfoWithInstance<sql.Database> => {
   name = getSqlDbName(name);
 
   const sqlDb = new sql.Database(
     name,
     {
       databaseName: name,
-      createMode: "Default",
+      createMode: 'Default',
       ...group,
       serverName: sqlServerName,
       elasticPoolId,
@@ -55,10 +54,10 @@ export default ({
             // capacity: 5,
           },
       //zoneRedundant: isPrd,
-      requestedBackupStorageRedundancy: isPrd ? "Zone" : "Local",
+      requestedBackupStorageRedundancy: isPrd ? 'Zone' : 'Local',
     },
     { dependsOn },
   );
 
-  return { name, resource: sqlDb };
+  return { name, group, id: sqlDb.id, instance: sqlDb };
 };

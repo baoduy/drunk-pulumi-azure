@@ -1,6 +1,6 @@
 import * as cs from '@pulumi/azure-native/containerservice';
 import { getAksName, getResourceGroupName } from '../Common';
-import { KeyVaultInfo, ResourceInfo, ResourceType } from '../types';
+import { KeyVaultInfo, ResourceInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate, Output } from '@pulumi/pulumi';
 import { currentRegionName, subscriptionId } from '../Common/AzureEnv';
@@ -55,17 +55,12 @@ export const getAksVaultConfig = async ({
   return rs?.value || '';
 };
 
-export const getAksPrivateDnz = ({
-  name,
-  groupName,
-  formattedName,
-}: ResourceType): Output<ResourceInfo | undefined> => {
-  name = formattedName ? name : getAksName(name);
-  groupName = formattedName ? groupName : getResourceGroupName(groupName);
-
-  const aks = containerservice.getManagedClusterOutput({
-    resourceName: name,
-    resourceGroupName: groupName,
+export const getAksPrivateDnz = (
+  aksInfo: ResourceInfo,
+): Output<ResourceInfo | undefined> => {
+  const aks = cs.getManagedClusterOutput({
+    resourceName: aksInfo.name,
+    resourceGroupName: aksInfo.group.resourceGroupName,
   });
 
   return aks.apply((a) => {
@@ -80,21 +75,3 @@ export const getAksPrivateDnz = ({
     } as ResourceInfo;
   });
 };
-
-// export const linkAksPrivateDnzVnet = ({
-//   vnetId,
-//   name,
-//   groupName,
-//   formattedName,
-// }: ResourceType & { vnetId: Output<string> }) => {
-//   const dns = getAksPrivateDnz({ name, groupName, formattedName });
-//   return dns.apply((d) => {
-//     if (!d) return;
-//     return linkVnetToPrivateDns({
-//       name,
-//       group: d.group,
-//       zoneName: d.resourceName,
-//       vnetId,
-//     });
-//   });
-// };

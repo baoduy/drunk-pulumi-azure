@@ -1,25 +1,35 @@
-import { BuilderProps } from "./types";
-import { IVaultBuilder, IVaultBuilderResults } from "./types/vaultBuilder";
-import Vault, { createVaultPrivateLink } from "../KeyVault";
-import { BasicMonitorArgs, KeyVaultInfo } from "../types";
-import { Input } from "@pulumi/pulumi";
-import { VaultNetworkResource } from "@drunk-pulumi/azure-providers";
-import { subscriptionId } from "../Common/AzureEnv";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
+import { BuilderProps } from './types';
+import { IVaultBuilder, IVaultBuilderResults } from './types/vaultBuilder';
+import Vault, { createVaultPrivateLink } from '../KeyVault';
+import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { Input, Output } from '@pulumi/pulumi';
+import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
+import { subscriptionId } from '../Common/AzureEnv';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 export class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
 
   public static from(vaultInfo: KeyVaultInfo): IVaultBuilderResults {
     if (!vaultInfo || !vaultInfo.name || !vaultInfo.id)
-      throw new Error("VaultBuilderResult is not defined");
-
+      throw new Error('VaultBuilderResult is not defined');
     return new VaultBuilderResults(vaultInfo);
   }
 
-  public info(): KeyVaultInfo {
-    return this.vaultInfo;
+  public get name(): string {
+    return this.vaultInfo.name;
   }
+  public get group(): ResourceGroupInfo {
+    return this.vaultInfo.group;
+  }
+  public get id(): Output<string> {
+    return this.vaultInfo.id;
+  }
+
+  // public info(): KeyVaultInfo {
+  //   return this.vaultInfo;
+  // }
+
   public linkTo(props: {
     subnetIds: Input<string>[];
     ipAddresses: Input<string>[];
@@ -59,20 +69,16 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 }
 
 class VaultBuilder implements IVaultBuilder {
-  private readonly _props: Omit<BuilderProps, "vaultInfo">;
+  private readonly _props: Omit<BuilderProps, 'vaultInfo'>;
   private _logInfo: BasicMonitorArgs | undefined = undefined;
 
-  constructor(props: Omit<BuilderProps, "vaultInfo">) {
+  constructor(props: Omit<BuilderProps, 'vaultInfo'>) {
     this._props = props;
   }
 
   public withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder {
     this._logInfo = logInfo;
     return this;
-  }
-
-  public get name() {
-    return this._props.name;
   }
 
   public build(): IVaultBuilderResults {
@@ -82,5 +88,5 @@ class VaultBuilder implements IVaultBuilder {
   }
 }
 
-export default (props: Omit<BuilderProps, "vaultInfo">) =>
+export default (props: Omit<BuilderProps, 'vaultInfo'>) =>
   new VaultBuilder(props) as IVaultBuilder;
