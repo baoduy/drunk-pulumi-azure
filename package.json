@@ -75,6 +75,9 @@
     "to-words": "^4.0.1",
     "xml-formatter": "^3.6.3"
   },
+  "prettier": {
+    "singleQuote": true
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
