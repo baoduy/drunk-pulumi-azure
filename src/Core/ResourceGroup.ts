@@ -12,14 +12,10 @@ import ResourceCreator from './ResourceCreator';
 import { getResourceGroupName } from '../Common';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { currentRegionName } from '../Common/AzureEnv';
-import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
+import { grantEnvRolesAccess, RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
 
-export type RGPermissionType = {
+export type RGPermissionType = RoleEnableTypes & {
   envRoles: EnvRolesResults;
-  enableRGRoles?: boolean;
-  enableAksRoles?: boolean;
-  enableIotRoles?: boolean;
-  enableVaultRoles?: boolean;
 };
 
 interface Props extends Omit<BasicResourceArgs, 'group'> {

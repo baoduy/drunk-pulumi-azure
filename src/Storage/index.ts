@@ -27,6 +27,8 @@ export type StorageFeatureType = {
   enableStaticWebsite?: boolean;
   /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
   enableKeyVaultEncryption?: boolean;
+  allowCrossTenantReplication?: boolean;
+  isSftpEnabled?: boolean;
 };
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
@@ -51,7 +53,7 @@ interface StorageProps extends BasicResourceArgs {
   queues?: Array<string>;
   fileShares?: Array<string>;
   //appInsight?: AppInsightInfo;
-  featureFlags?: StorageFeatureType;
+  features?: StorageFeatureType;
   policies?: StoragePolicyType;
   network?: StorageNetworkType;
   lock?: boolean;
@@ -71,7 +73,7 @@ export default ({
   queues = [],
   fileShares = [],
   network,
-  featureFlags = {},
+  features = {},
   policies = { keyExpirationPeriodInDays: 365 },
   lock = true,
 }: StorageProps): StorageResults => {
@@ -81,7 +83,7 @@ export default ({
   const secondaryKeyName = getKeyName(name, 'secondary');
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
   const secondConnectionKeyName = getConnectionName(name, 'secondary');
-  const encryptionKey = featureFlags.enableKeyVaultEncryption
+  const encryptionKey = features.enableKeyVaultEncryption
     ? getEncryptionKeyOutput(name, vaultInfo)
     : undefined;
 
@@ -100,8 +102,13 @@ export default ({
 
     isHnsEnabled: true,
     enableHttpsTrafficOnly: true,
-    allowBlobPublicAccess: policies?.allowBlobPublicAccess,
-    allowSharedKeyAccess: featureFlags.allowSharedKeyAccess,
+    allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
+    allowSharedKeyAccess: Boolean(features.allowSharedKeyAccess),
+    allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
+    defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
+    isSftpEnabled: Boolean(features.isSftpEnabled),
+
+    allowCrossTenantReplication: Boolean(features.allowCrossTenantReplication),
     identity: { type: 'SystemAssigned' },
     minimumTlsVersion: 'TLS1_2',
 
@@ -181,7 +188,7 @@ export default ({
   }
 
   //Enable Static Website for SPA
-  if (featureFlags.enableStaticWebsite) {
+  if (features.enableStaticWebsite) {
     new storage.StorageAccountStaticWebsite(
       name,
       {

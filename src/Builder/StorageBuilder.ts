@@ -86,7 +86,7 @@ class StorageBuilder
       queues: this._queues,
       fileShares: this._fileShares,
       policies: this._policies,
-      featureFlags: {
+      features: {
         ...this._features,
         enableStaticWebsite: this._type === 'staticWeb',
       },

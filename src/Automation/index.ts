@@ -1,6 +1,6 @@
 import { BasicResourceArgs, KeyVaultInfo } from "../types";
 import * as automation from "@pulumi/azure-native/automation";
-import { getAutomationAccountName } from "../Common/Naming";
+import { getAutomationAccountName } from "../Common";
 import { getEncryptionKeyOutput } from "../KeyVault/Helper";
 import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
 import { defaultScope } from "../Common/AzureEnv";
@@ -8,7 +8,7 @@ import { grantIdentityPermissions } from "../AzAd/Helper";
 
 interface Props extends BasicResourceArgs {
   enableEncryption?: boolean;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({
@@ -21,9 +21,10 @@ export default ({
 }: Props) => {
   name = getAutomationAccountName(name);
 
-  const encryption = enableEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
-    : undefined;
+  const encryption =
+    enableEncryption && vaultInfo
+      ? getEncryptionKeyOutput(name, vaultInfo)
+      : undefined;
 
   const roles = [{ name: "Contributor", scope: defaultScope }];
   const identity = UserAssignedIdentity({
