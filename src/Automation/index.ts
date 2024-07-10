@@ -8,7 +8,7 @@ import { grantIdentityPermissions } from "../AzAd/Helper";
 
 interface Props extends BasicResourceArgs {
   enableEncryption?: boolean;
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({
@@ -21,9 +21,10 @@ export default ({
 }: Props) => {
   name = getAutomationAccountName(name);
 
-  const encryption = enableEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
-    : undefined;
+  const encryption =
+    enableEncryption && vaultInfo
+      ? getEncryptionKeyOutput(name, vaultInfo)
+      : undefined;
 
   const roles = [{ name: "Contributor", scope: defaultScope }];
   const identity = UserAssignedIdentity({

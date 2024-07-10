@@ -33,7 +33,7 @@ interface Props {
     /** The management rule applied to Storage level (all containers)*/
     storageRules?: Array<DefaultManagementRules>;
   };
-  vaultInfo: KeyVaultInfo;
+  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
@@ -82,7 +82,7 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
     logWp,
     logStorage,
     appInsight,
-    toLogInfo: (): BasicMonitorArgs => ({
+    info: (): BasicMonitorArgs => ({
       logWpId: logWp?.log.id,
       logStorageId: logStorage?.id,
     }),
