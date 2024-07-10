@@ -19,7 +19,7 @@ export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
   vaultInfo: KeyVaultInfo;
   auth?: {
-    envRoles: EnvRolesResults;
+    envRoles?: EnvRolesResults;
     adminLogin?: pulumi.Input<string>;
     password?: pulumi.Input<string>;
   };
@@ -133,25 +133,30 @@ export default ({
   );
 
   //Enable AD Administrator
-  if (auth) {
+  if (auth?.envRoles) {
     if (userIdentity) {
       //Allows to Read Key Vault
       addMemberToGroup({
         name: `${name}-contributor-role`,
         objectId: userIdentity.principalId,
-        groupObjectId: auth?.envRoles.contributor.objectId,
+        groupObjectId: auth.envRoles.contributor.objectId,
       });
     }
 
     const adminGroup = auth.envRoles.contributor;
-    new dbformysql.AzureADAdministrator(name, {
-      serverName: mySql.name,
-      ...group,
-      login: username,
-      administratorType: 'ActiveDirectory',
-      sid: adminGroup.objectId,
-      tenantId,
-    });
+    new dbformysql.AzureADAdministrator(
+      name,
+      {
+        administratorName: username,
+        serverName: mySql.name,
+        ...group,
+        login: username,
+        administratorType: 'ActiveDirectory',
+        sid: adminGroup.objectId,
+        tenantId,
+      },
+      { ignoreChanges: ['administratorName'] },
+    );
   }
 
   if (network) {

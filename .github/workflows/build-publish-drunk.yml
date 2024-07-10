@@ -55,20 +55,9 @@ jobs:
 
       - run: npm install --force
 
-      - name: Run Lints
-        continue-on-error: true
-        run: npm run lint
-
-      #Fix node_modules/openpgp/openpgp.d.ts:10:46 - error
-      #      - name: Replace text in file
-      #        run: |
-      #          sed -i 's/NodeStream as GenericNodeStream/NodeWebStream as GenericNodeStream/g' node_modules/openpgp/openpgp.d.ts
-
-      #      - name: Test
-      #        continue-on-error: true
-      #        run: |
-      #          export NODE_OPTIONS="--max_old_space_size=4096"
-      #          npm test
+#      - name: Run Lints
+#        continue-on-error: true
+#        run: npm run lint
 
       - name: Build and Pack
         run: |
