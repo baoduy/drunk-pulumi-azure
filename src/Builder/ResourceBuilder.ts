@@ -37,6 +37,7 @@ class ResourceBuilder
     IResourceBuilder
 {
   private _createRGProps: ResourceGroupBuilderType | undefined = undefined;
+  private _createRG: boolean = false;
   private _RGInfo: ResourceGroupInfo | undefined = undefined;
   private _lock: boolean = false;
   private _createRole: boolean = false;
@@ -73,8 +74,11 @@ class ResourceBuilder
     this._loadRolesFromVault = true;
     return this;
   }
-  public createRG(props: ResourceGroupBuilderType): IResourceVaultBuilder {
+  public createRG(
+    props: ResourceGroupBuilderType | undefined = undefined,
+  ): IResourceVaultBuilder {
     this._createRGProps = props;
+    this._createRG = true;
     return this;
   }
   public withRG(props: ResourceGroupInfo): IResourceVaultBuilder {
@@ -129,12 +133,17 @@ class ResourceBuilder
         throw new Error(
           'The KeyVaultInfo needs to be defined to load environment Roles info.',
         );
-      this._envRoles = getEnvRolesOutput(this._vaultInfo!.info());
+      this._envRoles = getEnvRolesOutput(this._vaultInfo!);
     }
   }
 
   private buildRG() {
-    if (!this._createRGProps) return;
+    if (!this._createRG) return;
+    if (!this._createRGProps)
+      this._createRGProps = {
+        enableRGRoles: Boolean(this._envRoles),
+        enableVaultRoles: this._createVault,
+      };
 
     const rs = RG({
       name: this.name,
@@ -144,8 +153,9 @@ class ResourceBuilder
       },
       lock: this._lock,
     });
+    //Collect Info
     this._RGInfo = rs.info();
-    this._RGInstance = rs.resource;
+    this._RGInstance = rs.instance;
   }
 
   private buildVault() {
@@ -160,7 +170,7 @@ class ResourceBuilder
 
       //Add Environment Roles to Vault
       if (this._envRolesInstance)
-        this._envRolesInstance.addRolesToVault(this._vaultInfo!.info());
+        this._envRolesInstance.addRolesToVault(this._vaultInfo!);
     }
 
     if (!this._vaultInfo)
@@ -185,15 +195,15 @@ class ResourceBuilder
 
     if (asPrivateLink && subIds.length > 0) {
       createVaultPrivateLink({
-        vaultInfo: this._vaultInfo!.info(),
+        vaultInfo: this._vaultInfo!,
         subnetIds: subIds,
       });
     } else {
       new VaultNetworkResource(
         `${this.name}-vault`,
         {
-          vaultName: this._vaultInfo!.info()!.name,
-          resourceGroupName: this._vaultInfo!.info()!.group.resourceGroupName,
+          vaultName: this._vaultInfo!.name,
+          resourceGroupName: this._vaultInfo!.group.resourceGroupName,
           subscriptionId,
           subnetIds: subIds,
           ipAddresses: ipAddresses,

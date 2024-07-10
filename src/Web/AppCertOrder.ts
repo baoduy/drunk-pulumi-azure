@@ -1,51 +1,44 @@
-import * as certificateregistration from "@pulumi/azure-native/certificateregistration";
-import { DefaultResourceArgs, KeyVaultInfo } from "../types";
-import creator from "../Core/ResourceCreator";
-import { global } from "../Common";
-import { getCertOrderName } from "../Common/Naming";
+import * as cert from '@pulumi/azure-native/certificateregistration';
+import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { getCertOrderName, global } from '../Common';
 
-interface Props extends DefaultResourceArgs {
+interface Props extends BasicResourceArgs {
   domain: string;
-  productType?: certificateregistration.CertificateProductType;
+  productType?: cert.CertificateProductType;
   vaultInfo?: KeyVaultInfo;
 }
 
 export default ({
   domain,
-  productType = certificateregistration.CertificateProductType
-    .StandardDomainValidatedWildCardSsl,
+  productType = cert.CertificateProductType.StandardDomainValidatedWildCardSsl,
   vaultInfo,
   ...others
 }: Props) => {
   const n = getCertOrderName(domain);
 
-  const order = creator(
-    certificateregistration.AppServiceCertificateOrder,
-    {
-      certificateOrderName: n,
-      ...global.groupInfo,
-      location: "global",
-      productType,
-      autoRenew: true,
-      distinguishedName: `CN=*.${domain}`,
-      keySize: 2048,
-      validityInYears: 1,
-      ...others,
-    } as certificateregistration.AppServiceCertificateOrderArgs &
-      DefaultResourceArgs
-  );
+  const order = new cert.AppServiceCertificateOrder(n, {
+    certificateOrderName: n,
+    ...global.groupInfo,
+    location: 'global',
+    productType,
+    autoRenew: true,
+    distinguishedName: `CN=*.${domain}`,
+    keySize: 2048,
+    validityInYears: 1,
+    ...others,
+  });
 
   if (vaultInfo) {
-    new certificateregistration.AppServiceCertificateOrderCertificate(
+    new cert.AppServiceCertificateOrderCertificate(
       n,
       {
         certificateOrderName: n,
         ...global.groupInfo,
-        location: "global",
+        location: 'global',
         keyVaultSecretName: n,
         keyVaultId: vaultInfo.id,
       },
-      { dependsOn: order.resource }
+      { dependsOn: order },
     );
   }
   return order;

@@ -1,8 +1,8 @@
 import * as documentdb from '@pulumi/azure-native/documentdb';
-import { getCosmosDbName } from '../Common/Naming';
-import { DefaultResourceArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { getCosmosDbName } from '../Common';
+import { BasicArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
 import ResourceCreator from '../Core/ResourceCreator';
-import { isPrd} from '../Common/AzureEnv';
+import { isPrd } from '../Common/AzureEnv';
 import { createThreatProtection } from '../Logs/Helpers';
 import { Input } from '@pulumi/pulumi';
 
@@ -62,7 +62,9 @@ export default ({
       ? capabilities.map((n) => ({ name: n }))
       : undefined,
 
-    locations:locations? locations.map((n) => ({ locationName: n })):[{locationName: group.location}],
+    locations: locations
+      ? locations.map((n) => ({ locationName: n }))
+      : [{ locationName: group.location }],
 
     backupPolicy: isPrd
       ? {
@@ -123,8 +125,7 @@ export default ({
       ],
       metricsCategories: ['Requests'],
     },
-
-  } as unknown as documentdb.DatabaseAccountArgs & DefaultResourceArgs);
+  } as unknown as documentdb.DatabaseAccountArgs & BasicArgs);
 
   if (
     enableThreatProtection &&
@@ -159,7 +160,7 @@ export default ({
           resource: { id: db.name },
           ...group,
         },
-        { dependsOn: resource }
+        { dependsOn: resource },
       );
 
       if (db.containers) {
@@ -175,7 +176,7 @@ export default ({
                 defaultTtl: c.ttl,
                 partitionKey: { paths: [c.partitionKeyPath || '/id'] },
               },
-            })
+            }),
         );
       }
     });

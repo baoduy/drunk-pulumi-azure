@@ -1,19 +1,14 @@
-import * as network from "@pulumi/azure-native/network";
-import * as pulumi from "@pulumi/pulumi";
-
-import { isPrd } from "../Common/AzureEnv";
-import { getFirewallName } from "../Common/Naming";
-import ResourceCreator from "../Core/ResourceCreator";
-import {
-  BasicMonitorArgs,
-  BasicResourceArgs,
-  DefaultResourceArgs,
-} from "../types";
-import FirewallPolicy, { linkRulesToPolicy } from "./FirewallPolicy";
-import { FirewallPolicyProps } from "./types";
-import { Input } from "@pulumi/pulumi";
-import IpAddress from "./IpAddress";
-import { isDryRun } from "../Common/StackEnv";
+import * as network from '@pulumi/azure-native/network';
+import * as pulumi from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
+import { isPrd } from '../Common/AzureEnv';
+import { getFirewallName } from '../Common';
+import ResourceCreator from '../Core/ResourceCreator';
+import { BasicArgs, BasicMonitorArgs, BasicResourceArgs } from '../types';
+import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
+import { FirewallPolicyProps } from './types';
+import IpAddress from './IpAddress';
+import { isDryRun } from '../Common/StackEnv';
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
@@ -25,9 +20,7 @@ export type FirewallSkus = {
   tier: network.AzureFirewallSkuTier;
 };
 
-export interface FirewallProps
-  extends BasicResourceArgs,
-    Omit<DefaultResourceArgs, "monitoring"> {
+export interface FirewallProps extends BasicResourceArgs {
   /** The public outbound IP address ignores this property if want to enable the Force Tunneling mode */
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
@@ -42,7 +35,7 @@ export interface FirewallProps
   policy: FirewallPolicyProps;
   enableDnsProxy?: boolean;
   sku?: FirewallSkus;
-  monitorConfig?: Omit<BasicMonitorArgs, "dependsOn">;
+  monitorConfig?: Omit<BasicMonitorArgs, 'dependsOn'>;
 }
 
 export type FirewallResult = {
@@ -69,11 +62,11 @@ export default ({
   if (!isDryRun) {
     if (!outbound && !management)
       throw new Error(
-        "Management Public Ip Address is required for the Force Tunneling mode.",
+        'Management Public Ip Address is required for the Force Tunneling mode.',
       );
 
     if (sku.tier === network.AzureFirewallSkuTier.Basic && !management)
-      throw new Error("Management Subnet is required for Firewall Basic tier.");
+      throw new Error('Management Subnet is required for Firewall Basic tier.');
   }
 
   const fwName = getFirewallName(name);
@@ -90,15 +83,15 @@ export default ({
 
   const additionalProperties: Record<string, Input<string>> = {};
   if (enableDnsProxy && sku.tier !== network.AzureFirewallSkuTier.Basic) {
-    additionalProperties["Network.DNS.EnableProxy"] = "Enabled";
+    additionalProperties['Network.DNS.EnableProxy'] = 'Enabled';
   }
   if (snat) {
     if (snat.privateRanges)
       additionalProperties.privateRanges = snat.privateRanges;
     if (snat.autoLearnPrivateRanges)
-      additionalProperties.autoLearnPrivateRanges = "Enabled";
+      additionalProperties.autoLearnPrivateRanges = 'Enabled';
     if (snat.routeServerId)
-      additionalProperties["Network.RouteServerInfo.RouteServerID"] =
+      additionalProperties['Network.RouteServerInfo.RouteServerID'] =
         snat.routeServerId;
   }
 
@@ -109,7 +102,7 @@ export default ({
         basePolicyId: policy.parentPolicyId,
         sku: sku.tier,
         dnsSettings:
-          sku?.tier !== "Basic"
+          sku?.tier !== 'Basic'
             ? {
                 enableProxy: true,
               }
@@ -122,17 +115,17 @@ export default ({
     ...group,
     sku,
     firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
-    zones: isPrd ? ["1", "2", "3"] : undefined,
+    zones: isPrd ? ['1', '2', '3'] : undefined,
 
     threatIntelMode:
-      sku.tier !== network.AzureFirewallSkuTier.Basic && sku.name !== "AZFW_Hub"
+      sku.tier !== network.AzureFirewallSkuTier.Basic && sku.name !== 'AZFW_Hub'
         ? network.AzureFirewallThreatIntelMode.Deny
         : undefined,
 
     managementIpConfiguration:
       management && manageIpAddress
         ? {
-            name: "management",
+            name: 'management',
             publicIPAddress: { id: manageIpAddress.id },
             subnet: { id: management.subnetId },
           }
@@ -153,14 +146,14 @@ export default ({
     monitoring: {
       ...monitorConfig,
       logsCategories: [
-        "AzureFirewallApplicationRule",
-        "AzureFirewallNetworkRule",
-        "AzureFirewallDnsProxy",
+        'AzureFirewallApplicationRule',
+        'AzureFirewallNetworkRule',
+        'AzureFirewallDnsProxy',
       ],
     },
 
     ...others,
-  } as network.AzureFirewallArgs & DefaultResourceArgs);
+  } as network.AzureFirewallArgs & BasicArgs);
 
   //Link Rule to Policy
   if (fwPolicy && policy?.rules) {

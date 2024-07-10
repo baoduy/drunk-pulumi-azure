@@ -1,7 +1,7 @@
 import { EnvRolesResults } from '../../AzAd/EnvRoles';
 import { RGPermissionType } from '../../Core/ResourceGroup';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
-import { IBuilder, IBuilderAsync, BuilderProps } from './genericBuilder';
+import { BuilderProps, IBuilder, IBuilderAsync } from './genericBuilder';
 import {
   IVnetBuilder,
   IVnetBuilderStart,
@@ -38,7 +38,7 @@ export interface IResourceRoleBuilder {
 }
 
 export interface IResourceGroupBuilder {
-  createRG(props: ResourceGroupBuilderType): IResourceVaultBuilder;
+  createRG(props?: ResourceGroupBuilderType): IResourceVaultBuilder;
   withRG(props: ResourceGroupInfo): IResourceVaultBuilder;
 }
 

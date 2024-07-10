@@ -1,10 +1,10 @@
 import * as network from '@pulumi/azure-native/network';
-import { DefaultResourceArgs, BasicResourceArgs } from '../types';
+import { BasicResourceArgs } from '../types';
 import creator from '../Core/ResourceCreator';
 import { Input } from '@pulumi/pulumi';
-import { getAppGatewayName } from '../Common/Naming';
+import { getAppGatewayName } from '../Common';
 
-interface Props extends DefaultResourceArgs, BasicResourceArgs {
+interface Props extends BasicResourceArgs {
   publicIpAddressId: Input<string>;
   subnetId: Input<string>;
 }
@@ -36,7 +36,7 @@ export default ({ name, group, subnetId, publicIpAddressId }: Props) => {
       name: network.ApplicationGatewaySkuName.Standard_Small,
       tier: network.ApplicationGatewayTier.Standard,
     },
-  } as network.ApplicationGatewayArgs & DefaultResourceArgs);
+  } as network.ApplicationGatewayArgs & BasicResourceArgs);
 
   return rs;
 };

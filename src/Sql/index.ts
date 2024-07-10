@@ -4,13 +4,13 @@ import { getEncryptionKeyOutput } from '../KeyVault/Helper';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
-import { getElasticPoolName, getSqlServerName } from '../Common/Naming';
+import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
   BasicResourceArgs,
-  BasicResourceResultProps,
   KeyVaultInfo,
   NetworkPropsType,
   ResourceInfo,
+  ResourceInfoWithInstance,
 } from '../types';
 import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
@@ -34,7 +34,7 @@ const createElasticPool = ({
   //Minimum is 50 GD
   maxSizeBytesGb = 50,
   sku = { name: isPrd ? 'Standard' : 'Basic', capacity: 50 },
-}: ElasticPoolProps): BasicResourceResultProps<sql.ElasticPool> => {
+}: ElasticPoolProps): ResourceInfoWithInstance<sql.ElasticPool> => {
   //Create Sql Elastic
   const elasticName = getElasticPoolName(name);
 
@@ -58,7 +58,7 @@ const createElasticPool = ({
     //zoneRedundant: isPrd,
   });
 
-  return { name: elasticName, resource: ep };
+  return { name: elasticName, group, id: ep.id, instance: ep };
 };
 
 export type SqlAuthType = {
@@ -80,8 +80,8 @@ export type SqlElasticPoolType = {
 
 export type SqlResults = ResourceInfo & {
   resource: sql.Server;
-  elasticPool?: BasicResourceResultProps<sql.ElasticPool>;
-  databases?: Record<string, BasicResourceResultProps<sql.Database>>;
+  elasticPool?: ResourceInfoWithInstance<sql.ElasticPool>;
+  databases?: Record<string, ResourceInfoWithInstance<sql.Database>>;
 };
 
 export type SqlVulnerabilityAssessmentType = {
@@ -336,7 +336,7 @@ export default ({
     );
   }
 
-  const dbs: Record<string, BasicResourceResultProps<sql.Database>> = {};
+  const dbs: Record<string, ResourceInfoWithInstance<sql.Database>> = {};
   if (databases) {
     Object.keys(databases).forEach((key) => {
       const db = databases[key];
@@ -347,7 +347,7 @@ export default ({
         group,
         sqlServerName: sqlName,
         dependsOn: sqlServer,
-        elasticPoolId: ep ? ep.resource.id : undefined,
+        elasticPoolId: ep ? ep.id : undefined,
       });
 
       if (vaultInfo) {
@@ -360,7 +360,7 @@ export default ({
           value: connectionString,
           vaultInfo,
           contentType: `Sql ${d.name} Connection String`,
-          dependsOn: d.resource,
+          dependsOn: d.instance,
         });
       }
 
