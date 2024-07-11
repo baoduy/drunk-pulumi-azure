@@ -5,7 +5,7 @@ import { parseResourceInfoFromId } from '../Common/AzureEnv';
 import { getPrivateEndpointName } from '../Common';
 import { PrivateDnsZoneBuilder } from '../Builder';
 
-export type PrivateEndpointProps = Pick<PrivateLinkPropsType, 'subnetIds'> &
+export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
   Pick<BasicArgs, 'dependsOn'> & {
     resourceInfo: ResourceInfo;
     /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
@@ -16,6 +16,7 @@ export type PrivateEndpointProps = Pick<PrivateLinkPropsType, 'subnetIds'> &
 export default ({
   resourceInfo,
   subnetIds,
+  extraVnetIds,
   privateDnsZoneName,
   linkServiceGroupIds,
   dependsOn,
@@ -57,7 +58,7 @@ export default ({
       dependsOn,
     })
       .withARecord({ ipAddresses: ip as string[], recordName: '@' })
-      .linkTo({ subnetIds, registrationEnabled: false })
+      .linkTo({ subnetIds, vnetIds: extraVnetIds, registrationEnabled: false })
       .build();
   });
 

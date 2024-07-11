@@ -5,6 +5,7 @@ import {
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,
+  IBuilderAsync,
   ISshBuilder,
   SshBuilderProps,
 } from './types';
@@ -42,6 +43,7 @@ class AksBuilder
   private _networkProps: AksNetworkProps | undefined = undefined;
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
   private _importProps: AksImportProps | undefined = undefined;
+  private _lock: boolean = false;
 
   constructor(props: BuilderProps) {
     super(props);
@@ -81,6 +83,10 @@ class AksBuilder
     this._defaultNode = props;
     return this;
   }
+  public lock(): IBuilderAsync<AksResults> {
+    this._lock = true;
+    return this;
+  }
   public import(props: AksImportProps) {
     this._importProps = props;
     return this;
@@ -117,6 +123,7 @@ class AksBuilder
 
       importUri: this._importProps?.id,
       ignoreChanges: this._importProps?.ignoreChanges,
+      lock: this._lock,
     });
   }
 

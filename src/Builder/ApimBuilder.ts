@@ -344,9 +344,8 @@ class ApimBuilder
         group: this.commonProps.group,
         id: this._apimInstance!.id,
       },
-
+      ...this._privateLink,
       privateDnsZoneName: 'privatelink.azure-api.net',
-      subnetIds: this._privateLink.subnetIds,
       linkServiceGroupIds: this._privateLink.type
         ? [this._privateLink.type]
         : ['Gateway'],

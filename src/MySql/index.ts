@@ -186,12 +186,12 @@ export default ({
 
     if (network.privateLink) {
       PrivateEndpoint({
+        ...network.privateLink,
         resourceInfo: { name, group, id: mySql.id },
         privateDnsZoneName: 'mysql.database.azure.com',
         linkServiceGroupIds: network.privateLink.type
           ? [network.privateLink.type]
           : ['mysql'],
-        subnetIds: network.privateLink.subnetIds,
       });
     }
   }
