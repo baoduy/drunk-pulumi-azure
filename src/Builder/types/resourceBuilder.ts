@@ -1,6 +1,5 @@
 import { EnvRolesResults } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
-import { RGPermissionType } from '../../Core/ResourceGroup';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
 import { BuilderProps, IBuilder, IBuilderAsync } from './genericBuilder';
 import {
@@ -62,9 +61,9 @@ export interface IResourceVnetBuilder {
 export interface IResourceBuilder
   extends IResourceVnetBuilder,
     IResourceVaultItemsBuilder {
-  lock(): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
   withResource(builder: ResourceFunction): IResourceBuilder;
+  lock(): IResourceBuilder;
   build(): Promise<ResourceBuilderResults>;
 }

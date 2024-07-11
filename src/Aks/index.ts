@@ -440,13 +440,15 @@ export default async ({
       },
     },
     {
-      protect: lock,
       dependsOn: serviceIdentity.resource,
       import: importUri,
       deleteBeforeReplace: true,
       ignoreChanges,
     },
   );
+  if (lock) {
+    Locker({ name: aksName, resource: aks });
+  }
 
   new native.containerservice.MaintenanceConfiguration(
     `${aksName}-MaintenanceConfiguration`,
@@ -469,10 +471,6 @@ export default async ({
     },
     { dependsOn: aks },
   );
-
-  if (lock) {
-    Locker({ name: aksName, resource: aks });
-  }
 
   if (nodePools) {
     nodePools.map(

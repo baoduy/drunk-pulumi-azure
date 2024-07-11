@@ -32,4 +32,5 @@ export interface IAksBuilder extends IBuilderAsync<AksResults> {
   withFeature(props: AskFeatureProps): IAksBuilder;
   withTier(tier: native.containerservice.ManagedClusterSKUTier): IAksBuilder;
   import(props: AksImportProps): IAksBuilder;
+  lock(): IBuilderAsync<AksResults>;
 }
