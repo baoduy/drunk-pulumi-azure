@@ -49,7 +49,10 @@ export interface ResourceInfoWithInstance<InstanceType> extends ResourceInfo {
 }
 
 export type PrivateLinkPropsType = {
+  /** The Subnet that private links will be created.*/
   subnetIds: Input<string>[];
+  /** The extra Vnet that Private DNS Zone will be linked.*/
+  extraVnetIds?: Input<string>[];
   type?: string;
 };
 
