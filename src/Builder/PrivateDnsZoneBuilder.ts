@@ -73,13 +73,13 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
     if (this._vnetLinks.length <= 0) return;
     this._vnetLinks.forEach((lik, index) =>
       [
-        ...(lik.vnetIds ?? []),
+        //Link all subnets first
         ...(lik.subnetIds ?? []).map((s) =>
           output(s).apply((i) => getVnetIdFromSubnetId(i)),
         ),
+        //Then link the extra Vnet
+        ...(lik.vnetIds ?? []),
       ].map((v, i) => {
-        //output(v).apply((i) => console.log(this.commonProps.name, i));
-
         return new native.network.VirtualNetworkLink(
           `${this.commonProps.name.split('.')[0]}-${index}-${i}-link`,
           {
