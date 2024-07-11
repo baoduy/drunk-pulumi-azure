@@ -132,12 +132,12 @@ export default ({
 
     if (network.privateLink) {
       PrivateEndpoint({
+        ...network.privateLink,
         resourceInfo: { name, group, id: postgres.id },
         privateDnsZoneName: 'postgres.database.azure.com',
         linkServiceGroupIds: network.privateLink.type
           ? [network.privateLink.type]
           : ['postgresql'],
-        subnetIds: network.privateLink.subnetIds,
       });
     }
   }

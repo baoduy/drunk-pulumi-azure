@@ -68,9 +68,9 @@ export default ({
 
   if (sku === 'Premium' && network?.privateLink) {
     PrivateEndpoint({
+      ...network.privateLink,
       resourceInfo: { name, group, id: resource.id },
       privateDnsZoneName: 'privatelink.azurecr.io',
-      subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
         ? [network.privateLink.type]
         : ['azurecr'],

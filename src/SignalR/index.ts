@@ -85,10 +85,10 @@ export default ({
   if (privateLink) {
     //The Private Zone will create in Dev and reuse for sandbox and prd.
     PrivateEndpoint({
+      ...privateLink,
       resourceInfo: { name, group, id: signalR.id },
       privateDnsZoneName: 'privatelink.service.signalr.net',
-      subnetIds: privateLink.subnetIds,
-      linkServiceGroupIds: ['signalr'],
+      linkServiceGroupIds: privateLink.type ? [privateLink.type] : ['signalr'],
     });
   }
 
