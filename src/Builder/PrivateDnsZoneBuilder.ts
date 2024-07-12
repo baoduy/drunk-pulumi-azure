@@ -21,7 +21,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   public constructor(props: BasicResourceArgs) {
     if ('id' in props) this._dnsInfo = props as ResourceInfo;
     this.commonProps = {
-      props,
+      ...props,
       group: {
         resourceGroupName: props.group.resourceGroupName,
         location: globalKeyName,
@@ -115,7 +115,8 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   }
 }
 
-export const from = (info: ResourceInfo) => PrivateDnsZoneBuilder.from(info);
+export const from = (info: ResourceInfo) =>
+  PrivateDnsZoneBuilder.from(info) as IPrivateDnsZoneBuilder;
 
 export default (props: BasicResourceArgs) =>
   new PrivateDnsZoneBuilder(props) as IPrivateDnsZoneBuilder;

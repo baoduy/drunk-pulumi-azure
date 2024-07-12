@@ -1,7 +1,7 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Output, output } from '@pulumi/pulumi';
-import * as dns from '../Builder/PrivateDnsZoneBuilder';
+import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
 import {
   BasicResourceArgs,
@@ -555,7 +555,10 @@ export default async ({
           });
 
           dns.apply((s) =>
-            dns.from(s!).linkTo({ vnetIds: network.extraVnetIds }).build(),
+            dnsBuilder
+              .from(s!)
+              .linkTo({ vnetIds: network.extraVnetIds })
+              .build(),
           );
         }
       });
