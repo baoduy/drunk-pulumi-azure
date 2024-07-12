@@ -1,8 +1,14 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Output, output } from '@pulumi/pulumi';
+import * as dns from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
-import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
+import {
+  BasicResourceArgs,
+  KeyVaultInfo,
+  ResourceInfo,
+  ResourceInfoWithInstance,
+} from '../types';
 import {
   currentEnv,
   defaultScope,
@@ -19,7 +25,7 @@ import { createDiagnostic } from '../Logs/Helpers';
 import { getAksName, getResourceGroupName } from '../Common';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
-import { getAksConfig } from './Helper';
+import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import * as inputs from '@pulumi/azure-native/types/input';
 import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
@@ -137,6 +143,8 @@ export type AksAccessProps = {
 export type AksNetworkProps = {
   subnetId: pulumi.Input<string>;
   virtualHostSubnetName?: pulumi.Input<string>;
+  /** This is using for Private DNZ linking only*/
+  extraVnetIds?: pulumi.Input<string>[];
   outboundIpAddress?: {
     ipAddressId?: pulumi.Input<string>;
     ipAddressPrefixId?: pulumi.Input<string>;
@@ -182,9 +190,8 @@ export interface AksProps extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export type AksResults = ResourceInfo & {
+export type AksResults = ResourceInfoWithInstance<ManagedCluster> & {
   serviceIdentity: IdentityResult;
-  aks: ManagedCluster;
   disableLocalAccounts?: boolean;
   getKubeConfig: () => Output<string> | undefined;
 };
@@ -526,6 +533,7 @@ export default async ({
           }
         }
 
+        //Link service principal to Vnet Resources group
         if (network.subnetId && identity) {
           roleAssignment({
             name: `${name}-system-net`,
@@ -536,6 +544,19 @@ export default async ({
               group: parseResourceInfoFromId(sId)!.group,
             }),
           });
+        }
+
+        //Link Private Dns to extra Vnet
+        if (features?.enablePrivateCluster && network.extraVnetIds) {
+          const dns = getAksPrivateDnz({
+            name: aksName,
+            group,
+            id: aks.id,
+          });
+
+          dns.apply((s) =>
+            dns.from(s!).linkTo({ vnetIds: network.extraVnetIds }).build(),
+          );
         }
       });
 
@@ -590,10 +611,10 @@ export default async ({
   });
 
   return {
-    name,
+    name: aksName,
     group,
     id: aks.id,
-    aks,
+    instance: aks,
     serviceIdentity,
     getKubeConfig: (): Output<string> | undefined =>
       vaultInfo

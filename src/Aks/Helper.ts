@@ -65,7 +65,7 @@ export const getAksPrivateDnz = (
 
   return aks.apply((a) => {
     if (!a.privateFQDN) return undefined;
-    const dnsName = a.privateFQDN.split(':').slice(1).join('.');
+    const dnsName = a.privateFQDN.split('.').slice(1).join('.');
     const rsGroup = a.nodeResourceGroup!;
 
     return {
