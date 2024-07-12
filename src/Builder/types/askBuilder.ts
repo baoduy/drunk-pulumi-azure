@@ -1,6 +1,6 @@
 //AKS Builder types
-import * as native from '@pulumi/azure-native';
-import { SshGenerationProps, SshResults } from '../../Core/KeyGenerators';
+import * as cs from '@pulumi/azure-native/containerservice';
+import { SshGenerationProps } from '../../Core/KeyGenerators';
 import { IBuilderAsync } from './genericBuilder';
 import {
   AksAccessProps,
@@ -30,7 +30,7 @@ export interface IAksBuilder extends IBuilderAsync<AksResults> {
   withNodePool(props: AksNodePoolProps): IAksBuilder;
   withAddon(props: AskAddonProps): IAksBuilder;
   withFeature(props: AskFeatureProps): IAksBuilder;
-  withTier(tier: native.containerservice.ManagedClusterSKUTier): IAksBuilder;
+  withTier(tier: cs.ManagedClusterSKUTier): IAksBuilder;
   import(props: AksImportProps): IAksBuilder;
   lock(): IBuilderAsync<AksResults>;
 }

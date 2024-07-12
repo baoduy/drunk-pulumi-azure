@@ -21,9 +21,10 @@ export type SqlDbSku =
 export interface SqlDbProps extends BasicResourceArgs {
   sqlServerName: Input<string>;
   elasticPoolId?: Output<string>;
-  /**Provide this if elasticPoolId is not provided. Default is S0*/
+  /** Provide this if elasticPoolId is not provided. Default is S0 */
+  copyFrom?: Input<string>;
+  asSecondaryFrom?: Input<string>;
   sku?: SqlDbSku;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 //https://blog.bredvid.no/handling-azure-managed-identity-access-to-azure-sql-in-an-azure-devops-pipeline-1e74e1beb10b
@@ -32,32 +33,43 @@ export default ({
   name,
   sqlServerName,
   elasticPoolId,
+  copyFrom,
+  asSecondaryFrom,
   sku = 'S0',
   dependsOn,
+  importUri,
+  ignoreChanges,
 }: SqlDbProps): ResourceInfoWithInstance<sql.Database> => {
   name = getSqlDbName(name);
 
-  const sqlDb = new sql.Database(
-    name,
-    {
-      databaseName: name,
-      createMode: 'Default',
-      ...group,
-      serverName: sqlServerName,
-      elasticPoolId,
+  const dbProps: sql.DatabaseArgs = {
+    databaseName: name,
+    ...group,
+    serverName: sqlServerName,
+    elasticPoolId,
+    sku: elasticPoolId
+      ? undefined
+      : {
+          name: sku,
+        },
+    requestedBackupStorageRedundancy: isPrd ? 'Zone' : 'Local',
+    createMode: sql.CreateMode.Default,
+  };
 
-      sku: elasticPoolId
-        ? undefined
-        : {
-            name: sku,
-            // tier: 'Basic',
-            // capacity: 5,
-          },
-      //zoneRedundant: isPrd,
-      requestedBackupStorageRedundancy: isPrd ? 'Zone' : 'Local',
-    },
-    { dependsOn },
-  );
+  if (copyFrom) {
+    dbProps.sourceDatabaseId = copyFrom;
+    dbProps.createMode = sql.CreateMode.Copy;
+  } else if (asSecondaryFrom) {
+    dbProps.sourceDatabaseId = asSecondaryFrom;
+    dbProps.createMode = sql.CreateMode.Secondary;
+    dbProps.secondaryType = sql.SecondaryType.Geo;
+  }
 
+  const sqlDb = new sql.Database(name, dbProps, {
+    dependsOn,
+    ignoreChanges,
+    import: importUri,
+    deleteBeforeReplace: true,
+  });
   return { name, group, id: sqlDb.id, instance: sqlDb };
 };

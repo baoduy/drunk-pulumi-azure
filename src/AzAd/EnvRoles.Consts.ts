@@ -1,19 +1,15 @@
-import {
-  EnvRoleKeyTypes,
-  EnvRolesResults,
-  getEnvRolesOutput,
-} from './EnvRoles';
+import { EnvRoleKeyTypes, EnvRolesResults } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
 import { replaceAll } from '../Common/Helpers';
-import { Input, Resource } from '@pulumi/pulumi';
-import { KeyVaultInfo } from '../types';
 
+//Resource Group Role
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: ['Reader'],
   contributor: ['Contributor'],
   admin: ['Owner'],
 };
 
+//AKS Roles
 const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: [
     'Azure Kubernetes Service Cluster User Role',
@@ -34,12 +30,14 @@ const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   ],
 };
 
+//IOT Roles
 const IOTHubRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: ['IoT Hub Data Reader'],
   contributor: ['IoT Hub Data Contributor'],
   admin: ['IoT Hub Registry Contributor', 'IoT Hub Twin Contributor'],
 };
 
+//Key Vault Roles
 const KeyVaultRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: [
     'Key Vault Crypto Service Encryption User',
@@ -58,6 +56,7 @@ const KeyVaultRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   admin: ['Key Vault Administrator', 'Key Vault Data Access Administrator'],
 };
 
+//Storage Roles
 const StorageRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: [
     'Storage Blob Data Reader',
@@ -85,12 +84,32 @@ const StorageRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   ],
 };
 
+//Container Registry Roles
+const ContainerRegistry: Record<EnvRoleKeyTypes, string[]> = {
+  readOnly: [
+    'ACR Registry Catalog Lister',
+    'ACR Repository Reader',
+    'AcrQuarantineReader',
+  ],
+  contributor: [
+    'AcrImageSigner',
+    'AcrPull',
+    'AcrPush',
+    'ACR Repository Contributor',
+    'ACR Repository Writer',
+    'AcrQuarantineWriter',
+  ],
+  admin: ['AcrDelete'],
+};
+
 export type RoleEnableTypes = {
   enableRGRoles?: boolean;
   enableAksRoles?: boolean;
   enableStorageRoles?: boolean;
   enableIotRoles?: boolean;
   enableVaultRoles?: boolean;
+  /** Container Registry Roles */
+  enableACRRoles?: boolean;
 };
 
 export const getRoleNames = ({
@@ -99,6 +118,7 @@ export const getRoleNames = ({
   enableVaultRoles,
   enableAksRoles,
   enableStorageRoles,
+  enableACRRoles,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
   const rs = {
     readOnly: new Set<string>(),
@@ -134,6 +154,12 @@ export const getRoleNames = ({
     StorageRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
     StorageRoleNames.contributor.forEach((r) => rs.contributor.add(r));
     StorageRoleNames.admin.forEach((r) => rs.admin.add(r));
+  }
+
+  if (enableACRRoles) {
+    ContainerRegistry.readOnly.forEach((r) => rs.readOnly.add(r));
+    ContainerRegistry.contributor.forEach((r) => rs.contributor.add(r));
+    ContainerRegistry.admin.forEach((r) => rs.admin.add(r));
   }
 
   return {
