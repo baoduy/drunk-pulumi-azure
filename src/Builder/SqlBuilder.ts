@@ -1,33 +1,46 @@
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
+import { SqlDbSku } from '../Sql/SqlDb';
 import {
   Builder,
   BuilderProps,
+  FullSqlDbPropsType,
   ISqlAuthBuilder,
   ISqlBuilder,
   ISqlLoginBuilder,
   ISqlNetworkBuilder,
+  ISqlTierBuilder,
   LoginBuilderProps,
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
+  SqlDbCopyType,
+  SqlDbReplicaType,
 } from './types';
 import { randomLogin } from '../Core/Random';
 
 class SqlBuilder
   extends Builder<SqlResults>
-  implements ISqlLoginBuilder, ISqlAuthBuilder, ISqlNetworkBuilder, ISqlBuilder
+  implements
+    ISqlLoginBuilder,
+    ISqlAuthBuilder,
+    ISqlNetworkBuilder,
+    ISqlTierBuilder,
+    ISqlBuilder
 {
+  //Instances
+  private _sqlInstance: SqlResults | undefined = undefined;
+
+  //Fields
   private _generateLogin: boolean = false;
   private _loginInfo: LoginBuilderProps | undefined = undefined;
   private _authOptions: SqlBuilderAuthOptionsType = {};
   private _networkProps: SqlNetworkType | undefined = undefined;
   private _elasticPoolProps: SqlElasticPoolType | undefined = undefined;
-  private _databasesProps: SqlDbBuilderType = {};
+  private _databasesProps: Record<string, FullSqlDbPropsType> = {};
+  private _defaultSku: SqlDbSku = 'S0';
   private _vulnerabilityAssessment:
     | SqlBuilderVulnerabilityAssessmentType
     | undefined = undefined;
-
-  private _sqlInstance: SqlResults | undefined = undefined;
 
   constructor(props: BuilderProps) {
     super(props);
@@ -44,11 +57,32 @@ class SqlBuilder
     this._elasticPoolProps = props;
     return this;
   }
-  public withDatabases(props: SqlDbBuilderType): ISqlBuilder {
-    this._databasesProps = { ...this._databasesProps, ...props };
+  public withTier(sku: SqlDbSku): ISqlBuilder {
+    this._defaultSku = sku;
     return this;
   }
-  public withNetwork(props: SqlNetworkType): ISqlBuilder {
+  public withDatabases(props: SqlDbBuilderType): ISqlBuilder {
+    if (!props.sku) props.sku = this._defaultSku;
+    this._databasesProps[props.name] = props;
+    return this;
+  }
+  public copyDbFrom(props: SqlDbCopyType): ISqlBuilder {
+    if (!props.sku) props.sku = this._defaultSku;
+    this._databasesProps[props.name] = {
+      ...props,
+      copyFrom: props.copyFromDbId,
+    };
+    return this;
+  }
+  public replicaDbFrom(props: SqlDbReplicaType): ISqlBuilder {
+    if (!props.sku) props.sku = this._defaultSku;
+    this._databasesProps[props.name] = {
+      ...props,
+      asSecondaryFrom: props.replicaFromDbId,
+    };
+    return this;
+  }
+  public withNetwork(props: SqlNetworkType): ISqlTierBuilder {
     this._networkProps = props;
     return this;
   }
@@ -79,7 +113,6 @@ class SqlBuilder
       },
       vaultInfo: this.commonProps.vaultInfo,
     });
-
     this._loginInfo = { adminLogin: login.userName, password: login.password };
   }
 

@@ -1,5 +1,6 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
+import { FullSqlDbPropsType } from '../Builder';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { roleAssignment } from '../AzAd/RoleAssignment';
@@ -97,7 +98,7 @@ interface Props extends BasicResourceArgs {
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
   elasticPool?: SqlElasticPoolType;
-  databases?: Record<string, { name?: string; sku?: SqlDbSku }>;
+  databases?: Record<string, FullSqlDbPropsType>;
 
   network?: SqlNetworkType;
   vulnerabilityAssessment?: SqlVulnerabilityAssessmentType;
