@@ -60,7 +60,9 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       group: this.commonProps.group,
       id: this._zoneInstance!.id,
     };
+  }
 
+  private buildRecords() {
     this._aRecords.forEach(
       (a, index) =>
         new network.PrivateRecordSet(
@@ -70,8 +72,8 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
               ? `Root-${index}-ARecord`
               : `${a.recordName}-ARecord`,
           {
-            privateZoneName: this._zoneInstance!.name,
-            ...group,
+            privateZoneName: this._dnsInfo!.name,
+            ...this._dnsInfo!.group,
             relativeRecordSetName: a.recordName,
             recordType: 'A',
             aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
@@ -96,8 +98,8 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
         return new native.network.VirtualNetworkLink(
           `${this.commonProps.name.split('.')[0]}-${index}-${i}-link`,
           {
-            ...this.commonProps.group,
-            privateZoneName: this._zoneInstance!.name,
+            privateZoneName: this._dnsInfo!.name,
+            ...this._dnsInfo!.group,
             registrationEnabled: Boolean(lik.registrationEnabled),
             virtualNetwork: { id: v },
           },
@@ -109,6 +111,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
 
   public build(): ResourceInfo {
     this.buildZone();
+    this.buildRecords();
     this.buildVnetLinks();
 
     return this._dnsInfo!;
