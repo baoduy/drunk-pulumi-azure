@@ -1,7 +1,12 @@
 import * as cache from '@pulumi/azure-native/cache';
 import * as pulumi from '@pulumi/pulumi';
 
-import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from '../types';
+import {
+  BasicResourceArgs,
+  KeyVaultInfo,
+  NetworkPropsType,
+  ResourceInfoWithInstance,
+} from '../types';
 
 import { ToWords } from 'to-words';
 import { convertToIpRange } from '../VNet/Helper';
@@ -28,19 +33,26 @@ export default ({
   network,
   vaultInfo,
   sku = { name: 'Basic', family: 'C', capacity: 0 },
-}: Props) => {
+  dependsOn,
+  ignoreChanges,
+  importUri,
+}: Props): ResourceInfoWithInstance<cache.Redis> => {
   name = getRedisCacheName(name);
-  const redis = new cache.Redis(name, {
+  const redis = new cache.Redis(
     name,
-    ...group,
-    minimumTlsVersion: '1.2',
-    enableNonSslPort: false,
-    identity: { type: cache.ManagedServiceIdentityType.SystemAssigned },
-    sku,
-    zones: isPrd && sku.name === 'Premium' ? ['1', '2', '3'] : undefined,
-    subnetId: network?.subnetId,
-    publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
-  });
+    {
+      name,
+      ...group,
+      minimumTlsVersion: '1.2',
+      enableNonSslPort: false,
+      identity: { type: cache.ManagedServiceIdentityType.SystemAssigned },
+      sku,
+      zones: isPrd && sku.name === 'Premium' ? ['1', '2', '3'] : undefined,
+      subnetId: network?.subnetId,
+      publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
+    },
+    { dependsOn, import: importUri, ignoreChanges },
+  );
 
   //Whitelist IpAddress
   if (network?.ipAddresses) {
@@ -109,5 +121,10 @@ export default ({
     });
   }
 
-  return redis;
+  return {
+    name,
+    group,
+    id: redis.id,
+    instance: redis,
+  };
 };
