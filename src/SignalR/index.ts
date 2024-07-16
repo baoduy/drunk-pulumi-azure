@@ -1,6 +1,6 @@
 import * as ss from '@pulumi/azure-native/signalrservice';
 import * as pulumi from '@pulumi/pulumi';
-import { getPrivateEndpointName, getSignalRName } from '../Common';
+import { getPrivateEndpointName, getSignalRName, isPrd } from '../Common';
 import {
   BasicResourceArgs,
   KeyVaultInfo,
@@ -30,11 +30,16 @@ export default ({
   vaultInfo,
   privateLink,
   kind = ss.ServiceKind.SignalR,
-  sku = {
-    name: 'Standard_S1',
-    tier: ss.SignalRSkuTier.Standard,
-    capacity: 1,
-  },
+  sku = isPrd
+    ? {
+        name: 'Standard_S1',
+        tier: ss.SignalRSkuTier.Standard,
+        capacity: 1,
+      }
+    : {
+        name: 'Free_F1',
+        tier: 'Free',
+      },
   allowedOrigins,
 }: Props): ResourceInfoWithInstance<ss.SignalR> => {
   name = getSignalRName(name);

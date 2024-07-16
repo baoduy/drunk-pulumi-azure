@@ -112,7 +112,7 @@ export const getPrivateEndpointName = (name: string) =>
   getResourceName(name, { suffix: 'pre' });
 
 export const getSignalRName = (name: string) =>
-  getResourceName(name, { suffix: 'sigr' }).substring(0, 24);
+  getResourceName(name, { suffix: 'sigr' }); //.substring(0, 24);
 
 export const getElasticPoolName = (name: string) =>
   getResourceName(name, { suffix: 'elp' });
