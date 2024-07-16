@@ -1,5 +1,5 @@
 import { Input } from '@pulumi/pulumi';
-import { currentRegionCode } from '../../Common/AzureEnv';
+import { allAzurePorts, currentRegionCode } from '../../Common/AzureEnv';
 import {
   ApplicationRuleArgs,
   FirewallPolicyRuleCollectionResults,
@@ -62,20 +62,6 @@ export default ({
   });
 
   if (allowsAzure) {
-    const azPorts = [
-      '22',
-      '443',
-      '1433',
-      '3306',
-      '5432',
-      '5671',
-      '5672',
-      '6379',
-      '8883',
-      '10255',
-      '3389',
-    ];
-
     netRules.push({
       ruleType: 'NetworkRule',
       name: `${name}-net-allows-azure`,
@@ -83,7 +69,7 @@ export default ({
       ipProtocols: ['TCP', 'UDP'],
       sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud.${currentRegionCode}`],
-      destinationPorts: azPorts,
+      destinationPorts: allAzurePorts,
     });
 
     netRules.push({
@@ -93,7 +79,7 @@ export default ({
       ipProtocols: ['TCP', 'UDP'],
       sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud`],
-      destinationPorts: azPorts,
+      destinationPorts: allAzurePorts,
     });
 
     appRules.push({
@@ -151,6 +137,8 @@ export default ({
       sourceAddresses: subnetSpaces,
       targetFqdns: [
         //Azure DevOps
+        'vscode.dev',
+        '*.vscode.dev',
         '*.dev.azure.com',
         '*.vsassets.io',
         '*gallerycdn.vsassets.io',
