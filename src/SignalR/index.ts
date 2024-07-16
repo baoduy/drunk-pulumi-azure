@@ -1,10 +1,11 @@
-import * as native from '@pulumi/azure-native';
+import * as ss from '@pulumi/azure-native/signalrservice';
 import * as pulumi from '@pulumi/pulumi';
 import { getPrivateEndpointName, getSignalRName } from '../Common';
 import {
   BasicResourceArgs,
   KeyVaultInfo,
   PrivateLinkPropsType,
+  ResourceInfoWithInstance,
 } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -19,7 +20,7 @@ interface Props extends BasicResourceArgs {
   vaultInfo?: KeyVaultInfo;
   allowedOrigins?: pulumi.Input<pulumi.Input<string>[]>;
   privateLink?: PrivateLinkPropsType;
-  kind?: native.signalrservice.ServiceKind;
+  kind?: ss.ServiceKind | string;
   sku?: pulumi.Input<ResourceSkuArgs>;
 }
 
@@ -28,17 +29,17 @@ export default ({
   group,
   vaultInfo,
   privateLink,
-  kind = native.signalrservice.ServiceKind.SignalR,
+  kind = ss.ServiceKind.SignalR,
   sku = {
     name: 'Standard_S1',
-    tier: native.signalrservice.SignalRSkuTier.Standard,
+    tier: ss.SignalRSkuTier.Standard,
     capacity: 1,
   },
   allowedOrigins,
-}: Props) => {
+}: Props): ResourceInfoWithInstance<ss.SignalR> => {
   name = getSignalRName(name);
 
-  const signalR = new native.signalrservice.SignalR(name, {
+  const signalR = new ss.SignalR(name, {
     resourceName: name,
     ...group,
     kind,
@@ -50,33 +51,33 @@ export default ({
     ],
     networkACLs: privateLink
       ? {
-          defaultAction: native.signalrservice.ACLAction.Allow,
+          defaultAction: ss.ACLAction.Allow,
           publicNetwork: {
-            allow: [native.signalrservice.SignalRRequestType.ClientConnection],
+            allow: [ss.SignalRRequestType.ClientConnection],
             deny: [
-              native.signalrservice.SignalRRequestType.ServerConnection,
-              native.signalrservice.SignalRRequestType.RESTAPI,
+              ss.SignalRRequestType.ServerConnection,
+              ss.SignalRRequestType.RESTAPI,
             ],
           },
           privateEndpoints: [
             {
               name: getPrivateEndpointName(name),
               allow: [
-                native.signalrservice.SignalRRequestType.ClientConnection,
-                native.signalrservice.SignalRRequestType.ServerConnection,
-                native.signalrservice.SignalRRequestType.RESTAPI,
+                ss.SignalRRequestType.ClientConnection,
+                ss.SignalRRequestType.ServerConnection,
               ],
+              deny: [ss.SignalRRequestType.RESTAPI],
             },
           ],
         }
       : {
-          defaultAction: native.signalrservice.ACLAction.Allow,
+          defaultAction: ss.ACLAction.Allow,
           publicNetwork: {
             allow: [
-              native.signalrservice.SignalRRequestType.ClientConnection,
-              native.signalrservice.SignalRRequestType.ServerConnection,
-              native.signalrservice.SignalRRequestType.RESTAPI,
+              ss.SignalRRequestType.ClientConnection,
+              ss.SignalRRequestType.ServerConnection,
             ],
+            deny: [ss.SignalRRequestType.RESTAPI],
           },
         },
     sku,
@@ -96,7 +97,7 @@ export default ({
     signalR.hostName.apply(async (h) => {
       if (!h) return;
 
-      const keys = await native.signalrservice.listSignalRKeys({
+      const keys = await ss.listSignalRKeys({
         resourceName: name,
         resourceGroupName: group.resourceGroupName,
       });
@@ -138,5 +139,5 @@ export default ({
     });
   }
 
-  return signalR;
+  return { name, group, id: signalR.id, instance: signalR };
 };
