@@ -73,9 +73,9 @@ export default ({
   //Private Link
   if (network?.privateLink) {
     privateEndpointCreator({
+      ...network.privateLink,
       resourceInfo: { name, group, id: redis.id },
       privateDnsZoneName: 'privatelink.redis.cache.windows.net',
-      subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
         ? [network.privateLink.type]
         : ['redisCache'],
