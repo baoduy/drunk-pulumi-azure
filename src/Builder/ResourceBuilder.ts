@@ -26,7 +26,7 @@ import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
 import { subscriptionId } from '../Common/AzureEnv';
-import { IVaultBuilderResults } from './types/vaultBuilder';
+import { CertBuilderType, IVaultBuilderResults } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
 import { getKeyVaultInfo } from '../Common/AzureEnv';
 
@@ -51,6 +51,7 @@ class ResourceBuilder
   private _vaultInfo: IVaultBuilderResults | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
+  CertBuilderType;
   private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
     undefined;
   private _otherResources: ResourceFunction[] = [];
@@ -102,8 +103,13 @@ class ResourceBuilder
     this._vaultLinkingProps = props;
     return this;
   }
+
   public addSecrets(items: Record<string, Input<string>>): IResourceBuilder {
     this._secrets = { ...this._secrets, ...items };
+    return this;
+  }
+  public addCerts(props: CertBuilderType): IResourceBuilder {
+    this._certs[props.name] = props;
     return this;
   }
 

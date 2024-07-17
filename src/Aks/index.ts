@@ -28,7 +28,7 @@ import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { IdentityResult } from '../AzAd/Identity';
 import { ManagedCluster } from '@pulumi/azure-native/containerservice';
 

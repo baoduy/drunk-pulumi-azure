@@ -1,9 +1,10 @@
-import { Input, output, Resource } from "@pulumi/pulumi";
-import { getSecretName } from "../Common/Naming";
-import { VaultSecretResource } from "@drunk-pulumi/azure-providers/VaultSecret";
-import { KeyVaultInfo } from "../types";
-import { getSecret } from "../Common/ConfigHelper";
-import { replaceAll } from "../Common/Helpers";
+import { CertArgs, VaultCertResource } from '@drunk-pulumi/azure-providers';
+import { Input, output, Resource } from '@pulumi/pulumi';
+import { getSecretName } from '../Common';
+import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
+import { BasicArgs, KeyVaultInfo, NamedResourceType } from '../types';
+import { getSecret } from '../Common/ConfigHelper';
+import { replaceAll } from '../Common/Helpers';
 
 interface Props {
   name: string;
@@ -21,7 +22,7 @@ export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
     name,
     value,
     vaultInfo,
-    contentType: "config variables",
+    contentType: 'config variables',
   });
 };
 
@@ -52,10 +53,10 @@ export const addCustomSecret = ({
   const n = formattedName ? name : getSecretName(name);
   //This KeyVault Secret is not auto recovery the deleted one.
   return new VaultSecretResource(
-    replaceAll(name, ".", "-"),
+    replaceAll(name, '.', '-'),
     {
-      name: replaceAll(n, ".", "-"),
-      value: value ? output(value).apply((v) => v || "") : "",
+      name: replaceAll(n, '.', '-'),
+      value: value ? output(value).apply((v) => v || '') : '',
       vaultName: vaultInfo.name,
       contentType: contentType || name,
       ...others,
@@ -64,10 +65,20 @@ export const addCustomSecret = ({
   );
 };
 
-interface MultiSecretProps extends Omit<SecretProps, "value" | "name"> {
+interface MultiSecretProps extends Omit<SecretProps, 'value' | 'name'> {
   items: Array<{ name: string; value: Input<string> }>;
 }
 
 /** Add multi secrets to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
 export const addCustomSecrets = ({ items, ...others }: MultiSecretProps) =>
   items.map((i) => addCustomSecret({ ...i, ...others }));
+
+/** ================================================================================================ */
+
+export type CertProps = NamedResourceType & {
+  vaultInfo: KeyVaultInfo;
+  cert: CertArgs;
+};
+
+export const createCert = ({ name, vaultInfo, ...args }: CertProps) =>
+  new VaultCertResource(name, { ...args, name, vaultName: vaultInfo.name });

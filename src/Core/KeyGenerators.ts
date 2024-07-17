@@ -1,14 +1,14 @@
-import { KeyVaultInfo } from "../types";
-import { getSshName } from "../Common/Naming";
-import { SshKeyResource } from "@drunk-pulumi/azure-providers/SshKeyGenerator";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { getSecret } from "../KeyVault/Helper";
-import { LoginProps, randomPassword, randomUserName } from "./Random";
+import { KeyVaultInfo } from '../types';
+import { getSshName } from '../Common';
+import { SshKeyResource } from '@drunk-pulumi/azure-providers/SshKeyGenerator';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { getSecret } from '../KeyVault/Helper';
+import { LoginProps, randomPassword, randomUserName } from './Random';
 import {
   PGPProps,
   PGPResource,
-} from "@drunk-pulumi/azure-providers/PGPGenerator";
-import { Output, output } from "@pulumi/pulumi";
+} from '@drunk-pulumi/azure-providers/PGPGenerator';
+import { Output, output } from '@pulumi/pulumi';
 
 export type SshResults = {
   userName: Output<string>;
@@ -19,7 +19,7 @@ export type SshResults = {
   };
 };
 
-export type SshGenerationProps = Omit<LoginProps, "passwordOptions"> & {
+export type SshGenerationProps = Omit<LoginProps, 'passwordOptions'> & {
   vaultInfo: KeyVaultInfo;
 };
 
@@ -55,7 +55,7 @@ export const generateSsh = ({
     value: userName,
     formattedName: true,
     vaultInfo,
-    contentType: "Random Ssh",
+    contentType: 'Random Ssh',
     dependsOn: rs,
   });
 
@@ -64,7 +64,7 @@ export const generateSsh = ({
     value: pass.result,
     formattedName: true,
     vaultInfo,
-    contentType: "Random Ssh",
+    contentType: 'Random Ssh',
     dependsOn: rs,
   });
 

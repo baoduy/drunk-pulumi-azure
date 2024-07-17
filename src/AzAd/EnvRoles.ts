@@ -1,25 +1,24 @@
-import Role, { RoleProps } from "./Role";
-import { KeyVaultInfo } from "../types";
-import { output, Output } from "@pulumi/pulumi";
-import { Group } from "@pulumi/azuread";
-import { getSecretName } from "../Common/Naming";
-import { addCustomSecret } from "../KeyVault/CustomHelper";
-import { getSecret } from "../KeyVault/Helper";
+import Role, { RoleProps } from './Role';
+import { KeyVaultInfo } from '../types';
+import { output, Output } from '@pulumi/pulumi';
+import { getSecretName } from '../Common';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { getSecret } from '../KeyVault/Helper';
 
-export type EnvRoleKeyTypes = "readOnly" | "contributor" | "admin";
+export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
 
 const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   readOnly: {
-    roleName: "Readonly",
-    appName: "Azure",
+    roleName: 'Readonly',
+    appName: 'Azure',
   },
   contributor: {
-    roleName: "Contributor",
-    appName: "Azure",
+    roleName: 'Contributor',
+    appName: 'Azure',
   },
   admin: {
-    roleName: "Admin",
-    appName: "Azure",
+    roleName: 'Admin',
+    appName: 'Azure',
   },
 };
 

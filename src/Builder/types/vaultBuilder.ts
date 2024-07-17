@@ -1,12 +1,17 @@
-import { BasicMonitorArgs, KeyVaultInfo } from '../../types';
+import { CertArgs } from '@drunk-pulumi/azure-providers';
+import { BasicMonitorArgs, KeyVaultInfo, NamedResourceType } from '../../types';
 import { Input } from '@pulumi/pulumi';
 
+export type CertBuilderType = NamedResourceType & {
+  vaultInfo: KeyVaultInfo;
+  cert: CertArgs;
+};
 export interface IVaultBuilderResults extends KeyVaultInfo {
   info(): KeyVaultInfo;
 
   addSecrets(items: Record<string, Input<string>>): IVaultBuilderResults;
-  //addKeys () => IVaultBuilderResults;
-  //addCerts() => IVaultBuilderResults;
+  //addKeys () : IVaultBuilderResults;
+  addCerts(props: CertBuilderType): IVaultBuilderResults;
   privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults;
   linkTo(props: {
     subnetIds: Input<string>[];
