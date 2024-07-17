@@ -73,8 +73,12 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
-  public addCerts(props: CertBuilderType): IVaultBuilderResults {
-    new VaultCertResource(props.name, { ...props, vaultName: props.name });
+  public addCerts(items: Record<string, CertBuilderType>): IVaultBuilderResults {
+    Object.keys(items).map((key) => {
+      const val = items[key];
+      return  new VaultCertResource(val.name, { ...val, vaultName: this.vaultInfo.name });
+    });
+
     return this;
   }
 }

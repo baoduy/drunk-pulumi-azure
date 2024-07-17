@@ -51,7 +51,8 @@ class ResourceBuilder
   private _vaultInfo: IVaultBuilderResults | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
-  CertBuilderType;
+  private _certs: Record<string, CertBuilderType> = {};
+
   private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
     undefined;
   private _otherResources: ResourceFunction[] = [];
@@ -190,6 +191,7 @@ class ResourceBuilder
 
     //Add Secrets to Vaults
     if (this._secrets) this._vaultInfo!.addSecrets(this._secrets);
+    if (this._certs) this._vaultInfo!.addCerts(this._certs);
   }
 
   //This linking need to be called after Vnet created

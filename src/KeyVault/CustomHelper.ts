@@ -73,12 +73,3 @@ interface MultiSecretProps extends Omit<SecretProps, 'value' | 'name'> {
 export const addCustomSecrets = ({ items, ...others }: MultiSecretProps) =>
   items.map((i) => addCustomSecret({ ...i, ...others }));
 
-/** ================================================================================================ */
-
-export type CertProps = NamedResourceType & {
-  vaultInfo: KeyVaultInfo;
-  cert: CertArgs;
-};
-
-export const createCert = ({ name, vaultInfo, ...args }: CertProps) =>
-  new VaultCertResource(name, { ...args, name, vaultName: vaultInfo.name });
