@@ -63,7 +63,7 @@
     "typescript": "^5.5.3"
   },
   "dependencies": {
-    "@drunk-pulumi/azure-providers": "^0.0.27",
+    "@drunk-pulumi/azure-providers": "^0.0.29",
     "@pulumi/azure-native": "^2.50.1",
     "@pulumi/azuread": "5.53.2",
     "@pulumi/pulumi": "^3.124.0",
