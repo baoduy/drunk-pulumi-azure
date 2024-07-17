@@ -55,6 +55,23 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
   });
 });
 
+export const allAzurePorts = [
+  '22',
+  '443',
+  '445',
+  '1433',
+  '1194',
+  '3306',
+  '3389',
+  '5432',
+  '5671',
+  '5672',
+  '6379',
+  '6380',
+  '8883',
+  '9000',
+  '10255',
+];
 /** ======== Default Variables ================*/
 registerAutoTags({
   environment: stack,

@@ -63,25 +63,27 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   }
 
   private buildRecords() {
-    this._aRecords.forEach(
-      (a, index) =>
-        new network.PrivateRecordSet(
-          a.recordName === '*'
-            ? `All-${index}-ARecord`
-            : a.recordName === '@'
-              ? `Root-${index}-ARecord`
-              : `${a.recordName}-ARecord`,
-          {
-            privateZoneName: this._dnsInfo!.name,
-            ...this._dnsInfo!.group,
-            relativeRecordSetName: a.recordName,
-            recordType: 'A',
-            aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
-            ttl: 3600,
-          },
-          { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
-        ),
-    );
+    this._aRecords.forEach((a, index) => {
+      const n =
+        a.recordName === '*'
+          ? `All-${index}-ARecord`
+          : a.recordName === '@'
+            ? `Root-${index}-ARecord`
+            : `${a.recordName}-ARecord`;
+
+      return new network.PrivateRecordSet(
+        `${this._dnsInfo!.name}-${n}`,
+        {
+          privateZoneName: this._dnsInfo!.name,
+          ...this._dnsInfo!.group,
+          relativeRecordSetName: a.recordName,
+          recordType: 'A',
+          aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
+          ttl: 3600,
+        },
+        { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
+      );
+    });
   }
 
   private buildVnetLinks() {
