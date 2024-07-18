@@ -132,6 +132,7 @@ export type AskFeatureProps = {
   enablePodIdentity?: boolean;
   enableWorkloadIdentity?: boolean;
   enableDiagnosticSetting?: boolean;
+  enableMaintenance?: boolean;
 };
 
 export type AksAccessProps = {
@@ -208,7 +209,7 @@ export default async ({
   acr,
   aksAccess,
   vaultInfo,
-  features = { enableDiagnosticSetting: true },
+  features = { enableDiagnosticSetting: true, enableMaintenance: true },
   storageProfile,
   addon = {
     enableAzureKeyVault: false,
@@ -464,27 +465,24 @@ export default async ({
     Locker({ name: aksName, resource: aks });
   }
 
-  new ccs.MaintenanceConfiguration(
-    `${aksName}-MaintenanceConfiguration`,
-    {
-      configName: 'default',
-      // notAllowedTime: [
-      //   {
-      //     end: "2020-11-30T12:00:00Z",
-      //     start: "2020-11-26T03:00:00Z",
-      //   },
-      // ],
-      ...group,
-      resourceName: aks.name,
-      timeInWeek: [
-        {
-          day: ccs.WeekDay.Sunday,
-          hourSlots: [0, 23],
-        },
-      ],
-    },
-    { dependsOn: aks },
-  );
+  if (features?.enableMaintenance) {
+    //Default
+    new ccs.MaintenanceConfiguration(
+      `${aksName}-MaintenanceConfiguration`,
+      {
+        configName: 'default',
+        ...group,
+        resourceName: aks.name,
+        timeInWeek: [
+          {
+            day: ccs.WeekDay.Sunday,
+            hourSlots: [0, 23],
+          },
+        ],
+      },
+      { dependsOn: aks, deleteBeforeReplace: true },
+    );
+  }
 
   if (nodePools) {
     nodePools.map(
