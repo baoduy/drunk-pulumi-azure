@@ -1,4 +1,4 @@
-import * as native from '@pulumi/azure-native';
+import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
@@ -6,7 +6,6 @@ import vmsDiagnostic from './VmSetMonitor';
 import {
   BasicResourceArgs,
   KeyVaultInfo,
-  ResourceInfo,
   ResourceInfoWithInstance,
 } from '../types';
 import {
@@ -17,12 +16,13 @@ import {
   isPrd,
   parseResourceInfoFromId,
   tenantId,
-} from '../Common/AzureEnv';
+  stack,
+  getAksName,
+  getResourceGroupName,
+} from '../Common';
 import Locker from '../Core/Locker';
 import aksIdentityCreator from './Identity';
-import { stack } from '../Common/StackEnv';
 import { createDiagnostic } from '../Logs/Helpers';
-import { getAksName, getResourceGroupName } from '../Common';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { getAksConfig, getAksPrivateDnz } from './Helper';
@@ -69,7 +69,7 @@ const autoScaleFor = ({
 
 const defaultNodePoolProps = {
   availabilityZones: isPrd ? ['1', '2', '3'] : undefined,
-  type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
+  type: ccs.AgentPoolType.VirtualMachineScaleSets,
   vmSize: 'Standard_B2s',
 
   maxPods: 50,
@@ -79,7 +79,7 @@ const defaultNodePoolProps = {
 
   enableUltraSSD: isPrd,
   osDiskSizeGB: 128,
-  osDiskType: native.containerservice.OSDiskType.Managed,
+  osDiskType: ccs.OSDiskType.Managed,
 
   nodeLabels: {
     environment: currentEnv,
@@ -113,7 +113,7 @@ export enum VmSizes {
 export interface NodePoolProps
   extends Partial<inputs.containerservice.ManagedClusterAgentPoolProfileArgs> {
   name: string;
-  mode: native.containerservice.AgentPoolMode;
+  mode: ccs.AgentPoolMode;
   vmSize: VmSizes | string;
   osDiskSizeGB: number;
   maxPods: number;
@@ -156,7 +156,7 @@ export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
 
 export interface AksProps extends BasicResourceArgs {
   //nodeResourceGroup?: string;
-  tier?: native.containerservice.ManagedClusterSKUTier;
+  tier?: ccs.ManagedClusterSKUTier;
 
   addon?: AskAddonProps;
   features?: AskFeatureProps;
@@ -213,7 +213,7 @@ export default async ({
   addon = {
     enableAzureKeyVault: false,
   },
-  tier = native.containerservice.ManagedClusterSKUTier.Free,
+  tier = ccs.ManagedClusterSKUTier.Free,
   lock = true,
   dependsOn = [],
   importUri,
@@ -246,8 +246,15 @@ export default async ({
     dependsOn,
   });
 
+  // const privateDnsZone = features?.enablePrivateCluster
+  //   ? PrivateDnsZoneBuilder({
+  //       name: `${aksName}.privatelink.${currentRegionCode}.azmk8s.io`,
+  //       group,
+  //     }).build()
+  //   : undefined;
+
   //Create AKS Cluster
-  const aks = new native.containerservice.ManagedCluster(
+  const aks = new ccs.ManagedCluster(
     aksName,
     {
       resourceName: aksName,
@@ -261,8 +268,9 @@ export default async ({
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        enablePrivateClusterPublicFQDN: true,
+        enablePrivateClusterPublicFQDN: false,
         privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
+        //privateDNSZone: privateDnsZone?.id,
       },
 
       addonProfiles: {
@@ -307,11 +315,10 @@ export default async ({
       },
 
       sku: {
-        name: native.containerservice.ManagedClusterSKUName.Base,
+        name: ccs.ManagedClusterSKUName.Base,
         tier,
       },
-      supportPlan:
-        native.containerservice.KubernetesSupportPlan.KubernetesOfficial,
+      supportPlan: ccs.KubernetesSupportPlan.KubernetesOfficial,
       agentPoolProfiles: [
         {
           ...defaultNodePoolProps,
@@ -396,10 +403,10 @@ export default async ({
           }
         : undefined,
       identity: {
-        type: native.containerservice.ResourceIdentityType.SystemAssigned,
+        type: ccs.ResourceIdentityType.SystemAssigned,
       },
       autoUpgradeProfile: {
-        upgradeChannel: native.containerservice.UpgradeChannel.Patch,
+        upgradeChannel: ccs.UpgradeChannel.Patch,
         //nodeOSUpgradeChannel: "NodeImage",
       },
       disableLocalAccounts: Boolean(aksAccess.disableLocalAccounts),
@@ -414,9 +421,9 @@ export default async ({
         : undefined,
       storageProfile,
       networkProfile: {
-        networkMode: native.containerservice.NetworkMode.Transparent,
-        networkPolicy: native.containerservice.NetworkPolicy.Azure,
-        networkPlugin: native.containerservice.NetworkPlugin.Azure,
+        networkMode: ccs.NetworkMode.Transparent,
+        networkPolicy: ccs.NetworkPolicy.Azure,
+        networkPlugin: ccs.NetworkPlugin.Azure,
 
         //dnsServiceIP: '10.0.0.10',
         //dockerBridgeCidr: '172.17.0.1/16',
@@ -424,8 +431,8 @@ export default async ({
 
         outboundType:
           features?.enablePrivateCluster || !network.outboundIpAddress
-            ? native.containerservice.OutboundType.UserDefinedRouting
-            : native.containerservice.OutboundType.LoadBalancer,
+            ? ccs.OutboundType.UserDefinedRouting
+            : ccs.OutboundType.LoadBalancer,
 
         loadBalancerSku: 'Standard',
         loadBalancerProfile: network.outboundIpAddress
@@ -457,7 +464,7 @@ export default async ({
     Locker({ name: aksName, resource: aks });
   }
 
-  new native.containerservice.MaintenanceConfiguration(
+  new ccs.MaintenanceConfiguration(
     `${aksName}-MaintenanceConfiguration`,
     {
       configName: 'default',
@@ -471,7 +478,7 @@ export default async ({
       resourceName: aks.name,
       timeInWeek: [
         {
-          day: native.containerservice.WeekDay.Sunday,
+          day: ccs.WeekDay.Sunday,
           hourSlots: [0, 23],
         },
       ],
@@ -482,7 +489,7 @@ export default async ({
   if (nodePools) {
     nodePools.map(
       (p) =>
-        new native.containerservice.AgentPool(`${name}-${p.name}`, {
+        new ccs.AgentPool(`${name}-${p.name}`, {
           //agentPoolName:p.name,
           resourceName: aks.name,
           ...group,
