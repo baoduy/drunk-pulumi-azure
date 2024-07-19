@@ -14,9 +14,9 @@ import { addCustomSecret } from '../KeyVault/CustomHelper';
 interface Props extends BasicArgs {
   name: string;
   group?: ResourceGroupInfo;
-  enableStorageAccount?: boolean;
   //vaultInfo?: KeyVaultInfo;
   sku?: registry.SkuName | string;
+  policies?: { retentionDay: number };
   /**Only support Premium sku*/
   network?: Omit<NetworkPropsType, 'subnetId'>;
 }
@@ -29,6 +29,7 @@ export default ({
   group = global.groupInfo,
   sku = registry.SkuName.Basic,
   //vaultInfo,
+  policies,
   network,
   dependsOn,
   ignoreChanges,
@@ -47,8 +48,32 @@ export default ({
       ...group,
 
       sku: { name: sku },
+      //This is for encryption
+      identity: { type: registry.ResourceIdentityType.SystemAssigned },
+
       adminUserEnabled: false,
+      dataEndpointEnabled: false,
+      policies:
+        sku === 'Premium'
+          ? {
+              exportPolicy: {
+                status: registry.ExportPolicyStatus.Disabled,
+              },
+              quarantinePolicy: { status: registry.PolicyStatus.Enabled },
+              retentionPolicy: {
+                days: policies?.retentionDay ?? 90,
+                status: registry.PolicyStatus.Enabled,
+              },
+              trustPolicy: {
+                status: registry.PolicyStatus.Enabled,
+                type: registry.TrustPolicyType.Notary,
+              },
+            }
+          : undefined,
+
       publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
+      networkRuleBypassOptions: network?.privateLink ? 'None' : 'AzureServices',
+      zoneRedundancy: sku === 'Premium' ? 'Enabled' : 'Disabled',
 
       networkRuleSet:
         sku === 'Premium' && network
