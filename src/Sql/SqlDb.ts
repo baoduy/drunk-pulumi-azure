@@ -1,10 +1,7 @@
 import * as sql from '@pulumi/azure-native/sql';
-
 import { BasicResourceArgs, ResourceInfoWithInstance } from '../types';
-import { Input, Output, Resource } from '@pulumi/pulumi';
-
-import { isPrd } from '../Common/AzureEnv';
-import { getSqlDbName } from '../Common';
+import { Input, Output } from '@pulumi/pulumi';
+import { getSqlDbName, isPrd } from '../Common';
 
 export type SqlDbSku =
   | 'Basic'
@@ -71,5 +68,6 @@ export default ({
     import: importUri,
     deleteBeforeReplace: true,
   });
+
   return { name, group, id: sqlDb.id, instance: sqlDb };
 };

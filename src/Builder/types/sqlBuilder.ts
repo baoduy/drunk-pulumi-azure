@@ -10,9 +10,9 @@ import {
 import { SqlDbProps, SqlDbSku } from '../../Sql/SqlDb';
 import { LogStorageInfo } from '../../Logs/Helpers';
 
-export type SqlBuilderAuthOptionsType = Pick<
+export type SqlBuilderAuthOptionsType = Omit<
   SqlAuthType,
-  'azureAdOnlyAuthentication'
+  'password' | 'adminLogin' | 'envRoles'
 >;
 export type SqlDbBuilderType = { name: string; sku?: SqlDbSku };
 export type SqlDbCopyType = SqlDbBuilderType & { copyFromDbId: Input<string> };
@@ -50,7 +50,7 @@ export interface ISqlBuilder extends IBuilder<SqlResults> {
   withDatabases(props: SqlDbBuilderType): ISqlBuilder;
   copyDbFrom(props: SqlDbCopyType): ISqlBuilder;
   replicaDbFrom(props: SqlDbReplicaType): ISqlBuilder;
-
+  ignoreChangesFrom(...props: string[]): ISqlBuilder;
   withVulnerabilityAssessment(
     props: SqlBuilderVulnerabilityAssessmentType,
   ): ISqlBuilder;
