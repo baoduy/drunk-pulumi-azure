@@ -155,6 +155,7 @@ export default ({
         //AKS mater
         '*.hcp.southeastasia.azmk8s.io',
         //Microsoft Container Registry
+        '*.azurecr.io',
         'mcr.microsoft.com',
         'data.mcr.microsoft.com',
         '*.data.mcr.microsoft.com',
