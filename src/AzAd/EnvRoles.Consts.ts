@@ -95,9 +95,9 @@ const ContainerRegistry: Record<EnvRoleKeyTypes, string[]> = {
     'AcrImageSigner',
     'AcrPull',
     'AcrPush',
-    'ACR Repository Contributor',
-    'ACR Repository Writer',
-    'AcrQuarantineWriter',
+    //'ACR Repository Contributor',
+    //'ACR Repository Writer',
+    //'AcrQuarantineWriter',
   ],
   admin: ['AcrDelete'],
 };

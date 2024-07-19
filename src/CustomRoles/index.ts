@@ -1,4 +1,4 @@
-import { defaultScope } from '../Common/AzureEnv';
+import { defaultSubScope } from '../Common/AzureEnv';
 import * as authorization from '@pulumi/azure-native/authorization';
 interface Props {
   enableJustInTimeRemoteRole?: boolean;
@@ -9,7 +9,7 @@ export default ({ enableJustInTimeRemoteRole = true }: Props) => {
     new authorization.RoleDefinition('JustInTime-User-Remote-Request', {
       roleName: 'Just-In-Time-User-Remote-Request-Role',
       description: 'Just-in-time virtual machine user remote request role',
-      scope: defaultScope,
+      scope: defaultSubScope,
       permissions: [
         {
           actions: [
@@ -22,7 +22,7 @@ export default ({ enableJustInTimeRemoteRole = true }: Props) => {
           notActions: [],
         },
       ],
-      assignableScopes: [defaultScope],
+      assignableScopes: [defaultSubScope],
     });
   }
 };

@@ -10,7 +10,7 @@ import {
 } from '../types';
 import {
   currentEnv,
-  defaultScope,
+  defaultSubScope,
   Environments,
   getResourceIdFromInfo,
   isPrd,
@@ -222,7 +222,6 @@ export default async ({
 }: AksProps): Promise<AksResults> => {
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
-  const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
 
   //Auto detect and disable Local Account
@@ -518,7 +517,8 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile, network.subnetId])
       .apply(([identity, identityProfile, sId]) => {
-        if (acrScope && identityProfile && identityProfile['kubeletidentity']) {
+        const acrScope = acr?.id ?? defaultSubScope;
+        if (identityProfile && identityProfile['kubeletidentity']) {
           roleAssignment({
             name: `${name}-aks-identity-profile-pull`,
             principalId: identityProfile['kubeletidentity'].objectId!,

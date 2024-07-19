@@ -1,10 +1,10 @@
-import { BasicResourceArgs, KeyVaultInfo } from "../types";
-import * as automation from "@pulumi/azure-native/automation";
-import { getAutomationAccountName } from "../Common";
-import { getEncryptionKeyOutput } from "../KeyVault/Helper";
-import UserAssignedIdentity from "../AzAd/UserAssignedIdentity";
-import { defaultScope } from "../Common/AzureEnv";
-import { grantIdentityPermissions } from "../AzAd/Helper";
+import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import * as automation from '@pulumi/azure-native/automation';
+import { getAutomationAccountName } from '../Common';
+import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
+import { defaultSubScope } from '../Common';
+import { grantIdentityPermissions } from '../AzAd/Helper';
 
 interface Props extends BasicResourceArgs {
   enableEncryption?: boolean;
@@ -26,7 +26,7 @@ export default ({
       ? getEncryptionKeyOutput(name, vaultInfo)
       : undefined;
 
-  const roles = [{ name: "Contributor", scope: defaultScope }];
+  const roles = [{ name: 'Contributor', scope: defaultSubScope }];
   const identity = UserAssignedIdentity({
     name,
     group,
@@ -49,7 +49,7 @@ export default ({
       disableLocalAuth: true,
 
       encryption: {
-        keySource: encryption ? "Microsoft.Keyvault" : "Microsoft.Automation",
+        keySource: encryption ? 'Microsoft.Keyvault' : 'Microsoft.Automation',
         identity: encryption
           ? { userAssignedIdentity: [identity.id] }
           : undefined,
@@ -62,7 +62,7 @@ export default ({
           : undefined,
       },
       sku: {
-        name: "Basic",
+        name: 'Basic',
       },
     },
     { dependsOn: identity, ignoreChanges },

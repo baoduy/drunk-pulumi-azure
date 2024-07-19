@@ -1,9 +1,9 @@
-import * as azuread from "@pulumi/azuread";
-import { Input, Output, output } from "@pulumi/pulumi";
-import { defaultScope } from "../Common/AzureEnv";
-import { roleAssignment } from "./RoleAssignment";
-import { isDryRun } from "../Common/StackEnv";
-import { GetGroupResult } from "@pulumi/azuread/getGroup";
+import * as azuread from '@pulumi/azuread';
+import { Input, Output, output } from '@pulumi/pulumi';
+import { defaultSubScope } from '../Common';
+import { roleAssignment } from './RoleAssignment';
+import { isDryRun } from '../Common';
+import { GetGroupResult } from '@pulumi/azuread/getGroup';
 
 export interface GroupPermissionProps {
   /** The name of the roles would like to assign to this group*/
@@ -47,9 +47,9 @@ export default async ({ name, permissions, members, owners }: AdGroupProps) => {
         roleAssignment({
           name,
           principalId: group.objectId,
-          principalType: "Group",
+          principalType: 'Group',
           roleName: p.roleName,
-          scope: p.scope || defaultScope,
+          scope: p.scope || defaultSubScope,
         }),
       ),
     );
@@ -62,7 +62,7 @@ export const getAdGroup = (displayName: string) => {
   if (isDryRun)
     return output({
       displayName,
-      objectId: "00000000-0000-0000-0000-000000000000",
+      objectId: '00000000-0000-0000-0000-000000000000',
     } as GetGroupResult);
   return output(azuread.getGroup({ displayName }));
 };
@@ -78,10 +78,10 @@ export const addMemberToGroup = ({
   objectId?: Input<string>;
   groupObjectId: Input<string>;
 }) => {
-  if (userName && !userName.includes("@"))
-    throw new Error("UserName must include suffix @domain.name");
+  if (userName && !userName.includes('@'))
+    throw new Error('UserName must include suffix @domain.name');
   else if (!objectId)
-    throw new Error("Either UserName or ObjectId must be defined.");
+    throw new Error('Either UserName or ObjectId must be defined.');
 
   const user = userName
     ? output(azuread.getUser({ userPrincipalName: userName }))
@@ -124,9 +124,9 @@ export const assignRolesToGroup = ({
         roleAssignment({
           name: groupName,
           principalId: group.objectId,
-          principalType: "Group",
+          principalType: 'Group',
           roleName: p,
-          scope: scope ?? defaultScope,
+          scope: scope ?? defaultSubScope,
         }),
       ),
     );
