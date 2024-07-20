@@ -1,11 +1,12 @@
 import * as network from '@pulumi/azure-native/network';
 import { Input, interpolate, output, Output } from '@pulumi/pulumi';
 import * as netmask from 'netmask';
+import dns from 'node:dns/promises';
 import {
   currentCountryCode,
   parseResourceInfoFromId,
   subscriptionId,
-} from '../Common/AzureEnv';
+} from '../Common';
 import {
   getFirewallName,
   getIpAddressName,
@@ -135,3 +136,6 @@ export const getFirewallIpAddressByGroupName = (groupName: string) => {
   const rsName = getResourceGroupName(groupName);
   return getFirewallIpAddress(fireWallName, { resourceGroupName: rsName });
 };
+
+export const getIpAddressFromHost = (host: string) =>
+  output(dns.lookup(host, { family: 4 }));
