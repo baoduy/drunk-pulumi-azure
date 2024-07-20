@@ -95,18 +95,21 @@ class StorageBuilder
   }
 
   private buildCDN() {
-    if (!this._cdnProps) return;
+    if (!this._cdnProps || !this._storageInstance?.instance) return;
+
     const securityHeaders =
       this._cdnProps.securityResponseHeaders ??
       getDefaultResponseHeaders(this._cdnProps.domainName);
 
     //Create Azure CDN if customDomain provided
-    const origin = `${this._storageInstance!.name}.z23.web.core.windows.net`;
     CdnEndpoint({
       name: this._storageInstance!.name,
       ...this._cdnProps,
-      origin,
+      origin: this._storageInstance!.instance!.primaryEndpoints.apply((p) =>
+        p.web.replace('https://', '').slice(0, -1),
+      ),
       httpsEnabled: true,
+      securityResponseHeaders: securityHeaders,
       dependsOn: this._storageInstance?.instance,
     });
   }

@@ -1,7 +1,7 @@
 import { Input } from '@pulumi/pulumi';
 import * as native from '@pulumi/azure-native';
 import CdnHttpsEnable from '@drunk-pulumi/azure-providers/CdnHttpsEnable';
-import { subscriptionId } from '../Common/AzureEnv';
+import { subscriptionId, replaceAll, getCdnEndpointName } from '../Common';
 import {
   allowsCorsRules,
   enforceHttpsRule,
@@ -9,8 +9,6 @@ import {
   indexFileCacheRule,
 } from './CdnRules';
 import { cdnProfileInfo as globalCdnProfileInfo } from '../Common/GlobalEnv';
-import { replaceAll } from '../Common/Helpers';
-import { getCdnEndpointName } from '../Common';
 import { BasicArgs, ResourceInfo } from '../types';
 
 export interface CdnEndpointProps extends BasicArgs {
