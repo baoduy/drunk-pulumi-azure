@@ -108,7 +108,6 @@ class StorageBuilder
       origin: this._storageInstance!.instance!.primaryEndpoints.apply((p) =>
         p.web.replace('https://', '').slice(0, -1),
       ),
-      httpsEnabled: true,
       securityResponseHeaders: securityHeaders,
       dependsOn: this._storageInstance?.instance,
     });

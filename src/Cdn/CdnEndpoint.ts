@@ -16,7 +16,6 @@ export interface CdnEndpointProps extends BasicArgs {
   origin: Input<string>;
   cors?: string[];
   domainName: string;
-  httpsEnabled?: boolean;
   securityResponseHeaders?: Record<string, string>;
   cdnProfileInfo?: ResourceInfo;
 }
@@ -26,7 +25,6 @@ export default ({
   domainName,
   origin,
   cors,
-  httpsEnabled,
   securityResponseHeaders,
   cdnProfileInfo = globalCdnProfileInfo,
   dependsOn,
@@ -94,19 +92,17 @@ export default ({
       { dependsOn: endpoint },
     );
 
-    if (httpsEnabled) {
-      new CdnHttpsEnable(
-        name,
-        {
-          endpointName: endpoint.name,
-          ...cdnProfileInfo!.group,
-          profileName: cdnProfileInfo!.name,
-          customDomainName: customDomain.name,
-          subscriptionId,
-        },
-        { dependsOn: customDomain },
-      );
-    }
+    new CdnHttpsEnable(
+      name,
+      {
+        endpointName: endpoint.name,
+        ...cdnProfileInfo!.group,
+        profileName: cdnProfileInfo!.name,
+        customDomainName: customDomain.name,
+        subscriptionId,
+      },
+      { dependsOn: customDomain },
+    );
   }
 
   return endpoint;
