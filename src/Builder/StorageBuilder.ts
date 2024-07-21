@@ -37,8 +37,9 @@ class StorageBuilder
   public constructor(props: BuilderProps) {
     super(props);
   }
-  public asStorage(): IStorageBuilder {
+  public asStorage(props: StorageFeatureBuilderType = {}): IStorageBuilder {
     this._type = 'storage';
+    this._features = props;
     return this;
   }
   public asStaticWebStorage(): IStaticWebStorageBuilder {
@@ -63,10 +64,6 @@ class StorageBuilder
   }
   public withPolicies(props: StoragePolicyType): IStorageBuilder {
     this._policies = props;
-    return this;
-  }
-  public withFeature(props: StorageFeatureBuilderType): IStorageBuilder {
-    this._features = props;
     return this;
   }
   public withNetwork(props: StorageNetworkType): IStorageSharedBuilder {
