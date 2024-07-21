@@ -131,7 +131,7 @@ export type AskFeatureProps = {
   enableAutoScale?: boolean;
   enablePodIdentity?: boolean;
   enableWorkloadIdentity?: boolean;
-  enableDiagnosticSetting?: boolean;
+  //enableDiagnosticSetting?: boolean;
   enableMaintenance?: boolean;
 };
 
@@ -209,7 +209,7 @@ export default async ({
   acr,
   aksAccess,
   vaultInfo,
-  features = { enableDiagnosticSetting: true, enableMaintenance: true },
+  features = { enableMaintenance: true },
   storageProfile,
   addon = {
     enableAzureKeyVault: false,
@@ -590,7 +590,7 @@ export default async ({
     }
 
     //Diagnostic
-    if (features.enableDiagnosticSetting && logWpId) {
+    if (logWpId) {
       createDiagnostic({
         name,
         targetResourceId: id,
