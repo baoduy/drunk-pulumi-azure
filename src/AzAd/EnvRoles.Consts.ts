@@ -1,6 +1,6 @@
 import { EnvRoleKeyTypes, EnvRolesResults } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
-import { replaceAll } from '../Common/Helpers';
+import { replaceAll } from '../Common';
 
 //Resource Group Role
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
@@ -11,22 +11,11 @@ const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
 
 //AKS Roles
 const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
-  readOnly: [
-    'Azure Kubernetes Service Cluster User Role',
-    'Azure Kubernetes Service Cluster Monitoring User',
-  ],
-  contributor: [
-    'Azure Kubernetes Service Contributor Role',
-    'Azure Kubernetes Service Cluster User Role',
-    'Azure Kubernetes Service Cluster Monitoring User',
-    'Azure Kubernetes Service RBAC Reader',
-  ],
+  readOnly: ['Azure Kubernetes Service RBAC Reader'],
+  contributor: ['Azure Kubernetes Service RBAC Writer'],
   admin: [
-    'Azure Kubernetes Service Contributor Role',
     'Azure Kubernetes Service RBAC Cluster Admin',
-    'Azure Kubernetes Service Cluster Admin Role',
-    'Azure Kubernetes Service Cluster Monitoring User',
-    'Azure Kubernetes Service Cluster User Role',
+    'Azure Kubernetes Service RBAC Cluster Admin',
   ],
 };
 
@@ -102,14 +91,45 @@ const ContainerRegistry: Record<EnvRoleKeyTypes, string[]> = {
   admin: ['AcrDelete'],
 };
 
+export type RoleEnableItem = boolean | { [k in EnvRoleKeyTypes]?: boolean };
+
 export type RoleEnableTypes = {
-  enableRGRoles?: boolean;
-  enableAksRoles?: boolean;
-  enableStorageRoles?: boolean;
-  enableIotRoles?: boolean;
-  enableVaultRoles?: boolean;
+  enableRGRoles?: RoleEnableItem;
+  enableAksRoles?: RoleEnableItem;
+  enableStorageRoles?: RoleEnableItem;
+  enableIotRoles?: RoleEnableItem;
+  enableVaultRoles?: RoleEnableItem;
   /** Container Registry Roles */
-  enableACRRoles?: boolean;
+  enableACRRoles?: RoleEnableItem;
+};
+
+export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
+
+const getRoleFor = (
+  roleType: RoleEnableItem | undefined,
+  roleCollection: Record<EnvRoleKeyTypes, string[]>,
+  results: ListRoleType,
+) => {
+  if (!roleType) return results;
+
+  const allows = {
+    readOnly: typeof roleType === 'boolean' ? roleType : roleType.readOnly,
+    contributor:
+      typeof roleType === 'boolean' ? roleType : roleType.contributor,
+    admin: typeof roleType === 'boolean' ? roleType : roleType.admin,
+  };
+
+  if (allows.readOnly) {
+    roleCollection.readOnly.forEach((r) => results.readOnly.add(r));
+  }
+  if (allows.contributor) {
+    roleCollection.contributor.forEach((r) => results.contributor.add(r));
+  }
+  if (allows.admin) {
+    roleCollection.admin.forEach((r) => results.admin.add(r));
+  }
+
+  return results;
 };
 
 export const getRoleNames = ({
@@ -120,47 +140,18 @@ export const getRoleNames = ({
   enableStorageRoles,
   enableACRRoles,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
-  const rs = {
+  const rs: ListRoleType = {
     readOnly: new Set<string>(),
     admin: new Set<string>(),
     contributor: new Set<string>(),
   };
 
-  if (enableIotRoles) {
-    IOTHubRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
-    IOTHubRoleNames.contributor.forEach((r) => rs.contributor.add(r));
-    IOTHubRoleNames.admin.forEach((r) => rs.admin.add(r));
-  }
-
-  if (enableRGRoles) {
-    RGRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
-    RGRoleNames.contributor.forEach((r) => rs.contributor.add(r));
-    RGRoleNames.admin.forEach((r) => rs.admin.add(r));
-  }
-
-  if (enableVaultRoles) {
-    KeyVaultRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
-    KeyVaultRoleNames.contributor.forEach((r) => rs.contributor.add(r));
-    KeyVaultRoleNames.admin.forEach((r) => rs.admin.add(r));
-  }
-
-  if (enableAksRoles) {
-    AksRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
-    AksRoleNames.contributor.forEach((r) => rs.contributor.add(r));
-    AksRoleNames.admin.forEach((r) => rs.admin.add(r));
-  }
-
-  if (enableStorageRoles) {
-    StorageRoleNames.readOnly.forEach((r) => rs.readOnly.add(r));
-    StorageRoleNames.contributor.forEach((r) => rs.contributor.add(r));
-    StorageRoleNames.admin.forEach((r) => rs.admin.add(r));
-  }
-
-  if (enableACRRoles) {
-    ContainerRegistry.readOnly.forEach((r) => rs.readOnly.add(r));
-    ContainerRegistry.contributor.forEach((r) => rs.contributor.add(r));
-    ContainerRegistry.admin.forEach((r) => rs.admin.add(r));
-  }
+  getRoleFor(enableIotRoles, IOTHubRoleNames, rs);
+  getRoleFor(enableRGRoles, RGRoleNames, rs);
+  getRoleFor(enableVaultRoles, KeyVaultRoleNames, rs);
+  getRoleFor(enableAksRoles, AksRoleNames, rs);
+  getRoleFor(enableStorageRoles, StorageRoleNames, rs);
+  getRoleFor(enableACRRoles, ContainerRegistry, rs);
 
   return {
     readOnly: Array.from(rs.readOnly).sort(),

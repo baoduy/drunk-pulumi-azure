@@ -25,10 +25,9 @@ import { createVaultPrivateLink } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
-import { subscriptionId } from '../Common/AzureEnv';
+import { subscriptionId, getKeyVaultInfo } from '../Common';
 import { CertBuilderType, IVaultBuilderResults } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
-import { getKeyVaultInfo } from '../Common/AzureEnv';
 
 class ResourceBuilder
   implements
@@ -152,7 +151,7 @@ class ResourceBuilder
     if (!this._createRG) return;
     if (!this._createRGProps)
       this._createRGProps = {
-        enableRGRoles: Boolean(this._envRoles),
+        enableRGRoles: { readOnly: Boolean(this._envRoles) },
         enableVaultRoles: this._createVault,
       };
 
