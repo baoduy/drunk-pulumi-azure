@@ -11,8 +11,14 @@ const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
 
 //AKS Roles
 const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
-  readOnly: ['Azure Kubernetes Service RBAC Reader'],
-  contributor: ['Azure Kubernetes Service RBAC Writer'],
+  readOnly: [
+    'Azure Kubernetes Service RBAC Reader',
+    'Azure Kubernetes Service Cluster User Role',
+  ],
+  contributor: [
+    'Azure Kubernetes Service RBAC Writer',
+    'Azure Kubernetes Service Cluster User Role',
+  ],
   admin: [
     'Azure Kubernetes Service RBAC Cluster Admin',
     'Azure Kubernetes Service RBAC Cluster Admin',
