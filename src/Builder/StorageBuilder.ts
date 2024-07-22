@@ -96,7 +96,10 @@ class StorageBuilder
 
     const securityHeaders =
       this._cdnProps.securityResponseHeaders ??
-      getDefaultResponseHeaders(this._cdnProps.domainNames);
+      getDefaultResponseHeaders(
+        ...this._cdnProps.domainNames,
+        ...(this._cdnProps.allowsDomains ?? []),
+      );
 
     //Create Azure CDN if customDomain provided
     CdnEndpoint({

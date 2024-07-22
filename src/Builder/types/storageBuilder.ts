@@ -11,7 +11,9 @@ import { IBuilder } from './genericBuilder';
 export type StorageCdnType = Omit<
   CdnEndpointProps,
   'name' | 'dependsOn' | 'ignoreChanges' | 'importUri' | 'origin'
->;
+> & {
+  allowsDomains?: string[];
+};
 
 export type StorageFeatureBuilderType = Pick<
   StorageFeatureType,

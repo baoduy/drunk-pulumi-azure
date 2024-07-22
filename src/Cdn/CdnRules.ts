@@ -21,7 +21,7 @@ const getSecurities = (domains: string[]) => {
 };
 
 export const getDefaultResponseHeaders = (
-  domains: string[],
+  ...domains: string[]
 ): Record<string, string> => ({
   'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
   'X-XSS-Protection': '1; mode=block',
