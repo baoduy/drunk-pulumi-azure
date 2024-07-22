@@ -1,3 +1,4 @@
+import { Input } from '@pulumi/pulumi';
 import { EnvRoleKeyTypes, EnvRolesResults } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
 import { replaceAll } from '../Common';
@@ -169,6 +170,8 @@ export const getRoleNames = ({
 export const grantEnvRolesAccess = ({
   name,
   envRoles,
+  scope,
+  dependsOn,
   ...others
 }: RoleEnableTypes &
   Omit<RoleAssignmentProps, 'roleName' | 'principalType' | 'principalId'> & {
@@ -185,7 +188,8 @@ export const grantEnvRolesAccess = ({
         principalId: envRoles.readOnly.objectId,
         principalType: 'Group',
         roleName: r,
-        ...others,
+        scope,
+        dependsOn,
       });
     });
   }
@@ -199,7 +203,8 @@ export const grantEnvRolesAccess = ({
         principalId: envRoles.contributor.objectId,
         principalType: 'Group',
         roleName: r,
-        ...others,
+        scope,
+        dependsOn,
       });
     });
   }
@@ -213,7 +218,8 @@ export const grantEnvRolesAccess = ({
         principalId: envRoles.admin.objectId,
         principalType: 'Group',
         roleName: r,
-        ...others,
+        scope,
+        dependsOn,
       });
     });
   }

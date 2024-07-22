@@ -1,3 +1,6 @@
+import { interpolate } from '@pulumi/pulumi';
+import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
+import { subscriptionId } from '../Common';
 import {
   AksImportProps,
   BuilderAsync,
@@ -125,6 +128,20 @@ class AksBuilder
       ignoreChanges: this._importProps?.ignoreChanges,
       lock: this._lock,
     });
+
+    //Grant read permission to AKS Node Group
+    if (
+      this.commonProps.envRoles &&
+      this._askInstance.instance.nodeResourceGroup
+    ) {
+      grantEnvRolesAccess({
+        name: `${this._askInstance.name}-node-group`,
+        dependsOn: this._askInstance.instance,
+        envRoles: this.commonProps.envRoles,
+        enableRGRoles: { readOnly: true },
+        scope: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
+      });
+    }
   }
 
   public async build(): Promise<AksResults> {
