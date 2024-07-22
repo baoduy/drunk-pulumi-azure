@@ -15,14 +15,14 @@ export interface CdnEndpointProps extends BasicArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];
-  domainName: string;
+  domainNames: string[];
   securityResponseHeaders?: Record<string, string>;
   cdnProfileInfo?: ResourceInfo;
 }
 
 export default ({
   name,
-  domainName,
+  domainNames,
   origin,
   cors,
   securityResponseHeaders,
@@ -79,30 +79,33 @@ export default ({
     { dependsOn },
   );
 
-  if (domainName) {
-    const customDomain = new native.cdn.CustomDomain(
-      name,
-      {
-        endpointName: endpoint.name,
-        ...cdnProfileInfo!.group,
-        profileName: cdnProfileInfo!.name,
-        customDomainName: replaceAll(domainName, '.', '-'),
-        hostName: domainName,
-      },
-      { dependsOn: endpoint },
-    );
+  if (domainNames) {
+    domainNames.map((d) => {
+      const customDomain = new native.cdn.CustomDomain(
+        `${name}-${d}`,
+        {
+          ...cdnProfileInfo!.group,
+          endpointName: endpoint.name,
 
-    new CdnHttpsEnable(
-      name,
-      {
-        endpointName: endpoint.name,
-        ...cdnProfileInfo!.group,
-        profileName: cdnProfileInfo!.name,
-        customDomainName: customDomain.name,
-        subscriptionId,
-      },
-      { dependsOn: customDomain },
-    );
+          profileName: cdnProfileInfo!.name,
+          customDomainName: replaceAll(d, '.', '-'),
+          hostName: d,
+        },
+        { dependsOn: endpoint },
+      );
+
+      return new CdnHttpsEnable(
+        `${name}-${d}`,
+        {
+          ...cdnProfileInfo!.group,
+          endpointName: endpoint.name,
+          profileName: cdnProfileInfo!.name,
+          customDomainName: customDomain.name,
+          subscriptionId,
+        },
+        { dependsOn: customDomain },
+      );
+    });
   }
 
   return endpoint;
