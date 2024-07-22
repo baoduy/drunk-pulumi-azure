@@ -1,5 +1,5 @@
 import * as native from '@pulumi/azure-native';
-import { getRootDomainFromUrl } from '../Common/Helpers';
+import { getRootDomainFromUrl } from '../Common';
 
 const getSecurities = (domains: string[]) => {
   const rootDomains = domains.map(
@@ -16,7 +16,8 @@ const getSecurities = (domains: string[]) => {
     'https://graph.microsoft.com',
     'https://*.service.signalr.net',
     'wss://*.service.signalr.net',
-    `frame-ancestors 'self' https://login.microsoftonline.com ${rootDomains.join(' ')}`,
+    `frame-ancestors 'self' https://login.microsoftonline.com ${rootDomains.join(' ')};`,
+    `script-src-elem: 'default-src' ${rootDomains.join(' ')};`,
   ];
 };
 
