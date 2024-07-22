@@ -16,6 +16,7 @@ interface Props {
   allowsAzure?: boolean;
   allowsAzDevOps?: boolean;
   allowsK8sTools?: boolean;
+  allowsDevTools?: boolean;
   allowsSearch?: boolean;
   allowsOffice365?: boolean;
   allowsWindows365?: boolean;
@@ -32,6 +33,7 @@ export default ({
   allowsAzure,
   allowsAzDevOps,
   allowsK8sTools,
+  allowsDevTools,
   allowIpCheckApi,
   allowsSearch,
   allowAllOutbound,
@@ -191,6 +193,23 @@ export default ({
         '*.googleapis.com',
         'aka.ms',
         '*.chocolatey.org',
+      ],
+      protocols: [{ protocolType: 'Https', port: 443 }],
+    });
+  }
+
+  if (allowsDevTools) {
+    appRules.push({
+      ruleType: 'ApplicationRule',
+      name: `${name}-app-allow-dev-tools`,
+      description: 'Allows Dev Tools',
+      sourceAddresses: subnetSpaces,
+      targetFqdns: [
+        'github.com',
+        '*.github.com',
+        '*.pulumi.com',
+        '*.npmjs.com',
+        '*.nuget.org',
       ],
       protocols: [{ protocolType: 'Https', port: 443 }],
     });
