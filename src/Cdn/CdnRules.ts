@@ -1,23 +1,26 @@
 import * as native from '@pulumi/azure-native';
 
 export type CdnSecurityHeaderTypes = {
-  contentSecurityPolicies: string[];
-  allowOrigins: string;
-} & { [key: string]: string };
+  contentSecurityPolicies?: string[];
+  allowOrigins?: string;
+};
 
 export function getDefaultResponseHeaders({
   contentSecurityPolicies,
   allowOrigins,
-  ...others
 }: CdnSecurityHeaderTypes): Record<string, string> {
-  return {
+  const rs: Record<string, string> = {
     'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
     'X-XSS-Protection': '1; mode=block',
     'X-Content-Type-Options': 'nosniff',
-    'Content-Security-Policy': contentSecurityPolicies.join(';'),
-    'Access-Control-Allow-Origin': allowOrigins,
-    ...others,
   };
+  if (contentSecurityPolicies)
+    rs['Content-Security-Policy'] = contentSecurityPolicies.join(';');
+  if (allowOrigins) {
+    rs['Access-Control-Allow-Origin'] = allowOrigins;
+    rs['Access-Control-Allow-Credentials'] = 'true';
+  }
+  return rs;
 }
 
 export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
