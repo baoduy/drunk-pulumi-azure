@@ -1,35 +1,19 @@
 import * as native from '@pulumi/azure-native';
-import { getRootDomainFromUrl } from '../Common';
 
-const getSecurities = (domains: string[]) => {
-  const rootDomains = domains.map(
-    (d) => `https://*.${getRootDomainFromUrl(d)}`,
-  );
-  return [
-    "default-src 'self' data: 'unsafe-inline' 'unsafe-eval'",
-    ...rootDomains,
-    'https://*.services.visualstudio.com',
-    'https://*.googleapis.com', // Font and Css
-    'https://*.gstatic.com', // Font and Css
-    'https://*.google.com', // Captcha
-    'https://login.microsoftonline.com',
-    'https://graph.microsoft.com',
-    'https://*.service.signalr.net',
-    'wss://*.service.signalr.net',
-    `frame-ancestors 'self' https://login.microsoftonline.com ${rootDomains.join(' ')};`,
-    `script-src: 'default-src' ${rootDomains.join(' ')};`,
-    `script-src-elem: 'default-src' ${rootDomains.join(' ')};`,
-  ];
+export type CdnSecurityHeaderTypes = {
+  contentSecurityPolicies: string[];
 };
 
-export const getDefaultResponseHeaders = (
-  ...domains: string[]
-): Record<string, string> => ({
-  'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
-  'X-XSS-Protection': '1; mode=block',
-  'X-Content-Type-Options': 'nosniff',
-  'Content-Security-Policy': getSecurities(domains).join(' '),
-});
+export function getDefaultResponseHeaders({
+  contentSecurityPolicies,
+}: CdnSecurityHeaderTypes): Record<string, string> {
+  return {
+    'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
+    'X-XSS-Protection': '1; mode=block',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': contentSecurityPolicies.join(';'),
+  };
+}
 
 export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
   name: 'enforceHttps',

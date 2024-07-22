@@ -22,6 +22,10 @@ class StorageBuilder
   extends Builder<ResourceInfo>
   implements IStorageStarterBuilder, IStorageBuilder, IStaticWebStorageBuilder
 {
+  //Instance
+  private _storageInstance: StorageResults | undefined = undefined;
+
+  //Props
   private _type: 'storage' | 'staticWeb' = 'storage';
   private _policies: StoragePolicyType | undefined = undefined;
   private _features: StorageFeatureBuilderType = {};
@@ -31,8 +35,6 @@ class StorageBuilder
   private _cdnProps: StorageCdnType | undefined = undefined;
   private _network: StorageNetworkType | undefined = undefined;
   private _lock: boolean = false;
-
-  private _storageInstance: StorageResults | undefined = undefined;
 
   public constructor(props: BuilderProps) {
     super(props);
@@ -94,17 +96,15 @@ class StorageBuilder
   private buildCDN() {
     if (!this._cdnProps || !this._storageInstance?.instance) return;
 
-    const securityHeaders =
-      this._cdnProps.securityResponseHeaders ??
-      getDefaultResponseHeaders(
-        ...this._cdnProps.domainNames,
-        ...(this._cdnProps.allowsDomains ?? []),
-      );
+    const securityHeaders: Record<string, string> | undefined = this._cdnProps
+      .securityResponse
+      ? getDefaultResponseHeaders(this._cdnProps.securityResponse)
+      : undefined;
 
     //Create Azure CDN if customDomain provided
     CdnEndpoint({
-      name: this._storageInstance!.name,
       ...this._cdnProps,
+      name: this._storageInstance!.name,
       origin: this._storageInstance!.instance!.primaryEndpoints.apply((p) =>
         p.web.replace('https://', '').slice(0, -1),
       ),
@@ -116,7 +116,6 @@ class StorageBuilder
   public build(): ResourceInfo {
     this.buildStorage();
     this.buildCDN();
-
     return this._storageInstance!;
   }
 }

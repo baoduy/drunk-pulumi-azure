@@ -1,19 +1,18 @@
+import { CdnEndpointProps } from '../../Cdn/CdnEndpoint';
+import { CdnSecurityHeaderTypes } from '../../Cdn/CdnRules';
 import {
   ContainerProps,
   StorageFeatureType,
   StorageNetworkType,
   StoragePolicyType,
 } from '../../Storage';
-import { CdnEndpointProps } from '../../Cdn/CdnEndpoint';
 import { ResourceInfo } from '../../types';
 import { IBuilder } from './genericBuilder';
 
-export type StorageCdnType = Omit<
+export type StorageCdnType = Pick<
   CdnEndpointProps,
-  'name' | 'dependsOn' | 'ignoreChanges' | 'importUri' | 'origin'
-> & {
-  allowsDomains?: string[];
-};
+  'cdnProfileInfo' | 'cors' | 'domainNames'
+> & { securityResponse?: CdnSecurityHeaderTypes };
 
 export type StorageFeatureBuilderType = Pick<
   StorageFeatureType,
