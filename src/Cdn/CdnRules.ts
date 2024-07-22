@@ -17,6 +17,7 @@ const getSecurities = (domains: string[]) => {
     'https://*.service.signalr.net',
     'wss://*.service.signalr.net',
     `frame-ancestors 'self' https://login.microsoftonline.com ${rootDomains.join(' ')};`,
+    `script-src: 'default-src' ${rootDomains.join(' ')};`,
     `script-src-elem: 'default-src' ${rootDomains.join(' ')};`,
   ];
 };
