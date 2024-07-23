@@ -16,11 +16,10 @@ export const currentRegionName = (env['azure-native:config:location'] ??
   'SoutheastAsia') as string;
 export const currentRegionCode = getRegionCode(currentRegionName);
 export const currentCountryCode = getCountryCode(currentRegionName);
-export const defaultScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
+export const defaultSubScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
 
 export enum Environments {
   Global = 'global',
-  Local = 'local',
   Dev = 'dev',
   Sandbox = 'sandbox',
   Prd = 'prd',
@@ -31,14 +30,12 @@ export const isDev = isEnv(Environments.Dev);
 export const isSandbox = isEnv(Environments.Sandbox);
 export const isPrd = isEnv(Environments.Prd);
 export const isGlobal = isEnv(Environments.Global);
-export const isLocal = isEnv(Environments.Local);
 
 const getCurrentEnv = () => {
   if (isGlobal) return Environments.Global;
   if (isPrd) return Environments.Prd;
   if (isSandbox) return Environments.Sandbox;
-  if (isDev) return Environments.Dev;
-  return Environments.Local;
+  return Environments.Dev;
 };
 
 export const currentEnv = getCurrentEnv();
@@ -55,6 +52,23 @@ pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
   });
 });
 
+export const allAzurePorts = [
+  '22',
+  '443',
+  '445',
+  '1433',
+  '1194',
+  '3306',
+  '3389',
+  '5432',
+  '5671',
+  '5672',
+  '6379',
+  '6380',
+  '8883',
+  '9000',
+  '10255',
+];
 /** ======== Default Variables ================*/
 registerAutoTags({
   environment: stack,

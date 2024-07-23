@@ -15,16 +15,22 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _vnetLinks: PrivateDnsZoneVnetLinkingType[] = [];
   private readonly commonProps: BasicResourceArgs;
 
+  private _dnsInfo: ResourceInfo | undefined = undefined;
   private _zoneInstance: network.PrivateZone | undefined = undefined;
 
-  public constructor({ group, ...others }: BasicResourceArgs) {
+  public constructor(props: BasicResourceArgs) {
+    if ('id' in props) this._dnsInfo = props as ResourceInfo;
     this.commonProps = {
-      ...others,
+      ...props,
       group: {
-        resourceGroupName: group.resourceGroupName,
+        resourceGroupName: props.group.resourceGroupName,
         location: globalKeyName,
       },
     };
+  }
+
+  public static from(info: ResourceInfo): PrivateDnsZoneBuilder {
+    return new PrivateDnsZoneBuilder(info);
   }
 
   linkTo(props: PrivateDnsZoneVnetLinkingType): IPrivateDnsZoneBuilder {
@@ -38,6 +44,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   }
 
   private buildZone() {
+    if (this._dnsInfo) return;
     const { name, group, dependsOn } = this.commonProps;
     this._zoneInstance = new network.PrivateZone(
       name,
@@ -48,25 +55,35 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       { dependsOn },
     );
 
-    this._aRecords.forEach(
-      (a, index) =>
-        new network.PrivateRecordSet(
-          a.recordName === '*'
-            ? `All-${index}-ARecord`
-            : a.recordName === '@'
-              ? `Root-${index}-ARecord`
-              : `${a.recordName}-ARecord`,
-          {
-            privateZoneName: this._zoneInstance!.name,
-            ...group,
-            relativeRecordSetName: a.recordName,
-            recordType: 'A',
-            aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
-            ttl: 3600,
-          },
-          { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
-        ),
-    );
+    this._dnsInfo = {
+      name: this.commonProps.name,
+      group: this.commonProps.group,
+      id: this._zoneInstance!.id,
+    };
+  }
+
+  private buildRecords() {
+    this._aRecords.forEach((a, index) => {
+      const n =
+        a.recordName === '*'
+          ? `All-${index}-ARecord`
+          : a.recordName === '@'
+            ? `Root-${index}-ARecord`
+            : `${a.recordName}-ARecord`;
+
+      return new network.PrivateRecordSet(
+        `${this._dnsInfo!.name}-${n}`,
+        {
+          privateZoneName: this._dnsInfo!.name,
+          ...this._dnsInfo!.group,
+          relativeRecordSetName: a.recordName,
+          recordType: 'A',
+          aRecords: a.ipAddresses.map((i) => ({ ipv4Address: i })),
+          ttl: 3600,
+        },
+        { dependsOn: this._zoneInstance, deleteBeforeReplace: true },
+      );
+    });
   }
 
   private buildVnetLinks() {
@@ -83,8 +100,8 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
         return new native.network.VirtualNetworkLink(
           `${this.commonProps.name.split('.')[0]}-${index}-${i}-link`,
           {
-            ...this.commonProps.group,
-            privateZoneName: this._zoneInstance!.name,
+            privateZoneName: this._dnsInfo!.name,
+            ...this._dnsInfo!.group,
             registrationEnabled: Boolean(lik.registrationEnabled),
             virtualNetwork: { id: v },
           },
@@ -96,15 +113,15 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
 
   public build(): ResourceInfo {
     this.buildZone();
+    this.buildRecords();
     this.buildVnetLinks();
 
-    return {
-      name: this.commonProps.name,
-      group: this.commonProps.group,
-      id: this._zoneInstance!.id,
-    };
+    return this._dnsInfo!;
   }
 }
+
+export const from = (info: ResourceInfo) =>
+  PrivateDnsZoneBuilder.from(info) as IPrivateDnsZoneBuilder;
 
 export default (props: BasicResourceArgs) =>
   new PrivateDnsZoneBuilder(props) as IPrivateDnsZoneBuilder;

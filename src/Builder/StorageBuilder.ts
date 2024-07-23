@@ -22,6 +22,10 @@ class StorageBuilder
   extends Builder<ResourceInfo>
   implements IStorageStarterBuilder, IStorageBuilder, IStaticWebStorageBuilder
 {
+  //Instance
+  private _storageInstance: StorageResults | undefined = undefined;
+
+  //Props
   private _type: 'storage' | 'staticWeb' = 'storage';
   private _policies: StoragePolicyType | undefined = undefined;
   private _features: StorageFeatureBuilderType = {};
@@ -32,13 +36,12 @@ class StorageBuilder
   private _network: StorageNetworkType | undefined = undefined;
   private _lock: boolean = false;
 
-  private _storageInstance: StorageResults | undefined = undefined;
-
   public constructor(props: BuilderProps) {
     super(props);
   }
-  public asStorage(): IStorageBuilder {
+  public asStorage(props: StorageFeatureBuilderType = {}): IStorageBuilder {
     this._type = 'storage';
+    this._features = props;
     return this;
   }
   public asStaticWebStorage(): IStaticWebStorageBuilder {
@@ -63,10 +66,6 @@ class StorageBuilder
   }
   public withPolicies(props: StoragePolicyType): IStorageBuilder {
     this._policies = props;
-    return this;
-  }
-  public withFeature(props: StorageFeatureBuilderType): IStorageBuilder {
-    this._features = props;
     return this;
   }
   public withNetwork(props: StorageNetworkType): IStorageSharedBuilder {
@@ -95,18 +94,21 @@ class StorageBuilder
   }
 
   private buildCDN() {
-    if (!this._cdnProps) return;
-    const securityHeaders =
-      this._cdnProps.securityResponseHeaders ??
-      getDefaultResponseHeaders(this._cdnProps.domainName);
+    if (!this._cdnProps || !this._storageInstance?.instance) return;
+
+    const securityHeaders: Record<string, string> | undefined = this._cdnProps
+      .securityResponse
+      ? getDefaultResponseHeaders(this._cdnProps.securityResponse)
+      : undefined;
 
     //Create Azure CDN if customDomain provided
-    const origin = `${this._storageInstance!.name}.z23.web.core.windows.net`;
     CdnEndpoint({
-      name: this._storageInstance!.name,
       ...this._cdnProps,
-      origin,
-      httpsEnabled: true,
+      name: this._storageInstance!.name,
+      origin: this._storageInstance!.instance!.primaryEndpoints.apply((p) =>
+        p.web.replace('https://', '').slice(0, -1),
+      ),
+      securityResponseHeaders: securityHeaders,
       dependsOn: this._storageInstance?.instance,
     });
   }
@@ -114,7 +116,6 @@ class StorageBuilder
   public build(): ResourceInfo {
     this.buildStorage();
     this.buildCDN();
-
     return this._storageInstance!;
   }
 }

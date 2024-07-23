@@ -1,7 +1,7 @@
 import { Input } from '@pulumi/pulumi';
 import * as native from '@pulumi/azure-native';
 import CdnHttpsEnable from '@drunk-pulumi/azure-providers/CdnHttpsEnable';
-import { subscriptionId } from '../Common/AzureEnv';
+import { subscriptionId, replaceAll, getCdnEndpointName } from '../Common';
 import {
   allowsCorsRules,
   enforceHttpsRule,
@@ -9,26 +9,22 @@ import {
   indexFileCacheRule,
 } from './CdnRules';
 import { cdnProfileInfo as globalCdnProfileInfo } from '../Common/GlobalEnv';
-import { replaceAll } from '../Common/Helpers';
-import { getCdnEndpointName } from '../Common';
 import { BasicArgs, ResourceInfo } from '../types';
 
 export interface CdnEndpointProps extends BasicArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];
-  domainName: string;
-  httpsEnabled?: boolean;
+  domainNames: string[];
   securityResponseHeaders?: Record<string, string>;
   cdnProfileInfo?: ResourceInfo;
 }
 
 export default ({
   name,
-  domainName,
+  domainNames,
   origin,
   cors,
-  httpsEnabled,
   securityResponseHeaders,
   cdnProfileInfo = globalCdnProfileInfo,
   dependsOn,
@@ -83,32 +79,33 @@ export default ({
     { dependsOn },
   );
 
-  if (domainName) {
-    const customDomain = new native.cdn.CustomDomain(
-      name,
-      {
-        endpointName: endpoint.name,
-        ...cdnProfileInfo!.group,
-        profileName: cdnProfileInfo!.name,
-        customDomainName: replaceAll(domainName, '.', '-'),
-        hostName: domainName,
-      },
-      { dependsOn: endpoint },
-    );
-
-    if (httpsEnabled) {
-      new CdnHttpsEnable(
-        name,
+  if (domainNames) {
+    domainNames.map((d) => {
+      const customDomain = new native.cdn.CustomDomain(
+        `${name}-${d}`,
         {
-          endpointName: endpoint.name,
           ...cdnProfileInfo!.group,
+          endpointName: endpoint.name,
+
+          profileName: cdnProfileInfo!.name,
+          customDomainName: replaceAll(d, '.', '-'),
+          hostName: d,
+        },
+        { dependsOn: endpoint },
+      );
+
+      return new CdnHttpsEnable(
+        `${name}-${d}`,
+        {
+          ...cdnProfileInfo!.group,
+          endpointName: endpoint.name,
           profileName: cdnProfileInfo!.name,
           customDomainName: customDomain.name,
           subscriptionId,
         },
         { dependsOn: customDomain },
       );
-    }
+    });
   }
 
   return endpoint;

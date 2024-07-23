@@ -1,24 +1,25 @@
+import { CdnEndpointProps } from '../../Cdn/CdnEndpoint';
+import { CdnSecurityHeaderTypes } from '../../Cdn/CdnRules';
 import {
   ContainerProps,
   StorageFeatureType,
   StorageNetworkType,
   StoragePolicyType,
-} from "../../Storage";
-import { CdnEndpointProps } from "../../Cdn/CdnEndpoint";
-import { ResourceInfo } from "../../types";
-import { IBuilder } from "./genericBuilder";
+} from '../../Storage';
+import { ResourceInfo } from '../../types';
+import { IBuilder } from './genericBuilder';
 
-export type StorageCdnType = Omit<
+export type StorageCdnType = Pick<
   CdnEndpointProps,
-  "name" | "dependsOn" | "ignoreChanges" | "importUri" | "origin"
->;
+  'cdnProfileInfo' | 'cors' | 'domainNames'
+> & { securityResponse?: CdnSecurityHeaderTypes };
 
 export type StorageFeatureBuilderType = Pick<
   StorageFeatureType,
-  "enableKeyVaultEncryption" | "allowSharedKeyAccess"
+  'enableKeyVaultEncryption' | 'allowSharedKeyAccess'
 >;
 export interface IStorageStarterBuilder {
-  asStorage(): IStorageBuilder;
+  asStorage(props?: StorageFeatureBuilderType): IStorageBuilder;
   asStaticWebStorage(): IStaticWebStorageBuilder;
 }
 
@@ -33,7 +34,6 @@ export interface IStorageBuilder
   withQueue(name: string): IStorageBuilder;
   withFileShare(name: string): IStorageBuilder;
   withPolicies(props: StoragePolicyType): IStorageBuilder;
-  withFeature(props: StorageFeatureBuilderType): IStorageBuilder;
 }
 
 export interface IStaticWebStorageBuilder

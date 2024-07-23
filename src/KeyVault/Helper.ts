@@ -1,9 +1,9 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { Input, Output, output, Resource } from '@pulumi/pulumi';
 import { KeyVaultInfo } from '../types';
-import { getSecretName } from '../Common/Naming';
+import { getSecretName } from '../Common';
 import { replaceAll } from '../Common/Helpers';
-import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = {

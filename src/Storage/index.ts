@@ -1,6 +1,11 @@
 import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
-import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
+import {
+  BasicResourceArgs,
+  KeyVaultInfo,
+  PrivateLinkPropsType,
+  ResourceInfo,
+} from '../types';
 import { Input } from '@pulumi/pulumi';
 import { getEncryptionKeyOutput, getSecret } from '../KeyVault/Helper';
 import { isPrd } from '../Common/AzureEnv';
@@ -40,19 +45,16 @@ export type StoragePolicyType = {
 export type StorageNetworkType = {
   defaultByPass?: 'AzureServices' | 'None';
   vnet?: Array<{ subnetId?: Input<string>; ipAddresses?: Array<string> }>;
-  privateEndpoint?: {
-    subnetIds: Input<string>[];
+  privateEndpoint?: Omit<PrivateLinkPropsType, 'type'> & {
     type: 'blob' | 'table' | 'queue' | 'file' | 'web' | 'dfs';
   };
 };
 interface StorageProps extends BasicResourceArgs {
   //This is required for encryption key
   vaultInfo?: KeyVaultInfo;
-
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
   fileShares?: Array<string>;
-  //appInsight?: AppInsightInfo;
   features?: StorageFeatureType;
   policies?: StoragePolicyType;
   network?: StorageNetworkType;
@@ -167,8 +169,8 @@ export default ({
   if (network?.privateEndpoint) {
     //Create Private Endpoints
     privateEndpoint({
+      ...network.privateEndpoint,
       resourceInfo: { name, group, id: stg.id },
-      subnetIds: network.privateEndpoint.subnetIds,
       privateDnsZoneName: `privatelink.${network.privateEndpoint.type}.core.windows.net`,
       linkServiceGroupIds: [network.privateEndpoint.type],
     });

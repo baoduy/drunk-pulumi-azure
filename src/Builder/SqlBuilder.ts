@@ -1,3 +1,4 @@
+import { Input } from '@pulumi/pulumi';
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
 import {
@@ -41,6 +42,7 @@ class SqlBuilder
   private _vulnerabilityAssessment:
     | SqlBuilderVulnerabilityAssessmentType
     | undefined = undefined;
+  private _ignoreChanges: string[] | undefined = undefined;
 
   constructor(props: BuilderProps) {
     super(props);
@@ -98,6 +100,10 @@ class SqlBuilder
     this._loginInfo = props;
     return this;
   }
+  public ignoreChangesFrom(...props: string[]): ISqlBuilder {
+    this._ignoreChanges = props;
+    return this;
+  }
 
   private buildLogin() {
     if (!this._generateLogin) return;
@@ -145,6 +151,8 @@ class SqlBuilder
       network: this._networkProps,
       elasticPool: this._elasticPoolProps,
       databases: this._databasesProps,
+
+      ignoreChanges: this._ignoreChanges,
     });
   }
 

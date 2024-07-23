@@ -1,6 +1,6 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
-import { FullSqlDbPropsType } from '../Builder';
+import { FullSqlDbPropsType, LoginBuilderProps } from '../Builder';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { roleAssignment } from '../AzAd/RoleAssignment';
@@ -62,11 +62,10 @@ const createElasticPool = ({
   return { name: elasticName, group, id: ep.id, instance: ep };
 };
 
-export type SqlAuthType = {
+export type SqlAuthType = LoginBuilderProps & {
   envRoles?: EnvRolesResults;
   azureAdOnlyAuthentication?: boolean;
-  adminLogin: Input<string>;
-  password: Input<string>;
+  defaultLoginManagedId?: Input<string>;
 };
 
 export type SqlNetworkType = NetworkPropsType & {
@@ -114,12 +113,7 @@ export default ({
   vaultInfo,
   network,
   vulnerabilityAssessment,
-  ignoreChanges = [
-    'administratorLogin',
-    'administrators',
-    'resourceGroupName',
-    'location',
-  ],
+  ignoreChanges = ['administratorLogin'],
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
@@ -149,9 +143,9 @@ export default ({
         administratorType: adminGroup
           ? sql.AdministratorType.ActiveDirectory
           : undefined,
-        azureADOnlyAuthentication: Boolean(
-          adminGroup && auth.azureAdOnlyAuthentication,
-        ),
+        azureADOnlyAuthentication: adminGroup
+          ? auth.azureAdOnlyAuthentication ?? true
+          : false,
 
         principalType: sql.PrincipalType.Group,
         tenantId,
@@ -199,9 +193,9 @@ export default ({
   //Private Link
   if (network?.privateLink) {
     privateEndpointCreator({
+      ...network.privateLink,
       resourceInfo: { name, group, id: sqlServer.id },
       privateDnsZoneName: 'privatelink.database.windows.net',
-      subnetIds: network.privateLink.subnetIds,
       linkServiceGroupIds: network.privateLink.type
         ? [network.privateLink.type]
         : ['sqlServer'],
@@ -357,9 +351,12 @@ export default ({
       });
 
       if (vaultInfo) {
+        //Refer here to build connection correctly: https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/azure-active-directory-authentication?view=sql-server-ver16
         const connectionString = auth?.azureAdOnlyAuthentication
-          ? interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};Authentication=Active Directory Integrated;;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`
-          : interpolate`Data Source=${sqlName}.database.windows.net;Initial Catalog=${d.name};User Id=${auth.adminLogin};Password=${auth.password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=120;`;
+          ? auth?.defaultLoginManagedId
+            ? interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication=Active Directory Managed Identity; User Id=${auth.defaultLoginManagedId}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
+            : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication=Active Directory Default; MultipleActiveResultSets=False;Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
+          : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; User Id=${auth.adminLogin}; Password=${auth.password}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`;
 
         addCustomSecret({
           name: d.name,

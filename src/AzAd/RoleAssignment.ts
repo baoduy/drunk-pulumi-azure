@@ -1,8 +1,8 @@
-import * as native from "@pulumi/azure-native";
-import * as pulumi from "@pulumi/pulumi";
-import { Input, Resource } from "@pulumi/pulumi";
-import { defaultScope } from "../Common/AzureEnv";
-import RolesBuiltIn from "./RolesBuiltIn";
+import * as native from '@pulumi/azure-native';
+import * as pulumi from '@pulumi/pulumi';
+import { Input, Resource } from '@pulumi/pulumi';
+import { defaultSubScope } from '../Common/AzureEnv';
+import RolesBuiltIn from './RolesBuiltIn';
 
 type GetRoleProps = {
   roleName: string;
@@ -28,7 +28,7 @@ export type RoleAssignmentProps = {
 export const roleAssignment = ({
   name,
   roleName,
-  scope = defaultScope,
+  scope = defaultSubScope,
   principalId,
   principalType,
   dependsOn,
@@ -37,7 +37,7 @@ export const roleAssignment = ({
   return pulumi.output(principalId).apply((id) => {
     if (!id) return undefined;
     return new native.authorization.RoleAssignment(
-      `${name}-${roleName.split(" ").join("")}`,
+      `${name}-${roleName.split(' ').join('')}`,
       {
         principalId,
         principalType,

@@ -1,9 +1,10 @@
 import * as cs from '@pulumi/azure-native/containerservice';
 import { getAksName, getResourceGroupName } from '../Common';
+import { globalKeyName } from '../Common/GlobalEnv';
 import { KeyVaultInfo, ResourceInfo } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate, Output } from '@pulumi/pulumi';
-import { currentRegionName, subscriptionId } from '../Common/AzureEnv';
+import { subscriptionId } from '../Common/AzureEnv';
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
@@ -65,12 +66,12 @@ export const getAksPrivateDnz = (
 
   return aks.apply((a) => {
     if (!a.privateFQDN) return undefined;
-    const dnsName = a.privateFQDN.split(':').slice(1).join('.');
+    const dnsName = a.privateFQDN.split('.').slice(1).join('.');
     const rsGroup = a.nodeResourceGroup!;
 
     return {
       name: dnsName,
-      group: { resourceGroupName: rsGroup, location: currentRegionName },
+      group: { resourceGroupName: rsGroup, location: globalKeyName },
       id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
     } as ResourceInfo;
   });

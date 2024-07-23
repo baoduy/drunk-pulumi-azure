@@ -14,10 +14,9 @@ import { addCustomSecret } from '../KeyVault/CustomHelper';
 interface Props extends BasicArgs {
   name: string;
   group?: ResourceGroupInfo;
-  adminUserEnabled?: boolean;
-  enableStorageAccount?: boolean;
-  vaultInfo?: KeyVaultInfo;
+  //vaultInfo?: KeyVaultInfo;
   sku?: registry.SkuName | string;
+  policies?: { retentionDay: number };
   /**Only support Premium sku*/
   network?: Omit<NetworkPropsType, 'subnetId'>;
 }
@@ -29,18 +28,18 @@ export default ({
   name,
   group = global.groupInfo,
   sku = registry.SkuName.Basic,
-  adminUserEnabled = true,
-  vaultInfo,
+  //vaultInfo,
+  policies,
   network,
   dependsOn,
   ignoreChanges,
 }: Props): ResourceInfoWithInstance<registry.Registry> => {
   name = getAcrName(name);
 
-  const urlKey = `${name}-url`;
-  const userNameKey = `${name}-user-name`;
-  const primaryPasswordKey = getPasswordName(name, 'primary');
-  const secondaryPasswordKey = getPasswordName(name, 'secondary');
+  // const urlKey = `${name}-url`;
+  // const userNameKey = `${name}-user-name`;
+  // const primaryPasswordKey = getPasswordName(name, 'primary');
+  // const secondaryPasswordKey = getPasswordName(name, 'secondary');
 
   const resource = new registry.Registry(
     name,
@@ -49,8 +48,32 @@ export default ({
       ...group,
 
       sku: { name: sku },
-      adminUserEnabled,
+      //This is for encryption
+      identity: { type: registry.ResourceIdentityType.SystemAssigned },
+
+      adminUserEnabled: false,
+      dataEndpointEnabled: false,
+      policies:
+        sku === 'Premium'
+          ? {
+              exportPolicy: {
+                status: registry.ExportPolicyStatus.Disabled,
+              },
+              quarantinePolicy: { status: registry.PolicyStatus.Enabled },
+              retentionPolicy: {
+                days: policies?.retentionDay ?? 90,
+                status: registry.PolicyStatus.Enabled,
+              },
+              trustPolicy: {
+                status: registry.PolicyStatus.Enabled,
+                type: registry.TrustPolicyType.Notary,
+              },
+            }
+          : undefined,
+
       publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
+      networkRuleBypassOptions: network?.privateLink ? 'None' : 'AzureServices',
+      zoneRedundancy: sku === 'Premium' ? 'Enabled' : 'Disabled',
 
       networkRuleSet:
         sku === 'Premium' && network
@@ -77,51 +100,51 @@ export default ({
     });
   }
 
-  if (vaultInfo && adminUserEnabled) {
-    resource.id.apply(async (id) => {
-      //The Resource is not created in Azure yet.
-      if (!id) return;
-      //Only able to gert the secret once the resource is created.
-      const keys = await registry.listRegistryCredentials({
-        registryName: name,
-        resourceGroupName: global.groupInfo.resourceGroupName,
-      });
-
-      addCustomSecret({
-        name: urlKey,
-        value: `https://${name}.azurecr.io`,
-        vaultInfo,
-        contentType: 'Container Registry',
-        dependsOn: resource,
-      });
-
-      addCustomSecret({
-        name: userNameKey,
-        value: keys.username!,
-        vaultInfo,
-        contentType: 'Container Registry',
-        dependsOn: resource,
-      });
-
-      addCustomSecret({
-        name: primaryPasswordKey,
-        formattedName: true,
-        value: keys.passwords![0].value!,
-        vaultInfo,
-        contentType: 'Container Registry',
-        dependsOn: resource,
-      });
-
-      addCustomSecret({
-        name: secondaryPasswordKey,
-        formattedName: true,
-        value: keys.passwords![1].value!,
-        vaultInfo,
-        contentType: 'Container Registry',
-        dependsOn: resource,
-      });
-    });
-  }
+  // if (vaultInfo) {
+  //   resource.id.apply(async (id) => {
+  //     //The Resource is not created in Azure yet.
+  //     if (!id) return;
+  //     //Only able to gert the secret once the resource is created.
+  //     const keys = await registry.listRegistryCredentials({
+  //       registryName: name,
+  //       resourceGroupName: global.groupInfo.resourceGroupName,
+  //     });
+  //
+  //     addCustomSecret({
+  //       name: urlKey,
+  //       value: `https://${name}.azurecr.io`,
+  //       vaultInfo,
+  //       contentType: 'Container Registry',
+  //       dependsOn: resource,
+  //     });
+  //
+  //     addCustomSecret({
+  //       name: userNameKey,
+  //       value: keys.username!,
+  //       vaultInfo,
+  //       contentType: 'Container Registry',
+  //       dependsOn: resource,
+  //     });
+  //
+  //     addCustomSecret({
+  //       name: primaryPasswordKey,
+  //       formattedName: true,
+  //       value: keys.passwords![0].value!,
+  //       vaultInfo,
+  //       contentType: 'Container Registry',
+  //       dependsOn: resource,
+  //     });
+  //
+  //     addCustomSecret({
+  //       name: secondaryPasswordKey,
+  //       formattedName: true,
+  //       value: keys.passwords![1].value!,
+  //       vaultInfo,
+  //       contentType: 'Container Registry',
+  //       dependsOn: resource,
+  //     });
+  //   });
+  // }
 
   return {
     name,

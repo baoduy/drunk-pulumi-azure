@@ -1,28 +1,34 @@
-import * as native from '@pulumi/azure-native';
+import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Output, output } from '@pulumi/pulumi';
+import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
-import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
+import {
+  BasicResourceArgs,
+  KeyVaultInfo,
+  ResourceInfoWithInstance,
+} from '../types';
 import {
   currentEnv,
-  defaultScope,
+  defaultSubScope,
   Environments,
   getResourceIdFromInfo,
   isPrd,
   parseResourceInfoFromId,
   tenantId,
-} from '../Common/AzureEnv';
+  stack,
+  getAksName,
+  getResourceGroupName,
+} from '../Common';
 import Locker from '../Core/Locker';
 import aksIdentityCreator from './Identity';
-import { stack } from '../Common/StackEnv';
 import { createDiagnostic } from '../Logs/Helpers';
-import { getAksName, getResourceGroupName } from '../Common';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
-import { getAksConfig } from './Helper';
+import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { getKeyVaultBase } from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { IdentityResult } from '../AzAd/Identity';
 import { ManagedCluster } from '@pulumi/azure-native/containerservice';
 
@@ -63,7 +69,7 @@ const autoScaleFor = ({
 
 const defaultNodePoolProps = {
   availabilityZones: isPrd ? ['1', '2', '3'] : undefined,
-  type: native.containerservice.AgentPoolType.VirtualMachineScaleSets,
+  type: ccs.AgentPoolType.VirtualMachineScaleSets,
   vmSize: 'Standard_B2s',
 
   maxPods: 50,
@@ -73,7 +79,7 @@ const defaultNodePoolProps = {
 
   enableUltraSSD: isPrd,
   osDiskSizeGB: 128,
-  osDiskType: native.containerservice.OSDiskType.Managed,
+  osDiskType: ccs.OSDiskType.Managed,
 
   nodeLabels: {
     environment: currentEnv,
@@ -107,7 +113,7 @@ export enum VmSizes {
 export interface NodePoolProps
   extends Partial<inputs.containerservice.ManagedClusterAgentPoolProfileArgs> {
   name: string;
-  mode: native.containerservice.AgentPoolMode;
+  mode: ccs.AgentPoolMode;
   vmSize: VmSizes | string;
   osDiskSizeGB: number;
   maxPods: number;
@@ -125,7 +131,8 @@ export type AskFeatureProps = {
   enableAutoScale?: boolean;
   enablePodIdentity?: boolean;
   enableWorkloadIdentity?: boolean;
-  enableDiagnosticSetting?: boolean;
+  //enableDiagnosticSetting?: boolean;
+  enableMaintenance?: boolean;
 };
 
 export type AksAccessProps = {
@@ -137,6 +144,8 @@ export type AksAccessProps = {
 export type AksNetworkProps = {
   subnetId: pulumi.Input<string>;
   virtualHostSubnetName?: pulumi.Input<string>;
+  /** This is using for Private DNZ linking only*/
+  extraVnetIds?: pulumi.Input<string>[];
   outboundIpAddress?: {
     ipAddressId?: pulumi.Input<string>;
     ipAddressPrefixId?: pulumi.Input<string>;
@@ -148,7 +157,7 @@ export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
 
 export interface AksProps extends BasicResourceArgs {
   //nodeResourceGroup?: string;
-  tier?: native.containerservice.ManagedClusterSKUTier;
+  tier?: ccs.ManagedClusterSKUTier;
 
   addon?: AskAddonProps;
   features?: AskFeatureProps;
@@ -182,9 +191,8 @@ export interface AksProps extends BasicResourceArgs {
   lock?: boolean;
 }
 
-export type AksResults = ResourceInfo & {
+export type AksResults = ResourceInfoWithInstance<ManagedCluster> & {
   serviceIdentity: IdentityResult;
-  aks: ManagedCluster;
   disableLocalAccounts?: boolean;
   getKubeConfig: () => Output<string> | undefined;
 };
@@ -201,12 +209,12 @@ export default async ({
   acr,
   aksAccess,
   vaultInfo,
-  features = { enableDiagnosticSetting: true },
+  features = { enableMaintenance: true },
   storageProfile,
   addon = {
     enableAzureKeyVault: false,
   },
-  tier = native.containerservice.ManagedClusterSKUTier.Free,
+  tier = ccs.ManagedClusterSKUTier.Free,
   lock = true,
   dependsOn = [],
   importUri,
@@ -214,7 +222,6 @@ export default async ({
 }: AksProps): Promise<AksResults> => {
   const aksName = getAksName(name);
   const secretName = `${aksName}-config`;
-  const acrScope = acr?.enable ? acr.id ?? defaultScope : undefined;
   const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
 
   //Auto detect and disable Local Account
@@ -239,8 +246,15 @@ export default async ({
     dependsOn,
   });
 
+  // const privateDnsZone = features?.enablePrivateCluster
+  //   ? PrivateDnsZoneBuilder({
+  //       name: `${aksName}.privatelink.${currentRegionCode}.azmk8s.io`,
+  //       group,
+  //     }).build()
+  //   : undefined;
+
   //Create AKS Cluster
-  const aks = new native.containerservice.ManagedCluster(
+  const aks = new ccs.ManagedCluster(
     aksName,
     {
       resourceName: aksName,
@@ -254,8 +268,9 @@ export default async ({
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        enablePrivateClusterPublicFQDN: true,
+        enablePrivateClusterPublicFQDN: false,
         privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
+        //privateDNSZone: privateDnsZone?.id,
       },
 
       addonProfiles: {
@@ -300,11 +315,10 @@ export default async ({
       },
 
       sku: {
-        name: native.containerservice.ManagedClusterSKUName.Base,
+        name: ccs.ManagedClusterSKUName.Base,
         tier,
       },
-      supportPlan:
-        native.containerservice.KubernetesSupportPlan.KubernetesOfficial,
+      supportPlan: ccs.KubernetesSupportPlan.KubernetesOfficial,
       agentPoolProfiles: [
         {
           ...defaultNodePoolProps,
@@ -389,10 +403,10 @@ export default async ({
           }
         : undefined,
       identity: {
-        type: native.containerservice.ResourceIdentityType.SystemAssigned,
+        type: ccs.ResourceIdentityType.SystemAssigned,
       },
       autoUpgradeProfile: {
-        upgradeChannel: native.containerservice.UpgradeChannel.Patch,
+        upgradeChannel: ccs.UpgradeChannel.Patch,
         //nodeOSUpgradeChannel: "NodeImage",
       },
       disableLocalAccounts: Boolean(aksAccess.disableLocalAccounts),
@@ -407,9 +421,9 @@ export default async ({
         : undefined,
       storageProfile,
       networkProfile: {
-        networkMode: native.containerservice.NetworkMode.Transparent,
-        networkPolicy: native.containerservice.NetworkPolicy.Azure,
-        networkPlugin: native.containerservice.NetworkPlugin.Azure,
+        networkMode: ccs.NetworkMode.Transparent,
+        networkPolicy: ccs.NetworkPolicy.Azure,
+        networkPlugin: ccs.NetworkPlugin.Azure,
 
         //dnsServiceIP: '10.0.0.10',
         //dockerBridgeCidr: '172.17.0.1/16',
@@ -417,8 +431,8 @@ export default async ({
 
         outboundType:
           features?.enablePrivateCluster || !network.outboundIpAddress
-            ? native.containerservice.OutboundType.UserDefinedRouting
-            : native.containerservice.OutboundType.LoadBalancer,
+            ? ccs.OutboundType.UserDefinedRouting
+            : ccs.OutboundType.LoadBalancer,
 
         loadBalancerSku: 'Standard',
         loadBalancerProfile: network.outboundIpAddress
@@ -450,32 +464,29 @@ export default async ({
     Locker({ name: aksName, resource: aks });
   }
 
-  new native.containerservice.MaintenanceConfiguration(
-    `${aksName}-MaintenanceConfiguration`,
-    {
-      configName: 'default',
-      // notAllowedTime: [
-      //   {
-      //     end: "2020-11-30T12:00:00Z",
-      //     start: "2020-11-26T03:00:00Z",
-      //   },
-      // ],
-      ...group,
-      resourceName: aks.name,
-      timeInWeek: [
-        {
-          day: native.containerservice.WeekDay.Sunday,
-          hourSlots: [0, 23],
-        },
-      ],
-    },
-    { dependsOn: aks },
-  );
+  if (features?.enableMaintenance) {
+    //Default
+    new ccs.MaintenanceConfiguration(
+      `${aksName}-MaintenanceConfiguration`,
+      {
+        configName: 'default',
+        ...group,
+        resourceName: aks.name,
+        timeInWeek: [
+          {
+            day: ccs.WeekDay.Sunday,
+            hourSlots: [0, 23],
+          },
+        ],
+      },
+      { dependsOn: aks, deleteBeforeReplace: true },
+    );
+  }
 
   if (nodePools) {
     nodePools.map(
       (p) =>
-        new native.containerservice.AgentPool(`${name}-${p.name}`, {
+        new ccs.AgentPool(`${name}-${p.name}`, {
           //agentPoolName:p.name,
           resourceName: aks.name,
           ...group,
@@ -506,7 +517,8 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile, network.subnetId])
       .apply(([identity, identityProfile, sId]) => {
-        if (acrScope && identityProfile && identityProfile['kubeletidentity']) {
+        const acrScope = acr?.id ?? defaultSubScope;
+        if (identityProfile && identityProfile['kubeletidentity']) {
           roleAssignment({
             name: `${name}-aks-identity-profile-pull`,
             principalId: identityProfile['kubeletidentity'].objectId!,
@@ -526,6 +538,7 @@ export default async ({
           }
         }
 
+        //Link service principal to Vnet Resources group
         if (network.subnetId && identity) {
           roleAssignment({
             name: `${name}-system-net`,
@@ -536,6 +549,22 @@ export default async ({
               group: parseResourceInfoFromId(sId)!.group,
             }),
           });
+        }
+
+        //Link Private Dns to extra Vnet
+        if (features?.enablePrivateCluster && network.extraVnetIds) {
+          const dns = getAksPrivateDnz({
+            name: aksName,
+            group,
+            id: aks.id,
+          });
+
+          dns.apply((s) =>
+            dnsBuilder
+              .from(s!)
+              .linkTo({ vnetIds: network.extraVnetIds })
+              .build(),
+          );
         }
       });
 
@@ -561,7 +590,7 @@ export default async ({
     }
 
     //Diagnostic
-    if (features.enableDiagnosticSetting && logWpId) {
+    if (logWpId) {
       createDiagnostic({
         name,
         targetResourceId: id,
@@ -590,10 +619,10 @@ export default async ({
   });
 
   return {
-    name,
+    name: aksName,
     group,
     id: aks.id,
-    aks,
+    instance: aks,
     serviceIdentity,
     getKubeConfig: (): Output<string> | undefined =>
       vaultInfo

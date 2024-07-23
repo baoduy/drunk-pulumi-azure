@@ -2,6 +2,7 @@ import { EnvRolesResults } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
 import { BuilderProps, IBuilder, IBuilderAsync } from './genericBuilder';
+import { CertBuilderType } from './vaultBuilder';
 import {
   IVnetBuilder,
   IVnetBuilderStart,
@@ -51,7 +52,7 @@ export interface IResourceVaultBuilder {
 export interface IResourceVaultItemsBuilder {
   addSecrets(items: Record<string, Input<string>>): IResourceBuilder;
   //addKeys () : IResourceBuilder;
-  //addCerts() : IResourceBuilder;
+  addCerts(props: CertBuilderType): IResourceBuilder;
 }
 
 export interface IResourceVnetBuilder {

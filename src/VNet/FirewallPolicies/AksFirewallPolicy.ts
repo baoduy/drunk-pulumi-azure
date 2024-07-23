@@ -1,12 +1,12 @@
-import { Input } from "@pulumi/pulumi";
-import { input as inputs } from "@pulumi/azure-native/types";
-import { currentRegionCode } from "../../Common/AzureEnv";
+import { Input } from '@pulumi/pulumi';
+import { input as inputs } from '@pulumi/azure-native/types';
+import { allAzurePorts, currentRegionCode } from '../../Common/AzureEnv';
 import {
   ApplicationRuleArgs,
   FirewallPolicyRuleCollectionResults,
   NetworkRuleArgs,
-} from "../types";
-import { FirewallPolicyGroup } from "../FirewallPolicy";
+} from '../types';
+import { FirewallPolicyGroup } from '../FirewallPolicy';
 
 interface AzureFirewallPolicyProps {
   priority: number;
@@ -40,28 +40,28 @@ export default ({
   if (dNATs) {
     dNATs.forEach((nat) => {
       dnatRules.push({
-        ruleType: "NatRule",
+        ruleType: 'NatRule',
         name: `${nat.name}-inbound-443`,
         description: `Forward port 443 external IpAddress of ${nat.name} to internal IpAddress`,
-        sourceAddresses: [nat.sourceIpAddress ?? "*"],
+        sourceAddresses: [nat.sourceIpAddress ?? '*'],
         destinationAddresses: nat.publicIpAddresses,
-        destinationPorts: ["443"],
-        ipProtocols: ["TCP"],
+        destinationPorts: ['443'],
+        ipProtocols: ['TCP'],
         translatedAddress: nat.internalIpAddress,
-        translatedPort: "443",
+        translatedPort: '443',
       });
 
       if (nat.allowHttp)
         dnatRules.push({
-          ruleType: "NatRule",
+          ruleType: 'NatRule',
           name: `${nat.name}-inbound-80`,
           description: `Forward port 80 external IpAddress of ${nat.name} to internal IpAddress`,
-          sourceAddresses: [nat.sourceIpAddress ?? "*"],
+          sourceAddresses: [nat.sourceIpAddress ?? '*'],
           destinationAddresses: nat.publicIpAddresses,
-          destinationPorts: ["80"],
-          ipProtocols: ["TCP"],
+          destinationPorts: ['80'],
+          ipProtocols: ['TCP'],
           translatedAddress: nat.internalIpAddress,
-          translatedPort: "80",
+          translatedPort: '80',
         });
     });
   }
@@ -69,185 +69,175 @@ export default ({
   //AKS Network Rules
   netRules.push(
     {
-      ruleType: "NetworkRule",
-      name: "aks-vpn",
+      ruleType: 'NetworkRule',
+      name: 'aks-vpn',
       description:
-        "For OPEN VPN tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
-      ipProtocols: ["UDP"],
+        'For OPEN VPN tunneled secure communication between the nodes and the control plane for AzureCloud',
+      ipProtocols: ['UDP'],
       sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud.${currentRegionCode}`],
-      destinationPorts: ["1194"],
+      destinationPorts: ['1194'],
     },
     {
-      ruleType: "NetworkRule",
-      name: "aks-tcp",
+      ruleType: 'NetworkRule',
+      name: 'aks-tcp',
       description:
-        "For tunneled secure communication between the nodes and the control plane for AzureCloud.SoutheastAsia",
-      ipProtocols: ["TCP"],
+        'For tunneled secure communication between the nodes and the control plane for AzureCloud',
+      ipProtocols: ['TCP'],
       sourceAddresses: subnetSpaces,
       destinationAddresses: [`AzureCloud.${currentRegionCode}`],
-      destinationPorts: ["443", "9000"],
+      destinationPorts: allAzurePorts,
     },
     {
-      ruleType: "NetworkRule",
-      name: "aks-time",
+      ruleType: 'NetworkRule',
+      name: 'aks-time',
       description:
-        "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
-      ipProtocols: ["UDP"],
+        'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
+      ipProtocols: ['UDP'],
       sourceAddresses: subnetSpaces,
-      destinationAddresses: ["ntp.ubuntu.com"],
-      destinationPorts: ["123"],
+      destinationAddresses: ['ntp.ubuntu.com'],
+      destinationPorts: ['123'],
     },
     //TODO: Remove this
     {
-      ruleType: "NetworkRule",
-      name: "aks-time-others",
+      ruleType: 'NetworkRule',
+      name: 'aks-time-others',
       description:
-        "Required for Network Time Protocol (NTP) time synchronization on Linux nodes.",
-      ipProtocols: ["UDP"],
+        'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
+      ipProtocols: ['UDP'],
       sourceAddresses: subnetSpaces,
-      destinationAddresses: ["*"],
-      destinationPorts: ["123"],
+      destinationAddresses: ['*'],
+      destinationPorts: ['123'],
     },
     {
-      ruleType: "NetworkRule",
-      name: "azure-services-tags",
-      description: "Allows internal services to connect to Azure Resources.",
-      ipProtocols: ["TCP"],
+      ruleType: 'NetworkRule',
+      name: 'azure-services-tags',
+      description: 'Allows internal services to connect to Azure Resources.',
+      ipProtocols: ['TCP'],
       sourceAddresses: subnetSpaces,
       destinationAddresses: [
-        "AzureContainerRegistry.SoutheastAsia",
-        "MicrosoftContainerRegistry.SoutheastAsia",
-        "AzureActiveDirectory",
-        "AzureMonitor.SoutheastAsia",
-        "AppConfiguration",
-        "AzureKeyVault.SoutheastAsia",
-        //'AzureConnectors.SoutheastAsia',
-        //'AzureSignalR', This already using private endpoint
-        //'DataFactory.SoutheastAsia',
-        //'EventHub.SoutheastAsia',
-        "ServiceBus.SoutheastAsia",
-        //'Sql.SoutheastAsia', This already using private endpoint
-        "Storage.SoutheastAsia",
+        'AzureContainerRegistry',
+        'MicrosoftContainerRegistry',
+        'AzureActiveDirectory',
+        'AzureMonitor',
+        'AppConfiguration',
+        'AzureKeyVault',
       ],
-      destinationPorts: ["443"],
+      destinationPorts: ['443'],
     },
     {
-      ruleType: "NetworkRule",
-      name: "others-dns",
-      description: "Others DNS.",
-      ipProtocols: ["TCP", "UDP"],
+      ruleType: 'NetworkRule',
+      name: 'others-dns',
+      description: 'Others DNS.',
+      ipProtocols: ['TCP', 'UDP'],
       sourceAddresses: subnetSpaces,
-      destinationAddresses: ["*"],
-      destinationPorts: ["53"],
+      destinationAddresses: ['*'],
+      destinationPorts: ['53'],
     },
   );
 
   //AKS Apps Rules
   appRules.push(
     {
-      ruleType: "ApplicationRule",
-      name: "aks-services-fqdnTags",
-      description: "Allows pods to access AzureKubernetesService",
+      ruleType: 'ApplicationRule',
+      name: 'aks-services-fqdnTags',
+      description: 'Allows pods to access AzureKubernetesService',
       sourceAddresses: subnetSpaces,
-      fqdnTags: ["AzureKubernetesService"],
-      protocols: [{ protocolType: "Https", port: 443 }],
+      fqdnTags: ['AzureKubernetesService'],
+      protocols: [{ protocolType: 'Https', port: 443 }],
     },
     {
-      ruleType: "ApplicationRule",
-      name: "aks-fqdn",
-      description: "Azure Global required FQDN",
+      ruleType: 'ApplicationRule',
+      name: 'aks-fqdn',
+      description: 'Azure Global required FQDN',
       sourceAddresses: subnetSpaces,
       targetFqdns: [
         //AKS mater
-        "*.hcp.southeastasia.azmk8s.io",
+        '*.hcp.southeastasia.azmk8s.io',
         //Microsoft Container Registry
-        "mcr.microsoft.com",
-        "data.mcr.microsoft.com",
-        "*.data.mcr.microsoft.com",
+        '*.azurecr.io',
+        'mcr.microsoft.com',
+        'data.mcr.microsoft.com',
+        '*.data.mcr.microsoft.com',
         //Azure management
-        "management.azure.com",
-        "login.microsoftonline.com",
+        'management.azure.com',
+        'login.microsoftonline.com',
         //Microsoft trusted package repository
-        "packages.microsoft.com",
-        //Azure CDN
-        //"acs-mirror.azureedge.net",
-        //CosmosDb
-        //"*.documents.azure.com",
+        'packages.microsoft.com',
       ],
-      protocols: [{ protocolType: "Https", port: 443 }],
+      protocols: [{ protocolType: 'Https', port: 443 }],
     },
     {
-      ruleType: "ApplicationRule",
-      name: "azure-monitors",
-      description: "Azure AKS Monitoring",
+      ruleType: 'ApplicationRule',
+      name: 'azure-monitors',
+      description: 'Azure AKS Monitoring',
       sourceAddresses: subnetSpaces,
       targetFqdns: [
-        "dc.services.visualstudio.com",
-        "*.ods.opinsights.azure.com",
-        "*.oms.opinsights.azure.com",
-        "*.monitoring.azure.com",
-        "*.services.visualstudio.com",
+        'dc.services.visualstudio.com',
+        '*.ods.opinsights.azure.com',
+        '*.oms.opinsights.azure.com',
+        '*.monitoring.azure.com',
+        '*.services.visualstudio.com',
       ],
-      protocols: [{ protocolType: "Https", port: 443 }],
+      protocols: [{ protocolType: 'Https', port: 443 }],
     },
     {
-      ruleType: "ApplicationRule",
-      name: "azure-policy",
-      description: "Azure AKS Policy Management",
+      ruleType: 'ApplicationRule',
+      name: 'azure-policy',
+      description: 'Azure AKS Policy Management',
       sourceAddresses: subnetSpaces,
       targetFqdns: [
-        "*.policy.core.windows.net",
-        "gov-prod-policy-data.trafficmanager.net",
-        "raw.githubusercontent.com",
-        "dc.services.visualstudio.com",
+        '*.policy.core.windows.net',
+        'gov-prod-policy-data.trafficmanager.net',
+        'raw.githubusercontent.com',
+        'dc.services.visualstudio.com',
       ],
-      protocols: [{ protocolType: "Https", port: 443 }],
+      protocols: [{ protocolType: 'Https', port: 443 }],
     },
   );
 
   if (allowAccessPublicRegistries) {
     appRules.push(
       {
-        ruleType: "ApplicationRule",
-        name: "docker-services",
+        ruleType: 'ApplicationRule',
+        name: 'docker-services',
         sourceAddresses: subnetSpaces,
-        targetFqdns: ["*.docker.io", "docker.io", "*.docker.com", "*.pkg.dev"],
-        protocols: [{ protocolType: "Https", port: 443 }],
+        targetFqdns: ['*.docker.io', 'docker.io', '*.docker.com', '*.pkg.dev'],
+        protocols: [{ protocolType: 'Https', port: 443 }],
       },
       {
-        ruleType: "ApplicationRule",
-        name: "k8s-services",
+        ruleType: 'ApplicationRule',
+        name: 'k8s-services',
         sourceAddresses: subnetSpaces,
         targetFqdns: [
-          "quay.io", //For Cert Manager
-          "*.quay.io",
-          "k8s.gcr.io", //nginx images
-          "*.k8s.io",
-          "*.cloudfront.net",
-          "*.amazonaws.com",
-          "*.gcr.io",
-          "*.googleapis.com",
+          'quay.io', //For Cert Manager
+          '*.quay.io',
+          'k8s.gcr.io', //nginx images
+          '*.k8s.io',
+          '*.cloudfront.net',
+          '*.amazonaws.com',
+          '*.gcr.io',
+          '*.googleapis.com',
         ],
-        protocols: [{ protocolType: "Https", port: 443 }],
+        protocols: [{ protocolType: 'Https', port: 443 }],
       },
       {
-        ruleType: "ApplicationRule",
-        name: "ubuntu-services",
+        ruleType: 'ApplicationRule',
+        name: 'ubuntu-services',
         sourceAddresses: subnetSpaces,
         targetFqdns: [
-          "security.ubuntu.com",
-          "azure.archive.ubuntu.com",
-          "changelogs.ubuntu.com",
+          'security.ubuntu.com',
+          'azure.archive.ubuntu.com',
+          'changelogs.ubuntu.com',
         ],
-        protocols: [{ protocolType: "Https", port: 443 }],
+        protocols: [{ protocolType: 'Https', port: 443 }],
       },
     );
   }
 
   return FirewallPolicyGroup({
-    policy: { name: "aks-firewall-policy", dnatRules, netRules, appRules },
+    policy: { name: 'aks-firewall-policy', dnatRules, netRules, appRules },
     priority,
-    action: "Allow",
+    action: 'Allow',
   });
 };

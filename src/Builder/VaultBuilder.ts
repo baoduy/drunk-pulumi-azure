@@ -1,9 +1,16 @@
 import { BuilderProps } from './types';
-import { IVaultBuilder, IVaultBuilderResults } from './types/vaultBuilder';
+import {
+  CertBuilderType,
+  IVaultBuilder,
+  IVaultBuilderResults,
+} from './types/vaultBuilder';
 import Vault, { createVaultPrivateLink } from '../KeyVault';
 import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
-import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
+import {
+  VaultCertResource,
+  VaultNetworkResource,
+} from '@drunk-pulumi/azure-providers';
 import { subscriptionId } from '../Common/AzureEnv';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
@@ -63,6 +70,15 @@ export class VaultBuilderResults implements IVaultBuilderResults {
         vaultInfo: this.vaultInfo,
       });
     });
+    return this;
+  }
+
+  public addCerts(items: Record<string, CertBuilderType>): IVaultBuilderResults {
+    Object.keys(items).map((key) => {
+      const val = items[key];
+      return  new VaultCertResource(val.name, { ...val, vaultName: this.vaultInfo.name });
+    });
+
     return this;
   }
 }

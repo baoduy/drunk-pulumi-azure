@@ -2,7 +2,7 @@ import { getGraphPermissions } from '../AzAd/GraphDefinition';
 import identityCreator from '../AzAd/Identity';
 import { BasicArgs, KeyVaultInfo } from '../types';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { defaultScope } from '../Common/AzureEnv';
+import { defaultSubScope } from '../Common';
 
 interface Props extends BasicArgs {
   name: string;
@@ -35,7 +35,7 @@ export default ({ name, vaultInfo, dependsOn }: Props) => {
     principalId: serverIdentity.principalId!,
     principalType: 'ServicePrincipal',
     roleName: 'AcrPull',
-    scope: defaultScope,
+    scope: defaultSubScope,
     dependsOn: serverIdentity.resource,
   });
 

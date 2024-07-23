@@ -1,77 +1,77 @@
-import * as native from "@pulumi/azure-native";
+import * as native from '@pulumi/azure-native';
 
-const getSecurities = (envDomain: string) => [
-  "default-src 'self' data: 'unsafe-inline' 'unsafe-eval'",
-  `https://*.${envDomain}`,
-  "https://*.services.visualstudio.com",
-  "https://*.googleapis.com", // Font and Css
-  "https://*.gstatic.com", // Font and Css
-  "https://*.google.com", // Captcha
-  "https://login.microsoftonline.com",
-  "https://graph.microsoft.com",
-  "https://*.service.signalr.net",
-  "wss://*.service.signalr.net",
-  `frame-ancestors 'self' https://login.microsoftonline.com https://*.${envDomain}`,
-];
+export type CdnSecurityHeaderTypes = {
+  contentSecurityPolicies?: string[];
+  allowOrigins?: string;
+};
 
-export const getDefaultResponseHeaders = (
-  envDomain: string,
-): Record<string, string> => ({
-  "Strict-Transport-Security": "max-age=86400; includeSubDomains",
-  "X-XSS-Protection": "1; mode=block",
-  "X-Content-Type-Options": "nosniff",
-  "Content-Security-Policy": getSecurities(envDomain).join(" "),
-});
+export function getDefaultResponseHeaders({
+  contentSecurityPolicies,
+  allowOrigins,
+}: CdnSecurityHeaderTypes): Record<string, string> {
+  const rs: Record<string, string> = {
+    'Strict-Transport-Security': 'max-age=86400; includeSubDomains',
+    'X-XSS-Protection': '1; mode=block',
+    'X-Content-Type-Options': 'nosniff',
+  };
+  if (contentSecurityPolicies)
+    rs['Content-Security-Policy'] = contentSecurityPolicies.join(';');
+  if (allowOrigins) {
+    rs['Access-Control-Allow-Origin'] = allowOrigins;
+    rs['Access-Control-Allow-Credentials'] = 'true';
+  }
+  return rs;
+}
 
 export const enforceHttpsRule: native.types.input.cdn.DeliveryRuleArgs = {
-  name: "enforceHttps",
+  name: 'enforceHttps',
   order: 1,
   conditions: [
     {
-      name: "RequestScheme",
+      name: 'RequestScheme',
       parameters: {
-        matchValues: ["HTTP"],
-        operator: "Equal",
+        matchValues: ['HTTP'],
+        operator: 'Equal',
         negateCondition: false,
-        typeName: "DeliveryRuleRequestSchemeConditionParameters",
+        typeName: 'DeliveryRuleRequestSchemeConditionParameters',
       },
     },
   ],
   actions: [
     {
-      name: "UrlRedirect",
+      name: 'UrlRedirect',
       parameters: {
-        redirectType: "Found",
-        destinationProtocol: "Https",
-        typeName: "DeliveryRuleUrlRedirectActionParameters",
+        redirectType: 'Found',
+        destinationProtocol: 'Https',
+        typeName: 'DeliveryRuleUrlRedirectActionParameters',
       },
     },
   ],
 };
 
 export const indexFileCacheRule: native.types.input.cdn.DeliveryRuleArgs = {
-  name: "indexCache",
+  name: 'indexCache',
   order: 2,
   conditions: [
     {
-      name: "UrlFileName",
+      name: 'UrlFileName',
       parameters: {
-        operator: "Contains",
+        operator: 'Contains',
         negateCondition: false,
-        matchValues: ["index.html"],
-        transforms: ["Lowercase"],
-        typeName: "DeliveryRuleUrlFilenameConditionParameters",
+        matchValues: ['index.html'],
+        transforms: ['Lowercase'],
+        typeName: 'DeliveryRuleUrlFilenameConditionParameters',
       },
     },
   ],
   actions: [
     {
-      name: "CacheExpiration",
+      name: 'CacheExpiration',
       parameters: {
-        cacheBehavior: "Override",
-        cacheType: "All",
-        cacheDuration: "08:00:00",
-        typeName: "DeliveryRuleCacheExpirationActionParameters",
+        cacheBehavior: 'Override',
+        cacheType: 'All',
+        cacheDuration: '08:00:00',
+        typeName: 'DeliveryRuleCacheExpirationActionParameters',
       },
     },
   ],
@@ -81,27 +81,27 @@ export const getResponseHeadersRule = (
   rules: Record<string, string>,
 ): native.types.input.cdn.DeliveryRuleArgs => {
   return {
-    name: "defaultResponseHeaders",
+    name: 'defaultResponseHeaders',
     order: 3,
     conditions: [
       {
-        name: "UrlPath",
+        name: 'UrlPath',
         parameters: {
-          operator: "Any",
+          operator: 'Any',
           negateCondition: false,
           matchValues: [],
           transforms: [],
-          typeName: "DeliveryRuleUrlPathMatchConditionParameters",
+          typeName: 'DeliveryRuleUrlPathMatchConditionParameters',
         },
       },
     ],
     actions: Object.keys(rules).map((k) => ({
-      name: "ModifyResponseHeader",
+      name: 'ModifyResponseHeader',
       parameters: {
-        headerAction: "Overwrite",
+        headerAction: 'Overwrite',
         headerName: k,
         value: rules[k],
-        typeName: "DeliveryRuleHeaderActionParameters",
+        typeName: 'DeliveryRuleHeaderActionParameters',
       },
     })),
   };
@@ -115,11 +115,11 @@ export const allowsCorsRules = (
     order: 5 + i,
     conditions: [
       {
-        name: "RequestHeader",
+        name: 'RequestHeader',
         parameters: {
-          typeName: "DeliveryRuleRequestHeaderConditionParameters",
-          selector: "Origin",
-          operator: "Contains",
+          typeName: 'DeliveryRuleRequestHeaderConditionParameters',
+          selector: 'Origin',
+          operator: 'Contains',
           transforms: [],
           matchValues: [c],
           negateCondition: false,
@@ -128,11 +128,11 @@ export const allowsCorsRules = (
     ],
     actions: [
       {
-        name: "ModifyResponseHeader",
+        name: 'ModifyResponseHeader',
         parameters: {
-          typeName: "DeliveryRuleHeaderActionParameters",
-          headerAction: "Overwrite",
-          headerName: "Access-Control-Allow-Origin",
+          typeName: 'DeliveryRuleHeaderActionParameters',
+          headerAction: 'Overwrite',
+          headerName: 'Access-Control-Allow-Origin',
           value: c,
         },
       },

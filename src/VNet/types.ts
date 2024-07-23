@@ -1,7 +1,7 @@
-import { enums, input as inputs } from "@pulumi/azure-native/types";
-import { AzureFirewallApplicationRuleProtocolType } from "@pulumi/azure-native/types/enums/network";
-import { Input, Output } from "@pulumi/pulumi";
-import * as pulumi from "@pulumi/pulumi";
+import { enums, input as inputs } from '@pulumi/azure-native/types';
+import { AzureFirewallApplicationRuleProtocolType } from '@pulumi/azure-native/types/enums/network';
+import { Input, Output } from '@pulumi/pulumi';
+import * as pulumi from '@pulumi/pulumi';
 
 export type VnetInfoType = {
   vnetName: Input<string>;
@@ -49,7 +49,7 @@ export interface NatRuleArgs {
     Input<string | enums.network.FirewallPolicyRuleNetworkProtocol>[]
   >;
   name?: Input<string>;
-  ruleType: Input<"NatRule">;
+  ruleType: Input<'NatRule'>;
   sourceAddresses?: Input<Input<string>[]>;
   sourceIpGroups?: Input<Input<string>[]>;
   translatedAddress?: Input<string>;
@@ -66,6 +66,9 @@ interface FirewallPolicyRuleApplicationProtocolArgs {
 
 export interface NetworkRuleArgs {
   description?: Input<string>;
+  /**
+   * List of destination IP addresses or Service Tags.
+   */
   destinationAddresses?: Input<Input<string>[]>;
   destinationFqdns?: Input<Input<string>[]>;
   destinationIpGroups?: Input<Input<string>[]>;
@@ -74,7 +77,7 @@ export interface NetworkRuleArgs {
     Input<string | enums.network.FirewallPolicyRuleNetworkProtocol>[]
   >;
   name?: Input<string>;
-  ruleType: Input<"NetworkRule">;
+  ruleType: Input<'NetworkRule'>;
   sourceAddresses?: Input<Input<string>[]>;
   sourceIpGroups?: Input<Input<string>[]>;
 }
@@ -88,7 +91,7 @@ export interface ApplicationRuleArgs {
   >;
   name?: Input<string>;
   protocols?: Input<Input<FirewallPolicyRuleApplicationProtocolArgs>[]>;
-  ruleType: Input<"ApplicationRule">;
+  ruleType: Input<'ApplicationRule'>;
   sourceAddresses?: Input<Input<string>[]>;
   sourceIpGroups?: Input<Input<string>[]>;
   targetFqdns?: Input<Input<string>[]>;

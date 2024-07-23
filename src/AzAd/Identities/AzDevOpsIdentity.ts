@@ -1,10 +1,10 @@
-import { KeyVaultInfo } from "../../types";
-import Identity from "../Identity";
-import { getGraphPermissions } from "../GraphDefinition";
-import { getIdentityInfoOutput } from "../Helper";
-import { defaultScope } from "../../Common/AzureEnv";
+import { KeyVaultInfo } from '../../types';
+import Identity from '../Identity';
+import { getGraphPermissions } from '../GraphDefinition';
+import { getIdentityInfoOutput } from '../Helper';
+import { defaultSubScope } from '../../Common/AzureEnv';
 
-export const defaultAzAdoName = "azure-devops";
+export const defaultAzAdoName = 'azure-devops';
 
 interface Props {
   name?: string;
@@ -24,18 +24,21 @@ export const getAdoIdentityInfo = (vaultInfo: KeyVaultInfo) =>
 export default ({
   name = defaultAzAdoName,
   vaultInfo,
-  additionRoles = ["Owner"],
+  additionRoles = ['Owner'],
   ...others
 }: Props) => {
-  const graphAccess = getGraphPermissions({ name: "User.Read", type: "Scope" });
+  const graphAccess = getGraphPermissions({ name: 'User.Read', type: 'Scope' });
 
   const ado = Identity({
     name,
-    appType: "web",
+    appType: 'web',
     createClientSecret: true,
     createPrincipal: true,
     requiredResourceAccesses: [graphAccess],
-    roles: additionRoles.map((role) => ({ name: role, scope: defaultScope })),
+    roles: additionRoles.map((role) => ({
+      name: role,
+      scope: defaultSubScope,
+    })),
     vaultInfo,
     ...others,
   });

@@ -1,0 +1,55 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/31381ae8-323a-438d-9698-b5f4e8c3d5b5/resourceGroups/uk-prd-aks-hub-gb-grp-transwap/providers/Microsoft.ContainerService/managedClusters/uk-prd-aks-gb/maintenanceConfigurations/aksManagedAutoUpgradeSchedule",
+      "name": "aksManagedAutoUpgradeSchedule",
+      "properties": {
+        "maintenanceWindow": {
+          "schedule": {
+            "weekly": {
+              "intervalWeeks": 1,
+              "dayOfWeek": "Sunday"
+            }
+          },
+          "durationHours": 4,
+          "utcOffset": "+00:00",
+          "startDate": "2024-07-19",
+          "startTime": "00:00"
+        }
+      }
+    },
+    {
+      "id": "/subscriptions/31381ae8-323a-438d-9698-b5f4e8c3d5b5/resourceGroups/uk-prd-aks-hub-gb-grp-transwap/providers/Microsoft.ContainerService/managedClusters/uk-prd-aks-gb/maintenanceConfigurations/aksManagedNodeOSUpgradeSchedule",
+      "name": "aksManagedNodeOSUpgradeSchedule",
+      "properties": {
+        "maintenanceWindow": {
+          "schedule": {
+            "weekly": {
+              "intervalWeeks": 1,
+              "dayOfWeek": "Sunday"
+            }
+          },
+          "durationHours": 4,
+          "utcOffset": "+00:00",
+          "startDate": "2024-07-18",
+          "startTime": "00:00"
+        }
+      }
+    },
+    {
+      "id": "/subscriptions/31381ae8-323a-438d-9698-b5f4e8c3d5b5/resourceGroups/uk-prd-aks-hub-gb-grp-transwap/providers/Microsoft.ContainerService/managedClusters/uk-prd-aks-gb/maintenanceConfigurations/default",
+      "name": "default",
+      "properties": {
+        "timeInWeek": [
+          {
+            "day": "Sunday",
+            "hourSlots": [
+              0,
+              23
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
