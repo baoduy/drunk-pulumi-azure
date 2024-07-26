@@ -99,16 +99,16 @@ export default ({
       destinationPorts: ['123'],
     },
     //TODO: Remove this
-    {
-      ruleType: 'NetworkRule',
-      name: 'aks-time-others',
-      description:
-        'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
-      ipProtocols: ['UDP'],
-      sourceAddresses: subnetSpaces,
-      destinationAddresses: ['*'],
-      destinationPorts: ['123'],
-    },
+    // {
+    //   ruleType: 'NetworkRule',
+    //   name: 'aks-time-others',
+    //   description:
+    //     'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
+    //   ipProtocols: ['UDP'],
+    //   sourceAddresses: subnetSpaces,
+    //   destinationAddresses: ['*'],
+    //   destinationPorts: ['123'],
+    // },
     {
       ruleType: 'NetworkRule',
       name: 'azure-services-tags',
