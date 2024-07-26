@@ -98,6 +98,13 @@ const ContainerRegistry: Record<EnvRoleKeyTypes, string[]> = {
   admin: ['AcrDelete'],
 };
 
+//AppConfig Roles
+const AppConfigRoleNames: Record<EnvRoleKeyTypes, string[]> = {
+  readOnly: ['App Configuration Data Reader'],
+  contributor: ['App Configuration Data Owner'],
+  admin: [],
+};
+
 export type RoleEnableItem = boolean | { [k in EnvRoleKeyTypes]?: boolean };
 
 export type RoleEnableTypes = {
@@ -108,6 +115,7 @@ export type RoleEnableTypes = {
   enableVaultRoles?: RoleEnableItem;
   /** Container Registry Roles */
   enableACRRoles?: RoleEnableItem;
+  enableAppConfig?: RoleEnableItem;
 };
 
 export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
@@ -146,6 +154,7 @@ export const getRoleNames = ({
   enableAksRoles,
   enableStorageRoles,
   enableACRRoles,
+  enableAppConfig,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
   const rs: ListRoleType = {
     readOnly: new Set<string>(),
@@ -159,6 +168,7 @@ export const getRoleNames = ({
   getRoleFor(enableAksRoles, AksRoleNames, rs);
   getRoleFor(enableStorageRoles, StorageRoleNames, rs);
   getRoleFor(enableACRRoles, ContainerRegistry, rs);
+  getRoleFor(enableAppConfig, AppConfigRoleNames, rs);
 
   return {
     readOnly: Array.from(rs.readOnly).sort(),

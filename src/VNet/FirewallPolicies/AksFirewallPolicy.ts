@@ -1,6 +1,6 @@
 import { Input } from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/azure-native/types';
-import { allAzurePorts, currentRegionCode } from '../../Common/AzureEnv';
+import { allAzurePorts, currentRegionCode } from '../../Common';
 import {
   ApplicationRuleArgs,
   FirewallPolicyRuleCollectionResults,
@@ -14,6 +14,7 @@ interface AzureFirewallPolicyProps {
   subnetSpaces: Array<Input<string>>;
   /** Allows access to Docker and Kubernetes registries */
   allowAccessPublicRegistries?: boolean;
+  trustedAcrs?: string[];
 
   dNATs?: [
     {
@@ -31,6 +32,7 @@ export default ({
   priority,
   allowAccessPublicRegistries,
   subnetSpaces,
+  trustedAcrs = [],
   dNATs,
 }: AzureFirewallPolicyProps): FirewallPolicyRuleCollectionResults => {
   const dnatRules = new Array<Input<inputs.network.NatRuleArgs>>();
@@ -99,16 +101,16 @@ export default ({
       destinationPorts: ['123'],
     },
     //TODO: Remove this
-    {
-      ruleType: 'NetworkRule',
-      name: 'aks-time-others',
-      description:
-        'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
-      ipProtocols: ['UDP'],
-      sourceAddresses: subnetSpaces,
-      destinationAddresses: ['*'],
-      destinationPorts: ['123'],
-    },
+    // {
+    //   ruleType: 'NetworkRule',
+    //   name: 'aks-time-others',
+    //   description:
+    //     'Required for Network Time Protocol (NTP) time synchronization on Linux nodes.',
+    //   ipProtocols: ['UDP'],
+    //   sourceAddresses: subnetSpaces,
+    //   destinationAddresses: ['*'],
+    //   destinationPorts: ['123'],
+    // },
     {
       ruleType: 'NetworkRule',
       name: 'azure-services-tags',
@@ -153,12 +155,13 @@ export default ({
       sourceAddresses: subnetSpaces,
       targetFqdns: [
         //AKS mater
-        '*.hcp.southeastasia.azmk8s.io',
+        `*.hcp.${currentRegionCode}.azmk8s.io`,
         //Microsoft Container Registry
-        '*.azurecr.io',
+        ...trustedAcrs?.map((s) => `${s}.azurecr.io`),
         'mcr.microsoft.com',
-        'data.mcr.microsoft.com',
-        '*.data.mcr.microsoft.com',
+        '*.mcr.microsoft.com',
+        //'data.mcr.microsoft.com',
+        //'*.data.mcr.microsoft.com',
         //Azure management
         'management.azure.com',
         'login.microsoftonline.com',
