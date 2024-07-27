@@ -11,7 +11,7 @@ import { ToWords } from 'to-words';
 import { convertToIpRange } from '../VNet/Helper';
 import { getRedisCacheName } from '../Common';
 import { isPrd } from '../Common';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 
 const toWord = new ToWords();
@@ -88,19 +88,20 @@ export default ({
         name: n,
         resourceGroupName: group.resourceGroupName,
       });
-
-      addCustomSecret({
-        name: `${name}-primary-connection`,
-        value: `${name}.redis.cache.windows.net:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'Redis Cache',
-      });
-
-      addCustomSecret({
-        name: `${name}-secondary-connection`,
-        value: `${name}.redis.cache.windows.net:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
-        vaultInfo,
-        contentType: 'Redis Cache',
+        dependsOn: redis,
+        items: [
+          {
+            name: `${name}-primary-connection`,
+            value: `${name}.redis.cache.windows.net:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
+          },
+          {
+            name: `${name}-secondary-connection`,
+            value: `${name}.redis.cache.windows.net:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
+          },
+        ],
       });
     });
   }

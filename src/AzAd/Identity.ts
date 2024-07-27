@@ -14,7 +14,7 @@ import {
   NamedType,
   NamedWithVaultBasicArgs,
 } from '../types';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
 
 type PreAuthApplicationProps = {
@@ -135,18 +135,13 @@ export default ({
   );
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: secretNames.objectIdName,
-      value: app.objectId,
+    addCustomSecrets({
       vaultInfo,
       contentType: 'Identity',
-    });
-
-    addCustomSecret({
-      name: secretNames.clientIdKeyName,
-      value: app.clientId,
-      vaultInfo,
-      contentType: 'Identity',
+      items: [
+        { name: secretNames.objectIdName, value: app.objectId },
+        { name: secretNames.clientIdKeyName, value: app.clientId },
+      ],
     });
   }
 
@@ -202,18 +197,13 @@ export default ({
     });
 
     if (vaultInfo) {
-      addCustomSecret({
-        name: secretNames.principalIdKeyName,
-        value: principal.objectId,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'Identity',
-      });
-
-      addCustomSecret({
-        name: secretNames.principalSecretKeyName,
-        value: principalSecret,
-        vaultInfo,
-        contentType: 'Identity',
+        items: [
+          { name: secretNames.principalIdKeyName, value: principal.objectId },
+          { name: secretNames.principalSecretKeyName, value: principalSecret },
+        ],
       });
     }
   }

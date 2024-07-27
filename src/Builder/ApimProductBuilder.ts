@@ -2,7 +2,7 @@ import * as apim from '@pulumi/azure-native/apimanagement';
 import { interpolate } from '@pulumi/pulumi';
 import { getPasswordName } from '../Common';
 import { randomPassword } from '../Core/Random';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ResourceInfo } from '../types';
 import ApimApiBuilder from './ApimApiBuilder';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
@@ -114,22 +114,15 @@ export class ApimProductBuilder
     );
 
     if (this.props.vaultInfo) {
-      addCustomSecret({
-        name: primaryKey,
-        formattedName: true,
-        value: primaryPass,
+      addCustomSecrets({
         contentType: subName,
         vaultInfo: this.props.vaultInfo,
-        dependsOn: this._subInstance,
-      });
-
-      addCustomSecret({
-        name: secondaryKey,
         formattedName: true,
-        value: secondaryPass,
-        contentType: subName,
-        vaultInfo: this.props.vaultInfo,
         dependsOn: this._subInstance,
+        items: [
+          { name: primaryKey, value: primaryPass },
+          { name: secondaryKey, value: secondaryPass },
+        ],
       });
     }
   }

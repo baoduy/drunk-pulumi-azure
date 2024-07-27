@@ -11,7 +11,7 @@ import * as pulumi from '@pulumi/pulumi';
 import * as azure from '@pulumi/azure-native';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -158,17 +158,13 @@ export default ({
   }
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: `${name}-login`,
-      value: username,
+    addCustomSecrets({
       vaultInfo,
       contentType: name,
-    });
-    addCustomSecret({
-      name: `${name}-pass`,
-      value: password,
-      vaultInfo,
-      contentType: name,
+      items: [
+        { name: `${name}-login`, value: username },
+        { name: `${name}-pass`, value: password },
+      ],
     });
   }
 

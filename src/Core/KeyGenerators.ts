@@ -1,7 +1,7 @@
 import { KeyVaultInfo, NamedWithVaultType } from '../types';
 import { getSshName } from '../Common';
 import { SshKeyResource } from '@drunk-pulumi/azure-providers/SshKeyGenerator';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 import { LoginProps, randomPassword, randomUserName } from './Random';
 import {
@@ -49,23 +49,16 @@ export const generateSsh = ({
     },
     { dependsOn: pass },
   );
-
-  addCustomSecret({
-    name: userNameKey,
-    value: userName,
+  //Add secrets to vault
+  addCustomSecrets({
     formattedName: true,
     vaultInfo,
     contentType: 'Random Ssh',
     dependsOn: rs,
-  });
-
-  addCustomSecret({
-    name: passwordKeyName,
-    value: pass.result,
-    formattedName: true,
-    vaultInfo,
-    contentType: 'Random Ssh',
-    dependsOn: rs,
+    items: [
+      { name: userNameKey, value: userName },
+      { name: passwordKeyName, value: pass.result },
+    ],
   });
 
   return {

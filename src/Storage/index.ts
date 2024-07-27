@@ -2,7 +2,6 @@ import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
 import {
   BasicEncryptResourceArgs,
-  BasicResourceWithVaultArgs,
   PrivateLinkPropsType,
   ResourceInfo,
 } from '../types';
@@ -182,6 +181,7 @@ export default ({
     });
   }
 
+  //Lock the resources
   if (lock) {
     Locker({ name, resource: stg });
   }
@@ -263,7 +263,8 @@ export default ({
       connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
     }));
 
-    if (vaultInfo) {
+    //Add connection into Key vault
+    if (vaultInfo && features?.allowSharedKeyAccess) {
       //Keys
       addCustomSecrets({
         vaultInfo,

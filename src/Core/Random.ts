@@ -1,7 +1,7 @@
 import { Output } from '@pulumi/pulumi';
 import * as random from '@pulumi/random';
 import { getPasswordName } from '../Common';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { KeyVaultInfo, NamedType, NamedWithVaultType } from '../types';
 
 interface RandomPassProps extends NamedWithVaultType {
@@ -116,18 +116,13 @@ export const randomLogin = ({
   const passwordKey = `${name}-password`;
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: userNameKey,
-      value: userName,
+    addCustomSecrets({
       vaultInfo,
       contentType: 'Random Login',
-    });
-
-    addCustomSecret({
-      name: passwordKey,
-      value: password,
-      vaultInfo,
-      contentType: 'Random Login',
+      items: [
+        { name: userNameKey, value: userName },
+        { name: passwordKey, value: password },
+      ],
     });
   }
 

@@ -21,7 +21,7 @@ import {
 import creator from '../Core/ResourceCreator';
 import { getServiceBusName, isPrd } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 
 type TransportTypes = 'AmqpWebSockets' | 'Amqp' | null;
@@ -164,14 +164,6 @@ const createAndStoreConnection = ({
     if (typeof transportType === 'string')
       primaryConn += `;TransportType=${transportType};`;
 
-    addCustomSecret({
-      name: primaryName,
-      value: primaryConn,
-      vaultInfo,
-      contentType: `ServiceBus ${namespaceName}/${name}`,
-      dependsOn: rule,
-    });
-
     let secondConn = removeEntityPath
       ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, '')
       : keys.secondaryConnectionString;
@@ -179,12 +171,14 @@ const createAndStoreConnection = ({
     if (typeof transportType === 'string')
       secondConn += `;TransportType=${transportType};`;
 
-    addCustomSecret({
-      name: secondaryName,
-      value: secondConn,
+    addCustomSecrets({
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${name}`,
       dependsOn: rule,
+      items: [
+        { name: primaryName, value: primaryConn },
+        { name: secondaryName, value: secondConn },
+      ],
     });
   });
 

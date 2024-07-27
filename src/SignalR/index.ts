@@ -7,7 +7,7 @@ import {
   ResourceInfoWithInstance,
 } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 
 interface ResourceSkuArgs {
   capacity?: 1 | 2 | 5 | 10 | 20 | 50 | 100;
@@ -104,40 +104,23 @@ export default ({
         resourceName: name,
         resourceGroupName: group.resourceGroupName,
       });
-
-      addCustomSecret({
-        name: `${name}-host`,
-        value: h,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-primaryKey`,
-        value: keys.primaryKey || '',
-        vaultInfo,
-        contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-primaryConnection`,
-        value: keys.primaryConnectionString || '',
-        vaultInfo,
-        contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-secondaryKey`,
-        value: keys.secondaryKey || '',
-        vaultInfo,
-        contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-secondaryConnection`,
-        value: keys.secondaryConnectionString || '',
-        vaultInfo,
-        contentType: 'SignalR',
+        dependsOn: signalR,
+        items: [
+          { name: `${name}-host`, value: h },
+          //{ name: `${name}-primaryKey`, value: keys.primaryKey! },
+          {
+            name: `${name}-primaryConnection`,
+            value: keys.primaryConnectionString!,
+          },
+          //{ name: `${name}-secondaryKey`, value: keys.secondaryKey! },
+          {
+            name: `${name}-secondaryConnection`,
+            value: keys.secondaryConnectionString!,
+          },
+        ],
       });
     });
   }
