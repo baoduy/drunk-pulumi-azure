@@ -1,7 +1,7 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { Input, Output, output, Resource } from '@pulumi/pulumi';
 import { NamedWithVaultType } from '../types';
-import { getSecretName, replaceAll } from '../Common';
+import { getSecretName, isDryRun, replaceAll } from '../Common';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
@@ -38,7 +38,7 @@ export const addKey = ({
       ...vaultInfo.group,
       //https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.keyvault.webkey?view=azure-dotnet-legacy
       properties: {
-        keySize: 2048,
+        keySize: 4096,
         kty: 'RSA',
         keyOps: [
           'decrypt',
@@ -57,6 +57,25 @@ export const addKey = ({
   );
 };
 
+interface KeyVaultPropertiesResults {
+  keyName: Output<string>;
+  url: Output<string>;
+  keyVaultUri: string;
+  keyVersion: Output<string>;
+}
+
+export const addEncryptKey = (
+  props: Omit<SecretProps, 'value' | 'contentType'>,
+): KeyVaultPropertiesResults => {
+  const key = addKey({ ...props, name: `${props.name}-encrypt-key` });
+  return {
+    keyName: key.name,
+    keyVaultUri: `https://${props.vaultInfo.name}.vault.azure.net`,
+    keyVersion: key.keyUriWithVersion.apply((u) => u.split('/').pop()!),
+    url: key.keyUriWithVersion,
+  };
+};
+
 /** Get Key */
 export const getKey = async ({
   name,
@@ -69,40 +88,33 @@ export const getKey = async ({
   return client.getKey(n, version);
 };
 
-interface KeyVaultPropertiesResults {
-  keyName: string;
-  url: string;
-  keyVaultUri: string;
-  keyVersion?: string;
-}
-
 interface EncryptionPropertiesArgs {
   keySource: 'Microsoft.KeyVault';
   keyVaultProperties: Input<KeyVaultPropertiesResults>;
 }
 
 /** Get or create encryption Key */
-const getEncryptionKey = async ({
-  name,
-  vaultInfo,
-}: Required<NamedWithVaultType>): Promise<KeyVaultPropertiesResults> => {
-  const n = `${name}-encrypt-key`;
-  const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
-  return {
-    keyName: key!.properties.name,
-    keyVaultUri: key!.properties.vaultUrl,
-    keyVersion: key!.properties.version,
-    url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
-  };
-};
+// const getEncryptionKey = async ({
+//   name,
+//   vaultInfo,
+// }: Required<NamedWithVaultType>): Promise<KeyVaultPropertiesResults> => {
+//   const n = `${name}-encrypt-key`;
+//   const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
+//   return {
+//     keyName: key!.properties.name,
+//     keyVaultUri: key!.properties.vaultUrl,
+//     keyVersion: key!.properties.version,
+//     url: `${key!.properties.vaultUrl}/keys/${key!.properties.name}/${key!.properties.version}`,
+//   };
+// };
 
-export const getEncryptionKeyOutput = ({
-  name,
-  vaultInfo,
-}: NamedWithVaultType): Output<KeyVaultPropertiesResults> | undefined => {
-  if (!vaultInfo) return undefined;
-  return output(getEncryptionKey({ name, vaultInfo }));
-};
+// export const getEncryptionKeyOutput = ({
+//   name,
+//   vaultInfo,
+// }: NamedWithVaultType): Output<KeyVaultPropertiesResults> | undefined => {
+//   if (!vaultInfo) return undefined;
+//   return output(getEncryptionKey({ name, vaultInfo }));
+// };
 
 /** Get Secret */
 export const getSecret = async ({

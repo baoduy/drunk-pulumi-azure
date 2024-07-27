@@ -113,7 +113,7 @@ class AksBuilder
     this._askInstance = await Aks({
       ...this.commonProps,
       addon: this._addonProps,
-      aksAccess: { ...this._authProps, envRoles: this.commonProps.envRoles },
+      aksAccess: this._authProps!,
       tier: this._tier,
       linux: {
         adminUsername: this._sshInstance!.userName,

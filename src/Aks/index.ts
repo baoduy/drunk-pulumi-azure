@@ -5,7 +5,11 @@ import { Input, Output, output } from '@pulumi/pulumi';
 import { IEnvRoleBuilder } from '../Builder';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
-import { BasicResourceWithVaultArgs, ResourceInfoWithInstance } from '../types';
+import {
+  BasicEncryptResourceArgs,
+  BasicResourceWithVaultArgs,
+  ResourceInfoWithInstance,
+} from '../types';
 import {
   currentEnv,
   defaultSubScope,
@@ -130,7 +134,7 @@ export type AskFeatureProps = {
 };
 
 export type AksAccessProps = {
-  envRoles?: IEnvRoleBuilder;
+  //envRoles?: IEnvRoleBuilder;
   authorizedIPRanges?: Input<string>[];
   disableLocalAccounts?: boolean;
 };
@@ -149,7 +153,7 @@ export type AksNetworkProps = {
 export type AksNodePoolProps = Omit<NodePoolProps, 'subnetId' | 'aksId'>;
 export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
 
-export interface AksProps extends BasicResourceWithVaultArgs {
+export interface AksProps extends BasicEncryptResourceArgs {
   //nodeResourceGroup?: string;
   tier?: ccs.ManagedClusterSKUTier;
 
@@ -201,6 +205,8 @@ export default async ({
   acr,
   aksAccess,
   vaultInfo,
+  enableEncryption,
+  envRoles,
   features = { enableMaintenance: true },
   storageProfile,
   addon = {
@@ -403,11 +409,11 @@ export default async ({
       },
       disableLocalAccounts: Boolean(aksAccess.disableLocalAccounts),
       enableRBAC: true,
-      aadProfile: aksAccess.envRoles
+      aadProfile: envRoles
         ? {
             enableAzureRBAC: true,
             managed: true,
-            adminGroupObjectIDs: [aksAccess.envRoles.admin.objectId],
+            adminGroupObjectIDs: [envRoles.admin.objectId],
             tenantID: tenantId,
           }
         : undefined,
@@ -519,15 +525,11 @@ export default async ({
             scope: acrScope,
           });
 
-          if (vaultInfo) {
-            addCustomSecret({
-              name: `${name}-identity-clientId`,
-              value: identityProfile['kubeletidentity'].clientId!,
-              dependsOn: aks,
-              contentType: name,
-              vaultInfo,
-            });
-          }
+          //Add into EnvRoles
+          envRoles?.addMember(
+            'contributor',
+            identityProfile['kubeletidentity'].objectId!,
+          );
         }
 
         //Link service principal to Vnet Resources group
@@ -541,6 +543,9 @@ export default async ({
               group: parseResourceInfoFromId(sId)!.group,
             }),
           });
+
+          //Add into EnvRoles
+          envRoles?.addMember('contributor', identity.principalId);
         }
 
         //Link Private Dns to extra Vnet

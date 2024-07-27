@@ -1,8 +1,6 @@
 import * as azure from '@pulumi/azure-native';
 import {
   BasicEncryptResourceArgs,
-  BasicResourceArgs,
-  KeyVaultInfo,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
 } from '../types';
@@ -11,9 +9,9 @@ import * as pulumi from '@pulumi/pulumi';
 import * as dbformysql from '@pulumi/azure-native/dbformysql';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { addMemberToGroup } from '../AzAd/Group';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
@@ -69,7 +67,7 @@ export default ({
     }).result;
 
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput({ name, vaultInfo })
+    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
 
   const userIdentity = enableEncryption

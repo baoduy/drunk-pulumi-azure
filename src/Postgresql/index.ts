@@ -1,11 +1,6 @@
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
-import {
-  BasicEncryptResourceArgs,
-  BasicResourceWithVaultArgs,
-  LoginWithEnvRolesArgs,
-  NetworkPropsType,
-} from '../types';
+import { addEncryptKey } from '../KeyVault/Helper';
+import { BasicEncryptResourceArgs, NetworkPropsType } from '../types';
 import { getPostgresqlName, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as azure from '@pulumi/azure-native';
@@ -63,7 +58,7 @@ export default ({
   }).result;
 
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput({ name, vaultInfo })
+    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
 
   const userIdentity = enableEncryption

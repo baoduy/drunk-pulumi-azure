@@ -7,7 +7,7 @@ import {
   ResourceInfo,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
-import { getEncryptionKeyOutput, getSecret } from '../KeyVault/Helper';
+import { addEncryptKey, getSecret } from '../KeyVault/Helper';
 import { isPrd } from '../Common';
 import { getConnectionName, getKeyName, getStorageName } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
@@ -84,7 +84,7 @@ export default ({
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
   const secondConnectionKeyName = getConnectionName(name, 'secondary');
   const encryptionKey = enableEncryption
-    ? getEncryptionKeyOutput({ name, vaultInfo })
+    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts

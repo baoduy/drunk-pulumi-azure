@@ -1,7 +1,7 @@
 import { BasicResourceWithVaultArgs } from '../types';
 import * as automation from '@pulumi/azure-native/automation';
 import { getAutomationAccountName } from '../Common';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import { defaultSubScope } from '../Common';
 import { grantIdentityPermissions } from '../AzAd/Helper';
@@ -22,7 +22,7 @@ export default ({
 
   const encryption =
     enableEncryption && vaultInfo
-      ? getEncryptionKeyOutput({ name, vaultInfo })
+      ? addEncryptKey({ name, vaultInfo })
       : undefined;
 
   const roles = [{ name: 'Contributor', scope: defaultSubScope }];
@@ -54,9 +54,9 @@ export default ({
           : undefined,
         keyVaultProperties: encryption
           ? {
-              keyName: encryption.apply((s) => s.keyName),
-              keyvaultUri: encryption.apply((s) => s.keyVaultUri),
-              keyVersion: encryption.apply((s) => s.keyVersion!),
+              keyName: encryption.keyName,
+              keyvaultUri: encryption.keyVaultUri,
+              keyVersion: encryption.keyVersion,
             }
           : undefined,
       },

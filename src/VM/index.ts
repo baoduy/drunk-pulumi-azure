@@ -5,7 +5,7 @@ import { getNICName, getVMName } from '../Common';
 import Locker from '../Core/Locker';
 import { randomPassword } from '../Core/Random';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import { BasicEncryptResourceArgs, LoginArgs } from '../types';
 import GlobalSchedule from './GlobalSchedule';
 import Extension, { VmExtensionProps } from './Extension';
@@ -81,7 +81,7 @@ export default ({
 
   //All VM will using the same Key
   const keyEncryption = enableEncryption
-    ? getEncryptionKeyOutput({ name: `az-vm-key-encryption`, vaultInfo })
+    ? addEncryptKey({ name: vmName, vaultInfo: vaultInfo! })
     : undefined;
   const diskEncryption = enableEncryption
     ? addCustomSecret({

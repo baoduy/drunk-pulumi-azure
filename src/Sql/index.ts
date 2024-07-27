@@ -1,14 +1,13 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 import { FullSqlDbPropsType } from '../Builder';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { isPrd, subscriptionId, tenantId } from '../Common';
 import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
   BasicEncryptResourceArgs,
   BasicResourceArgs,
-  BasicResourceWithVaultArgs,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
   ResourceInfo,
@@ -16,7 +15,7 @@ import {
 } from '../types';
 import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
-import sqlDbCreator, { SqlDbSku } from './SqlDb';
+import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { grantIdentityPermissions } from '../AzAd/Helper';
 
@@ -114,7 +113,7 @@ export default ({
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput({ name: sqlName, vaultInfo })
+    ? addEncryptKey({ name: sqlName, vaultInfo: vaultInfo! })
     : undefined;
 
   const adminGroup = auth.envRoles?.contributor;
@@ -319,7 +318,7 @@ export default ({
         keyName: keyName,
         uri: encryptKey.url,
       },
-      { dependsOn: sqlServer },
+      { dependsOn: sqlServer, ignoreChanges },
     );
 
     new sql.EncryptionProtector(
