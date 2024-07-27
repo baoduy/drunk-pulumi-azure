@@ -119,11 +119,11 @@ export default ({
 
   const adminGroup = auth.envRoles?.contributor;
 
+  if (enableEncryption) ignoreChanges.push('keyId');
   if (auth.azureAdOnlyAuthentication) {
     ignoreChanges.push('administratorLogin');
     ignoreChanges.push('administratorLoginPassword');
   }
-  if (enableEncryption) ignoreChanges.push('keyId');
 
   const sqlServer = new sql.Server(
     sqlName,
