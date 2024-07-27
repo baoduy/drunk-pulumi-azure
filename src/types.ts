@@ -1,5 +1,5 @@
 import { Input, Output, Resource } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
+import { EnvRoleKeyTypes, EnvRolesResults } from './AzAd/EnvRoles';
 
 export declare namespace NodeJS {
   interface ProcessEnv {
@@ -9,34 +9,37 @@ export declare namespace NodeJS {
   }
 }
 
-export type NamedResourceType = {
-  name: string;
-};
+/** Omit all the key of OT from T */
+export type TypeOmit<T, OT> = Omit<T, keyof OT>;
+
+export type OmitOpts<T> = TypeOmit<T, OptsArgs>;
 
 export type ResourceGroupInfo = {
   resourceGroupName: string;
   location?: Input<string>;
 };
-
-export type BasicResourceInfo = NamedResourceType & {
-  id: Output<string>;
-};
-
-export type ResourceInfo = BasicResourceInfo & {
-  group: ResourceGroupInfo;
-};
-
-export type BasicArgs = {
+export type OptsArgs = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
   importUri?: string;
   ignoreChanges?: string[];
 };
+export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
+export type LoginWithEnvRolesArgs = LoginArgs & { envRoles?: EnvRolesResults };
+export type NamedType = { name: string };
+export type NamedWithVaultType = NamedType & { vaultInfo?: KeyVaultInfo };
+export type NamedBasicArgs = NamedType & OptsArgs;
+export type NamedWithVaultBasicArgs = NamedWithVaultType & OptsArgs;
 
-export interface BasicResourceArgs extends BasicArgs {
-  name: string;
-  group: ResourceGroupInfo;
-}
+export type ResourceArgs = NamedType & { group: ResourceGroupInfo };
+export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
 
+export type BasicResourceArgs = ResourceArgs & OptsArgs;
+export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
+export type BasicEncryptResourceArgs = BasicResourceWithVaultArgs & {
+  enableEncryption?: boolean;
+};
+export type BasicResourceInfo = NamedType & { id: Output<string> };
+export type ResourceInfo = BasicResourceInfo & ResourceArgs;
 export type KeyVaultInfo = ResourceInfo;
 
 export interface BasicResourceInfoWithInstance<InstanceType>
@@ -64,7 +67,7 @@ export type NetworkPropsType = {
 
 export type IdentityRoleAssignment = {
   vaultInfo?: KeyVaultInfo;
-  roles?: Array<{ name: string; scope: Input<string> }>;
+  roles?: Array<NamedType & { scope: Input<string> }>;
   envRole?: EnvRoleKeyTypes;
 };
 
@@ -86,13 +89,12 @@ export type ConventionProps = {
   includeOrgName?: boolean;
 };
 
-export type BasicMonitorArgs = BasicArgs & {
+export type BasicMonitorArgs = OptsArgs & {
   logWpId?: Input<string>;
   logStorageId?: Input<string>;
 };
 
-export interface DiagnosticProps extends BasicMonitorArgs {
-  name: string;
+export interface DiagnosticProps extends NamedType, BasicMonitorArgs {
   targetResourceId: Input<string>;
   metricsCategories?: string[];
   logsCategories?: string[];

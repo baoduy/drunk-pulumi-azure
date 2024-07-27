@@ -1,8 +1,11 @@
-import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from '../types';
-import { getPostgresqlName } from '../Common';
+import {
+  BasicResourceWithVaultArgs,
+  LoginWithEnvRolesArgs,
+  NetworkPropsType,
+} from '../types';
+import { getPostgresqlName, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as azure from '@pulumi/azure-native';
-import { isPrd, tenantId } from '../Common/AzureEnv';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -11,13 +14,9 @@ import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import Locker from '../Core/Locker';
 
-export interface PostgresProps extends BasicResourceArgs {
-  // auth: {
-  //   adminLogin?: pulumi.Input<string>;
-  //   password?: pulumi.Input<string>;
-  // };
+export interface PostgresProps extends BasicResourceWithVaultArgs {
+  // auth: LoginWithEnvRolesArgs;
   sku?: pulumi.Input<inputs.dbforpostgresql.SkuArgs>;
-  vaultInfo?: KeyVaultInfo;
   version?: azure.dbforpostgresql.ServerVersion;
   storageSizeGB?: number;
   databases?: Array<string>;

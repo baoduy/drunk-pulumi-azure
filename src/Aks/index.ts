@@ -1,13 +1,10 @@
 import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
+import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
-import {
-  BasicResourceArgs,
-  KeyVaultInfo,
-  ResourceInfoWithInstance,
-} from '../types';
+import { BasicResourceWithVaultArgs, ResourceInfoWithInstance } from '../types';
 import {
   currentEnv,
   defaultSubScope,
@@ -27,10 +24,8 @@ import { roleAssignment } from '../AzAd/RoleAssignment';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import * as inputs from '@pulumi/azure-native/types/input';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { IdentityResult } from '../AzAd/Identity';
-import { ManagedCluster } from '@pulumi/azure-native/containerservice';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -111,8 +106,7 @@ export enum VmSizes {
 }
 
 export interface NodePoolProps
-  extends Partial<inputs.containerservice.ManagedClusterAgentPoolProfileArgs> {
-  name: string;
+  extends containerservice.ManagedClusterAgentPoolProfileArgs {
   mode: ccs.AgentPoolMode;
   vmSize: VmSizes | string;
   osDiskSizeGB: number;
@@ -155,7 +149,7 @@ export type AksNetworkProps = {
 export type AksNodePoolProps = Omit<NodePoolProps, 'subnetId' | 'aksId'>;
 export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
 
-export interface AksProps extends BasicResourceArgs {
+export interface AksProps extends BasicResourceWithVaultArgs {
   //nodeResourceGroup?: string;
   tier?: ccs.ManagedClusterSKUTier;
 
@@ -184,14 +178,12 @@ export interface AksProps extends BasicResourceArgs {
   };
   //kubernetesVersion?: Input<string>;
   nodePools?: Array<AksNodePoolProps>;
-
-  vaultInfo?: KeyVaultInfo;
   logWpId?: Input<string>;
   /**Lock resource from delete*/
   lock?: boolean;
 }
 
-export type AksResults = ResourceInfoWithInstance<ManagedCluster> & {
+export type AksResults = ResourceInfoWithInstance<ccs.ManagedCluster> & {
   serviceIdentity: IdentityResult;
   disableLocalAccounts?: boolean;
   getKubeConfig: () => Output<string> | undefined;

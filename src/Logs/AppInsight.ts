@@ -1,14 +1,16 @@
 import * as native from '@pulumi/azure-native';
-
-import { BasicResourceArgs, KeyVaultInfo, ResourceInfo } from '../types';
+import {
+  BasicResourceWithVaultArgs,
+  KeyVaultInfo,
+  ResourceInfo,
+} from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { getAppInsightName } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { Input } from '@pulumi/pulumi';
 
-interface Props extends BasicResourceArgs {
+interface Props extends BasicResourceWithVaultArgs {
   dailyCapGb?: number;
-  vaultInfo?: KeyVaultInfo;
   immediatePurgeDataOn30Days?: boolean;
   ingestionMode?: native.insights.IngestionMode;
   workspaceResourceId?: Input<string>;

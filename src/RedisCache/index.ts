@@ -2,8 +2,7 @@ import * as cache from '@pulumi/azure-native/cache';
 import * as pulumi from '@pulumi/pulumi';
 
 import {
-  BasicResourceArgs,
-  KeyVaultInfo,
+  BasicResourceWithVaultArgs,
   NetworkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
@@ -11,14 +10,13 @@ import {
 import { ToWords } from 'to-words';
 import { convertToIpRange } from '../VNet/Helper';
 import { getRedisCacheName } from '../Common';
-import { isPrd } from '../Common/AzureEnv';
+import { isPrd } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 
 const toWord = new ToWords();
 
-interface Props extends BasicResourceArgs {
-  vaultInfo?: KeyVaultInfo;
+interface Props extends BasicResourceWithVaultArgs {
   network?: NetworkPropsType;
   sku?: {
     name: cache.SkuName | string;

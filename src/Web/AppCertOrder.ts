@@ -1,11 +1,10 @@
 import * as cert from '@pulumi/azure-native/certificateregistration';
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { BasicResourceWithVaultArgs } from '../types';
 import { getCertOrderName, global } from '../Common';
 
-interface Props extends BasicResourceArgs {
+interface Props extends BasicResourceWithVaultArgs {
   domain: string;
   productType?: cert.CertificateProductType;
-  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({

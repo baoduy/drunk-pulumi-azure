@@ -1,14 +1,11 @@
 import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
-import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { ResourceWithVaultArgs } from '../types';
 import { getKeyName, getLogWpName } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
-interface Props {
-  name: string;
-  group: ResourceGroupInfo;
+interface Props extends ResourceWithVaultArgs {
   sku?: operationalinsights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
-  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({

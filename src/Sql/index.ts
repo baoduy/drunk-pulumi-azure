@@ -1,14 +1,15 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
-import { FullSqlDbPropsType, LoginBuilderProps } from '../Builder';
+import { FullSqlDbPropsType } from '../Builder';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
-import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
+import { isPrd, subscriptionId, tenantId } from '../Common';
 import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
   BasicResourceArgs,
-  KeyVaultInfo,
+  BasicResourceWithVaultArgs,
+  LoginArgs,
+  LoginWithEnvRolesArgs,
   NetworkPropsType,
   ResourceInfo,
   ResourceInfoWithInstance,
@@ -62,8 +63,7 @@ const createElasticPool = ({
   return { name: elasticName, group, id: ep.id, instance: ep };
 };
 
-export type SqlAuthType = LoginBuilderProps & {
-  envRoles?: EnvRolesResults;
+export type SqlAuthType = LoginWithEnvRolesArgs & {
   azureAdOnlyAuthentication?: boolean;
   defaultLoginManagedId?: Input<string>;
 };
@@ -91,8 +91,7 @@ export type SqlVulnerabilityAssessmentType = {
   storageEndpoint: Input<string>;
 };
 
-interface Props extends BasicResourceArgs {
-  vaultInfo?: KeyVaultInfo;
+interface Props extends BasicResourceWithVaultArgs {
   enableEncryption?: boolean;
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
@@ -117,7 +116,7 @@ export default ({
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
+    ? getEncryptionKeyOutput({ name, vaultInfo })
     : undefined;
 
   const adminGroup = auth.envRoles?.contributor;

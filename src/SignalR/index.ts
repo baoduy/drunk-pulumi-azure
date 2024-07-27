@@ -2,8 +2,7 @@ import * as ss from '@pulumi/azure-native/signalrservice';
 import * as pulumi from '@pulumi/pulumi';
 import { getPrivateEndpointName, getSignalRName, isPrd } from '../Common';
 import {
-  BasicResourceArgs,
-  KeyVaultInfo,
+  BasicResourceWithVaultArgs,
   PrivateLinkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
@@ -16,8 +15,7 @@ interface ResourceSkuArgs {
   tier?: 'Standard' | 'Free';
 }
 
-interface Props extends BasicResourceArgs {
-  vaultInfo?: KeyVaultInfo;
+interface Props extends BasicResourceWithVaultArgs {
   allowedOrigins?: pulumi.Input<pulumi.Input<string>[]>;
   privateLink?: PrivateLinkPropsType;
   kind?: ss.ServiceKind | string;

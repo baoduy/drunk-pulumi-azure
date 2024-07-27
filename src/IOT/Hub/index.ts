@@ -1,10 +1,8 @@
-import { BasicResourceArgs, KeyVaultInfo } from "../../types";
-import { getIotHubName } from "../../Common/Naming";
-import * as devices from "@pulumi/azure-native/devices";
-import { subscriptionId } from "../../Common/AzureEnv";
-import { Input } from "@pulumi/pulumi";
-import Locker from "../../Core/Locker";
-import { addCustomSecret } from "../../KeyVault/CustomHelper";
+import { BasicResourceWithVaultArgs } from '../../types';
+import { getIotHubName, subscriptionId } from '../../Common';
+import * as devices from '@pulumi/azure-native/devices';
+import { Input } from '@pulumi/pulumi';
+import { addCustomSecret } from '../../KeyVault/CustomHelper';
 
 type StorageEndpointPropertiesArgs = {
   name: Input<string>;
@@ -12,13 +10,13 @@ type StorageEndpointPropertiesArgs = {
   subscriptionId: Input<string>;
   connectionString: Input<string>;
   containerName: Input<string>;
-  encoding: "avro" | "avroDeflate"; // 'avroDeflate' and 'avro'
+  encoding: 'avro' | 'avroDeflate'; // 'avroDeflate' and 'avro'
   batchFrequencyInSeconds: Input<number>;
   fileNameFormat: Input<string>;
   maxChunkSizeInBytes: Input<number>;
 };
 
-interface Props extends BasicResourceArgs {
+interface Props extends BasicResourceWithVaultArgs {
   sku: {
     name: devices.IotHubSku;
     capacity?: number;
@@ -38,23 +36,22 @@ interface Props extends BasicResourceArgs {
     /** provide the event container name to enable events to be pushing to storage */
     eventContainerName?: Input<string>;
   };
-  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({
   name,
   group,
-  sku = { name: "F1", capacity: 1 },
+  sku = { name: 'F1', capacity: 1 },
   storage,
   serviceBus,
   dependsOn,
   vaultInfo,
 }: Props) => {
   const hubName = getIotHubName(name);
-  const busQueueEndpointName = "busQueue";
-  const busTopicEndpointName = "busTopic";
-  const storageMessageEndpointName = "hubStorage";
-  const storageEventEndpointName = "hubEventStorage";
+  const busQueueEndpointName = 'busQueue';
+  const busTopicEndpointName = 'busTopic';
+  const storageMessageEndpointName = 'hubStorage';
+  const storageEventEndpointName = 'hubEventStorage';
 
   const routeEndpoints = new Array<string>();
   const storageEndpoints = new Array<StorageEndpointPropertiesArgs>();
@@ -67,9 +64,9 @@ export default ({
       subscriptionId,
       connectionString: storage.connectionString,
       containerName: storage.messageContainerName,
-      encoding: "avro", // 'avroDeflate' and 'avro'
+      encoding: 'avro', // 'avroDeflate' and 'avro'
       batchFrequencyInSeconds: 60, //60 to 720
-      fileNameFormat: "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}", //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+      fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
       maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
     });
   }
@@ -80,9 +77,9 @@ export default ({
       subscriptionId,
       connectionString: storage.connectionString,
       containerName: storage.eventContainerName,
-      encoding: "avro", // 'avroDeflate' and 'avro'
+      encoding: 'avro', // 'avroDeflate' and 'avro'
       batchFrequencyInSeconds: 60, //60 to 720
-      fileNameFormat: "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}", //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
+      fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}', //Must have all these {iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm} but order and delimiter can be changed.
       maxChunkSizeInBytes: 300 * 1024 * 1024, // 10485760(10MB) and 524288000(500MB). Default value is 314572800(300MB).
     });
   }
@@ -97,7 +94,7 @@ export default ({
     source: devices.RoutingSource.DeviceMessages,
     endpointNames: [r],
     isEnabled: true,
-    condition: "true",
+    condition: 'true',
   }));
 
   if (storage?.eventContainerName) {
@@ -106,7 +103,7 @@ export default ({
       source: devices.RoutingSource.DeviceLifecycleEvents,
       endpointNames: [storageEventEndpointName],
       isEnabled: true,
-      condition: "true",
+      condition: 'true',
     });
   }
 
@@ -128,7 +125,7 @@ export default ({
               $default: {
                 connectionString: storage.connectionString,
                 containerName: storage.fileContainerName,
-                sasTtlAsIso8601: "PT1H",
+                sasTtlAsIso8601: 'PT1H',
               },
             }
           : undefined,
@@ -155,12 +152,12 @@ export default ({
         //privateEndpointConnections: {},
         messagingEndpoints: {
           fileNotifications: {
-            lockDurationAsIso8601: "PT1M",
+            lockDurationAsIso8601: 'PT1M',
             maxDeliveryCount: 10,
-            ttlAsIso8601: "PT1H",
+            ttlAsIso8601: 'PT1H',
           },
         },
-        minTlsVersion: "1.2",
+        minTlsVersion: '1.2',
 
         routing: {
           endpoints: {
@@ -191,13 +188,13 @@ export default ({
           },
           fallbackRoute: {
             name: `$fallback`,
-            condition: "true",
+            condition: 'true',
             isEnabled: true,
             source: devices.RoutingSource.DeviceMessages,
 
             endpointNames: storage?.eventContainerName
               ? [storageEventEndpointName]
-              : ["events"],
+              : ['events'],
           },
 
           routes: routes,
@@ -226,7 +223,7 @@ export default ({
           name: `${hubName}-${k.keyName}`,
           value: conn,
           vaultInfo,
-          contentType: "IOT Hub",
+          contentType: 'IOT Hub',
         });
       });
     });

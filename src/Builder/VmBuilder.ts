@@ -1,5 +1,5 @@
 import { Input } from '@pulumi/pulumi';
-import { ResourceInfo } from '../types';
+import { LoginArgs, ResourceInfo } from '../types';
 import {
   Builder,
   BuilderProps,
@@ -8,7 +8,6 @@ import {
   IVmOsBuilder,
   IVmSizeBuilder,
   IVmVnetBuilder,
-  LoginBuilderProps,
   VmOsBuilderLinuxProps,
   VmOsBuilderWindowsProps,
   VmSizeTypes,
@@ -29,7 +28,7 @@ class VmBuilder
   private _subnetProps: Input<string> | undefined = undefined;
   private _tagsProps: Record<string, Input<string>> | undefined = undefined;
   private _generateLogin: boolean = false;
-  private _loginProps: LoginBuilderProps | undefined = undefined;
+  private _loginProps: LoginArgs | undefined = undefined;
   private _vmSize: VmSizeTypes | undefined = undefined;
   private _windowImage: VmOsBuilderWindowsProps | undefined = undefined;
   private _linuxImage: VmOsBuilderLinuxProps | undefined = undefined;
@@ -56,7 +55,7 @@ class VmBuilder
     this._generateLogin = true;
     return this;
   }
-  public withLoginInfo(props: LoginBuilderProps): IVmVnetBuilder {
+  public withLoginInfo(props: LoginArgs): IVmVnetBuilder {
     this._loginProps = props;
     return this;
   }

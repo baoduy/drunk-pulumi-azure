@@ -1,5 +1,5 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
-import { organization } from '../Common/StackEnv';
+import { organization } from '../Common';
 import { getIpsRange } from '../VNet/Helper';
 import xmlFormat from 'xml-formatter';
 import {

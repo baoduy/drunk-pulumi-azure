@@ -1,20 +1,20 @@
+import { NamedType } from '../../types';
+
 export enum SetHeaderTypes {
-  delete = "delete",
-  override = "override",
-  skip = "skip",
-  append = "append",
+  delete = 'delete',
+  override = 'override',
+  skip = 'skip',
+  append = 'append',
 }
 
 export type ApimBaseUrlType = {
   url: string;
 };
-export type ApimSetHeaderType = {
-  name: string;
+export type ApimSetHeaderType = NamedType & {
   value?: string;
   type: SetHeaderTypes;
 };
-export type ApimCheckHeaderType = {
-  name: string;
+export type ApimCheckHeaderType = NamedType & {
   value?: string[];
 };
 export type ApimMockPropsType = {
@@ -51,7 +51,7 @@ export type ApimClientIpHeaderType = {
   headerKey: string;
 };
 export type ApimValidateJwtWhitelistIpType = {
-  claimKey: "client_IpWhitelist" | string;
+  claimKey: 'client_IpWhitelist' | string;
 };
 export type ApimWhitelistIpType = {
   ipAddresses: string[];

@@ -1,21 +1,16 @@
 import * as appConfig from '@pulumi/azure-native/appconfiguration';
-import { isPrd } from '../Common/AzureEnv';
-import { getAppConfigName } from '../Common';
+import { getAppConfigName, isPrd } from '../Common';
 import {
-  KeyVaultInfo,
   PrivateLinkPropsType,
-  ResourceGroupInfo,
   ResourceInfo,
+  ResourceWithVaultArgs,
 } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
-export type AppConfigProps = {
-  name: string;
-  group: ResourceGroupInfo;
+export type AppConfigProps = ResourceWithVaultArgs & {
   privateLink?: PrivateLinkPropsType;
   disableLocalAuth?: boolean;
-  vaultInfo?: KeyVaultInfo;
 };
 
 export default ({

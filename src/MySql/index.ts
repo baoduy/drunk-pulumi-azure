@@ -1,14 +1,17 @@
 import * as azure from '@pulumi/azure-native';
-import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from '../types';
-import { getMySqlName } from '../Common';
+import {
+  BasicResourceArgs,
+  KeyVaultInfo,
+  LoginWithEnvRolesArgs,
+  NetworkPropsType,
+} from '../types';
+import { getMySqlName, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as dbformysql from '@pulumi/azure-native/dbformysql';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { isPrd, tenantId } from '../Common/AzureEnv';
 import { addMemberToGroup } from '../AzAd/Group';
-import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import { RandomString } from '@pulumi/random';
@@ -18,11 +21,7 @@ import PrivateEndpoint from '../VNet/PrivateEndpoint';
 export interface MySqlProps extends BasicResourceArgs {
   enableEncryption?: boolean;
   vaultInfo: KeyVaultInfo;
-  auth?: {
-    envRoles?: EnvRolesResults;
-    adminLogin?: pulumi.Input<string>;
-    password?: pulumi.Input<string>;
-  };
+  auth?: LoginWithEnvRolesArgs;
   sku?: pulumi.Input<inputs.dbformysql.SkuArgs>;
   version?: dbformysql.ServerVersion;
   storageSizeGB?: number;
@@ -71,7 +70,7 @@ export default ({
     }).result;
 
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
+    ? getEncryptionKeyOutput({ name, vaultInfo })
     : undefined;
 
   const userIdentity = enableEncryption

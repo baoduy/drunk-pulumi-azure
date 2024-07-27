@@ -1,6 +1,7 @@
 import * as azuread from '@pulumi/azuread';
 import { Input, Output, output } from '@pulumi/pulumi';
 import { defaultSubScope } from '../Common';
+import { NamedType } from '../types';
 import { roleAssignment } from './RoleAssignment';
 import { isDryRun } from '../Common';
 import { GetGroupResult } from '@pulumi/azuread/getGroup';
@@ -12,8 +13,7 @@ export interface GroupPermissionProps {
   scope?: Input<string>;
 }
 
-interface AdGroupProps {
-  name: string;
+interface AdGroupProps extends NamedType {
   //The ObjectId of Users.
   members?: Input<string>[];
   owners?: Input<Input<string>[]>;
@@ -72,8 +72,7 @@ export const addMemberToGroup = ({
   userName,
   objectId,
   groupObjectId,
-}: {
-  name: string;
+}: NamedType & {
   userName?: string;
   objectId?: Input<string>;
   groupObjectId: Input<string>;

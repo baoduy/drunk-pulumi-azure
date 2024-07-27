@@ -1,8 +1,8 @@
-import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { BasicMonitorArgs, KeyVaultInfo, ResourceArgs } from '../types';
 import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';
-import { getResourceName } from '../Common/ResourceEnv';
+import { getResourceName } from '../Common';
 import { DefaultManagementRules } from '../Storage/ManagementRules';
 import AppInsight from './AppInsight';
 
@@ -25,9 +25,7 @@ const defaultStorageRules: Array<DefaultManagementRules> = [
   },
 ];
 
-interface Props {
-  name: string;
-  group: ResourceGroupInfo;
+interface Props extends ResourceArgs {
   workspace?: WorkspaceType;
   storage?: {
     /** The management rule applied to Storage level (all containers)*/

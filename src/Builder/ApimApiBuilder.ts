@@ -2,7 +2,7 @@ import * as apim from '@pulumi/azure-native/apimanagement';
 import { enums } from '@pulumi/azure-native/types';
 import { Input, interpolate } from '@pulumi/pulumi';
 import { getImportConfig } from '../Apim/ApiProduct/SwaggerHelper';
-import { organization } from '../Common/StackEnv';
+import { organization } from '../Common';
 import { ResourceInfo } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
 

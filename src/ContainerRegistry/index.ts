@@ -1,19 +1,15 @@
 import * as registry from '@pulumi/azure-native/containerregistry';
 import {
-  BasicArgs,
   KeyVaultInfo,
   NetworkPropsType,
-  ResourceGroupInfo,
   ResourceInfoWithInstance,
+  BasicResourceArgs,
 } from '../types';
 import * as global from '../Common/GlobalEnv';
-import { getAcrName, getPasswordName } from '../Common';
+import { getAcrName } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
 
-interface Props extends BasicArgs {
-  name: string;
-  group?: ResourceGroupInfo;
+interface Props extends BasicResourceArgs {
   //vaultInfo?: KeyVaultInfo;
   sku?: registry.SkuName | string;
   policies?: { retentionDay: number };
@@ -35,11 +31,6 @@ export default ({
   ignoreChanges,
 }: Props): ResourceInfoWithInstance<registry.Registry> => {
   name = getAcrName(name);
-
-  // const urlKey = `${name}-url`;
-  // const userNameKey = `${name}-user-name`;
-  // const primaryPasswordKey = getPasswordName(name, 'primary');
-  // const secondaryPasswordKey = getPasswordName(name, 'secondary');
 
   const resource = new registry.Registry(
     name,
@@ -99,52 +90,6 @@ export default ({
         : ['azurecr'],
     });
   }
-
-  // if (vaultInfo) {
-  //   resource.id.apply(async (id) => {
-  //     //The Resource is not created in Azure yet.
-  //     if (!id) return;
-  //     //Only able to gert the secret once the resource is created.
-  //     const keys = await registry.listRegistryCredentials({
-  //       registryName: name,
-  //       resourceGroupName: global.groupInfo.resourceGroupName,
-  //     });
-  //
-  //     addCustomSecret({
-  //       name: urlKey,
-  //       value: `https://${name}.azurecr.io`,
-  //       vaultInfo,
-  //       contentType: 'Container Registry',
-  //       dependsOn: resource,
-  //     });
-  //
-  //     addCustomSecret({
-  //       name: userNameKey,
-  //       value: keys.username!,
-  //       vaultInfo,
-  //       contentType: 'Container Registry',
-  //       dependsOn: resource,
-  //     });
-  //
-  //     addCustomSecret({
-  //       name: primaryPasswordKey,
-  //       formattedName: true,
-  //       value: keys.passwords![0].value!,
-  //       vaultInfo,
-  //       contentType: 'Container Registry',
-  //       dependsOn: resource,
-  //     });
-  //
-  //     addCustomSecret({
-  //       name: secondaryPasswordKey,
-  //       formattedName: true,
-  //       value: keys.passwords![1].value!,
-  //       vaultInfo,
-  //       contentType: 'Container Registry',
-  //       dependsOn: resource,
-  //     });
-  //   });
-  // }
 
   return {
     name,

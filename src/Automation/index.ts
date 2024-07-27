@@ -1,4 +1,4 @@
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
+import { BasicResourceWithVaultArgs } from '../types';
 import * as automation from '@pulumi/azure-native/automation';
 import { getAutomationAccountName } from '../Common';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
@@ -6,9 +6,8 @@ import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import { defaultSubScope } from '../Common';
 import { grantIdentityPermissions } from '../AzAd/Helper';
 
-interface Props extends BasicResourceArgs {
+interface Props extends BasicResourceWithVaultArgs {
   enableEncryption?: boolean;
-  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({
@@ -23,7 +22,7 @@ export default ({
 
   const encryption =
     enableEncryption && vaultInfo
-      ? getEncryptionKeyOutput(name, vaultInfo)
+      ? getEncryptionKeyOutput({ name, vaultInfo })
       : undefined;
 
   const roles = [{ name: 'Contributor', scope: defaultSubScope }];

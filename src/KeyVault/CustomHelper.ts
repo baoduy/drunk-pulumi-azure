@@ -1,16 +1,12 @@
-import { CertArgs, VaultCertResource } from '@drunk-pulumi/azure-providers';
-import { Input, output, Resource } from '@pulumi/pulumi';
-import { getSecretName } from '../Common';
+import { Input, output } from '@pulumi/pulumi';
+import { getSecretName, replaceAll } from '../Common';
 import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
-import { BasicArgs, KeyVaultInfo, NamedResourceType } from '../types';
+import { KeyVaultInfo, NamedBasicArgs, NamedWithVaultType } from '../types';
 import { getSecret } from '../Common/ConfigHelper';
-import { replaceAll } from '../Common/Helpers';
 
-interface Props {
-  name: string;
+interface Props extends Required<NamedWithVaultType> {
   /** The value of the secret. If Value is not provided the secret will be get from config*/
   value?: Input<string>;
-  vaultInfo: KeyVaultInfo;
 }
 
 /**Add key vault secret from a value or from pulumi configuration secret. */
@@ -26,18 +22,15 @@ export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
   });
 };
 
-interface SecretProps {
-  name: string;
+interface SecretProps extends NamedBasicArgs {
   /**Use the name directly without applying naming format*/
   formattedName?: boolean;
   value: Input<string>;
   vaultInfo: KeyVaultInfo;
   contentType?: Input<string>;
-  ignoreChange?: boolean;
   tags?: Input<{
     [key: string]: string;
   }>;
-  dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 }
 
 /** Add a secret to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
@@ -72,4 +65,3 @@ interface MultiSecretProps extends Omit<SecretProps, 'value' | 'name'> {
 /** Add multi secrets to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
 export const addCustomSecrets = ({ items, ...others }: MultiSecretProps) =>
   items.map((i) => addCustomSecret({ ...i, ...others }));
-

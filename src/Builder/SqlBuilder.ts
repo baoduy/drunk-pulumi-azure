@@ -1,6 +1,7 @@
 import { Input } from '@pulumi/pulumi';
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
+import { LoginArgs } from '../types';
 import {
   Builder,
   BuilderProps,
@@ -10,7 +11,6 @@ import {
   ISqlLoginBuilder,
   ISqlNetworkBuilder,
   ISqlTierBuilder,
-  LoginBuilderProps,
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
@@ -33,7 +33,7 @@ class SqlBuilder
 
   //Fields
   private _generateLogin: boolean = false;
-  private _loginInfo: LoginBuilderProps | undefined = undefined;
+  private _loginInfo: LoginArgs | undefined = undefined;
   private _authOptions: SqlBuilderAuthOptionsType = {};
   private _networkProps: SqlNetworkType | undefined = undefined;
   private _elasticPoolProps: SqlElasticPoolType | undefined = undefined;
@@ -96,7 +96,7 @@ class SqlBuilder
     this._generateLogin = true;
     return this;
   }
-  public withLoginInfo(props: LoginBuilderProps): ISqlAuthBuilder {
+  public withLoginInfo(props: LoginArgs): ISqlAuthBuilder {
     this._loginInfo = props;
     return this;
   }

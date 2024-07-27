@@ -2,7 +2,7 @@ import { KeyVaultInfo } from '../../types';
 import Identity from '../Identity';
 import { getGraphPermissions } from '../GraphDefinition';
 import { getIdentityInfoOutput } from '../Helper';
-import { defaultSubScope } from '../../Common/AzureEnv';
+import { defaultSubScope } from '../../Common';
 
 export const defaultAzAdoName = 'azure-devops';
 

@@ -9,7 +9,11 @@ import {
   ApplicationOptionalClaims,
   ApplicationRequiredResourceAccess,
 } from '@pulumi/azuread/types/input';
-import { BasicArgs, IdentityRoleAssignment, KeyVaultInfo } from '../types';
+import {
+  IdentityRoleAssignment,
+  NamedType,
+  NamedWithVaultBasicArgs,
+} from '../types';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
 
@@ -18,8 +22,9 @@ type PreAuthApplicationProps = {
   oauth2PermissionNames: string[];
 };
 
-interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
-  name: string;
+interface IdentityProps
+  extends NamedWithVaultBasicArgs,
+    IdentityRoleAssignment {
   owners?: pulumi.Input<pulumi.Input<string>[]>;
   createClientSecret?: boolean;
   /** if UI app set public client is true */
@@ -39,11 +44,9 @@ interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
     pulumi.Input<ApplicationRequiredResourceAccess>[]
   >;
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
-  vaultInfo?: KeyVaultInfo;
 }
 
-export type IdentityResult = {
-  name: string;
+export type IdentityResult = NamedType & {
   objectId: Output<string>;
   clientId: Output<string>;
   clientSecret: Output<string> | undefined;

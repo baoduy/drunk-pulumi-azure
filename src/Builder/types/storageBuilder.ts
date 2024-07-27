@@ -16,13 +16,12 @@ export type StorageCdnType = Pick<
 
 export type StorageFeatureBuilderType = Pick<
   StorageFeatureType,
-  'enableKeyVaultEncryption' | 'allowSharedKeyAccess'
+  'allowSharedKeyAccess'
 >;
 export interface IStorageStarterBuilder {
   asStorage(props?: StorageFeatureBuilderType): IStorageBuilder;
   asStaticWebStorage(): IStaticWebStorageBuilder;
 }
-
 export interface IStorageSharedBuilder extends IBuilder<ResourceInfo> {
   withNetwork(props: StorageNetworkType): IStorageSharedBuilder;
   lock(): IStorageSharedBuilder;

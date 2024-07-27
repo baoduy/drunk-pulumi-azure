@@ -1,5 +1,5 @@
 import {
-  BasicArgs,
+  OptsArgs,
   BasicResourceArgs,
   BasicResourceInfoWithInstance,
   ResourceGroupInfo,
@@ -11,7 +11,7 @@ import {
 import ResourceCreator from './ResourceCreator';
 import { getResourceGroupName } from '../Common';
 import { EnvRolesResults } from '../AzAd/EnvRoles';
-import { currentRegionName } from '../Common/AzureEnv';
+import { currentRegionName } from '../Common';
 import { grantEnvRolesAccess, RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
 
 export type RGPermissionType = RoleEnableTypes & {
@@ -40,7 +40,7 @@ export default ({
   const { resource, locker, diagnostic } = ResourceCreator(ResourceGroup, {
     resourceGroupName: name,
     ...others,
-  } as ResourceGroupArgs & BasicArgs);
+  } as ResourceGroupArgs & OptsArgs);
 
   if (permissions) {
     grantEnvRolesAccess({

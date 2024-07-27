@@ -1,6 +1,6 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as storage from "@pulumi/azure-native/storage";
-import { ResourceGroupInfo } from "../types";
+import * as pulumi from '@pulumi/pulumi';
+import * as storage from '@pulumi/azure-native/storage';
+import { ResourceArgs } from '../types';
 
 interface DateAfterModificationArgs {
   daysAfterLastAccessTimeGreaterThan?: pulumi.Input<number>;
@@ -27,10 +27,10 @@ type ManagementRuleActions = {
 };
 
 type ManagementRuleFilters = {
-  blobTypes: Array<"blockBlob" | "appendBlob">;
+  blobTypes: Array<'blockBlob' | 'appendBlob'>;
   tagFilters?: pulumi.Input<{
     name: pulumi.Input<string>;
-    op: "==";
+    op: '==';
     value: pulumi.Input<string>;
   }>[];
 };
@@ -55,9 +55,7 @@ export const createManagementRules = ({
   group,
   rules,
   containerNames,
-}: {
-  name: string;
-  group: ResourceGroupInfo;
+}: ResourceArgs & {
   storageAccount: storage.StorageAccount;
   containerNames?: pulumi.Input<string>[];
   rules: Array<ManagementRules | DefaultManagementRules>;
@@ -66,7 +64,7 @@ export const createManagementRules = ({
   return new storage.ManagementPolicy(
     name,
     {
-      managementPolicyName: "default",
+      managementPolicyName: 'default',
       accountName: storageAccount.name,
       ...group,
 
@@ -74,7 +72,7 @@ export const createManagementRules = ({
         rules: rules.map((m, i) => ({
           enabled: true,
           name: `${name}-${i}`,
-          type: "Lifecycle",
+          type: 'Lifecycle',
 
           definition: {
             actions: m.actions,

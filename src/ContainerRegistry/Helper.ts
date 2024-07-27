@@ -1,8 +1,7 @@
 import * as native from '@pulumi/azure-native';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { ResourceGroupInfo } from '../types';
-import { getAcrName } from '../Common/Naming';
-import { global } from '../Common';
+import { NamedType, ResourceGroupInfo } from '../types';
+import { global, getAcrName } from '../Common';
 
 export interface ImageInfo {
   registry: string;
@@ -10,8 +9,7 @@ export interface ImageInfo {
   tags: Tag[];
 }
 
-export interface Tag {
-  name: string;
+export interface Tag extends NamedType {
   signed: boolean;
 }
 
@@ -49,7 +47,7 @@ export const getLastAcrImage = async ({
   if (credentials == undefined) return;
 
   const token = Buffer.from(
-    `${credentials.username!}:${credentials.passwords![0].value!}`
+    `${credentials.username!}:${credentials.passwords![0].value!}`,
   ).toString('base64');
 
   const url = `https://${acrName}.azurecr.io/acr/v1/${repository}/_tags?last=1&n=1&orderby=timedesc`;

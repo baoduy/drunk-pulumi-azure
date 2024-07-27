@@ -13,7 +13,7 @@ import {
   getResourceGroupName,
   getVnetName,
 } from '../Common';
-import { ResourceGroupInfo } from '../types';
+import { ResourceArgs } from '../types';
 import { VnetInfoType } from './types';
 
 export const appGatewaySubnetName = 'app-gateway';
@@ -119,10 +119,7 @@ export const parseVnetInfoFromId = (
     } as VnetInfoType;
   });
 
-export const getFirewallIpAddress = (
-  name: string,
-  group: ResourceGroupInfo,
-) => {
+export const getFirewallIpAddress = ({ name, group }: ResourceArgs) => {
   const firewall = network.getAzureFirewallOutput({
     azureFirewallName: name,
     ...group,
@@ -134,7 +131,10 @@ export const getFirewallIpAddress = (
 export const getFirewallIpAddressByGroupName = (groupName: string) => {
   const fireWallName = getFirewallName(groupName);
   const rsName = getResourceGroupName(groupName);
-  return getFirewallIpAddress(fireWallName, { resourceGroupName: rsName });
+  return getFirewallIpAddress({
+    name: fireWallName,
+    group: { resourceGroupName: rsName },
+  });
 };
 
 export const getIpAddressFromHost = (host: string) =>

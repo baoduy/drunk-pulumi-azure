@@ -9,9 +9,9 @@ import {
   indexFileCacheRule,
 } from './CdnRules';
 import { cdnProfileInfo as globalCdnProfileInfo } from '../Common/GlobalEnv';
-import { BasicArgs, ResourceInfo } from '../types';
+import { OptsArgs, ResourceInfo } from '../types';
 
-export interface CdnEndpointProps extends BasicArgs {
+export interface CdnEndpointProps extends OptsArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];

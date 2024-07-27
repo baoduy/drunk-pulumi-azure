@@ -1,15 +1,12 @@
 import * as documentdb from '@pulumi/azure-native/documentdb';
 import { getCosmosDbName } from '../Common';
-import { BasicArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { NamedType, OptsArgs, ResourceWithVaultArgs } from '../types';
 import ResourceCreator from '../Core/ResourceCreator';
-import { isPrd } from '../Common/AzureEnv';
+import { isPrd } from '../Common';
 import { createThreatProtection } from '../Logs/Helpers';
 import { Input } from '@pulumi/pulumi';
 
-interface CosmosDbProps {
-  name: string;
-  group: ResourceGroupInfo;
-  vaultInfo?: KeyVaultInfo;
+interface CosmosDbProps extends ResourceWithVaultArgs {
   locations?: Array<Input<string>>;
   enableMultipleWriteLocations?: boolean;
   capabilities?: Array<'EnableCassandra' | 'EnableTable' | 'EnableGremlin'>;
@@ -22,16 +19,17 @@ interface CosmosDbProps {
     ipAddresses?: Input<string>[];
   };
 
-  sqlDbs?: Array<{
-    name: string;
-    containers?: Array<{
-      name: string;
-
-      partitionKeyPath: string;
-      /** auto expired items in seconds*/
-      ttl?: number;
-    }>;
-  }>;
+  sqlDbs?: Array<
+    NamedType & {
+      containers?: Array<
+        NamedType & {
+          partitionKeyPath: string;
+          /** auto expired items in seconds*/
+          ttl?: number;
+        }
+      >;
+    }
+  >;
   //allowPortalAccess?: boolean;
   //mongoNames?: Array<string>;
   //sqlDbContainers?: Array<string>;
@@ -125,7 +123,7 @@ export default ({
       ],
       metricsCategories: ['Requests'],
     },
-  } as unknown as documentdb.DatabaseAccountArgs & BasicArgs);
+  } as unknown as documentdb.DatabaseAccountArgs & OptsArgs);
 
   if (
     enableThreatProtection &&

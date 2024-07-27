@@ -1,8 +1,8 @@
-import {createAxios} from '@drunk-pulumi/azure-providers/Tools/Axios';
+import { createAxios } from '@drunk-pulumi/azure-providers/Tools/Axios';
+import { NamedType } from '../types';
 
-export interface AzureResourceItem {
+export interface AzureResourceItem extends NamedType {
   id: string;
-  name: string;
   location: string;
   resourceGroupName: string;
   tags: {

@@ -1,16 +1,12 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { Input, Output, output, Resource } from '@pulumi/pulumi';
-import { KeyVaultInfo } from '../types';
-import { getSecretName } from '../Common';
-import { replaceAll } from '../Common/Helpers';
+import { NamedWithVaultType } from '../types';
+import { getSecretName, replaceAll } from '../Common';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
-type SecretProps = {
-  name: string;
-
+type SecretProps = Required<NamedWithVaultType> & {
   value: Input<string>;
-  vaultInfo: KeyVaultInfo;
 
   contentType?: Input<string>;
 
@@ -20,10 +16,9 @@ type SecretProps = {
   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
 };
 
-type GetVaultItemProps = {
-  name: string;
+type GetVaultItemProps = Required<NamedWithVaultType> & {
   version?: string;
-  vaultInfo: KeyVaultInfo;
+
   nameFormatted?: boolean;
 };
 
@@ -87,10 +82,10 @@ interface EncryptionPropertiesArgs {
 }
 
 /** Get or create encryption Key */
-const getEncryptionKey = async (
-  name: string,
-  vaultInfo: KeyVaultInfo,
-): Promise<KeyVaultPropertiesResults> => {
+const getEncryptionKey = async ({
+  name,
+  vaultInfo,
+}: Required<NamedWithVaultType>): Promise<KeyVaultPropertiesResults> => {
   const n = `${name}-encrypt-key`;
   const key = await getKeyVaultBase(vaultInfo.name).getOrCreateKey(n);
   return {
@@ -101,12 +96,12 @@ const getEncryptionKey = async (
   };
 };
 
-export const getEncryptionKeyOutput = (
-  name: string,
-  vaultInfo?: KeyVaultInfo,
-): Output<KeyVaultPropertiesResults> | undefined => {
+export const getEncryptionKeyOutput = ({
+  name,
+  vaultInfo,
+}: NamedWithVaultType): Output<KeyVaultPropertiesResults> | undefined => {
   if (!vaultInfo) return undefined;
-  return output(getEncryptionKey(name, vaultInfo));
+  return output(getEncryptionKey({ name, vaultInfo }));
 };
 
 /** Get Secret */

@@ -1,4 +1,4 @@
-import { KeyVaultInfo } from '../types';
+import { KeyVaultInfo, NamedWithVaultType } from '../types';
 import { getSshName } from '../Common';
 import { SshKeyResource } from '@drunk-pulumi/azure-providers/SshKeyGenerator';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -91,9 +91,7 @@ export const generatePGP = ({
   name,
   options,
   vaultInfo,
-}: {
-  name: string;
-  vaultInfo: KeyVaultInfo;
+}: Required<NamedWithVaultType> & {
   options: PGPProps;
 }) => {
   const rs = new PGPResource(name, {

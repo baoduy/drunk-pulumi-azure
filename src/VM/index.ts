@@ -1,10 +1,10 @@
-import { Input, Resource } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import * as compute from '@pulumi/azure-native/compute';
 import * as network from '@pulumi/azure-native/network';
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
-import { getNICName, getVMName } from '../Common/Naming';
+import { getNICName, getVMName } from '../Common';
 import Locker from '../Core/Locker';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { BasicResourceWithVaultArgs } from '../types';
 import GlobalSchedule from './GlobalSchedule';
 import Extension, { VmExtensionProps } from './Extension';
 
@@ -20,7 +20,7 @@ export type VmScheduleType = {
 //https://az-vm-image.info/
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
-interface Props extends BasicResourceArgs {
+interface Props extends BasicResourceWithVaultArgs {
   subnetId: Input<string>;
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
@@ -37,7 +37,7 @@ interface Props extends BasicResourceArgs {
   };
 
   enableEncryption?: boolean;
-  vaultInfo?: KeyVaultInfo;
+
   //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
   dataDiskSizeGB?: number;
@@ -46,7 +46,6 @@ interface Props extends BasicResourceArgs {
   //This need a lock
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export default ({
@@ -83,10 +82,10 @@ export default ({
 
   //All VM will using the same Key
   const keyEncryption = enableEncryption
-    ? getEncryptionKeyOutput(`az-vm-key-encryption`, vaultInfo)
+    ? getEncryptionKeyOutput({ name: `az-vm-key-encryption`, vaultInfo })
     : undefined;
   const diskEncryption = enableEncryption
-    ? getEncryptionKeyOutput(`az-vm-disk-encryption`, vaultInfo)
+    ? getEncryptionKeyOutput({ name: `az-vm-disk-encryption`, vaultInfo })
     : undefined;
 
   const vm = new compute.VirtualMachine(

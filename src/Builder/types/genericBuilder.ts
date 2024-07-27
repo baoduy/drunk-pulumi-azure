@@ -1,26 +1,24 @@
 //Common Builder Types
 import { Input, Resource } from '@pulumi/pulumi';
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
+import {
+  LoginArgs,
+  ResourceInfo,
+  ResourceWithVaultArgs,
+  TypeOmit,
+} from '../../types';
 import { EnvRolesResults } from '../../AzAd/EnvRoles';
 
-export type BuilderProps = {
-  name: string;
-  group: ResourceGroupInfo;
+export type BuilderProps = ResourceWithVaultArgs & {
   /** the below are optionals property and will be available depend on the situation*/
   envRoles?: EnvRolesResults;
-  vaultInfo?: KeyVaultInfo;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
 
-export type CommonOmit<T> = Omit<T, keyof BuilderProps>;
-export type LoginBuilderProps = {
-  adminLogin: Input<string>;
-  password: Input<string>;
-};
+export type OmitBuilderProps<T> = TypeOmit<T, BuilderProps>;
 
 export interface ILoginBuilder<IReturnInterface> {
   generateLogin(): IReturnInterface;
-  withLoginInfo(props: LoginBuilderProps): IReturnInterface;
+  withLoginInfo(props: LoginArgs): IReturnInterface;
 }
 
 //Synchronous
