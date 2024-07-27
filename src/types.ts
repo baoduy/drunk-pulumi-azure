@@ -32,12 +32,13 @@ export type NamedWithVaultBasicArgs = NamedWithVaultType & OptsArgs;
 
 export type ResourceArgs = NamedType & { group: ResourceGroupInfo };
 export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
+export type EncryptResourceArgs = ResourceWithVaultArgs & {
+  enableEncryption?: boolean;
+};
 
 export type BasicResourceArgs = ResourceArgs & OptsArgs;
 export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
-export type BasicEncryptResourceArgs = BasicResourceWithVaultArgs & {
-  enableEncryption?: boolean;
-};
+export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
 export type BasicResourceInfo = NamedType & { id: Output<string> };
 export type ResourceInfo = BasicResourceInfo & ResourceArgs;
 export type KeyVaultInfo = ResourceInfo;

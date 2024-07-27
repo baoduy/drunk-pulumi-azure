@@ -6,9 +6,9 @@ import { roleAssignment } from '../AzAd/RoleAssignment';
 import { isPrd, subscriptionId, tenantId } from '../Common';
 import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
+  BasicEncryptResourceArgs,
   BasicResourceArgs,
   BasicResourceWithVaultArgs,
-  LoginArgs,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
   ResourceInfo,
@@ -91,13 +91,11 @@ export type SqlVulnerabilityAssessmentType = {
   storageEndpoint: Input<string>;
 };
 
-interface Props extends BasicResourceWithVaultArgs {
-  enableEncryption?: boolean;
+interface Props extends BasicEncryptResourceArgs {
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
   elasticPool?: SqlElasticPoolType;
   databases?: Record<string, FullSqlDbPropsType>;
-
   network?: SqlNetworkType;
   vulnerabilityAssessment?: SqlVulnerabilityAssessmentType;
 }

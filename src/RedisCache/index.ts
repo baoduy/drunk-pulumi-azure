@@ -90,20 +90,6 @@ export default ({
       });
 
       addCustomSecret({
-        name: `${name}-primary-key`,
-        value: keys.primaryKey,
-        vaultInfo,
-        contentType: 'Redis Cache',
-      });
-
-      addCustomSecret({
-        name: `${name}-secondary-key`,
-        value: keys.secondaryKey,
-        vaultInfo,
-        contentType: 'Redis Cache',
-      });
-
-      addCustomSecret({
         name: `${name}-primary-connection`,
         value: `${name}.redis.cache.windows.net:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
         vaultInfo,

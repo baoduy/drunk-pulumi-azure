@@ -1,14 +1,14 @@
 //Common Builder Types
 import { Input, Resource } from '@pulumi/pulumi';
 import {
+  EncryptResourceArgs,
   LoginArgs,
   ResourceInfo,
-  ResourceWithVaultArgs,
   TypeOmit,
 } from '../../types';
 import { EnvRolesResults } from '../../AzAd/EnvRoles';
 
-export type BuilderProps = ResourceWithVaultArgs & {
+export type BuilderProps = EncryptResourceArgs & {
   /** the below are optionals property and will be available depend on the situation*/
   envRoles?: EnvRolesResults;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;

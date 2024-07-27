@@ -1,5 +1,6 @@
 import * as azure from '@pulumi/azure-native';
 import {
+  BasicEncryptResourceArgs,
   BasicResourceArgs,
   KeyVaultInfo,
   LoginWithEnvRolesArgs,
@@ -18,9 +19,7 @@ import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
-export interface MySqlProps extends BasicResourceArgs {
-  enableEncryption?: boolean;
-  vaultInfo: KeyVaultInfo;
+export interface MySqlProps extends BasicEncryptResourceArgs {
   auth?: LoginWithEnvRolesArgs;
   sku?: pulumi.Input<inputs.dbformysql.SkuArgs>;
   version?: dbformysql.ServerVersion;
@@ -105,7 +104,7 @@ export default ({
             primaryKeyURI: encryptKey.url,
           }
         : { type: dbformysql.DataEncryptionType.SystemManaged },
-      //maintenanceWindow: { dayOfWeek: 6 },
+      maintenanceWindow: { dayOfWeek: 6, startHour: 0, startMinute: 0 },
       sku,
       backup: {
         geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',

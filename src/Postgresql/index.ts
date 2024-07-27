@@ -1,4 +1,7 @@
+import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
+import { getEncryptionKeyOutput } from '../KeyVault/Helper';
 import {
+  BasicEncryptResourceArgs,
   BasicResourceWithVaultArgs,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
@@ -14,7 +17,7 @@ import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import Locker from '../Core/Locker';
 
-export interface PostgresProps extends BasicResourceWithVaultArgs {
+export interface PostgresProps extends BasicEncryptResourceArgs {
   // auth: LoginWithEnvRolesArgs;
   sku?: pulumi.Input<inputs.dbforpostgresql.SkuArgs>;
   version?: azure.dbforpostgresql.ServerVersion;
@@ -29,7 +32,6 @@ export interface PostgresProps extends BasicResourceWithVaultArgs {
 export default ({
   name,
   group,
-  //auth,
   version = azure.dbforpostgresql.ServerVersion.ServerVersion_14,
   storageSizeGB = 128,
   /**
@@ -42,6 +44,7 @@ export default ({
   network,
   databases,
   vaultInfo,
+  enableEncryption,
   dependsOn,
   lock = true,
 }: PostgresProps) => {
@@ -59,6 +62,14 @@ export default ({
     options: { special: false },
   }).result;
 
+  const encryptKey = enableEncryption
+    ? getEncryptionKeyOutput({ name, vaultInfo })
+    : undefined;
+
+  const userIdentity = enableEncryption
+    ? UserAssignedIdentity({ name, group, vaultInfo })
+    : undefined;
+
   const postgres = new azure.dbforpostgresql.Server(
     name,
     {
@@ -74,10 +85,15 @@ export default ({
       },
       administratorLogin: username,
       administratorLoginPassword: password,
-      dataEncryption: { type: 'SystemManaged' },
-      //maintenanceWindow: { dayOfWeek: 6 },
+      dataEncryption: encryptKey
+        ? {
+            type: 'AzureKeyVault',
+            primaryUserAssignedIdentityId: userIdentity?.id,
+            primaryKeyURI: encryptKey.url,
+          }
+        : { type: 'SystemManaged' },
+      maintenanceWindow: { dayOfWeek: 6, startHour: 0, startMinute: 0 },
       sku,
-      //network: {},
       backup: {
         geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
         backupRetentionDays: 7,
