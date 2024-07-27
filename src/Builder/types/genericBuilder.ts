@@ -6,11 +6,11 @@ import {
   ResourceInfo,
   TypeOmit,
 } from '../../types';
-import { EnvRolesResults } from '../../AzAd/EnvRoles';
+import { IEnvRoleBuilder } from './envRoleBuilder';
 
 export type BuilderProps = EncryptResourceArgs & {
   /** the below are optionals property and will be available depend on the situation*/
-  envRoles?: EnvRolesResults;
+  envRoles?: IEnvRoleBuilder;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
 

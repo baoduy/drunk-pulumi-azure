@@ -1,5 +1,6 @@
 import { Input, Output, Resource } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes, EnvRolesResults } from './AzAd/EnvRoles';
+import { EnvRoleKeyTypes, EnvRolesInfo } from './AzAd/EnvRoles';
+import { IEnvRoleBuilder } from './Builder';
 
 export declare namespace NodeJS {
   interface ProcessEnv {
@@ -24,7 +25,7 @@ export type OptsArgs = {
   ignoreChanges?: string[];
 };
 export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
-export type LoginWithEnvRolesArgs = LoginArgs & { envRoles?: EnvRolesResults };
+export type LoginWithEnvRolesArgs = LoginArgs & { envRoles?: IEnvRoleBuilder };
 export type NamedType = { name: string };
 export type NamedWithVaultType = NamedType & { vaultInfo?: KeyVaultInfo };
 export type NamedBasicArgs = NamedType & OptsArgs;

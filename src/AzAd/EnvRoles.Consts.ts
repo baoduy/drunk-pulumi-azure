@@ -1,5 +1,5 @@
 import { Input } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes, EnvRolesResults } from './EnvRoles';
+import { EnvRoleKeyTypes, EnvRolesInfo } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
 import { replaceAll } from '../Common';
 
@@ -185,7 +185,7 @@ export const grantEnvRolesAccess = ({
   ...others
 }: RoleEnableTypes &
   Omit<RoleAssignmentProps, 'roleName' | 'principalType' | 'principalId'> & {
-    envRoles: EnvRolesResults;
+    envRoles: EnvRolesInfo;
   }) => {
   const roles = getRoleNames(others);
 

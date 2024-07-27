@@ -2,6 +2,7 @@ import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
 import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
+import { IEnvRoleBuilder } from '../Builder';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
 import { BasicResourceWithVaultArgs, ResourceInfoWithInstance } from '../types';
@@ -21,7 +22,6 @@ import Locker from '../Core/Locker';
 import aksIdentityCreator from './Identity';
 import { createDiagnostic } from '../Logs/Helpers';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
@@ -130,7 +130,7 @@ export type AskFeatureProps = {
 };
 
 export type AksAccessProps = {
-  envRoles?: EnvRolesResults;
+  envRoles?: IEnvRoleBuilder;
   authorizedIPRanges?: Input<string>[];
   disableLocalAccounts?: boolean;
 };

@@ -1,3 +1,4 @@
+import { IEnvRoleBuilder } from '../Builder';
 import {
   OptsArgs,
   BasicResourceArgs,
@@ -10,12 +11,11 @@ import {
 } from '@pulumi/azure-native/resources';
 import ResourceCreator from './ResourceCreator';
 import { getResourceGroupName } from '../Common';
-import { EnvRolesResults } from '../AzAd/EnvRoles';
 import { currentRegionName } from '../Common';
 import { grantEnvRolesAccess, RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
 
 export type RGPermissionType = RoleEnableTypes & {
-  envRoles: EnvRolesResults;
+  envRoles: IEnvRoleBuilder;
 };
 
 interface Props extends Omit<BasicResourceArgs, 'group'> {

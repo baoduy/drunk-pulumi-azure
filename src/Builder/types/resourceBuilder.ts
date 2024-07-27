@@ -1,6 +1,7 @@
-import { EnvRolesResults } from '../../AzAd/EnvRoles';
+import { EnvRolesInfo } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
+import { IEnvRoleBuilder } from './envRoleBuilder';
 import { BuilderProps, IBuilder, IBuilderAsync } from './genericBuilder';
 import { CertBuilderType } from './vaultBuilder';
 import {
@@ -11,7 +12,7 @@ import {
 import { Input } from '@pulumi/pulumi';
 
 export type ResourceBuilderResults = BuilderProps & {
-  envRoles: EnvRolesResults;
+  envRoles: IEnvRoleBuilder;
   vnetInstance?: VnetBuilderResults;
   otherInstances: Record<string, any>;
 };
@@ -34,7 +35,7 @@ export type ResourceVaultLinkingBuilderType = {
 
 export interface IResourceRoleBuilder {
   createRoles(): IResourceGroupBuilder;
-  withRoles(props: EnvRolesResults): IResourceGroupBuilder;
+  withRoles(props: EnvRolesInfo): IResourceGroupBuilder;
   withRolesFromVault(): IResourceGroupBuilder;
 }
 
@@ -62,6 +63,7 @@ export interface IResourceVnetBuilder {
 export interface IResourceBuilder
   extends IResourceVnetBuilder,
     IResourceVaultItemsBuilder {
+  enableEncryption(): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
   withResource(builder: ResourceFunction): IResourceBuilder;
