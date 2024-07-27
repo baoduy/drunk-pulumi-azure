@@ -135,6 +135,7 @@ export default ({
       identity: { type: 'SystemAssigned' },
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
+      keyId: encryptKey?.url,
 
       administrators: {
         administratorType: adminGroup
