@@ -67,7 +67,7 @@ interface KeyVaultPropertiesResults {
 export const addEncryptKey = (
   props: Omit<SecretProps, 'value' | 'contentType'>,
 ): KeyVaultPropertiesResults => {
-  const key = addKey({ ...props, name: `${props.name}-encrypt-key` });
+  const key = addKey({ ...props, name: `${props.name}-encryptKey` });
   return {
     keyName: key.name,
     keyVaultUri: `https://${props.vaultInfo.name}.vault.azure.net`,
