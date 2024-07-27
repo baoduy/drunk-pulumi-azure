@@ -114,7 +114,7 @@ export default ({
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput({ name, vaultInfo })
+    ? getEncryptionKeyOutput({ name: sqlName, vaultInfo })
     : undefined;
 
   const adminGroup = auth.envRoles?.contributor;
@@ -306,6 +306,7 @@ export default ({
 
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
+    const keyName = interpolate`${vaultInfo?.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
 
     const serverKey = new sql.ServerKey(
       `${sqlName}-serverKey`,
@@ -313,10 +314,10 @@ export default ({
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
         serverKeyType: 'AzureKeyVault',
-        keyName: encryptKey.keyName,
+        keyName: keyName,
         uri: encryptKey.url,
       },
-      { dependsOn: sqlServer, ignoreChanges: ['keyName', 'uri'] },
+      { dependsOn: sqlServer },
     );
 
     new sql.EncryptionProtector(
@@ -326,7 +327,7 @@ export default ({
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
         serverKeyType: 'AzureKeyVault',
-        serverKeyName: encryptKey.keyName,
+        serverKeyName: serverKey.name,
         autoRotationEnabled: true,
       },
       { dependsOn: serverKey },

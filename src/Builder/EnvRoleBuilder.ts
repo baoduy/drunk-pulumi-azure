@@ -4,8 +4,10 @@ import {
   createEnvRoles,
   getEnvRolesOutput,
   pushEnvRolesToVault,
+  EnvRoleKeyTypes,
 } from '../AzAd/EnvRoles';
 import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
+import { addMemberToGroup } from '../AzAd/Group';
 import { KeyVaultInfo } from '../types';
 import { EnvRoleBuilderGrantType, IEnvRoleBuilder } from './types';
 
@@ -21,8 +23,14 @@ export class EnvRoleBuilder implements IEnvRoleBuilder {
   public get admin() {
     return this.props.admin;
   }
-  addMember(memberId: Input<string>): IEnvRoleBuilder {
-    throw new Error('Method not implemented.');
+  addMember(type: EnvRoleKeyTypes, memberId: Input<string>): IEnvRoleBuilder {
+    addMemberToGroup({
+      name: type,
+      groupObjectId: this.props[type].objectId,
+      objectId: memberId,
+    });
+
+    return this;
   }
   pushTo(vaultInfo: KeyVaultInfo): IEnvRoleBuilder {
     pushEnvRolesToVault(this.props, vaultInfo);

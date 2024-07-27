@@ -14,12 +14,7 @@ import {
   ResourceVnetBuilderType,
   VnetBuilderResults,
 } from './types';
-import {
-  createEnvRoles,
-  CreateEnvRolesType,
-  EnvRolesInfo,
-  getEnvRolesOutput,
-} from '../AzAd/EnvRoles';
+import { EnvRolesInfo } from '../AzAd/EnvRoles';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../types';
 import RG from '../Core/ResourceGroup';
 import { ResourceGroup } from '@pulumi/azure-native/resources';

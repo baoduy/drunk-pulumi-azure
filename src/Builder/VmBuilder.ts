@@ -97,10 +97,7 @@ class VmBuilder
       vmSize: this._vmSize!,
       osType: Boolean(this._linuxImage) ? 'Linux' : 'Windows',
       image: this._linuxImage ?? this._windowImage!,
-      login: {
-        userName: this._loginProps!.adminLogin!,
-        password: this._loginProps!.password,
-      },
+      login: this._loginProps!,
       schedule: this._schedule,
       tags: this._tagsProps,
     });

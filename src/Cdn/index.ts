@@ -27,14 +27,11 @@ export default ({
   });
 
   if (envRoles) {
-    profile.identity.apply((i) => {
-      if (!i) return;
-      addMemberToGroup({
-        name,
-        objectId: i.principalId,
-        groupObjectId: envRoles.readOnly.objectId,
-      });
-    });
+    //Add identity to read only group in order to read the certificate from the key vault
+    envRoles.addMember(
+      'readOnly',
+      profile.identity.apply((i) => i!.principalId!),
+    );
   }
 
   return {

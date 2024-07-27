@@ -69,28 +69,19 @@ export const getAdGroup = (displayName: string) => {
 
 export const addMemberToGroup = ({
   name,
-  userName,
   objectId,
   groupObjectId,
 }: NamedType & {
-  userName?: string;
-  objectId?: Input<string>;
+  objectId: Input<string>;
   groupObjectId: Input<string>;
-}) => {
-  if (userName && !userName.includes('@'))
-    throw new Error('UserName must include suffix @domain.name');
-  else if (!objectId)
-    throw new Error('Either UserName or ObjectId must be defined.');
-
-  const user = userName
-    ? output(azuread.getUser({ userPrincipalName: userName }))
-    : { objectId: objectId };
-
-  return new azuread.GroupMember(name, {
-    groupObjectId,
-    memberObjectId: user.objectId,
-  });
-};
+}) =>
+  output([objectId, groupObjectId]).apply(
+    ([oId, gId]) =>
+      new azuread.GroupMember(`${name}-${gId}-${oId}`, {
+        groupObjectId,
+        memberObjectId: objectId,
+      }),
+  );
 
 export const addGroupToGroup = (
   groupMemberName: string,

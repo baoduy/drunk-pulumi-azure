@@ -1,5 +1,6 @@
 import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
+import { createEnvRoles } from '../AzAd/EnvRoles';
 import {
   BasicEncryptResourceArgs,
   PrivateLinkPropsType,
@@ -67,6 +68,7 @@ export default ({
   group,
   vaultInfo,
   enableEncryption,
+  envRoles,
   containers = [],
   queues = [],
   fileShares = [],
@@ -245,26 +247,25 @@ export default ({
     if (!id) return;
 
     //Allows to Read Key Vault
-    grantIdentityPermissions({
-      name,
-      vaultInfo,
-      envRole: 'readOnly',
-      principalId: stg.identity.apply((s) => s!.principalId),
-    });
-
-    const keys = (
-      await storage.listStorageAccountKeys({
-        accountName: name,
-        resourceGroupName: group.resourceGroupName,
-      })
-    ).keys.map((k) => ({
-      name: k.keyName,
-      key: k.value,
-      connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
-    }));
+    if (envRoles)
+      envRoles.addMember(
+        'readOnly',
+        stg.identity.apply((s) => s!.principalId),
+      );
 
     //Add connection into Key vault
     if (vaultInfo && features?.allowSharedKeyAccess) {
+      const keys = (
+        await storage.listStorageAccountKeys({
+          accountName: name,
+          resourceGroupName: group.resourceGroupName,
+        })
+      ).keys.map((k) => ({
+        name: k.keyName,
+        key: k.value,
+        connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
+      }));
+
       //Keys
       addCustomSecrets({
         vaultInfo,

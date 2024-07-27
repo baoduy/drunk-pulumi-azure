@@ -35,6 +35,7 @@ export type ResourceArgs = NamedType & { group: ResourceGroupInfo };
 export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
 export type EncryptResourceArgs = ResourceWithVaultArgs & {
   enableEncryption?: boolean;
+  envRoles?: IEnvRoleBuilder;
 };
 
 export type BasicResourceArgs = ResourceArgs & OptsArgs;

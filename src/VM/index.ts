@@ -3,8 +3,10 @@ import * as compute from '@pulumi/azure-native/compute';
 import * as network from '@pulumi/azure-native/network';
 import { getNICName, getVMName } from '../Common';
 import Locker from '../Core/Locker';
+import { randomPassword } from '../Core/Random';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { getEncryptionKeyOutput } from '../KeyVault/Helper';
-import { BasicResourceWithVaultArgs } from '../types';
+import { BasicEncryptResourceArgs, LoginArgs } from '../types';
 import GlobalSchedule from './GlobalSchedule';
 import Extension, { VmExtensionProps } from './Extension';
 
@@ -20,11 +22,11 @@ export type VmScheduleType = {
 //https://az-vm-image.info/
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
-interface Props extends BasicResourceWithVaultArgs {
+interface Props extends BasicEncryptResourceArgs {
   subnetId: Input<string>;
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
-  login: { userName: Input<string>; password?: Input<string> };
+  login: LoginArgs;
   osType?: 'Windows' | 'Linux';
   image: {
     offer: 'WindowsServer' | 'CentOS' | 'Windows-10' | 'windows-11' | string;
@@ -35,10 +37,6 @@ interface Props extends BasicResourceWithVaultArgs {
       | string;
     sku: '2019-Datacenter' | '21h1-pro' | 'win11-23h2-pro' | string;
   };
-
-  enableEncryption?: boolean;
-
-  //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
   dataDiskSizeGB?: number;
   schedule?: VmScheduleType;
@@ -60,6 +58,7 @@ export default ({
   dataDiskSizeGB,
   enableEncryption,
   vaultInfo,
+  envRoles,
   schedule = { timeZone: 'Singapore Standard Time' },
   login,
   image,
@@ -85,7 +84,13 @@ export default ({
     ? getEncryptionKeyOutput({ name: `az-vm-key-encryption`, vaultInfo })
     : undefined;
   const diskEncryption = enableEncryption
-    ? getEncryptionKeyOutput({ name: `az-vm-disk-encryption`, vaultInfo })
+    ? addCustomSecret({
+        name: `${vmName}-disk-secret`,
+        vaultInfo: vaultInfo!,
+        formattedName: true,
+        value: randomPassword({ name: vmName, policy: false, length: 50 })
+          .result,
+      })
     : undefined;
 
   const vm = new compute.VirtualMachine(
@@ -103,7 +108,7 @@ export default ({
       },
       osProfile: {
         computerName: name,
-        adminUsername: login.userName,
+        adminUsername: login.adminLogin,
         adminPassword: login.password,
 
         allowExtensionOperations: true,
@@ -160,7 +165,7 @@ export default ({
               ? {
                   diskEncryptionKey: diskEncryption
                     ? {
-                        secretUrl: diskEncryption.url,
+                        secretUrl: diskEncryption.id,
                         sourceVault: {
                           id: vaultInfo.id,
                         },
@@ -206,9 +211,9 @@ export default ({
     {
       dependsOn,
       ignoreChanges: [
-        'storageProfile.osDisk.managedDisk.storageAccountType',
-        'storageProfile.osDisk.managedDisk.id',
-        'osDisk.osType',
+        // 'storageProfile.osDisk.managedDisk.storageAccountType',
+        // 'storageProfile.osDisk.managedDisk.id',
+        // 'osDisk.osType',
       ],
     },
   );
@@ -225,6 +230,14 @@ export default ({
   }
   if (lock) {
     Locker({ name: vmName, resource: vm });
+  }
+
+  //Add Identity to readonly to be able to read key from vault
+  if (envRoles) {
+    envRoles.addMember(
+      'readOnly',
+      vm.identity.apply((i) => i!.principalId),
+    );
   }
 
   //Auto shutdown
