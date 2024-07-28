@@ -15,6 +15,8 @@ export type TypeOmit<T, OT> = Omit<T, keyof OT>;
 
 export type OmitOpts<T> = TypeOmit<T, OptsArgs>;
 
+export type LockableType = { lock?: boolean };
+
 export type ResourceGroupInfo = {
   resourceGroupName: string;
   location?: Input<string>;

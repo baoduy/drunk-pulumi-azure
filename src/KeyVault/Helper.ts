@@ -36,7 +36,6 @@ export const addKey = ({
       keyName: n,
       vaultName: vaultInfo.name,
       ...vaultInfo.group,
-      //https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.keyvault.webkey?view=azure-dotnet-legacy
       properties: {
         keySize: 4096,
         kty: 'RSA',
@@ -48,12 +47,21 @@ export const addKey = ({
           'wrapKey',
           'unwrapKey',
         ],
-        //curveName: 'P512',
-        attributes: { enabled: true },
+        //curveName: keyvault.JsonWebKeyCurveName.P_521,
+        attributes: { enabled: true, exportable: false },
+        rotationPolicy: {
+          lifetimeActions: [
+            {
+              action: { type: keyvault.KeyRotationPolicyActionType.Rotate },
+              trigger: { timeBeforeExpiry: 'P30D' },
+            },
+          ],
+          attributes: { expiryTime: 'P1Y' },
+        },
       },
       tags,
     },
-    { dependsOn },
+    { dependsOn, ignoreChanges: ['attributes.expires'] },
   );
 };
 

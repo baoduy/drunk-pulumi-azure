@@ -1,6 +1,7 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 import { FullSqlDbPropsType } from '../Builder';
+import Locker from '../Core/Locker';
 import { addEncryptKey } from '../KeyVault/Helper';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { isPrd, subscriptionId, tenantId } from '../Common';
@@ -8,6 +9,7 @@ import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
   BasicEncryptResourceArgs,
   BasicResourceArgs,
+  LockableType,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
   ResourceInfo,
@@ -90,7 +92,7 @@ export type SqlVulnerabilityAssessmentType = {
   storageEndpoint: Input<string>;
 };
 
-interface Props extends BasicEncryptResourceArgs {
+interface Props extends BasicEncryptResourceArgs, LockableType {
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
   elasticPool?: SqlElasticPoolType;
@@ -110,6 +112,8 @@ export default ({
   network,
   vulnerabilityAssessment,
   ignoreChanges = [],
+  lock,
+  dependsOn,
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
@@ -118,11 +122,12 @@ export default ({
 
   const adminGroup = auth.envRoles?.contributor;
 
-  if (enableEncryption) ignoreChanges.push('keyId');
+  ignoreChanges.push('keyId');
   if (auth.azureAdOnlyAuthentication) {
     ignoreChanges.push('administratorLogin');
     ignoreChanges.push('administratorLoginPassword');
   }
+  console.log(sqlName, ignoreChanges);
 
   const sqlServer = new sql.Server(
     sqlName,
@@ -155,9 +160,15 @@ export default ({
         : sql.ServerNetworkAccessFlag.Enabled,
     },
     {
+      dependsOn,
       ignoreChanges,
+      protect: lock,
     },
   );
+  //Lock from delete
+  if (lock) {
+    Locker({ name, resource: sqlServer });
+  }
 
   //Allows to Read Key Vault
   grantIdentityPermissions({
@@ -347,6 +358,7 @@ export default ({
         sqlServerName: sqlName,
         dependsOn: sqlServer,
         elasticPoolId: ep ? ep.id : undefined,
+        lock,
       });
 
       if (vaultInfo) {

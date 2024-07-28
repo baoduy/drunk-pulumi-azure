@@ -6,6 +6,7 @@ import {
   Builder,
   BuilderProps,
   FullSqlDbPropsType,
+  IResourceBuilder,
   ISqlAuthBuilder,
   ISqlBuilder,
   ISqlLoginBuilder,
@@ -43,6 +44,7 @@ class SqlBuilder
     | SqlBuilderVulnerabilityAssessmentType
     | undefined = undefined;
   private _ignoreChanges: string[] | undefined = undefined;
+  private _lock: boolean = false;
 
   constructor(props: BuilderProps) {
     super(props);
@@ -104,7 +106,10 @@ class SqlBuilder
     this._ignoreChanges = props;
     return this;
   }
-
+  public lock(): ISqlBuilder {
+    this._lock = true;
+    return this;
+  }
   private buildLogin() {
     if (!this._generateLogin) return;
 
@@ -151,7 +156,7 @@ class SqlBuilder
       network: this._networkProps,
       elasticPool: this._elasticPoolProps,
       databases: this._databasesProps,
-
+      lock: this._lock,
       ignoreChanges: this._ignoreChanges,
     });
   }

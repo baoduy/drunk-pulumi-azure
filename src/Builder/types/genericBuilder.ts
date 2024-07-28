@@ -46,3 +46,11 @@ export abstract class BuilderAsync<TResults extends ResourceInfo>
   protected constructor(public commonProps: BuilderProps) {}
   public abstract build(): Promise<TResults>;
 }
+
+//Other interface
+export interface ILockable<TBuilderResults> {
+  lock(): TBuilderResults;
+}
+export interface IIgnoreChanges<TBuilderResults> {
+  ignoreChangesFrom(...props: string[]): TBuilderResults;
+}

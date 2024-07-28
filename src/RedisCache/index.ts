@@ -24,7 +24,9 @@ interface Props extends BasicResourceWithVaultArgs {
     capacity: number;
   };
 }
-
+/**
+ * There is no encryption available for Redis yet
+ * */
 export default ({
   name,
   group,

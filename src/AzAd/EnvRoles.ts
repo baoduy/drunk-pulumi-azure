@@ -1,8 +1,8 @@
 import Role, { RoleProps } from './Role';
 import { KeyVaultInfo } from '../types';
-import { Input, output, Output } from '@pulumi/pulumi';
+import { output, Output } from '@pulumi/pulumi';
 import { getSecretName } from '../Common';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 
 export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
@@ -41,7 +41,7 @@ export const pushEnvRolesToVault = (
   envRoles: EnvRolesInfo,
   vaultInfo: KeyVaultInfo,
 ) => {
-  Object.keys(envRoles).forEach((key) => {
+  Object.keys(envRoleConfig).forEach((key) => {
     const role = envRoles[key as EnvRoleKeyTypes];
     //Add to Key Vault
     const secretNames = getRoleSecretName(key);

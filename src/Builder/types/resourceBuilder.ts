@@ -2,7 +2,12 @@ import { EnvRolesInfo } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
 import { IEnvRoleBuilder } from './envRoleBuilder';
-import { BuilderProps, IBuilder, IBuilderAsync } from './genericBuilder';
+import {
+  BuilderProps,
+  IBuilder,
+  IBuilderAsync,
+  ILockable,
+} from './genericBuilder';
 import { CertBuilderType } from './vaultBuilder';
 import {
   IVnetBuilder,
@@ -62,11 +67,11 @@ export interface IResourceVnetBuilder {
 }
 export interface IResourceBuilder
   extends IResourceVnetBuilder,
-    IResourceVaultItemsBuilder {
+    IResourceVaultItemsBuilder,
+    ILockable<IResourceBuilder> {
   enableEncryption(): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
   withResource(builder: ResourceFunction): IResourceBuilder;
-  lock(): IResourceBuilder;
   build(): Promise<ResourceBuilderResults>;
 }

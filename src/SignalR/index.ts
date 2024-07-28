@@ -22,6 +22,9 @@ interface Props extends BasicResourceWithVaultArgs {
   sku?: pulumi.Input<ResourceSkuArgs>;
 }
 
+/**
+ * There is no encryption available for SignalR yet
+ * */
 export default ({
   name,
   group,
