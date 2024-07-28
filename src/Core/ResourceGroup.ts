@@ -46,6 +46,7 @@ export default ({
     grantEnvRolesAccess({
       name,
       ...permissions,
+      envRoles: permissions.envRoles.info(),
       scope: resource.id,
       dependsOn: resource,
     });

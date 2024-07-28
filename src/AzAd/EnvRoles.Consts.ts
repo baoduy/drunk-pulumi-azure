@@ -1,7 +1,5 @@
-import { Input } from '@pulumi/pulumi';
 import { EnvRoleKeyTypes, EnvRolesInfo } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
-import { replaceAll } from '../Common';
 
 //Resource Group Role
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
@@ -193,7 +191,12 @@ export const grantEnvRolesAccess = ({
   Object.keys(envRoles).forEach((k) => {
     const type = k as EnvRoleKeyTypes;
     const objectId = envRoles[type].objectId;
-    if (!objectId) return;
+    if (!objectId) {
+      console.warn(
+        `The Env role '${type}' was ignored as the objectId was NULL.`,
+      );
+      return;
+    }
 
     const n = `${name}-${type}`;
     roles.readOnly.forEach((r) =>

@@ -203,8 +203,8 @@ export default ({
       },
       ...group,
       enableVmProtection: true,
+      encryption: { enabled: true, enforcement: 'AllowUnencrypted' },
       dhcpOptions: dnsServers ? { dnsServers } : undefined,
-
       subnets: subnets.map((s) =>
         CreateSubnet({
           subnet: s,

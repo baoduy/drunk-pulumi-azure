@@ -45,7 +45,7 @@ export class EnvRoleBuilder implements IEnvRoleBuilder {
     });
     return this;
   }
-  public toInfo(): EnvRolesInfo {
+  public info(): EnvRolesInfo {
     return this.props;
   }
 

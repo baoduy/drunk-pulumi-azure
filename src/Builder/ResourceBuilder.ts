@@ -137,10 +137,15 @@ class ResourceBuilder
     return this;
   }
   private buildRoles() {
+    //If the EnvRoles is already provided then no need to re-build it
+    if (this._envRoles) return;
+    //Create new EnvRoles
     if (this._createRole) {
       this._envRoles = EnvRoleBuilder.create();
       this._pushEnvToVault = true;
-    } else if (this._loadRolesFromVault) {
+    }
+    //Load EnvRole from Vault
+    else if (this._loadRolesFromVault) {
       this._envRoles = EnvRoleBuilder.loadForm(this._vaultInfo!);
     }
   }

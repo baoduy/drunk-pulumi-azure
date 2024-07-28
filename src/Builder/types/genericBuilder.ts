@@ -54,3 +54,6 @@ export interface ILockable<TBuilderResults> {
 export interface IIgnoreChanges<TBuilderResults> {
   ignoreChangesFrom(...props: string[]): TBuilderResults;
 }
+export interface IInfo<TBuilderResults> {
+  info(): TBuilderResults;
+}

@@ -137,7 +137,7 @@ class AksBuilder
       grantEnvRolesAccess({
         name: `${this._askInstance.name}-node-group`,
         dependsOn: this._askInstance.instance,
-        envRoles: this.commonProps.envRoles,
+        envRoles: this.commonProps.envRoles.info(),
         enableRGRoles: { readOnly: true },
         scope: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
       });
