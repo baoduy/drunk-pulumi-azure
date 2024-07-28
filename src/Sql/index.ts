@@ -127,7 +127,6 @@ export default ({
     ignoreChanges.push('administratorLogin');
     ignoreChanges.push('administratorLoginPassword');
   }
-  console.log(sqlName, ignoreChanges);
 
   const sqlServer = new sql.Server(
     sqlName,
