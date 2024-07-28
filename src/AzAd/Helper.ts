@@ -1,6 +1,12 @@
-import { getIdentityName, getSecretName } from '../Common';
+import {
+  getIdentityName,
+  getManagedIdentityName,
+  getSecretName,
+  parseResourceInfoFromId,
+} from '../Common';
 import { getSecret } from '../KeyVault/Helper';
 import {
+  IdentityInfo,
   IdentityRoleAssignment,
   KeyVaultInfo,
   NamedType,
@@ -108,21 +114,50 @@ export const grantIdentityPermissions = ({
   name,
   principalId,
   vaultInfo,
-  roles,
-  envRole,
+  role,
 }: IdentityRoleAssignment &
   NamedType & {
     principalId: Input<string>;
   }) => {
-  if (roles) {
-    grantIdentityToResourceRoles({ name, roles, principalId });
-  }
-  if (envRole && vaultInfo) {
+  // if (roles) {
+  //   grantIdentityToResourceRoles({ name, roles, principalId });
+  // }
+  if (role && vaultInfo) {
     grantIdentityEnvRolesGroup({
       name,
-      roleType: envRole,
+      roleType: role,
       principalId,
       vaultInfo,
     });
   }
 };
+
+export const getUserAssignedIdentityInfo = async (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+): Promise<IdentityInfo> => {
+  name = getManagedIdentityName(name);
+  const id = await getSecret({
+    name: `${name}-id`,
+    vaultInfo,
+    nameFormatted: true,
+  });
+  const principalId = await getSecret({
+    name: `${name}-principalId`,
+    vaultInfo,
+    nameFormatted: true,
+  });
+
+  const info = parseResourceInfoFromId(id!.value!);
+  return {
+    name: info!.name!,
+    group: info!.group!,
+    id: info!.id!,
+    principalId: principalId!.value!,
+  };
+};
+
+export const getUserAssignedIdentityInfoOutput = (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+) => output<IdentityInfo>(getUserAssignedIdentityInfo(name, vaultInfo));

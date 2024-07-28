@@ -105,10 +105,11 @@ export default ({
   name,
   auth,
   group,
-  enableEncryption,
   elasticPool,
   databases,
   vaultInfo,
+  enableEncryption,
+  envRoles,
   network,
   vulnerabilityAssessment,
   ignoreChanges = [],
@@ -170,12 +171,16 @@ export default ({
   }
 
   //Allows to Read Key Vault
-  grantIdentityPermissions({
-    name,
-    vaultInfo,
-    envRole: 'readOnly',
-    principalId: sqlServer.identity.apply((s) => s!.principalId),
-  });
+  envRoles?.addMember(
+    'readOnly',
+    sqlServer.identity.apply((s) => s!.principalId),
+  );
+  // grantIdentityPermissions({
+  //   name,
+  //   vaultInfo,
+  //   role: 'readOnly',
+  //   principalId: sqlServer.identity.apply((s) => s!.principalId),
+  // });
 
   const ep = elasticPool
     ? createElasticPool({
@@ -238,13 +243,17 @@ export default ({
   if (vulnerabilityAssessment) {
     //Grant Storage permission
     if (vulnerabilityAssessment.logStorageId) {
-      roleAssignment({
-        name,
-        principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
-        principalType: 'ServicePrincipal',
-        roleName: 'Storage Blob Data Contributor',
-        scope: vulnerabilityAssessment.logStorageId,
-      });
+      envRoles?.addMember(
+        'contributor',
+        sqlServer.identity.apply((i) => i!.principalId!),
+      );
+      // roleAssignment({
+      //   name,
+      //   principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
+      //   principalType: 'ServicePrincipal',
+      //   roleName: 'Storage Blob Data Contributor',
+      //   scope: vulnerabilityAssessment.logStorageId,
+      // });
     }
 
     //ServerSecurityAlertPolicy

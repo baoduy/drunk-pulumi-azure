@@ -3,8 +3,6 @@ import * as automation from '@pulumi/azure-native/automation';
 import { getAutomationAccountName } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
-import { defaultSubScope } from '../Common';
-import { grantIdentityPermissions } from '../AzAd/Helper';
 
 interface Props extends BasicResourceWithVaultArgs {
   enableEncryption?: boolean;
@@ -25,11 +23,10 @@ export default ({
       ? addEncryptKey({ name, vaultInfo })
       : undefined;
 
-  const roles = [{ name: 'Contributor', scope: defaultSubScope }];
   const identity = UserAssignedIdentity({
     name,
     group,
-    roles,
+    role: 'contributor',
     dependsOn,
   });
   //TODO: Add this identity into a vault reader role.
@@ -65,14 +62,6 @@ export default ({
       },
     },
     { dependsOn: identity, ignoreChanges },
-  );
-
-  auto.identity.apply((i) =>
-    grantIdentityPermissions({
-      name,
-      roles,
-      principalId: i!.principalId,
-    }),
   );
 
   return auto;

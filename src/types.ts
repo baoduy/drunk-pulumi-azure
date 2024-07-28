@@ -44,8 +44,11 @@ export type BasicResourceArgs = ResourceArgs & OptsArgs;
 export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
 export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
 export type BasicResourceInfo = NamedType & { id: Output<string> };
+
+//Resource Output Info
 export type ResourceInfo = BasicResourceInfo & ResourceArgs;
 export type KeyVaultInfo = ResourceInfo;
+export type IdentityInfo = ResourceInfo & { principalId: string };
 
 export interface BasicResourceInfoWithInstance<InstanceType>
   extends BasicResourceInfo {
@@ -72,18 +75,17 @@ export type NetworkPropsType = {
 
 export type IdentityRoleAssignment = {
   vaultInfo?: KeyVaultInfo;
-  roles?: Array<NamedType & { scope: Input<string> }>;
-  envRole?: EnvRoleKeyTypes;
+  //roles?: Array<NamedType & { scope: Input<string> }>;
+  role?: EnvRoleKeyTypes;
 };
 
-export interface ResourceInfoArg {
-  /**If name and provider of the resource is not provided then the Id will be resource group Id*/
-  name?: Input<string>;
-  /**The provider name of the resource ex: "Microsoft.Network/virtualNetworks" or "Microsoft.Network/networkSecurityGroups"*/
-  provider?: string;
-  group: ResourceGroupInfo;
-  subscriptionId?: Input<string>;
-}
+// export type GlobalResourceInfo = ResourceInfo & {
+//   name?: Input<string>;
+//   /**The provider name of the resource ex: "Microsoft.Network/virtualNetworks" or "Microsoft.Network/networkSecurityGroups"*/
+//   provider?: string;
+//   group: ResourceGroupInfo;
+//   subscriptionId?: Input<string>;
+// };
 
 export type ConventionProps = {
   prefix?: string;
