@@ -1,5 +1,10 @@
 import { Input } from '@pulumi/pulumi';
-import { IBuilder, ILoginBuilder } from './genericBuilder';
+import {
+  IBuilder,
+  IIgnoreChanges,
+  ILockable,
+  ILoginBuilder,
+} from './genericBuilder';
 import {
   SqlAuthType,
   SqlElasticPoolType,
@@ -45,12 +50,13 @@ export interface ISqlTierBuilder {
   withElasticPool(props: SqlElasticPoolType): ISqlBuilder;
   withTier(sku: SqlDbSku): ISqlBuilder;
 }
-
-export interface ISqlBuilder extends IBuilder<SqlResults> {
+export interface ISqlBuilder
+  extends IBuilder<SqlResults>,
+    ILockable<ISqlBuilder>,
+    IIgnoreChanges<ISqlBuilder> {
   withDatabases(props: SqlDbBuilderType): ISqlBuilder;
   copyDbFrom(props: SqlDbCopyType): ISqlBuilder;
   replicaDbFrom(props: SqlDbReplicaType): ISqlBuilder;
-  ignoreChangesFrom(...props: string[]): ISqlBuilder;
   withVulnerabilityAssessment(
     props: SqlBuilderVulnerabilityAssessmentType,
   ): ISqlBuilder;

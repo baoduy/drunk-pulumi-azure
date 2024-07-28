@@ -1,13 +1,10 @@
 import { getGraphPermissions } from '../AzAd/GraphDefinition';
 import identityCreator from '../AzAd/Identity';
-import { BasicArgs, KeyVaultInfo } from '../types';
+import { NamedWithVaultBasicArgs } from '../types';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { defaultSubScope } from '../Common';
 
-interface Props extends BasicArgs {
-  name: string;
-  vaultInfo?: KeyVaultInfo;
-}
+type Props = NamedWithVaultBasicArgs;
 
 //** The AzAD app Identity for Azure Kubernetes for RBAC */
 export default ({ name, vaultInfo, dependsOn }: Props) => {

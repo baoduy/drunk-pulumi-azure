@@ -1,7 +1,8 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Resource } from '@pulumi/pulumi';
-import { defaultSubScope } from '../Common/AzureEnv';
+import { defaultSubScope } from '../Common';
+import { NamedType } from '../types';
 import RolesBuiltIn from './RolesBuiltIn';
 
 type GetRoleProps = {
@@ -15,8 +16,7 @@ export const getRoleDefinitionByName = ({ roleName }: GetRoleProps) => {
   throw new Error(`The role ${roleName} is not found.`);
 };
 
-export type RoleAssignmentProps = {
-  name: string;
+export type RoleAssignmentProps = NamedType & {
   roleName: string;
   scope?: pulumi.Input<string>;
   principalId: pulumi.Input<string>;

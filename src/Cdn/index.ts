@@ -1,5 +1,6 @@
-import { EnvRolesResults } from '../AzAd/EnvRoles';
+import { EnvRolesInfo } from '../AzAd/EnvRoles';
 import { addMemberToGroup } from '../AzAd/Group';
+import { IEnvRoleBuilder } from '../Builder';
 import { ResourceGroupInfo, ResourceInfoWithInstance } from '../types';
 import * as cdn from '@pulumi/azure-native/cdn';
 import { getCdnProfileName, global } from '../Common';
@@ -7,7 +8,7 @@ import { getCdnProfileName, global } from '../Common';
 interface Props {
   name: string;
   group?: ResourceGroupInfo;
-  envRoles?: EnvRolesResults;
+  envRoles?: IEnvRoleBuilder;
 }
 
 export default ({
@@ -26,14 +27,11 @@ export default ({
   });
 
   if (envRoles) {
-    profile.identity.apply((i) => {
-      if (!i) return;
-      addMemberToGroup({
-        name,
-        objectId: i.principalId,
-        groupObjectId: envRoles.readOnly.objectId,
-      });
-    });
+    //Add identity to read only group in order to read the certificate from the key vault
+    envRoles.addMember(
+      'readOnly',
+      profile.identity.apply((i) => i!.principalId!),
+    );
   }
 
   return {

@@ -1,7 +1,7 @@
 import * as cs from '@pulumi/azure-native/containerservice';
 import { getAksName, getResourceGroupName } from '../Common';
 import { globalKeyName } from '../Common/GlobalEnv';
-import { KeyVaultInfo, ResourceInfo } from '../types';
+import { KeyVaultInfo, ResourceInfo, NamedType } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate, Output } from '@pulumi/pulumi';
 import { subscriptionId } from '../Common/AzureEnv';
@@ -12,8 +12,7 @@ export const getAksConfig = async ({
   groupName,
   formattedName,
   disableLocalAccounts,
-}: {
-  name: string;
+}: NamedType & {
   groupName: string;
   formattedName?: boolean;
   disableLocalAccounts?: boolean;
@@ -40,8 +39,7 @@ export const getAksVaultConfig = async ({
   version,
   vaultInfo,
   formattedName,
-}: {
-  name: string;
+}: NamedType & {
   version?: string;
   vaultInfo: KeyVaultInfo;
   formattedName?: boolean;

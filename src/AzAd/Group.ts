@@ -1,6 +1,7 @@
 import * as azuread from '@pulumi/azuread';
 import { Input, Output, output } from '@pulumi/pulumi';
 import { defaultSubScope } from '../Common';
+import { NamedType } from '../types';
 import { roleAssignment } from './RoleAssignment';
 import { isDryRun } from '../Common';
 import { GetGroupResult } from '@pulumi/azuread/getGroup';
@@ -12,8 +13,7 @@ export interface GroupPermissionProps {
   scope?: Input<string>;
 }
 
-interface AdGroupProps {
-  name: string;
+interface AdGroupProps extends NamedType {
   //The ObjectId of Users.
   members?: Input<string>[];
   owners?: Input<Input<string>[]>;
@@ -69,29 +69,19 @@ export const getAdGroup = (displayName: string) => {
 
 export const addMemberToGroup = ({
   name,
-  userName,
   objectId,
   groupObjectId,
-}: {
-  name: string;
-  userName?: string;
-  objectId?: Input<string>;
+}: NamedType & {
+  objectId: Input<string>;
   groupObjectId: Input<string>;
-}) => {
-  if (userName && !userName.includes('@'))
-    throw new Error('UserName must include suffix @domain.name');
-  else if (!objectId)
-    throw new Error('Either UserName or ObjectId must be defined.');
-
-  const user = userName
-    ? output(azuread.getUser({ userPrincipalName: userName }))
-    : { objectId: objectId };
-
-  return new azuread.GroupMember(name, {
-    groupObjectId,
-    memberObjectId: user.objectId,
-  });
-};
+}) =>
+  output([objectId, groupObjectId]).apply(
+    ([oId, gId]) =>
+      new azuread.GroupMember(`${name}-${gId}-${oId}`, {
+        groupObjectId,
+        memberObjectId: objectId,
+      }),
+  );
 
 export const addGroupToGroup = (
   groupMemberName: string,

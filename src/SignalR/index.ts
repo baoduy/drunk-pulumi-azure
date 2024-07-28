@@ -2,13 +2,12 @@ import * as ss from '@pulumi/azure-native/signalrservice';
 import * as pulumi from '@pulumi/pulumi';
 import { getPrivateEndpointName, getSignalRName, isPrd } from '../Common';
 import {
-  BasicResourceArgs,
-  KeyVaultInfo,
+  BasicResourceWithVaultArgs,
   PrivateLinkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 
 interface ResourceSkuArgs {
   capacity?: 1 | 2 | 5 | 10 | 20 | 50 | 100;
@@ -16,14 +15,16 @@ interface ResourceSkuArgs {
   tier?: 'Standard' | 'Free';
 }
 
-interface Props extends BasicResourceArgs {
-  vaultInfo?: KeyVaultInfo;
+interface Props extends BasicResourceWithVaultArgs {
   allowedOrigins?: pulumi.Input<pulumi.Input<string>[]>;
   privateLink?: PrivateLinkPropsType;
   kind?: ss.ServiceKind | string;
   sku?: pulumi.Input<ResourceSkuArgs>;
 }
 
+/**
+ * There is no encryption available for SignalR yet
+ * */
 export default ({
   name,
   group,
@@ -106,40 +107,23 @@ export default ({
         resourceName: name,
         resourceGroupName: group.resourceGroupName,
       });
-
-      addCustomSecret({
-        name: `${name}-host`,
-        value: h,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-primaryKey`,
-        value: keys.primaryKey || '',
-        vaultInfo,
-        contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-primaryConnection`,
-        value: keys.primaryConnectionString || '',
-        vaultInfo,
-        contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-secondaryKey`,
-        value: keys.secondaryKey || '',
-        vaultInfo,
-        contentType: 'SignalR',
-      });
-
-      addCustomSecret({
-        name: `${name}-secondaryConnection`,
-        value: keys.secondaryConnectionString || '',
-        vaultInfo,
-        contentType: 'SignalR',
+        dependsOn: signalR,
+        items: [
+          { name: `${name}-host`, value: h },
+          //{ name: `${name}-primaryKey`, value: keys.primaryKey! },
+          {
+            name: `${name}-primaryConnection`,
+            value: keys.primaryConnectionString!,
+          },
+          //{ name: `${name}-secondaryKey`, value: keys.secondaryKey! },
+          {
+            name: `${name}-secondaryConnection`,
+            value: keys.secondaryConnectionString!,
+          },
+        ],
       });
     });
   }

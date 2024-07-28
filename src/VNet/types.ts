@@ -1,7 +1,7 @@
 import { enums, input as inputs } from '@pulumi/azure-native/types';
-import { AzureFirewallApplicationRuleProtocolType } from '@pulumi/azure-native/types/enums/network';
 import { Input, Output } from '@pulumi/pulumi';
 import * as pulumi from '@pulumi/pulumi';
+import { NamedType } from '../types';
 
 export type VnetInfoType = {
   vnetName: Input<string>;
@@ -100,8 +100,7 @@ export interface ApplicationRuleArgs {
   webCategories?: Input<Input<string>[]>;
 }
 
-export type FirewallPolicyRuleCollectionResults = {
-  name: string;
+export type FirewallPolicyRuleCollectionResults = NamedType & {
   priority: number;
   ruleCollections: Input<
     Input<
@@ -111,8 +110,7 @@ export type FirewallPolicyRuleCollectionResults = {
   >;
 };
 
-export type FirewallPolicyResults = {
-  name: string;
+export type FirewallPolicyResults = NamedType & {
   dnatRules?: Array<Input<NatRuleArgs>>;
   netRules?: Array<Input<NetworkRuleArgs>>;
   appRules?: Array<Input<ApplicationRuleArgs>>;

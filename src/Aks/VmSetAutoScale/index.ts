@@ -7,7 +7,6 @@ import { Input, Resource } from '@pulumi/pulumi';
 interface Props extends BasicMonitorArgs {
   group: ResourceGroupInfo;
   getCapacity?: typeof defaultGetCapacity;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 const defaultGetCapacity = (

@@ -1,7 +1,5 @@
-import { Input } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes, EnvRolesResults } from './EnvRoles';
+import { EnvRoleKeyTypes, EnvRolesInfo } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
-import { replaceAll } from '../Common';
 
 //Resource Group Role
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
@@ -83,14 +81,16 @@ const StorageRoleNames: Record<EnvRoleKeyTypes, string[]> = {
 //Container Registry Roles
 const ContainerRegistry: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: [
-    'ACR Registry Catalog Lister',
+    //'ACR Registry Catalog Lister',
     'ACR Repository Reader',
     'AcrQuarantineReader',
+    //'AcrPull',
   ],
   contributor: [
     'AcrImageSigner',
     'AcrPull',
     'AcrPush',
+
     //'ACR Repository Contributor',
     //'ACR Repository Writer',
     //'AcrQuarantineWriter',
@@ -185,52 +185,29 @@ export const grantEnvRolesAccess = ({
   ...others
 }: RoleEnableTypes &
   Omit<RoleAssignmentProps, 'roleName' | 'principalType' | 'principalId'> & {
-    envRoles: EnvRolesResults;
+    envRoles: EnvRolesInfo;
   }) => {
   const roles = getRoleNames(others);
+  Object.keys(envRoles).forEach((k) => {
+    const type = k as EnvRoleKeyTypes;
+    const objectId = envRoles[type].objectId;
+    if (!objectId) {
+      console.warn(
+        `The Env role '${type}' was ignored as the objectId was NULL.`,
+      );
+      return;
+    }
 
-  if (envRoles.readOnly.objectId) {
-    //ReadOnly
-    roles.readOnly.forEach((r) => {
-      const n = `${name}-readonly-${replaceAll(r, ' ', '')}`;
+    const n = `${name}-${type}`;
+    roles[type].forEach((r) =>
       roleAssignment({
         name: n,
-        principalId: envRoles.readOnly.objectId,
-        principalType: 'Group',
         roleName: r,
+        principalId: objectId,
+        principalType: 'Group',
         scope,
         dependsOn,
-      });
-    });
-  }
-
-  if (envRoles.contributor.objectId) {
-    //Contributors
-    roles.contributor.forEach((r) => {
-      const n = `${name}-contributor-${replaceAll(r, ' ', '')}`;
-      roleAssignment({
-        name: n,
-        principalId: envRoles.contributor.objectId,
-        principalType: 'Group',
-        roleName: r,
-        scope,
-        dependsOn,
-      });
-    });
-  }
-
-  if (envRoles.admin.objectId) {
-    //Admin
-    roles.admin.forEach((r) => {
-      const n = `${name}-admin-${replaceAll(r, ' ', '')}`;
-      roleAssignment({
-        name: n,
-        principalId: envRoles.admin.objectId,
-        principalType: 'Group',
-        roleName: r,
-        scope,
-        dependsOn,
-      });
-    });
-  }
+      }),
+    );
+  });
 };

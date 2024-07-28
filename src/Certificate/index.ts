@@ -2,7 +2,7 @@ import * as tls from '@pulumi/tls';
 import * as fs from 'fs';
 import * as pem from './p12';
 import { KeyVaultInfo } from '../types';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 
 export const defaultAllowedUses = [
   'data_encipherment',
@@ -90,25 +90,14 @@ export const createSelfSignCertWithCA = ({
   });
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: vaultCertName,
+    addCustomSecrets({
       vaultInfo,
-      value: cert.certPem,
       contentType: `${dnsName} self sign cert.`,
-    });
-
-    addCustomSecret({
-      name: vaultCAName,
-      vaultInfo,
-      value: ca.certPem,
-      contentType: `${dnsName} self sign ca cert.`,
-    });
-
-    addCustomSecret({
-      name: vaultPrivateKeyName,
-      vaultInfo,
-      value: privateKey.privateKeyPem,
-      contentType: `${dnsName} self sign private key.`,
+      items: [
+        { name: vaultCertName, value: cert.certPem },
+        { name: vaultCAName, value: ca.certPem },
+        { name: vaultPrivateKeyName, value: privateKey.privateKeyPem },
+      ],
     });
   }
 
@@ -159,18 +148,13 @@ export const createSelfSignCert = ({
   });
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: vaultCertName,
+    addCustomSecrets({
       vaultInfo,
-      value: cert.certPem,
       contentType: `${dnsName} self sign cert.`,
-    });
-
-    addCustomSecret({
-      name: vaultPrivateKeyName,
-      vaultInfo,
-      value: privateKey.privateKeyPem,
-      contentType: `${dnsName} self sign private key.`,
+      items: [
+        { name: vaultCertName, value: cert.certPem },
+        { name: vaultPrivateKeyName, value: privateKey.privateKeyPem },
+      ],
     });
   }
 
@@ -190,7 +174,6 @@ export const convertPfxFileToPem = async ({
 }) => {
   const p12File = await fs.promises.readFile(certPath, { encoding: 'binary' });
   const cert = pem.convertToPem(p12File, password);
-
   return { cert: cert.pemCertificate, privateKey: cert.pemKey };
 };
 

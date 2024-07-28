@@ -1,5 +1,10 @@
 import * as sql from '@pulumi/azure-native/sql';
-import { BasicResourceArgs, ResourceInfoWithInstance } from '../types';
+import Locker from '../Core/Locker';
+import {
+  BasicResourceArgs,
+  LockableType,
+  ResourceInfoWithInstance,
+} from '../types';
 import { Input, Output } from '@pulumi/pulumi';
 import { getSqlDbName, isPrd } from '../Common';
 
@@ -15,7 +20,7 @@ export type SqlDbSku =
   | 'P6'
   | 'P11';
 
-export interface SqlDbProps extends BasicResourceArgs {
+export interface SqlDbProps extends BasicResourceArgs, LockableType {
   sqlServerName: Input<string>;
   elasticPoolId?: Output<string>;
   /** Provide this if elasticPoolId is not provided. Default is S0 */
@@ -36,6 +41,7 @@ export default ({
   dependsOn,
   importUri,
   ignoreChanges,
+  lock,
 }: SqlDbProps): ResourceInfoWithInstance<sql.Database> => {
   name = getSqlDbName(name);
 
@@ -67,7 +73,12 @@ export default ({
     ignoreChanges,
     import: importUri,
     deleteBeforeReplace: true,
+    protect: lock,
   });
+  //Lock from delete
+  if (lock) {
+    Locker({ name, resource: sqlDb });
+  }
 
   return { name, group, id: sqlDb.id, instance: sqlDb };
 };

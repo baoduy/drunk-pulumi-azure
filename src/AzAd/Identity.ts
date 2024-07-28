@@ -9,8 +9,8 @@ import {
   ApplicationOptionalClaims,
   ApplicationRequiredResourceAccess,
 } from '@pulumi/azuread/types/input';
-import { BasicArgs, IdentityRoleAssignment, KeyVaultInfo } from '../types';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { NamedType, NamedWithVaultBasicArgs } from '../types';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
 
 type PreAuthApplicationProps = {
@@ -18,8 +18,7 @@ type PreAuthApplicationProps = {
   oauth2PermissionNames: string[];
 };
 
-interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
-  name: string;
+interface IdentityProps extends NamedWithVaultBasicArgs {
   owners?: pulumi.Input<pulumi.Input<string>[]>;
   createClientSecret?: boolean;
   /** if UI app set public client is true */
@@ -39,11 +38,9 @@ interface IdentityProps extends BasicArgs, IdentityRoleAssignment {
     pulumi.Input<ApplicationRequiredResourceAccess>[]
   >;
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
-  vaultInfo?: KeyVaultInfo;
 }
 
-export type IdentityResult = {
-  name: string;
+export type IdentityResult = NamedType & {
   objectId: Output<string>;
   clientId: Output<string>;
   clientSecret: Output<string> | undefined;
@@ -65,8 +62,6 @@ export default ({
   requiredResourceAccesses = [],
   oauth2Permissions,
   publicClient = false,
-  roles,
-  envRole,
   optionalClaims,
   vaultInfo,
   dependsOn,
@@ -132,18 +127,13 @@ export default ({
   );
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: secretNames.objectIdName,
-      value: app.objectId,
+    addCustomSecrets({
       vaultInfo,
       contentType: 'Identity',
-    });
-
-    addCustomSecret({
-      name: secretNames.clientIdKeyName,
-      value: app.clientId,
-      vaultInfo,
-      contentType: 'Identity',
+      items: [
+        { name: secretNames.objectIdName, value: app.objectId },
+        { name: secretNames.clientIdKeyName, value: app.clientId },
+      ],
     });
   }
 
@@ -190,27 +180,22 @@ export default ({
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
-    grantIdentityPermissions({
-      name,
-      envRole,
-      roles,
-      vaultInfo,
-      principalId: principal.objectId,
-    });
+    // grantIdentityPermissions({
+    //   name,
+    //   envRole,
+    //   roles,
+    //   vaultInfo,
+    //   principalId: principal.objectId,
+    // });
 
     if (vaultInfo) {
-      addCustomSecret({
-        name: secretNames.principalIdKeyName,
-        value: principal.objectId,
+      addCustomSecrets({
         vaultInfo,
         contentType: 'Identity',
-      });
-
-      addCustomSecret({
-        name: secretNames.principalSecretKeyName,
-        value: principalSecret,
-        vaultInfo,
-        contentType: 'Identity',
+        items: [
+          { name: secretNames.principalIdKeyName, value: principal.objectId },
+          { name: secretNames.principalSecretKeyName, value: principalSecret },
+        ],
       });
     }
   }

@@ -1,8 +1,13 @@
-import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import {
+  BasicEncryptResourceArgs,
+  BasicMonitorArgs,
+  KeyVaultInfo,
+  ResourceArgs,
+} from '../types';
 import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';
-import { getResourceName } from '../Common/ResourceEnv';
+import { getResourceName } from '../Common';
 import { DefaultManagementRules } from '../Storage/ManagementRules';
 import AppInsight from './AppInsight';
 
@@ -25,9 +30,7 @@ const defaultStorageRules: Array<DefaultManagementRules> = [
   },
 ];
 
-interface Props {
-  name: string;
-  group: ResourceGroupInfo;
+interface Props extends BasicEncryptResourceArgs {
   workspace?: WorkspaceType;
   storage?: {
     /** The management rule applied to Storage level (all containers)*/
@@ -36,7 +39,14 @@ interface Props {
   vaultInfo?: KeyVaultInfo;
 }
 
-export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
+export default ({
+  group,
+  name,
+  workspace,
+  storage,
+  vaultInfo,
+  ...others
+}: Props) => {
   name = getResourceName(name, { suffix: 'logs' });
 
   const createWp: WorkspaceType | undefined = workspace
@@ -45,6 +55,7 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
 
   const logWp = createWp
     ? LogWp({
+        ...others,
         group,
         name,
         sku: createWp.sku,
@@ -56,6 +67,7 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
   const appInsight =
     logWp && createWp?.createAppInsight
       ? AppInsight({
+          ...others,
           group,
           name,
           dailyCapGb: createWp.dailyQuotaGb,
@@ -68,6 +80,7 @@ export default ({ group, name, workspace, storage, vaultInfo }: Props) => {
 
   const logStorage = storage
     ? Storage({
+        ...others,
         group,
         name,
         vaultInfo,

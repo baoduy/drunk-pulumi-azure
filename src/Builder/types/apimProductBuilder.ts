@@ -1,11 +1,10 @@
-import { input as inputs } from "@pulumi/azure-native/types";
-import { Input } from "@pulumi/pulumi";
-import { ResourceInfo } from "../../types";
-import { IApimPolicyBuilder } from "./apimPolicyBuilder";
-import { BuilderProps, IBuilderAsync } from "./genericBuilder";
+import { input as inputs } from '@pulumi/azure-native/types';
+import { Input } from '@pulumi/pulumi';
+import { NamedType, ResourceInfo } from '../../types';
+import { IApimPolicyBuilder } from './apimPolicyBuilder';
+import { BuilderProps, IBuilderAsync } from './genericBuilder';
 
 export type ApimChildBuilderProps = BuilderProps & {
-  name: string;
   apimServiceName: string;
 };
 
@@ -30,10 +29,9 @@ export type ApimApiPolicyType = (
 export type VersionBuilderFunction = (
   builder: IApimApiRevisionBuilder,
 ) => IApimApiRevisionBuilder;
-export type ApimApiVersionType = "v1" | "v2" | "v3" | "v4" | "v5" | string;
-export type ApimApiOperationType = {
-  name: string;
-  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
+export type ApimApiVersionType = 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | string;
+export type ApimApiOperationType = NamedType & {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
   urlTemplate: Input<string>;
   responses?: Input<Input<inputs.apimanagement.ResponseContractArgs>[]>;
 };

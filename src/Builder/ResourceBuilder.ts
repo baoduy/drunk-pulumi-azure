@@ -1,7 +1,9 @@
 import { RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
+import { EnvRoleBuilder } from './EnvRoleBuilder';
 import {
   BuilderAsyncFunctionType,
   BuilderFunctionType,
+  IEnvRoleBuilder,
   IResourceBuilder,
   IResourceGroupBuilder,
   IResourceRoleBuilder,
@@ -12,12 +14,7 @@ import {
   ResourceVnetBuilderType,
   VnetBuilderResults,
 } from './types';
-import {
-  createEnvRoles,
-  CreateEnvRolesType,
-  EnvRolesResults,
-  getEnvRolesOutput,
-} from '../AzAd/EnvRoles';
+import { EnvRolesInfo } from '../AzAd/EnvRoles';
 import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../types';
 import RG from '../Core/ResourceGroup';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
@@ -36,6 +33,13 @@ class ResourceBuilder
     IResourceVaultBuilder,
     IResourceBuilder
 {
+  //Instances
+  private _RGInstance: ResourceGroup | undefined = undefined;
+  private _otherInstances: Record<string, ResourceInfo> = {};
+  private _vnetInstance: VnetBuilderResults | undefined = undefined;
+  private _otherResources: ResourceFunction[] = [];
+
+  //Props
   private _createRGProps: RoleEnableTypes | undefined = undefined;
   private _createRG: boolean = false;
   private _RGInfo: ResourceGroupInfo | undefined = undefined;
@@ -44,23 +48,17 @@ class ResourceBuilder
   private _createVault: boolean = false;
   private _createVaultName: string | undefined = undefined;
   private _loadRolesFromVault: boolean = false;
-  private _envRoles: EnvRolesResults | undefined = undefined;
+  private _envRoles: IEnvRoleBuilder | undefined = undefined;
   private _otherBuilders = new Array<BuilderFunctionType>();
   private _otherBuildersAsync = new Array<BuilderAsyncFunctionType>();
   private _vaultInfo: IVaultBuilderResults | undefined = undefined;
   private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
   private _certs: Record<string, CertBuilderType> = {};
-
   private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
     undefined;
-  private _otherResources: ResourceFunction[] = [];
-
-  //Instances
-  private _RGInstance: ResourceGroup | undefined = undefined;
-  private _envRolesInstance: CreateEnvRolesType | undefined = undefined;
-  private _otherInstances: Record<string, ResourceInfo> = {};
-  private _vnetInstance: VnetBuilderResults | undefined = undefined;
+  private _enableEncryption: boolean = false;
+  private _pushEnvToVault: boolean = false;
 
   constructor(public name: string) {}
 
@@ -68,8 +66,8 @@ class ResourceBuilder
     this._createRole = true;
     return this;
   }
-  public withRoles(props: EnvRolesResults): IResourceGroupBuilder {
-    this._envRoles = props;
+  public withRoles(props: EnvRolesInfo): IResourceGroupBuilder {
+    this._envRoles = EnvRoleBuilder.form(props);
     return this;
   }
   public withRolesFromVault(): IResourceGroupBuilder {
@@ -117,6 +115,11 @@ class ResourceBuilder
     this._vnetBuilder = props;
     return this;
   }
+  public enableEncryption(): IResourceBuilder {
+    this._enableEncryption = true;
+    return this;
+  }
+
   public withBuilder(props: BuilderFunctionType): IResourceBuilder {
     this._otherBuilders.push(props);
     return this;
@@ -133,20 +136,19 @@ class ResourceBuilder
     this._lock = true;
     return this;
   }
-
   private buildRoles() {
+    //If the EnvRoles is already provided then no need to re-build it
+    if (this._envRoles) return;
+    //Create new EnvRoles
     if (this._createRole) {
-      this._envRolesInstance = createEnvRoles();
-      this._envRoles = this._envRolesInstance;
-    } else if (this._loadRolesFromVault) {
-      if (!this._vaultInfo)
-        throw new Error(
-          'The KeyVaultInfo needs to be defined to load environment Roles info.',
-        );
-      this._envRoles = getEnvRolesOutput(this._vaultInfo!);
+      this._envRoles = EnvRoleBuilder.create();
+      this._pushEnvToVault = true;
+    }
+    //Load EnvRole from Vault
+    else if (this._loadRolesFromVault) {
+      this._envRoles = EnvRoleBuilder.loadForm(this._vaultInfo!);
     }
   }
-
   private buildRG() {
     if (!this._createRG) return;
     if (!this._createRGProps)
@@ -179,8 +181,7 @@ class ResourceBuilder
       }).build();
 
       //Add Environment Roles to Vault
-      if (this._envRolesInstance)
-        this._envRolesInstance.addRolesToVault(this._vaultInfo!);
+      if (this._pushEnvToVault) this._envRoles!.pushTo(this._vaultInfo!);
     }
 
     if (!this._vaultInfo)
@@ -266,6 +267,7 @@ class ResourceBuilder
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!.info(),
       envRoles: this._envRoles!,
+      enableEncryption: this._enableEncryption,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,
       dependsOn: this._RGInstance,

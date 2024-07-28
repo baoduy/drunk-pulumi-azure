@@ -1,23 +1,20 @@
-import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from '../types';
-import { getPostgresqlName } from '../Common';
+import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
+import { addEncryptKey } from '../KeyVault/Helper';
+import { BasicEncryptResourceArgs, NetworkPropsType } from '../types';
+import { getPostgresqlName, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as azure from '@pulumi/azure-native';
-import { isPrd, tenantId } from '../Common/AzureEnv';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import Locker from '../Core/Locker';
 
-export interface PostgresProps extends BasicResourceArgs {
-  // auth: {
-  //   adminLogin?: pulumi.Input<string>;
-  //   password?: pulumi.Input<string>;
-  // };
+export interface PostgresProps extends BasicEncryptResourceArgs {
+  // auth: LoginWithEnvRolesArgs;
   sku?: pulumi.Input<inputs.dbforpostgresql.SkuArgs>;
-  vaultInfo?: KeyVaultInfo;
   version?: azure.dbforpostgresql.ServerVersion;
   storageSizeGB?: number;
   databases?: Array<string>;
@@ -30,7 +27,6 @@ export interface PostgresProps extends BasicResourceArgs {
 export default ({
   name,
   group,
-  //auth,
   version = azure.dbforpostgresql.ServerVersion.ServerVersion_14,
   storageSizeGB = 128,
   /**
@@ -43,6 +39,7 @@ export default ({
   network,
   databases,
   vaultInfo,
+  enableEncryption,
   dependsOn,
   lock = true,
 }: PostgresProps) => {
@@ -60,6 +57,14 @@ export default ({
     options: { special: false },
   }).result;
 
+  const encryptKey = enableEncryption
+    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
+    : undefined;
+
+  const userIdentity = enableEncryption
+    ? UserAssignedIdentity({ name, group, vaultInfo })
+    : undefined;
+
   const postgres = new azure.dbforpostgresql.Server(
     name,
     {
@@ -75,10 +80,15 @@ export default ({
       },
       administratorLogin: username,
       administratorLoginPassword: password,
-      dataEncryption: { type: 'SystemManaged' },
-      //maintenanceWindow: { dayOfWeek: 6 },
+      dataEncryption: encryptKey
+        ? {
+            type: 'AzureKeyVault',
+            primaryUserAssignedIdentityId: userIdentity?.id,
+            primaryKeyURI: encryptKey.url,
+          }
+        : { type: 'SystemManaged' },
+      maintenanceWindow: { dayOfWeek: 6, startHour: 0, startMinute: 0 },
       sku,
-      //network: {},
       backup: {
         geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
         backupRetentionDays: 7,
@@ -143,17 +153,13 @@ export default ({
   }
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: `${name}-login`,
-      value: username,
+    addCustomSecrets({
       vaultInfo,
       contentType: name,
-    });
-    addCustomSecret({
-      name: `${name}-pass`,
-      value: password,
-      vaultInfo,
-      contentType: name,
+      items: [
+        { name: `${name}-login`, value: username },
+        { name: `${name}-pass`, value: password },
+      ],
     });
   }
 

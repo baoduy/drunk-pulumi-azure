@@ -1,14 +1,12 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 import { Input } from '@pulumi/pulumi';
-import { isPrd } from '../Common/AzureEnv';
-import { getFirewallName } from '../Common';
+import { getFirewallName, isPrd, isDryRun } from '../Common';
 import ResourceCreator from '../Core/ResourceCreator';
-import { BasicArgs, BasicMonitorArgs, BasicResourceArgs } from '../types';
+import { OptsArgs, BasicMonitorArgs, BasicResourceArgs } from '../types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './types';
 import IpAddress from './IpAddress';
-import { isDryRun } from '../Common/StackEnv';
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
@@ -153,7 +151,7 @@ export default ({
     },
 
     ...others,
-  } as network.AzureFirewallArgs & BasicArgs);
+  } as network.AzureFirewallArgs & OptsArgs);
 
   //Link Rule to Policy
   if (fwPolicy && policy?.rules) {

@@ -216,7 +216,7 @@ export default ({
           'quay.io', //For Cert Manager
           '*.quay.io',
           'k8s.gcr.io', //nginx images
-          '*.k8s.io',
+          'registry.k8s.io',
           '*.cloudfront.net',
           '*.amazonaws.com',
           '*.gcr.io',

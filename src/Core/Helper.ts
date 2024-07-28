@@ -1,8 +1,10 @@
-import {createAxios} from '@drunk-pulumi/azure-providers/Tools/Axios';
+import { createAxios } from '@drunk-pulumi/azure-providers/Tools/Axios';
+import { interpolate } from '@pulumi/pulumi';
+import { subscriptionId } from '../Common';
+import { NamedType, ResourceGroupInfo } from '../types';
 
-export interface AzureResourceItem {
+export interface AzureResourceItem extends NamedType {
   id: string;
-  name: string;
   location: string;
   resourceGroupName: string;
   tags: {
@@ -13,6 +15,10 @@ export interface AzureResourceItem {
 export interface AzureResourceResult {
   value: Array<AzureResourceItem>;
 }
+
+/**Get Resource group Id from Info */
+export const getRGId = (group: ResourceGroupInfo) =>
+  interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}`;
 
 /** Find a NetworkSecurityGroups in a Resource Group*/
 export const findNetworkSecurityGroups = async (group: string) => {

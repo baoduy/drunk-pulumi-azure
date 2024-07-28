@@ -1,9 +1,8 @@
 import * as network from '@pulumi/azure-native/network';
 import { input as inputs } from '@pulumi/azure-native/types';
-import { Input, output } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import * as pulumi from '@pulumi/pulumi';
-//import { NetworkRouteResource } from "@drunk-pulumi/azure-providers";
-import { BasicMonitorArgs, ResourceGroupInfo } from '../types';
+import { BasicMonitorArgs, ResourceArgs } from '../types';
 import { CustomSecurityRuleArgs } from './types';
 import Firewall, { FirewallSkus, FirewallProps } from './Firewall';
 import { FirewallPolicyProps } from './types';
@@ -12,9 +11,7 @@ import { SubnetProps } from './Subnet';
 import Vnet from './Vnet';
 import { parseVnetInfoFromId } from './Helper';
 
-interface Props {
-  name: string;
-  group: ResourceGroupInfo;
+interface Props extends ResourceArgs {
   ddosId?: Input<string>;
   addressSpace?: Input<string>[];
   subnets?: SubnetProps[];

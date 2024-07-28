@@ -1,13 +1,14 @@
 import * as bus from '@pulumi/azure-native/servicebus';
 import * as pulumi from '@pulumi/pulumi';
 import {
-  BasicArgs,
+  OptsArgs,
   BasicMonitorArgs,
   BasicResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
   ResourceGroupInfo,
   ResourceInfoWithInstance,
+  NamedType,
 } from '../types';
 import {
   BusConnectionTypes,
@@ -17,11 +18,10 @@ import {
   getTopicName,
   getTopicOrQueueVaultName,
 } from './ServiceBusHelper';
-import { isPrd } from '../Common/AzureEnv';
 import creator from '../Core/ResourceCreator';
-import { getServiceBusName } from '../Common';
+import { getServiceBusName, isPrd } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 
 type TransportTypes = 'AmqpWebSockets' | 'Amqp' | null;
@@ -49,7 +49,7 @@ type OptionsType = {
   autoDeleteOnIdle?: pulumi.Input<string>;
 };
 
-interface ConnCreatorProps extends BasicArgs {
+interface ConnCreatorProps extends OptsArgs {
   topicName?: string;
   queueName?: string;
   namespaceName: string;
@@ -164,14 +164,6 @@ const createAndStoreConnection = ({
     if (typeof transportType === 'string')
       primaryConn += `;TransportType=${transportType};`;
 
-    addCustomSecret({
-      name: primaryName,
-      value: primaryConn,
-      vaultInfo,
-      contentType: `ServiceBus ${namespaceName}/${name}`,
-      dependsOn: rule,
-    });
-
     let secondConn = removeEntityPath
       ? keys.secondaryConnectionString.replace(`;EntityPath=${name}`, '')
       : keys.secondaryConnectionString;
@@ -179,12 +171,14 @@ const createAndStoreConnection = ({
     if (typeof transportType === 'string')
       secondConn += `;TransportType=${transportType};`;
 
-    addCustomSecret({
-      name: secondaryName,
-      value: secondConn,
+    addCustomSecrets({
       vaultInfo,
       contentType: `ServiceBus ${namespaceName}/${name}`,
       dependsOn: rule,
+      items: [
+        { name: primaryName, value: primaryConn },
+        { name: secondaryName, value: secondConn },
+      ],
     });
   });
 
@@ -193,7 +187,7 @@ const createAndStoreConnection = ({
 
 interface TopicProps
   extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'>,
-    BasicArgs {
+    OptsArgs {
   shortName: string;
   namespaceFullName: string;
   version: number;
@@ -306,7 +300,7 @@ const topicCreator = ({
   };
 };
 
-interface SubProps extends BasicArgs {
+interface SubProps extends OptsArgs {
   shortName: string;
   namespaceFullName: pulumi.Input<string>;
   topicFullName: pulumi.Input<string>;
@@ -349,7 +343,7 @@ const subscriptionCreator = ({
 
 interface QueueProps
   extends Pick<ConnCreatorProps, 'removeEntityPath' | 'transportType'>,
-    BasicArgs {
+    OptsArgs {
   shortName: string;
   version: number;
   namespaceFullName: string;
@@ -359,14 +353,12 @@ interface QueueProps
   options?: OptionsType;
 }
 
-interface TopicResultProps {
-  name: string;
+interface TopicResultProps extends NamedType {
   topic: bus.Topic;
   subs?: Array<ResourceInfoWithInstance<bus.Subscription>>;
 }
 
-interface QueueResultProps {
-  name: string;
+interface QueueResultProps extends NamedType {
   queue: bus.Queue;
 }
 
@@ -503,7 +495,7 @@ export default ({
           logsCategories: ['OperationalLogs'],
         }
       : undefined,
-  } as bus.NamespaceArgs & BasicArgs);
+  } as bus.NamespaceArgs & OptsArgs);
 
   const namespace = resource as bus.Namespace;
 

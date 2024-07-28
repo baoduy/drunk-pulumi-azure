@@ -78,6 +78,7 @@ export default ({
 
         enabledForDeployment: true,
         enabledForDiskEncryption: true,
+        enabledForTemplateDeployment: true,
 
         networkAcls: {
           bypass: 'AzureServices',

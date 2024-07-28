@@ -1,15 +1,16 @@
+import { defaultSubScope } from '../../Common';
 import { KeyVaultInfo } from '../../types';
 import Identity from '../Identity';
 import { getGraphPermissions } from '../GraphDefinition';
 import { getIdentityInfoOutput } from '../Helper';
-import { defaultSubScope } from '../../Common/AzureEnv';
+import { roleAssignment } from '../RoleAssignment';
 
 export const defaultAzAdoName = 'azure-devops';
 
 interface Props {
   name?: string;
   vaultInfo: KeyVaultInfo;
-  additionRoles?: string[];
+  isSubOwner?: boolean;
 }
 
 /** Get Global  ADO Identity */
@@ -24,9 +25,10 @@ export const getAdoIdentityInfo = (vaultInfo: KeyVaultInfo) =>
 export default ({
   name = defaultAzAdoName,
   vaultInfo,
-  additionRoles = ['Owner'],
+  isSubOwner,
   ...others
 }: Props) => {
+  const roleName = isSubOwner ? 'Owner' : 'Contributor';
   const graphAccess = getGraphPermissions({ name: 'User.Read', type: 'Scope' });
 
   const ado = Identity({
@@ -35,12 +37,17 @@ export default ({
     createClientSecret: true,
     createPrincipal: true,
     requiredResourceAccesses: [graphAccess],
-    roles: additionRoles.map((role) => ({
-      name: role,
-      scope: defaultSubScope,
-    })),
     vaultInfo,
     ...others,
+  });
+
+  roleAssignment({
+    name,
+    scope: defaultSubScope,
+    dependsOn: ado.resource,
+    principalId: ado.principalId!,
+    principalType: 'ServicePrincipal',
+    roleName,
   });
 
   console.log(

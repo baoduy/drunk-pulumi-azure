@@ -1,14 +1,12 @@
-import * as network from "@pulumi/azure-native/network";
-import { PublicIPAddress } from "@pulumi/azure-native/network";
-import { Input } from "@pulumi/pulumi";
-import { getIpAddressPrefixName } from "../Common/Naming";
-import Locker from "../Core/Locker";
-import { BasicResourceArgs } from "../types";
-import IpAddress from "./IpAddress";
+import * as network from '@pulumi/azure-native/network';
+import { PublicIPAddress } from '@pulumi/azure-native/network';
+import { Input } from '@pulumi/pulumi';
+import { getIpAddressPrefixName } from '../Common';
+import Locker from '../Core/Locker';
+import { BasicResourceArgs, NamedType } from '../types';
+import IpAddress from './IpAddress';
 
-type AddressNameType = Array<{
-  name: string;
-}>;
+type AddressNameType = Array<NamedType>;
 
 export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
   prefixLength?: 28 | 29 | 30 | 31;
@@ -42,7 +40,7 @@ export default ({
   lock = true,
 }: PublicIpAddressPrefixProps): PublicIpAddressPrefixResult => {
   const n = getIpAddressPrefixName(name);
-  const sku = { name: "Standard", tier: "Regional" };
+  const sku = { name: 'Standard', tier: 'Regional' };
 
   const addressPrefix = createPrefix
     ? new network.PublicIPPrefix(
@@ -53,7 +51,7 @@ export default ({
           prefixLength,
           sku,
         },
-        { ignoreChanges: ["prefixLength"] },
+        { ignoreChanges: ['prefixLength'] },
       )
     : undefined;
 

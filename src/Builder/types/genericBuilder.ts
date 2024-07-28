@@ -1,26 +1,24 @@
 //Common Builder Types
 import { Input, Resource } from '@pulumi/pulumi';
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../../types';
-import { EnvRolesResults } from '../../AzAd/EnvRoles';
+import {
+  EncryptResourceArgs,
+  LoginArgs,
+  ResourceInfo,
+  TypeOmit,
+} from '../../types';
+import { IEnvRoleBuilder } from './envRoleBuilder';
 
-export type BuilderProps = {
-  name: string;
-  group: ResourceGroupInfo;
+export type BuilderProps = EncryptResourceArgs & {
   /** the below are optionals property and will be available depend on the situation*/
-  envRoles?: EnvRolesResults;
-  vaultInfo?: KeyVaultInfo;
+  envRoles?: IEnvRoleBuilder;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
 
-export type CommonOmit<T> = Omit<T, keyof BuilderProps>;
-export type LoginBuilderProps = {
-  adminLogin: Input<string>;
-  password: Input<string>;
-};
+export type OmitBuilderProps<T> = TypeOmit<T, BuilderProps>;
 
 export interface ILoginBuilder<IReturnInterface> {
   generateLogin(): IReturnInterface;
-  withLoginInfo(props: LoginBuilderProps): IReturnInterface;
+  withLoginInfo(props: LoginArgs): IReturnInterface;
 }
 
 //Synchronous
@@ -47,4 +45,15 @@ export abstract class BuilderAsync<TResults extends ResourceInfo>
 {
   protected constructor(public commonProps: BuilderProps) {}
   public abstract build(): Promise<TResults>;
+}
+
+//Other interface
+export interface ILockable<TBuilderResults> {
+  lock(): TBuilderResults;
+}
+export interface IIgnoreChanges<TBuilderResults> {
+  ignoreChangesFrom(...props: string[]): TBuilderResults;
+}
+export interface IInfo<TBuilderResults> {
+  info(): TBuilderResults;
 }

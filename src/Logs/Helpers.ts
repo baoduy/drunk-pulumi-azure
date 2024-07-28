@@ -4,8 +4,7 @@ import {
   currentRegionName,
   parseResourceInfoFromId,
   subscriptionId,
-} from '../Common/AzureEnv';
-import {
+  getResourceName,
   getAppInsightName,
   getKeyName,
   getLogWpName,
@@ -17,10 +16,12 @@ import { getStorageSecrets, StorageConnectionInfo } from '../Storage/Helper';
 import {
   DiagnosticProps,
   KeyVaultInfo,
+  NamedType,
+  ResourceArgs,
   ResourceGroupInfo,
   ResourceInfo,
+  ResourceWithVaultArgs,
 } from '../types';
-import { getResourceName } from '../Common/ResourceEnv';
 import { getAppInsightKey } from './AppInsight';
 
 export const createDiagnostic = ({
@@ -78,8 +79,7 @@ export const createDiagnostic = ({
   );
 };
 
-interface ThreatProtectionProps {
-  name: string;
+interface ThreatProtectionProps extends NamedType {
   targetResourceId: Input<string>;
 }
 
@@ -194,11 +194,7 @@ export const getAppInsightInfo = ({
   name,
   group,
   vaultInfo,
-}: {
-  name: string;
-  group: ResourceGroupInfo;
-  vaultInfo?: KeyVaultInfo;
-}): AppInsightInfo => {
+}: ResourceWithVaultArgs): AppInsightInfo => {
   const n = getAppInsightName(name);
   const id = interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
 

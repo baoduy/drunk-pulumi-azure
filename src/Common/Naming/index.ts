@@ -70,6 +70,9 @@ export const getAppConfigName = (name: string) =>
 export const getApimName = (name: string) =>
   getResourceName(name, { suffix: 'apim' });
 
+export const getDiskEncryptionName = (name: string) =>
+  getResourceName(name, { suffix: 'disk-encrypt' });
+
 export const getSshName = (name: string) =>
   getResourceName(name, { suffix: 'ssh' });
 

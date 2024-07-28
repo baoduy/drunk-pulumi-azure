@@ -1,8 +1,8 @@
-import { BasicResourceArgs } from "../types";
-import { RouteArgs } from "./types";
-import { getRouteName, getRouteItemName } from "../Common/Naming";
-import * as network from "@pulumi/azure-native/network";
-import { Input } from "@pulumi/pulumi";
+import { BasicResourceArgs } from '../types';
+import { RouteArgs } from './types';
+import { getRouteName, getRouteItemName } from '../Common';
+import * as network from '@pulumi/azure-native/network';
+import { Input } from '@pulumi/pulumi';
 
 interface Props extends BasicResourceArgs {
   routes?: Input<RouteArgs>[];
@@ -17,7 +17,7 @@ export default ({ name, group, routes }: Props) => {
   });
 };
 
-interface RouteItemsProps extends BasicResourceArgs, Omit<RouteArgs, "name"> {
+interface RouteItemsProps extends BasicResourceArgs, Omit<RouteArgs, 'name'> {
   routeTableName: Input<string>;
 }
 

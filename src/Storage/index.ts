@@ -1,14 +1,14 @@
 import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
+import { createEnvRoles } from '../AzAd/EnvRoles';
 import {
-  BasicResourceArgs,
-  KeyVaultInfo,
+  BasicEncryptResourceArgs,
   PrivateLinkPropsType,
   ResourceInfo,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
-import { getEncryptionKeyOutput, getSecret } from '../KeyVault/Helper';
-import { isPrd } from '../Common/AzureEnv';
+import { addEncryptKey, getSecret } from '../KeyVault/Helper';
+import { isPrd } from '../Common';
 import { getConnectionName, getKeyName, getStorageName } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import Locker from '../Core/Locker';
@@ -30,8 +30,6 @@ export type StorageFeatureType = {
   allowSharedKeyAccess?: boolean;
   /** Enable this storage as static website. */
   enableStaticWebsite?: boolean;
-  /** This option only able to enable once Account is created, and the Principal added to the Key Vault Read Permission Group */
-  enableKeyVaultEncryption?: boolean;
   allowCrossTenantReplication?: boolean;
   isSftpEnabled?: boolean;
 };
@@ -49,9 +47,7 @@ export type StorageNetworkType = {
     type: 'blob' | 'table' | 'queue' | 'file' | 'web' | 'dfs';
   };
 };
-interface StorageProps extends BasicResourceArgs {
-  //This is required for encryption key
-  vaultInfo?: KeyVaultInfo;
+interface StorageProps extends BasicEncryptResourceArgs {
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
   fileShares?: Array<string>;
@@ -71,6 +67,8 @@ export default ({
   name,
   group,
   vaultInfo,
+  enableEncryption,
+  envRoles,
   containers = [],
   queues = [],
   fileShares = [],
@@ -85,8 +83,8 @@ export default ({
   const secondaryKeyName = getKeyName(name, 'secondary');
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
   const secondConnectionKeyName = getConnectionName(name, 'secondary');
-  const encryptionKey = features.enableKeyVaultEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
+  const encryptionKey = enableEncryption
+    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
@@ -185,6 +183,7 @@ export default ({
     });
   }
 
+  //Lock the resources
   if (lock) {
     Locker({ name, resource: stg });
   }
@@ -248,25 +247,25 @@ export default ({
     if (!id) return;
 
     //Allows to Read Key Vault
-    grantIdentityPermissions({
-      name,
-      vaultInfo,
-      envRole: 'readOnly',
-      principalId: stg.identity.apply((s) => s!.principalId),
-    });
+    if (envRoles)
+      envRoles.addMember(
+        'readOnly',
+        stg.identity.apply((s) => s!.principalId),
+      );
 
-    const keys = (
-      await storage.listStorageAccountKeys({
-        accountName: name,
-        resourceGroupName: group.resourceGroupName,
-      })
-    ).keys.map((k) => ({
-      name: k.keyName,
-      key: k.value,
-      connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
-    }));
+    //Add connection into Key vault
+    if (vaultInfo && features?.allowSharedKeyAccess) {
+      const keys = (
+        await storage.listStorageAccountKeys({
+          accountName: name,
+          resourceGroupName: group.resourceGroupName,
+        })
+      ).keys.map((k) => ({
+        name: k.keyName,
+        key: k.value,
+        connectionString: `DefaultEndpointsProtocol=https;AccountName=${name};AccountKey=${k.value};EndpointSuffix=core.windows.net`,
+      }));
 
-    if (vaultInfo) {
       //Keys
       addCustomSecrets({
         vaultInfo,

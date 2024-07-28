@@ -1,28 +1,24 @@
 import * as azure from '@pulumi/azure-native';
-import { BasicResourceArgs, KeyVaultInfo, NetworkPropsType } from '../types';
-import { getMySqlName } from '../Common';
+import {
+  BasicEncryptResourceArgs,
+  LoginWithEnvRolesArgs,
+  NetworkPropsType,
+} from '../types';
+import { getMySqlName, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as dbformysql from '@pulumi/azure-native/dbformysql';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { isPrd, tenantId } from '../Common/AzureEnv';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { addMemberToGroup } from '../AzAd/Group';
-import { EnvRolesResults } from '../AzAd/EnvRoles';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
-export interface MySqlProps extends BasicResourceArgs {
-  enableEncryption?: boolean;
-  vaultInfo: KeyVaultInfo;
-  auth?: {
-    envRoles?: EnvRolesResults;
-    adminLogin?: pulumi.Input<string>;
-    password?: pulumi.Input<string>;
-  };
+export interface MySqlProps extends BasicEncryptResourceArgs {
+  auth?: LoginWithEnvRolesArgs;
   sku?: pulumi.Input<inputs.dbformysql.SkuArgs>;
   version?: dbformysql.ServerVersion;
   storageSizeGB?: number;
@@ -71,7 +67,7 @@ export default ({
     }).result;
 
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
+    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
 
   const userIdentity = enableEncryption
@@ -106,7 +102,7 @@ export default ({
             primaryKeyURI: encryptKey.url,
           }
         : { type: dbformysql.DataEncryptionType.SystemManaged },
-      //maintenanceWindow: { dayOfWeek: 6 },
+      maintenanceWindow: { dayOfWeek: 6, startHour: 0, startMinute: 0 },
       sku,
       backup: {
         geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
@@ -197,17 +193,13 @@ export default ({
   }
 
   if (vaultInfo) {
-    addCustomSecret({
-      name: `${name}-login`,
-      value: username,
+    addCustomSecrets({
       vaultInfo,
       contentType: name,
-    });
-    addCustomSecret({
-      name: `${name}-pass`,
-      value: password,
-      vaultInfo,
-      contentType: name,
+      items: [
+        { name: `${name}-login`, value: username },
+        { name: `${name}-pass`, value: password },
+      ],
     });
   }
 

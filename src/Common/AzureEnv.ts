@@ -1,7 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
 import { authorization } from '@pulumi/azure-native';
 import { registerAutoTags } from './AutoTags';
-import { KeyVaultInfo, ResourceInfo, ResourceInfoArg } from '../types';
+import { KeyVaultInfo, ResourceInfo } from '../types';
 import { getKeyVaultName, getResourceGroupName } from './Naming';
 import { organization, projectName, stack } from './StackEnv';
 import { getCountryCode, getRegionCode } from './Location';
@@ -98,18 +98,18 @@ export const getKeyVaultInfo = (
   };
 };
 
-export const getResourceIdFromInfo = ({
-  group,
-  name,
-  provider,
-}: ResourceInfoArg) => {
-  if (!name && !provider)
-    return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}`;
-  else if (name && provider)
-    return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
-
-  throw new Error('Resource Info is invalid.');
-};
+// export const getResourceIdFromInfo = ({
+//   group,
+//   name,
+//   provider,
+// }: ResourceInfoArg) => {
+//   if (!name && !provider)
+//     return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}`;
+//   else if (name && provider)
+//     return pulumi.interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/${provider}/${name}`;
+//
+//   throw new Error('Resource Info is invalid.');
+// };
 
 export type ParsedResourceInfo = ResourceInfo & {
   subscriptionId: pulumi.Input<string>;

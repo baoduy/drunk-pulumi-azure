@@ -1,21 +1,23 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
-import { FullSqlDbPropsType, LoginBuilderProps } from '../Builder';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
-import { EnvRolesResults } from '../AzAd/EnvRoles';
+import { FullSqlDbPropsType } from '../Builder';
+import Locker from '../Core/Locker';
+import { addEncryptKey } from '../KeyVault/Helper';
 import { roleAssignment } from '../AzAd/RoleAssignment';
-import { isPrd, subscriptionId, tenantId } from '../Common/AzureEnv';
+import { isPrd, subscriptionId, tenantId } from '../Common';
 import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
+  BasicEncryptResourceArgs,
   BasicResourceArgs,
-  KeyVaultInfo,
+  LockableType,
+  LoginWithEnvRolesArgs,
   NetworkPropsType,
   ResourceInfo,
   ResourceInfoWithInstance,
 } from '../types';
 import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
-import sqlDbCreator, { SqlDbSku } from './SqlDb';
+import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { grantIdentityPermissions } from '../AzAd/Helper';
 
@@ -62,8 +64,7 @@ const createElasticPool = ({
   return { name: elasticName, group, id: ep.id, instance: ep };
 };
 
-export type SqlAuthType = LoginBuilderProps & {
-  envRoles?: EnvRolesResults;
+export type SqlAuthType = LoginWithEnvRolesArgs & {
   azureAdOnlyAuthentication?: boolean;
   defaultLoginManagedId?: Input<string>;
 };
@@ -91,14 +92,11 @@ export type SqlVulnerabilityAssessmentType = {
   storageEndpoint: Input<string>;
 };
 
-interface Props extends BasicResourceArgs {
-  vaultInfo?: KeyVaultInfo;
-  enableEncryption?: boolean;
+interface Props extends BasicEncryptResourceArgs, LockableType {
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
   elasticPool?: SqlElasticPoolType;
   databases?: Record<string, FullSqlDbPropsType>;
-
   network?: SqlNetworkType;
   vulnerabilityAssessment?: SqlVulnerabilityAssessmentType;
 }
@@ -107,21 +105,25 @@ export default ({
   name,
   auth,
   group,
-  enableEncryption,
   elasticPool,
   databases,
   vaultInfo,
+  enableEncryption,
+  envRoles,
   network,
   vulnerabilityAssessment,
-  ignoreChanges = ['administratorLogin'],
+  ignoreChanges = [],
+  lock,
+  dependsOn,
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
-    ? getEncryptionKeyOutput(name, vaultInfo)
+    ? addEncryptKey({ name: sqlName, vaultInfo: vaultInfo! })
     : undefined;
 
   const adminGroup = auth.envRoles?.contributor;
 
+  ignoreChanges.push('keyId');
   if (auth.azureAdOnlyAuthentication) {
     ignoreChanges.push('administratorLogin');
     ignoreChanges.push('administratorLoginPassword');
@@ -138,6 +140,7 @@ export default ({
       identity: { type: 'SystemAssigned' },
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
+      keyId: encryptKey?.url,
 
       administrators: {
         administratorType: adminGroup
@@ -157,17 +160,27 @@ export default ({
         : sql.ServerNetworkAccessFlag.Enabled,
     },
     {
+      dependsOn,
       ignoreChanges,
+      protect: lock,
     },
   );
+  //Lock from delete
+  if (lock) {
+    Locker({ name, resource: sqlServer });
+  }
 
   //Allows to Read Key Vault
-  grantIdentityPermissions({
-    name,
-    vaultInfo,
-    envRole: 'readOnly',
-    principalId: sqlServer.identity.apply((s) => s!.principalId),
-  });
+  envRoles?.addMember(
+    'readOnly',
+    sqlServer.identity.apply((s) => s!.principalId),
+  );
+  // grantIdentityPermissions({
+  //   name,
+  //   vaultInfo,
+  //   role: 'readOnly',
+  //   principalId: sqlServer.identity.apply((s) => s!.principalId),
+  // });
 
   const ep = elasticPool
     ? createElasticPool({
@@ -230,13 +243,17 @@ export default ({
   if (vulnerabilityAssessment) {
     //Grant Storage permission
     if (vulnerabilityAssessment.logStorageId) {
-      roleAssignment({
-        name,
-        principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
-        principalType: 'ServicePrincipal',
-        roleName: 'Storage Blob Data Contributor',
-        scope: vulnerabilityAssessment.logStorageId,
-      });
+      envRoles?.addMember(
+        'contributor',
+        sqlServer.identity.apply((i) => i!.principalId!),
+      );
+      // roleAssignment({
+      //   name,
+      //   principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
+      //   principalType: 'ServicePrincipal',
+      //   roleName: 'Storage Blob Data Contributor',
+      //   scope: vulnerabilityAssessment.logStorageId,
+      // });
     }
 
     //ServerSecurityAlertPolicy
@@ -309,6 +326,7 @@ export default ({
 
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
+    const keyName = interpolate`${vaultInfo?.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
 
     const serverKey = new sql.ServerKey(
       `${sqlName}-serverKey`,
@@ -316,10 +334,10 @@ export default ({
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
         serverKeyType: 'AzureKeyVault',
-        keyName: encryptKey.keyName,
+        keyName: keyName,
         uri: encryptKey.url,
       },
-      { dependsOn: sqlServer, ignoreChanges: ['keyName', 'uri'] },
+      { dependsOn: sqlServer, ignoreChanges },
     );
 
     new sql.EncryptionProtector(
@@ -329,7 +347,7 @@ export default ({
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
         serverKeyType: 'AzureKeyVault',
-        serverKeyName: encryptKey.keyName,
+        serverKeyName: serverKey.name,
         autoRotationEnabled: true,
       },
       { dependsOn: serverKey },
@@ -348,6 +366,7 @@ export default ({
         sqlServerName: sqlName,
         dependsOn: sqlServer,
         elasticPoolId: ep ? ep.id : undefined,
+        lock,
       });
 
       if (vaultInfo) {

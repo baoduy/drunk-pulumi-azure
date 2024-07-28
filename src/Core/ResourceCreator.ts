@@ -4,7 +4,7 @@ import * as pulumi from '@pulumi/pulumi';
 import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
 import Locker from './Locker';
 import { createDiagnostic } from '../Logs/Helpers';
-import { BasicArgs, DiagnosticProps } from '../types';
+import { OptsArgs, DiagnosticProps } from '../types';
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
   const rs = props as {
@@ -43,7 +43,7 @@ type ClassOf = new (
   urn: pulumi.Output<string>;
 };
 
-export type DefaultCreatorProps = BasicArgs & {
+export type DefaultCreatorProps = OptsArgs & {
   monitoring?: Omit<DiagnosticProps, 'name' | 'targetResourceId'>;
   lock?: boolean;
 };

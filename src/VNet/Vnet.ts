@@ -203,8 +203,12 @@ export default ({
       },
       ...group,
       enableVmProtection: true,
+      encryption: {
+        enabled: true,
+        enforcement:
+          network.VirtualNetworkEncryptionEnforcement.AllowUnencrypted,
+      },
       dhcpOptions: dnsServers ? { dnsServers } : undefined,
-
       subnets: subnets.map((s) =>
         CreateSubnet({
           subnet: s,

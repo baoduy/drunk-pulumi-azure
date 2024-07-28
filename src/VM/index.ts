@@ -1,10 +1,12 @@
-import { Input, Resource } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import * as compute from '@pulumi/azure-native/compute';
 import * as network from '@pulumi/azure-native/network';
-import { BasicResourceArgs, KeyVaultInfo } from '../types';
-import { getNICName, getVMName } from '../Common/Naming';
+import { getNICName, getVMName } from '../Common';
 import Locker from '../Core/Locker';
-import { getEncryptionKeyOutput } from '../KeyVault/Helper';
+import { randomPassword } from '../Core/Random';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addEncryptKey } from '../KeyVault/Helper';
+import { BasicEncryptResourceArgs, LoginArgs } from '../types';
 import GlobalSchedule from './GlobalSchedule';
 import Extension, { VmExtensionProps } from './Extension';
 
@@ -20,11 +22,11 @@ export type VmScheduleType = {
 //https://az-vm-image.info/
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
-interface Props extends BasicResourceArgs {
+interface Props extends BasicEncryptResourceArgs {
   subnetId: Input<string>;
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
-  login: { userName: Input<string>; password?: Input<string> };
+  login: LoginArgs;
   osType?: 'Windows' | 'Linux';
   image: {
     offer: 'WindowsServer' | 'CentOS' | 'Windows-10' | 'windows-11' | string;
@@ -35,10 +37,6 @@ interface Props extends BasicResourceArgs {
       | string;
     sku: '2019-Datacenter' | '21h1-pro' | 'win11-23h2-pro' | string;
   };
-
-  enableEncryption?: boolean;
-  vaultInfo?: KeyVaultInfo;
-  //licenseType?: 'None' | 'Windows_Client' | 'Windows_Server';
   osDiskSizeGB?: number;
   dataDiskSizeGB?: number;
   schedule?: VmScheduleType;
@@ -46,7 +44,6 @@ interface Props extends BasicResourceArgs {
   //This need a lock
   lock?: boolean;
   tags?: { [key: string]: Input<string> };
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export default ({
@@ -61,6 +58,7 @@ export default ({
   dataDiskSizeGB,
   enableEncryption,
   vaultInfo,
+  envRoles,
   schedule = { timeZone: 'Singapore Standard Time' },
   login,
   image,
@@ -83,10 +81,16 @@ export default ({
 
   //All VM will using the same Key
   const keyEncryption = enableEncryption
-    ? getEncryptionKeyOutput(`az-vm-key-encryption`, vaultInfo)
+    ? addEncryptKey({ name: vmName, vaultInfo: vaultInfo! })
     : undefined;
   const diskEncryption = enableEncryption
-    ? getEncryptionKeyOutput(`az-vm-disk-encryption`, vaultInfo)
+    ? addCustomSecret({
+        name: `${vmName}-disk-secret`,
+        vaultInfo: vaultInfo!,
+        formattedName: true,
+        value: randomPassword({ name: vmName, policy: false, length: 50 })
+          .result,
+      })
     : undefined;
 
   const vm = new compute.VirtualMachine(
@@ -104,7 +108,7 @@ export default ({
       },
       osProfile: {
         computerName: name,
-        adminUsername: login.userName,
+        adminUsername: login.adminLogin,
         adminPassword: login.password,
 
         allowExtensionOperations: true,
@@ -161,7 +165,7 @@ export default ({
               ? {
                   diskEncryptionKey: diskEncryption
                     ? {
-                        secretUrl: diskEncryption.url,
+                        secretUrl: diskEncryption.id,
                         sourceVault: {
                           id: vaultInfo.id,
                         },
@@ -207,9 +211,9 @@ export default ({
     {
       dependsOn,
       ignoreChanges: [
-        'storageProfile.osDisk.managedDisk.storageAccountType',
-        'storageProfile.osDisk.managedDisk.id',
-        'osDisk.osType',
+        // 'storageProfile.osDisk.managedDisk.storageAccountType',
+        // 'storageProfile.osDisk.managedDisk.id',
+        // 'osDisk.osType',
       ],
     },
   );
@@ -226,6 +230,14 @@ export default ({
   }
   if (lock) {
     Locker({ name: vmName, resource: vm });
+  }
+
+  //Add Identity to readonly to be able to read key from vault
+  if (envRoles) {
+    envRoles.addMember(
+      'readOnly',
+      vm.identity.apply((i) => i!.principalId),
+    );
   }
 
   //Auto shutdown

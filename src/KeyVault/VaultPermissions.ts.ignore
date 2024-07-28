@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { roleAssignment } from "../AzAd/RoleAssignment";
 import * as native from "@pulumi/azure-native";
-import { EnvRolesResults } from "../AzAd/EnvRoles";
+import { EnvRolesInfo } from "../AzAd/EnvRoles";
 import { Output } from "@pulumi/pulumi";
 
 export interface PermissionProps {
@@ -86,7 +86,7 @@ export const grantVaultPermissionToRole = ({
 }: {
   name: string;
   vaultId: Output<string>;
-  envRoles: EnvRolesResults;
+  envRoles: IEnvRoleBuilder;
 }) => {
   //Grant RBAC permission to Group
   grantVaultRbacPermission({

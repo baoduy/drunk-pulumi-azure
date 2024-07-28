@@ -113,7 +113,7 @@ class AksBuilder
     this._askInstance = await Aks({
       ...this.commonProps,
       addon: this._addonProps,
-      aksAccess: { ...this._authProps, envRoles: this.commonProps.envRoles },
+      aksAccess: this._authProps!,
       tier: this._tier,
       linux: {
         adminUsername: this._sshInstance!.userName,
@@ -137,7 +137,7 @@ class AksBuilder
       grantEnvRolesAccess({
         name: `${this._askInstance.name}-node-group`,
         dependsOn: this._askInstance.instance,
-        envRoles: this.commonProps.envRoles,
+        envRoles: this.commonProps.envRoles.info(),
         enableRGRoles: { readOnly: true },
         scope: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
       });

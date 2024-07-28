@@ -1,16 +1,17 @@
 import { Input } from '@pulumi/pulumi';
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
+import { LoginArgs } from '../types';
 import {
   Builder,
   BuilderProps,
   FullSqlDbPropsType,
+  IResourceBuilder,
   ISqlAuthBuilder,
   ISqlBuilder,
   ISqlLoginBuilder,
   ISqlNetworkBuilder,
   ISqlTierBuilder,
-  LoginBuilderProps,
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
@@ -33,7 +34,7 @@ class SqlBuilder
 
   //Fields
   private _generateLogin: boolean = false;
-  private _loginInfo: LoginBuilderProps | undefined = undefined;
+  private _loginInfo: LoginArgs | undefined = undefined;
   private _authOptions: SqlBuilderAuthOptionsType = {};
   private _networkProps: SqlNetworkType | undefined = undefined;
   private _elasticPoolProps: SqlElasticPoolType | undefined = undefined;
@@ -43,6 +44,7 @@ class SqlBuilder
     | SqlBuilderVulnerabilityAssessmentType
     | undefined = undefined;
   private _ignoreChanges: string[] | undefined = undefined;
+  private _lock: boolean = false;
 
   constructor(props: BuilderProps) {
     super(props);
@@ -96,7 +98,7 @@ class SqlBuilder
     this._generateLogin = true;
     return this;
   }
-  public withLoginInfo(props: LoginBuilderProps): ISqlAuthBuilder {
+  public withLoginInfo(props: LoginArgs): ISqlAuthBuilder {
     this._loginInfo = props;
     return this;
   }
@@ -104,7 +106,10 @@ class SqlBuilder
     this._ignoreChanges = props;
     return this;
   }
-
+  public lock(): ISqlBuilder {
+    this._lock = true;
+    return this;
+  }
   private buildLogin() {
     if (!this._generateLogin) return;
 
@@ -151,7 +156,7 @@ class SqlBuilder
       network: this._networkProps,
       elasticPool: this._elasticPoolProps,
       databases: this._databasesProps,
-
+      lock: this._lock,
       ignoreChanges: this._ignoreChanges,
     });
   }

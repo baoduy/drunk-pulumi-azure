@@ -1,12 +1,11 @@
 import * as network from '@pulumi/azure-native/network';
 import { output } from '@pulumi/pulumi';
-import { BasicArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
-import { parseResourceInfoFromId } from '../Common/AzureEnv';
-import { getPrivateEndpointName } from '../Common';
+import { OptsArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
+import { getPrivateEndpointName, parseResourceInfoFromId } from '../Common';
 import { PrivateDnsZoneBuilder } from '../Builder';
 
 export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
-  Pick<BasicArgs, 'dependsOn'> & {
+  Pick<OptsArgs, 'dependsOn'> & {
     resourceInfo: ResourceInfo;
     /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
     privateDnsZoneName: string;

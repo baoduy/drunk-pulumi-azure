@@ -1,14 +1,11 @@
 import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
-import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { ResourceWithVaultArgs } from '../types';
 import { getKeyName, getLogWpName } from '../Common';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 
-interface Props {
-  name: string;
-  group: ResourceGroupInfo;
+interface Props extends ResourceWithVaultArgs {
   sku?: operationalinsights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
-  vaultInfo?: KeyVaultInfo;
 }
 
 export default ({
@@ -54,28 +51,21 @@ export default ({
         workspaceName: name,
         resourceGroupName: group.resourceGroupName,
       });
-
-      addCustomSecret({
-        name: workspaceIdKeyName,
-        value: id,
+      addCustomSecrets({
         contentType: 'Log Analytics',
-        vaultInfo,
-      });
-
-      addCustomSecret({
-        name: primaryKeyName,
         formattedName: true,
-        value: keys.primarySharedKey!,
-        contentType: 'Log Analytics',
         vaultInfo,
-      });
-
-      addCustomSecret({
-        name: secondaryKeyName,
-        formattedName: true,
-        value: keys.secondarySharedKey!,
-        contentType: 'Log Analytics',
-        vaultInfo,
+        items: [
+          { name: workspaceIdKeyName, value: id },
+          {
+            name: primaryKeyName,
+            value: keys.primarySharedKey!,
+          },
+          {
+            name: secondaryKeyName,
+            value: keys.secondarySharedKey!,
+          },
+        ],
       });
     });
   }

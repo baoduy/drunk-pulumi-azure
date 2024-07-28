@@ -3,14 +3,13 @@ import { findVMScaleSet } from '../../Core/Helper';
 import * as fs from 'fs';
 import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../../types';
 import { all, Input, Resource } from '@pulumi/pulumi';
-import { replaceAll } from '../../Common/Helpers';
+import { replaceAll } from '../../Common';
 import { getLogWpSecretsById } from '../../Logs/Helpers';
 import { getAccountSAS, getStorageSecretsById } from '../../Storage/Helper';
 
 interface Props extends BasicMonitorArgs {
   group: ResourceGroupInfo;
   vaultInfo: KeyVaultInfo;
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 export default ({
