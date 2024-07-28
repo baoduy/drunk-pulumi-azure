@@ -199,7 +199,7 @@ export const grantEnvRolesAccess = ({
     }
 
     const n = `${name}-${type}`;
-    roles.readOnly.forEach((r) =>
+    roles[type].forEach((r) =>
       roleAssignment({
         name: n,
         roleName: r,
