@@ -2,12 +2,11 @@ import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
 import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
-import { IEnvRoleBuilder } from '../Builder';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import vmsDiagnostic from './VmSetMonitor';
 import {
   BasicEncryptResourceArgs,
-  BasicResourceWithVaultArgs,
+  LockableType,
   ResourceInfoWithInstance,
 } from '../types';
 import {
@@ -115,7 +114,6 @@ export interface NodePoolProps
   vmSize: VmSizes | string;
   osDiskSizeGB: number;
   maxPods: number;
-  enableEncryptionAtHost?: boolean;
 }
 
 export type AskAddonProps = {
@@ -153,10 +151,8 @@ export type AksNetworkProps = {
 export type AksNodePoolProps = Omit<NodePoolProps, 'subnetId' | 'aksId'>;
 export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
 
-export interface AksProps extends BasicEncryptResourceArgs {
-  //nodeResourceGroup?: string;
+export interface AksProps extends BasicEncryptResourceArgs, LockableType {
   tier?: ccs.ManagedClusterSKUTier;
-
   addon?: AskAddonProps;
   features?: AskFeatureProps;
   aksAccess: AksAccessProps;
@@ -172,10 +168,8 @@ export interface AksProps extends BasicEncryptResourceArgs {
   };
   //Azure Registry Container
   acr?: { enable: boolean; id: Input<string> };
-
   defaultNodePool: DefaultAksNodePoolProps;
   network: AksNetworkProps;
-
   linux: {
     adminUsername: Input<string>;
     sshKeys: Array<pulumi.Input<string>>;
@@ -183,8 +177,6 @@ export interface AksProps extends BasicEncryptResourceArgs {
   //kubernetesVersion?: Input<string>;
   nodePools?: Array<AksNodePoolProps>;
   logWpId?: Input<string>;
-  /**Lock resource from delete*/
-  lock?: boolean;
 }
 
 export type AksResults = ResourceInfoWithInstance<ccs.ManagedCluster> & {
@@ -236,6 +228,7 @@ export default async ({
     'nodeResourceGroup',
     'linuxProfile',
     'windowsProfile',
+    'diskEncryptionSetID',
   );
 
   const serviceIdentity = aksIdentityCreator({
@@ -244,12 +237,8 @@ export default async ({
     dependsOn,
   });
 
-  // const privateDnsZone = features?.enablePrivateCluster
-  //   ? PrivateDnsZoneBuilder({
-  //       name: `${aksName}.privatelink.${currentRegionCode}.azmk8s.io`,
-  //       group,
-  //     }).build()
-  //   : undefined;
+  //TODO: Implement Disk Encryption
+  // const diskEncryptionSet =enableEncryption? compute.
 
   //Create AKS Cluster
   const aks = new ccs.ManagedCluster(
@@ -326,7 +315,7 @@ export default async ({
             nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
           }),
-
+          enableEncryptionAtHost: true,
           name: 'defaultnodes',
           mode: 'System',
           count: 1,
@@ -367,6 +356,7 @@ export default async ({
         skipNodesWithLocalStorage: 'false',
         skipNodesWithSystemPods: 'true',
       },
+
       //Still under preview
       // workloadAutoScalerProfile: enableAutoScale
       //   ? { keda: { enabled: true } }
@@ -374,7 +364,7 @@ export default async ({
       //azureMonitorProfile: { metrics: { enabled } },
       //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
       //enablePodSecurityPolicy: true,
-
+      diskEncryptionSetID: '',
       servicePrincipalProfile: {
         clientId: serviceIdentity.clientId,
         secret: serviceIdentity.clientSecret,
@@ -404,7 +394,7 @@ export default async ({
         type: ccs.ResourceIdentityType.SystemAssigned,
       },
       autoUpgradeProfile: {
-        upgradeChannel: ccs.UpgradeChannel.Patch,
+        upgradeChannel: ccs.UpgradeChannel.Stable,
         //nodeOSUpgradeChannel: "NodeImage",
       },
       disableLocalAccounts: Boolean(aksAccess.disableLocalAccounts),
@@ -422,10 +412,6 @@ export default async ({
         networkMode: ccs.NetworkMode.Transparent,
         networkPolicy: ccs.NetworkPolicy.Azure,
         networkPlugin: ccs.NetworkPlugin.Azure,
-
-        //dnsServiceIP: '10.0.0.10',
-        //dockerBridgeCidr: '172.17.0.1/16',
-        //serviceCidr: '10.0.0.0/16',
 
         outboundType:
           features?.enablePrivateCluster || !network.outboundIpAddress
@@ -456,8 +442,11 @@ export default async ({
       import: importUri,
       deleteBeforeReplace: true,
       ignoreChanges,
+      protect: lock,
     },
   );
+
+  //Lock from delete
   if (lock) {
     Locker({ name: aksName, resource: aks });
   }
@@ -490,15 +479,13 @@ export default async ({
           ...group,
           ...defaultNodePoolProps,
           ...p,
-
           ...autoScaleFor({
             env: currentEnv,
             nodeType: p.mode,
             enableAutoScaling: features.enableAutoScale,
           }),
-
+          enableEncryptionAtHost: true,
           count: p.mode === 'System' ? 1 : 0,
-          //orchestratorVersion: kubernetesVersion,
           vnetSubnetID: network.subnetId,
           kubeletDiskType: 'OS',
           osSKU: 'Ubuntu',
@@ -517,13 +504,13 @@ export default async ({
       .apply(([identity, identityProfile, sId]) => {
         const acrScope = acr?.id ?? defaultSubScope;
         if (identityProfile && identityProfile['kubeletidentity']) {
-          roleAssignment({
-            name: `${name}-aks-identity-profile-pull`,
-            principalId: identityProfile['kubeletidentity'].objectId!,
-            principalType: 'ServicePrincipal',
-            roleName: 'AcrPull',
-            scope: acrScope,
-          });
+          // roleAssignment({
+          //   name: `${name}-aks-identity-profile-pull`,
+          //   principalId: identityProfile['kubeletidentity'].objectId!,
+          //   principalType: 'ServicePrincipal',
+          //   roleName: 'AcrPull',
+          //   scope: acrScope,
+          // });
 
           //Add into EnvRoles
           envRoles?.addMember(

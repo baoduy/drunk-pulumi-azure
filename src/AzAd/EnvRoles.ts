@@ -1,7 +1,8 @@
+import { grantEnvRolesAccess } from './EnvRoles.Consts';
 import Role, { RoleProps } from './Role';
 import { KeyVaultInfo } from '../types';
 import { output, Output } from '@pulumi/pulumi';
-import { getSecretName } from '../Common';
+import { defaultSubScope, getSecretName } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 
@@ -72,6 +73,15 @@ export const createEnvRoles = () => {
 
   const pushToVault = (vaultInfo: KeyVaultInfo) =>
     pushEnvRolesToVault(groups, vaultInfo);
+
+  //Allows Some Subscription level access
+  //1. Allows to AcrPull
+  grantEnvRolesAccess({
+    envRoles: groups,
+    name: 'envRoles-SubScope-Access',
+    scope: defaultSubScope,
+    enableACRRoles: { contributor: true },
+  });
 
   return {
     ...groups,
