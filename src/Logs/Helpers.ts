@@ -107,7 +107,11 @@ export const getLogWpSecrets = async ({
   const secondaryKeyName = getKeyName(fullName, 'secondary');
 
   const [wpId, primaryKey, secondaryKey] = await Promise.all([
-    getSecret({ name: workspaceIdKeyName, vaultInfo }).then((i) => i?.value),
+    getSecret({
+      name: workspaceIdKeyName,
+      nameFormatted: true,
+      vaultInfo,
+    }).then((i) => i?.value),
     getSecret({ name: primaryKeyName, nameFormatted: true, vaultInfo }).then(
       (i) => i?.value,
     ),
