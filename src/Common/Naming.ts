@@ -1,8 +1,8 @@
-import { ConventionProps } from '../../types';
-import { currentCountryCode } from '../AzureEnv';
-import { replaceAll } from '../Helpers';
-import { getResourceName } from '../ResourceEnv';
-import { organization, stack } from '../StackEnv';
+import { ConventionProps } from '../types';
+import { currentCountryCode } from './AzureEnv';
+import { replaceAll } from './Helpers';
+import { getResourceName } from './ResourceEnv';
+import { organization, stack } from './StackEnv';
 
 const removeNumberAndDash = (s: string) => s.replace(/^\d+-/, '');
 const removeLeadingAndTrailingDash = (s: string) => s.replace(/^-|-$/g, '');
