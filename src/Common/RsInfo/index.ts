@@ -5,7 +5,7 @@ import { ResourceGroupWithIdInfo, ResourceInfo } from '../../types';
 
 /** The method to get Resource group Name*/
 export const getResourceGroupInfo = (name: string): ResourceGroupWithIdInfo => {
-  const rgName = rsHelper.getResourceGroupInfo(name);
+  const rgName = rsHelper.getResourceGroupName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}`;
   return { resourceGroupName: rgName, id, location: currentRegionCode };
 };
