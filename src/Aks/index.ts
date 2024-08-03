@@ -4,7 +4,7 @@ import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import { getRGId } from '../Core/Helper';
-import vmsDiagnostic from './VmSetMonitor';
+//import vmsDiagnostic from './VmSetMonitor';
 import {
   BasicEncryptResourceArgs,
   LockableType,
@@ -588,15 +588,15 @@ export default async ({
         dependsOn: aks,
       });
 
-      if (vaultInfo) {
-        //Apply monitoring for VMScale Sets
-        vmsDiagnostic({
-          group: { resourceGroupName: nodeResourceGroup },
-          logWpId,
-          vaultInfo,
-          dependsOn: aks,
-        });
-      }
+      // if (vaultInfo) {
+      //   //Apply monitoring for VMScale Sets
+      //   vmsDiagnostic({
+      //     group: { resourceGroupName: nodeResourceGroup },
+      //     logWpId,
+      //     vaultInfo,
+      //     dependsOn: aks,
+      //   });
+      // }
     }
   });
 

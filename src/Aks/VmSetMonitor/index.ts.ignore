@@ -1,5 +1,5 @@
 import * as native from '@pulumi/azure-native';
-import { findVMScaleSet } from '../../Core/Helper';
+//import { findVMScaleSet } from '../../Core/Helper';
 import * as fs from 'fs';
 import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../../types';
 import { all, Input, Resource } from '@pulumi/pulumi';
