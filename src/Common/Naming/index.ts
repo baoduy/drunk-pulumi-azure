@@ -4,6 +4,15 @@ import { replaceAll } from '../Helpers';
 import { getResourceName } from '../ResourceEnv';
 import { organization, stack } from '../StackEnv';
 
+const removeNumberAndDash = (s: string) => s.replace(/^\d+-/, '');
+const removeLeadingAndTrailingDash = (s: string) => s.replace(/^-|-$/g, '');
+
+export const cleanName = (name: string): string => {
+  name = removeNumberAndDash(name);
+  name = removeLeadingAndTrailingDash(name);
+  return name;
+};
+
 /** The method to get Resource group Name*/
 export const getResourceGroupName = (
   name: string,
@@ -19,7 +28,8 @@ export const getStorageName = (name: string): string => {
   name = getResourceName(name, { includeOrgName: true, suffix: 'stg' });
   name = replaceAll(name, '-', '');
   name = replaceAll(name, '.', '');
-  return name.toLowerCase().substring(0, 24);
+  name = name.toLowerCase().substring(0, 24);
+  return removeLeadingAndTrailingDash(name);
 };
 
 /** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
@@ -115,7 +125,7 @@ export const getPrivateEndpointName = (name: string) =>
   getResourceName(name, { suffix: 'pre' });
 
 export const getSignalRName = (name: string) =>
-  getResourceName(name, { suffix: 'sigr' }); //.substring(0, 24);
+  getResourceName(name, { suffix: 'sigr' });
 
 export const getElasticPoolName = (name: string) =>
   getResourceName(name, { suffix: 'elp' });
@@ -196,12 +206,14 @@ export const getBastionName = (name: string) =>
 export const getKeyVaultName = (
   name: string,
   convention: ConventionProps = {},
-) =>
-  getResourceName(name, {
+) => {
+  name = getResourceName(name, {
     ...convention,
     suffix: 'vlt',
     includeOrgName: true,
   }).substring(0, 24);
+  return removeLeadingAndTrailingDash(name);
+};
 
 export const getCdnEndpointName = (name: string) =>
   getResourceName(name, { suffix: 'cdn' });
@@ -211,8 +223,8 @@ export const getCdnProfileName = (name: string) =>
   getResourceName(name, { suffix: 'cdn-pfl' });
 
 /**The Azure Container Registry is created to Global group so no prefix*/
-export const getAcrName = (name: string) =>
-  replaceAll(
+export const getAcrName = (name: string) => {
+  name = replaceAll(
     getResourceName(name, {
       prefix: '',
       suffix: 'acr',
@@ -221,6 +233,8 @@ export const getAcrName = (name: string) =>
     '-',
     '',
   ).substring(0, 24);
+  return removeLeadingAndTrailingDash(name);
+};
 
 /**The App Cert Order is created to Global group so no prefix*/
 export const getCertOrderName = (name: string) =>

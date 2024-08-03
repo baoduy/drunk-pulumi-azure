@@ -60,6 +60,7 @@ export const randomPassword = ({
       vaultInfo,
       value: randomPass.result,
       contentType: name,
+      dependsOn: randomPass,
     });
   }
 

@@ -65,6 +65,7 @@ export default ({
       value: appInsight.instrumentationKey,
       vaultInfo,
       contentType: 'AppInsight',
+      dependsOn: appInsight,
     });
   }
 

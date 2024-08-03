@@ -22,7 +22,7 @@ import { createVaultPrivateLink } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
-import { subscriptionId, getKeyVaultInfo } from '../Common';
+import { subscriptionId, getKeyVaultInfo, cleanName } from '../Common';
 import { CertBuilderType, IVaultBuilderResults } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
 
@@ -174,7 +174,7 @@ class ResourceBuilder
     //Create Vault
     if (this._createVault) {
       this._vaultInfo = VaultBuilder({
-        name: this._createVaultName ?? this.name,
+        name: this._createVaultName ?? cleanName(this.name),
         group: this._RGInfo!,
         envRoles: this._envRoles!,
         dependsOn: this._RGInstance,
@@ -263,7 +263,7 @@ class ResourceBuilder
 
   private getResults(): ResourceBuilderResults {
     return {
-      name: this.name,
+      name: cleanName(this.name),
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!.info(),
       envRoles: this._envRoles!,

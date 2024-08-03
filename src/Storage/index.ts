@@ -76,6 +76,8 @@ export default ({
   features = {},
   policies = { keyExpirationPeriodInDays: 365 },
   lock = true,
+  dependsOn,
+  ignoreChanges,
 }: StorageProps): StorageResults => {
   name = getStorageName(name);
 
@@ -88,81 +90,87 @@ export default ({
     : undefined;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
-  const stg = new storage.StorageAccount(name, {
-    accountName: name,
-    ...group,
+  const stg = new storage.StorageAccount(
+    name,
+    {
+      accountName: name,
+      ...group,
 
-    kind: storage.Kind.StorageV2,
-    sku: {
-      name: isPrd
-        ? storage.SkuName.Standard_ZRS //Zone redundant in PRD
-        : storage.SkuName.Standard_LRS,
-    },
-    accessTier: 'Hot',
+      kind: storage.Kind.StorageV2,
+      sku: {
+        name: isPrd
+          ? storage.SkuName.Standard_ZRS //Zone redundant in PRD
+          : storage.SkuName.Standard_LRS,
+      },
+      accessTier: 'Hot',
 
-    isHnsEnabled: true,
-    enableHttpsTrafficOnly: true,
-    allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
-    allowSharedKeyAccess: Boolean(features.allowSharedKeyAccess),
-    allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
-    defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
-    isSftpEnabled: Boolean(features.isSftpEnabled),
+      isHnsEnabled: true,
+      enableHttpsTrafficOnly: true,
+      allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
+      allowSharedKeyAccess: Boolean(features.allowSharedKeyAccess),
+      allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
+      defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
+      isSftpEnabled: Boolean(features.isSftpEnabled),
 
-    allowCrossTenantReplication: Boolean(features.allowCrossTenantReplication),
-    identity: { type: 'SystemAssigned' },
-    minimumTlsVersion: 'TLS1_2',
+      allowCrossTenantReplication: Boolean(
+        features.allowCrossTenantReplication,
+      ),
+      identity: { type: 'SystemAssigned' },
+      minimumTlsVersion: 'TLS1_2',
 
-    //1 Year Months
-    keyPolicy: {
-      keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
-    },
+      //1 Year Months
+      keyPolicy: {
+        keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
+      },
 
-    encryption: encryptionKey
-      ? {
-          services: {
-            blob: {
-              enabled: true,
-              keyType: storage.KeyType.Account,
+      encryption: encryptionKey
+        ? {
+            services: {
+              blob: {
+                enabled: true,
+                keyType: storage.KeyType.Account,
+              },
+              file: {
+                enabled: true,
+                keyType: storage.KeyType.Account,
+              },
             },
-            file: {
-              enabled: true,
-              keyType: storage.KeyType.Account,
-            },
-          },
-          keySource: 'Microsoft.KeyVault',
-          keyVaultProperties: encryptionKey,
-        }
-      : undefined,
-
-    sasPolicy: {
-      expirationAction: storage.ExpirationAction.Log,
-      sasExpirationPeriod: '00.00:30:00',
-    },
-
-    publicNetworkAccess: network?.privateEndpoint ? 'Disabled' : 'Enabled',
-    networkRuleSet: {
-      bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
-      defaultAction: 'Allow',
-
-      virtualNetworkRules: network?.vnet
-        ? network.vnet
-            .filter((v) => v.subnetId)
-            .map((v) => ({
-              virtualNetworkResourceId: v.subnetId!,
-            }))
+            keySource: 'Microsoft.KeyVault',
+            keyVaultProperties: encryptionKey,
+          }
         : undefined,
 
-      ipRules: network?.vnet
-        ? network.vnet
-            .filter((v) => v.ipAddresses)
-            .flatMap((s) => s.ipAddresses)
-            .map((i) => ({
-              iPAddressOrRange: i!,
-              action: 'Allow',
-            }))
-        : undefined,
+      sasPolicy: {
+        expirationAction: storage.ExpirationAction.Log,
+        sasExpirationPeriod: '00.00:30:00',
+      },
+
+      publicNetworkAccess: network?.privateEndpoint ? 'Disabled' : 'Enabled',
+      networkRuleSet: {
+        bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
+        defaultAction: 'Allow',
+
+        virtualNetworkRules: network?.vnet
+          ? network.vnet
+              .filter((v) => v.subnetId)
+              .map((v) => ({
+                virtualNetworkResourceId: v.subnetId!,
+              }))
+          : undefined,
+
+        ipRules: network?.vnet
+          ? network.vnet
+              .filter((v) => v.ipAddresses)
+              .flatMap((s) => s.ipAddresses)
+              .map((i) => ({
+                iPAddressOrRange: i!,
+                action: 'Allow',
+              }))
+          : undefined,
+      },
     },
-  });
+    { dependsOn, ignoreChanges },
+  );
 
   if (network?.privateEndpoint) {
     //Create Private Endpoints

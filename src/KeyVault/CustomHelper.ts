@@ -1,4 +1,4 @@
-import { Input, output } from '@pulumi/pulumi';
+import { Input, output, Resource } from '@pulumi/pulumi';
 import { getSecretName, replaceAll } from '../Common';
 import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
 import { KeyVaultInfo, NamedBasicArgs, NamedWithVaultType } from '../types';
@@ -7,10 +7,16 @@ import { getSecret } from '../Common/ConfigHelper';
 interface Props extends Required<NamedWithVaultType> {
   /** The value of the secret. If Value is not provided the secret will be get from config*/
   value?: Input<string>;
+  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }
 
 /**Add key vault secret from a value or from pulumi configuration secret. */
-export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
+export const addVaultSecretFrom = ({
+  name,
+  value,
+  vaultInfo,
+  dependsOn,
+}: Props) => {
   if (!value) value = getSecret(name);
   if (!value) throw new Error(`The value of "${name}" is not defined.`);
 
@@ -19,6 +25,7 @@ export const addVaultSecretFrom = ({ name, value, vaultInfo }: Props) => {
     value,
     vaultInfo,
     contentType: 'config variables',
+    dependsOn,
   });
 };
 

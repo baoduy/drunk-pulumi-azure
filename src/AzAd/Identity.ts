@@ -155,6 +155,7 @@ export default ({
         value: clientSecret,
         vaultInfo,
         contentType: 'Identity',
+        dependsOn: app,
       });
     }
   }
@@ -192,6 +193,7 @@ export default ({
       addCustomSecrets({
         vaultInfo,
         contentType: 'Identity',
+        dependsOn: principal,
         items: [
           { name: secretNames.principalIdKeyName, value: principal.objectId },
           { name: secretNames.principalSecretKeyName, value: principalSecret },

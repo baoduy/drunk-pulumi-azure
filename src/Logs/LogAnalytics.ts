@@ -1,53 +1,59 @@
-import * as operationalinsights from '@pulumi/azure-native/operationalinsights';
-import { ResourceWithVaultArgs } from '../types';
+import * as insights from '@pulumi/azure-native/operationalinsights';
+import { BasicResourceWithVaultArgs } from '../types';
 import { getKeyName, getLogWpName } from '../Common';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 
-interface Props extends ResourceWithVaultArgs {
-  sku?: operationalinsights.WorkspaceSkuNameEnum;
+interface Props extends BasicResourceWithVaultArgs {
+  sku?: insights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
 }
 
 export default ({
   name,
   group,
-  sku = operationalinsights.WorkspaceSkuNameEnum.Free,
+  sku = insights.WorkspaceSkuNameEnum.Free,
   dailyQuotaGb = 0.023,
   vaultInfo,
+  dependsOn,
+  ignoreChanges,
+  importUri,
 }: Props) => {
   name = getLogWpName(name);
   const workspaceIdKeyName = `${name}-Id`;
   const primaryKeyName = getKeyName(name, 'primary');
   const secondaryKeyName = getKeyName(name, 'secondary');
 
-  const log = new operationalinsights.Workspace(name, {
-    workspaceName: name,
-    ...group,
+  const log = new insights.Workspace(
+    name,
+    {
+      workspaceName: name,
+      ...group,
 
-    publicNetworkAccessForIngestion: 'Enabled',
-    publicNetworkAccessForQuery: 'Enabled',
-    features: {
-      //clusterResourceId?: pulumi.Input<string>;
-      //disableLocalAuth: true,
-      //enableDataExport: false,
-      //enableLogAccessUsingOnlyResourcePermissions?: pulumi.Input<boolean>;
-      immediatePurgeDataOn30Days: true,
+      publicNetworkAccessForIngestion: 'Enabled',
+      publicNetworkAccessForQuery: 'Enabled',
+      features: {
+        //clusterResourceId?: pulumi.Input<string>;
+        //disableLocalAuth: true,
+        //enableDataExport: false,
+        //enableLogAccessUsingOnlyResourcePermissions?: pulumi.Input<boolean>;
+        immediatePurgeDataOn30Days: true,
+      },
+      workspaceCapping:
+        sku === insights.WorkspaceSkuNameEnum.Free
+          ? undefined
+          : { dailyQuotaGb }, //Fee is 2.99 USD/GB - Carefully
+
+      retentionInDays: sku === insights.WorkspaceSkuNameEnum.Free ? 7 : 30, //DO NOT changes this
+      sku: { name: sku },
     },
-    workspaceCapping:
-      sku === operationalinsights.WorkspaceSkuNameEnum.Free
-        ? undefined
-        : { dailyQuotaGb }, //Fee is 2.99 USD/GB - Carefully
-
-    retentionInDays:
-      sku === operationalinsights.WorkspaceSkuNameEnum.Free ? 7 : 30, //DO NOT changes this
-    sku: { name: sku },
-  });
+    { dependsOn, ignoreChanges },
+  );
 
   if (vaultInfo) {
     log.customerId.apply(async (id) => {
       if (!id) return;
 
-      const keys = await operationalinsights.getSharedKeys({
+      const keys = await insights.getSharedKeys({
         workspaceName: name,
         resourceGroupName: group.resourceGroupName,
       });
@@ -70,5 +76,5 @@ export default ({
     });
   }
 
-  return { log, vaultNames: { primaryKeyName, secondaryKeyName } };
+  return log;
 };
