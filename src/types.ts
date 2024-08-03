@@ -21,6 +21,9 @@ export type ResourceGroupInfo = {
   resourceGroupName: string;
   location?: Input<string>;
 };
+export type ResourceGroupWithIdInfo = ResourceGroupInfo & {
+  id: Input<string>;
+};
 export type OptsArgs = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
   importUri?: string;

@@ -1,6 +1,6 @@
-import * as naming from './Naming';
-import { ResourceInfo } from '../types';
-import { currentRegionCode } from './AzureEnv';
+import * as naming from '../Naming';
+import { ResourceInfo } from '../../types';
+import { currentRegionCode } from '../AzureEnv';
 
 type NamingType = typeof naming;
 type ResourceNamingType = Omit<
