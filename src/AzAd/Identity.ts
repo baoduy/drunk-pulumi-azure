@@ -9,7 +9,7 @@ import {
   ApplicationOptionalClaims,
   ApplicationRequiredResourceAccess,
 } from '@pulumi/azuread/types/input';
-import { NamedType, NamedWithVaultBasicArgs } from '../types';
+import { WithNamedType, NamedWithVaultBasicArgs } from '../types';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
 
@@ -40,7 +40,7 @@ interface IdentityProps extends NamedWithVaultBasicArgs {
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
 }
 
-export type IdentityResult = NamedType & {
+export type IdentityResult = WithNamedType & {
   objectId: Output<string>;
   clientId: Output<string>;
   clientSecret: Output<string> | undefined;

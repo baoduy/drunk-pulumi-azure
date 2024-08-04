@@ -36,7 +36,7 @@
     "src/AzAd/Identities/AzDevOpsIdentity.ts",
     "src/AzAd/Identities/AzDevOpsManagedIdentity.ts",
     "src/AzAd/Identities/AzUserAdRevertSync.ts",
-    "src/AzAd/Identities/GlobalUserAssignedIdentity.ts",
+    "src/AzAd/Identities/EnvUID.ts",
     "src/AzAd/Identities/index.ts",
     "src/AzAd/Identity.ts",
     "src/AzAd/Role.ts",

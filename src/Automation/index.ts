@@ -1,4 +1,4 @@
-import { BasicResourceWithVaultArgs } from '../types';
+import { BasicResourceWithVaultArgs, ResourceInfoWithInstance } from '../types';
 import * as automation from '@pulumi/azure-native/automation';
 import { getAutomationAccountName } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
@@ -15,7 +15,7 @@ export default ({
   vaultInfo,
   dependsOn,
   ignoreChanges,
-}: Props) => {
+}: Props): ResourceInfoWithInstance<automation.AutomationAccount> => {
   name = getAutomationAccountName(name);
 
   const encryption =
@@ -61,8 +61,13 @@ export default ({
         name: 'Basic',
       },
     },
-    { dependsOn: identity, ignoreChanges },
+    { dependsOn: identity.instance, ignoreChanges },
   );
 
-  return auto;
+  return {
+    name,
+    group,
+    id: auto.id,
+    instance: auto,
+  };
 };

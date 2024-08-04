@@ -1,7 +1,11 @@
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
-import { BasicResourceArgs, IdentityRoleAssignment } from '../types';
-import * as azure from '@pulumi/azure-native';
-import { getManagedIdentityName } from '../Common';
+import {
+  BasicResourceArgs,
+  IdentityInfoWithInstance,
+  IdentityRoleAssignment,
+} from '../types';
+import * as mid from '@pulumi/azure-native/managedidentity';
+import { getUIDName } from '../Common';
 import { grantIdentityPermissions } from './Helper';
 
 export interface UserAssignedIdentityProps
@@ -16,9 +20,9 @@ export default ({
   importUri,
   ignoreChanges,
   ...others
-}: UserAssignedIdentityProps) => {
-  name = getManagedIdentityName(name);
-  const managedIdentity = new azure.managedidentity.UserAssignedIdentity(
+}: UserAssignedIdentityProps): IdentityInfoWithInstance<mid.UserAssignedIdentity> => {
+  name = getUIDName(name);
+  const managedIdentity = new mid.UserAssignedIdentity(
     name,
     {
       resourceName: name,
@@ -52,5 +56,12 @@ export default ({
       ],
     });
   }
-  return managedIdentity;
+
+  return {
+    //name,
+    //group,
+    id: managedIdentity.id,
+    principalId: managedIdentity.principalId,
+    instance: managedIdentity,
+  };
 };

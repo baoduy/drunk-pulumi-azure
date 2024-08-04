@@ -110,10 +110,8 @@ export const getSshName = (name: string, convention: ConventionProps = {}) =>
 
 export const getIdentityName = (name: string) => getResourceName(name);
 
-export const getManagedIdentityName = (
-  name: string,
-  convention: ConventionProps = {},
-) => getResourceName(name, { ...convention, suffix: 'mid' });
+export const getUIDName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'uid' });
 
 export const getAksName = (name: string, convention: ConventionProps = {}) =>
   getResourceName(name, { ...convention, suffix: 'aks' });

@@ -1,10 +1,10 @@
 import { Input } from '@pulumi/pulumi';
 import { EnvRoleKeyTypes, EnvRolesInfo } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
-import { KeyVaultInfo, NamedType } from '../../types';
+import { KeyVaultInfo, WithNamedType } from '../../types';
 import { IInfo } from './genericBuilder';
 
-export type EnvRoleBuilderGrantType = NamedType & {
+export type EnvRoleBuilderGrantType = WithNamedType & {
   permissions: RoleEnableTypes;
   scope: Input<string>;
 };

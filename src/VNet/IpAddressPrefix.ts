@@ -3,10 +3,10 @@ import { PublicIPAddress } from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
 import { getIpAddressPrefixName } from '../Common';
 import Locker from '../Core/Locker';
-import { BasicResourceArgs, NamedType } from '../types';
+import { BasicResourceArgs, WithNamedType } from '../types';
 import IpAddress from './IpAddress';
 
-type AddressNameType = Array<NamedType>;
+type AddressNameType = Array<WithNamedType>;
 
 export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
   prefixLength?: 28 | 29 | 30 | 31;

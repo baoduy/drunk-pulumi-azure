@@ -12,9 +12,7 @@ export declare namespace NodeJS {
 
 /** Omit all the key of OT from T */
 export type TypeOmit<T, OT> = Omit<T, keyof OT>;
-
 export type OmitOpts<T> = TypeOmit<T, OptsArgs>;
-
 export type LockableType = { lock?: boolean };
 
 export type ResourceGroupInfo = {
@@ -31,40 +29,55 @@ export type OptsArgs = {
   ignoreChanges?: string[];
 };
 export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
-export type LoginWithEnvRolesArgs = LoginArgs & { envRoles?: IEnvRoleBuilder };
-export type NamedType = { name: string };
-export type NamedWithVaultType = NamedType & { vaultInfo?: KeyVaultInfo };
-export type NamedBasicArgs = NamedType & OptsArgs;
+export type WithNamedType = { name: string };
+export type WithOutputId = { id: Output<string> };
+export type WithSubId = { subscriptionId?: string };
+export type WithPrincipalId = { principalId: Input<string> };
+export type WithEnvRoles = {
+  envRoles?: IEnvRoleBuilder;
+  envUIDInfo?: IdentityInfo;
+};
+export type WithVaultInfo = { vaultInfo?: KeyVaultInfo };
+export type WithResourceGroupInfo = { group: ResourceGroupInfo };
+export type WithEncryptionInfo = WithEnvRoles &
+  WithVaultInfo & { enableEncryption?: boolean };
+
+export type LoginWithEnvRolesArgs = LoginArgs & WithEnvRoles;
+
+export type NamedWithVaultType = WithNamedType & WithVaultInfo;
+export type NamedBasicArgs = WithNamedType & OptsArgs;
 export type NamedWithVaultBasicArgs = NamedWithVaultType & OptsArgs;
 
-export type ResourceArgs = NamedType & { group: ResourceGroupInfo };
+export type ResourceArgs = WithNamedType & WithResourceGroupInfo;
 export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
-export type EncryptResourceArgs = ResourceWithVaultArgs & {
-  enableEncryption?: boolean;
-  envRoles?: IEnvRoleBuilder;
-};
+export type EncryptResourceArgs = ResourceWithVaultArgs & WithEncryptionInfo;
 
 export type BasicResourceArgs = ResourceArgs & OptsArgs;
 export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
 export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
-export type BasicResourceInfo = NamedType & { id: Output<string> };
+/** Basic vs Info is Basic doesn't required of group info*/
+export type BasicResourceInfo = WithNamedType & WithOutputId;
 
 //Resource Output Info
 export type ResourceInfo = BasicResourceInfo & ResourceArgs;
-export type ResourceInfoWithSub = ResourceInfo & {
-  subscriptionId?: string;
-};
+export type ResourceInfoWithSub = ResourceInfo & WithSubId;
 export type KeyVaultInfo = ResourceInfo;
-export type IdentityInfo = ResourceInfo & { principalId: string };
+export type IdentityInfo = WithOutputId & WithPrincipalId;
+export interface IdentityInfoWithInstance<InstanceType>
+  extends IdentityInfo,
+    WithInstance<InstanceType> {}
 
+export interface WithInstance<InstanceType> {
+  instance: InstanceType;
+}
+/** Basic vs Info is Basic doesn't required of group info*/
 export interface BasicResourceInfoWithInstance<InstanceType>
-  extends BasicResourceInfo {
-  instance: InstanceType;
-}
+  extends WithInstance<InstanceType>,
+    BasicResourceInfo {}
 
-export interface ResourceInfoWithInstance<InstanceType> extends ResourceInfo {
-  instance: InstanceType;
-}
+export interface ResourceInfoWithInstance<InstanceType>
+  extends WithInstance<InstanceType>,
+    ResourceInfo {}
 
 export type PrivateLinkPropsType = {
   /** The Subnet that private links will be created.*/
@@ -80,9 +93,7 @@ export type NetworkPropsType = {
   privateLink?: PrivateLinkPropsType;
 };
 
-export type IdentityRoleAssignment = {
-  vaultInfo?: KeyVaultInfo;
-  //roles?: Array<NamedType & { scope: Input<string> }>;
+export type IdentityRoleAssignment = WithVaultInfo & {
   role?: EnvRoleKeyTypes;
 };
 
@@ -108,7 +119,7 @@ export type BasicMonitorArgs = OptsArgs & {
   logStorageId?: Input<string>;
 };
 
-export interface DiagnosticProps extends NamedType, BasicMonitorArgs {
+export interface DiagnosticProps extends WithNamedType, BasicMonitorArgs {
   targetResourceId: Input<string>;
   metricsCategories?: string[];
   logsCategories?: string[];

@@ -8,7 +8,7 @@ import {
   NetworkPropsType,
   ResourceGroupInfo,
   ResourceInfoWithInstance,
-  NamedType,
+  WithNamedType,
 } from '../types';
 import {
   BusConnectionTypes,
@@ -353,12 +353,12 @@ interface QueueProps
   options?: OptionsType;
 }
 
-interface TopicResultProps extends NamedType {
+interface TopicResultProps extends WithNamedType {
   topic: bus.Topic;
   subs?: Array<ResourceInfoWithInstance<bus.Subscription>>;
 }
 
-interface QueueResultProps extends NamedType {
+interface QueueResultProps extends WithNamedType {
   queue: bus.Queue;
 }
 

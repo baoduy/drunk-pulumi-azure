@@ -1,6 +1,6 @@
 import * as native from '@pulumi/azure-native';
 //import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { NamedType, ResourceGroupInfo } from '../types';
+import { WithNamedType, ResourceGroupInfo } from '../types';
 import { global, getAcrName } from '../Common';
 
 export interface ImageInfo {
@@ -9,7 +9,7 @@ export interface ImageInfo {
   tags: Tag[];
 }
 
-export interface Tag extends NamedType {
+export interface Tag extends WithNamedType {
   signed: boolean;
 }
 

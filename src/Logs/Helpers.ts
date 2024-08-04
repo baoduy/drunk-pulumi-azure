@@ -12,7 +12,7 @@ import { getStorageSecrets, StorageConnectionInfo } from '../Storage/Helper';
 import {
   DiagnosticProps,
   KeyVaultInfo,
-  NamedType,
+  WithNamedType,
   ResourceGroupInfo,
   ResourceInfo,
   ResourceWithVaultArgs,
@@ -74,7 +74,7 @@ export const createDiagnostic = ({
   );
 };
 
-interface ThreatProtectionProps extends NamedType {
+interface ThreatProtectionProps extends WithNamedType {
   targetResourceId: Input<string>;
 }
 

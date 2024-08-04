@@ -2,7 +2,7 @@ import { Output } from '@pulumi/pulumi';
 import * as random from '@pulumi/random';
 import { getPasswordName } from '../Common';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
-import { KeyVaultInfo, NamedType, NamedWithVaultType } from '../types';
+import { KeyVaultInfo, WithNamedType, NamedWithVaultType } from '../types';
 
 interface RandomPassProps extends NamedWithVaultType {
   policy?: 'monthly' | 'yearly' | boolean;
@@ -78,7 +78,7 @@ const randomString = (name: string, length = 5) =>
     special: false,
   });
 
-interface UserNameProps extends NamedType {
+interface UserNameProps extends WithNamedType {
   loginPrefix?: string;
   maxUserNameLength?: number;
 }

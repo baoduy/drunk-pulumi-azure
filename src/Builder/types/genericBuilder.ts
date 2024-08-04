@@ -5,12 +5,11 @@ import {
   LoginArgs,
   ResourceInfo,
   TypeOmit,
+  WithEnvRoles,
 } from '../../types';
 import { IEnvRoleBuilder } from './envRoleBuilder';
 
 export type BuilderProps = EncryptResourceArgs & {
-  /** the below are optionals property and will be available depend on the situation*/
-  envRoles?: IEnvRoleBuilder;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
 

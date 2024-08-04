@@ -1,8 +1,8 @@
 import { CertArgs } from '@drunk-pulumi/azure-providers';
-import { BasicMonitorArgs, KeyVaultInfo, NamedType } from '../../types';
+import { BasicMonitorArgs, KeyVaultInfo, WithNamedType } from '../../types';
 import { Input } from '@pulumi/pulumi';
 
-export type CertBuilderType = NamedType & {
+export type CertBuilderType = WithNamedType & {
   cert: CertArgs;
 };
 export interface IVaultBuilderResults extends KeyVaultInfo {

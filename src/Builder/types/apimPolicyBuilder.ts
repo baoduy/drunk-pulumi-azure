@@ -1,4 +1,4 @@
-import { NamedType } from '../../types';
+import { WithNamedType } from '../../types';
 
 export enum SetHeaderTypes {
   delete = 'delete',
@@ -10,11 +10,11 @@ export enum SetHeaderTypes {
 export type ApimBaseUrlType = {
   url: string;
 };
-export type ApimSetHeaderType = NamedType & {
+export type ApimSetHeaderType = WithNamedType & {
   value?: string;
   type: SetHeaderTypes;
 };
-export type ApimCheckHeaderType = NamedType & {
+export type ApimCheckHeaderType = WithNamedType & {
   value?: string[];
 };
 export type ApimMockPropsType = {

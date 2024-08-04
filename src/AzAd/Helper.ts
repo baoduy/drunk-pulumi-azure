@@ -1,15 +1,10 @@
-import {
-  getIdentityName,
-  getManagedIdentityName,
-  getSecretName,
-  rsInfo,
-} from '../Common';
+import { getIdentityName, getUIDName, getSecretName, rsInfo } from '../Common';
 import { getSecret } from '../KeyVault/Helper';
 import {
   IdentityInfo,
   IdentityRoleAssignment,
   KeyVaultInfo,
-  NamedType,
+  WithNamedType,
   NamedWithVaultType,
 } from '../types';
 import { Input, output } from '@pulumi/pulumi';
@@ -17,7 +12,7 @@ import { EnvRoleKeyTypes, getEnvRole } from './EnvRoles';
 import { roleAssignment } from './RoleAssignment';
 import { addMemberToGroup } from './Group';
 
-interface Props extends NamedType {
+interface Props extends WithNamedType {
   includePrincipal?: boolean;
   vaultInfo: KeyVaultInfo;
 }
@@ -76,7 +71,7 @@ const grantIdentityToResourceRoles = ({
   name,
   roles,
   principalId,
-}: NamedType & {
+}: WithNamedType & {
   roles: Array<{ name: string; scope: Input<string> }>;
   principalId: Input<string>;
 }) =>
@@ -116,7 +111,7 @@ export const grantIdentityPermissions = ({
   vaultInfo,
   role,
 }: IdentityRoleAssignment &
-  NamedType & {
+  WithNamedType & {
     principalId: Input<string>;
   }) => {
   // if (roles) {
@@ -132,32 +127,32 @@ export const grantIdentityPermissions = ({
   }
 };
 
-export const getUserAssignedIdentityInfo = async (
+export const getUserAssignedIdentityInfo = (
   name: string,
   vaultInfo: KeyVaultInfo,
-): Promise<IdentityInfo> => {
-  name = getManagedIdentityName(name);
-  const id = await getSecret({
-    name: `${name}-id`,
-    vaultInfo,
-    nameFormatted: true,
-  });
-  const principalId = await getSecret({
-    name: `${name}-principalId`,
-    vaultInfo,
-    nameFormatted: true,
-  });
+): IdentityInfo => {
+  name = getUIDName(name);
 
-  const info = rsInfo.getResourceInfoFromId(id!.value!);
+  const id = output(
+    getSecret({
+      name: `${name}-id`,
+      vaultInfo,
+      nameFormatted: true,
+    }),
+  );
+  const principalId = output(
+    getSecret({
+      name: `${name}-principalId`,
+      vaultInfo,
+      nameFormatted: true,
+    }),
+  );
+
+  //const info = rsInfo.getResourceInfoFromId(id!.value!);
   return {
-    name: info!.name!,
-    group: info!.group!,
-    id: info!.id!,
-    principalId: principalId!.value!,
+    //name: info!.name!,
+    //group: info!.group!,
+    id: id?.apply((i) => i?.value!),
+    principalId: principalId?.apply((i) => i?.value!),
   };
 };
-
-export const getUserAssignedIdentityInfoOutput = (
-  name: string,
-  vaultInfo: KeyVaultInfo,
-) => output<IdentityInfo>(getUserAssignedIdentityInfo(name, vaultInfo));
