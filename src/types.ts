@@ -1,5 +1,5 @@
 import { Input, Output, Resource } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes, EnvRolesInfo } from './AzAd/EnvRoles';
+import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
 import { IEnvRoleBuilder } from './Builder';
 
 export declare namespace NodeJS {
@@ -24,6 +24,7 @@ export type ResourceGroupInfo = {
 export type ResourceGroupWithIdInfo = ResourceGroupInfo & {
   id: Input<string>;
 };
+
 export type OptsArgs = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
   importUri?: string;
@@ -50,6 +51,9 @@ export type BasicResourceInfo = NamedType & { id: Output<string> };
 
 //Resource Output Info
 export type ResourceInfo = BasicResourceInfo & ResourceArgs;
+export type ResourceInfoWithSub = ResourceInfo & {
+  subscriptionId?: string;
+};
 export type KeyVaultInfo = ResourceInfo;
 export type IdentityInfo = ResourceInfo & { principalId: string };
 

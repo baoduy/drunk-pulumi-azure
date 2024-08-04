@@ -3,12 +3,6 @@ import { Input, Output } from '@pulumi/pulumi';
 import * as pulumi from '@pulumi/pulumi';
 import { NamedType } from '../types';
 
-export type VnetInfoType = {
-  vnetName: Input<string>;
-  resourceGroupName: Input<string>;
-  subscriptionId?: Input<string>;
-};
-
 export interface RouteArgs {
   name?: Input<string>;
   addressPrefix?: pulumi.Input<string>;

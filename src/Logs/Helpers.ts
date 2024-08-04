@@ -2,14 +2,10 @@ import * as native from '@pulumi/azure-native';
 import { Input, interpolate, Output, output } from '@pulumi/pulumi';
 import {
   currentRegionName,
-  parseResourceInfoFromId,
-  subscriptionId,
+  rsInfo,
+  naming,
   getResourceName,
-  getAppInsightName,
-  getKeyName,
-  getLogWpName,
-  getResourceGroupName,
-  getStorageName,
+  defaultSubScope,
 } from '../Common';
 import { getSecret } from '../KeyVault/Helper';
 import { getStorageSecrets, StorageConnectionInfo } from '../Storage/Helper';
@@ -17,7 +13,6 @@ import {
   DiagnosticProps,
   KeyVaultInfo,
   NamedType,
-  ResourceArgs,
   ResourceGroupInfo,
   ResourceInfo,
   ResourceWithVaultArgs,
@@ -103,8 +98,8 @@ export const getLogWpSecrets = async ({
   vaultInfo: KeyVaultInfo;
 }) => {
   const workspaceIdKeyName = `${fullName}-Id`;
-  const primaryKeyName = getKeyName(fullName, 'primary');
-  const secondaryKeyName = getKeyName(fullName, 'secondary');
+  const primaryKeyName = naming.getKeyName(fullName, 'primary');
+  const secondaryKeyName = naming.getKeyName(fullName, 'secondary');
 
   const [wpId, primaryKey, secondaryKey] = await Promise.all([
     getSecret({
@@ -130,7 +125,7 @@ export const getLogWpSecretsById = async ({
   logWpId: string;
   vaultInfo: KeyVaultInfo;
 }) => {
-  const info = parseResourceInfoFromId(logWpId);
+  const info = rsInfo.getResourceInfoFromId(logWpId);
   const secrets = info
     ? await getLogWpSecrets({ fullName: info.name, vaultInfo })
     : undefined;
@@ -155,8 +150,8 @@ export const getLogWpInfo = ({
   group: ResourceGroupInfo;
   vaultInfo?: KeyVaultInfo;
 }): LogWpInfo => {
-  const n = getLogWpName(logWpName);
-  const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${n}`;
+  const n = naming.getLogWpName(logWpName);
+  const id = interpolate`${defaultSubScope}/resourcegroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${n}`;
 
   const secrets = vaultInfo
     ? output(getLogWpSecrets({ fullName: n, vaultInfo }))
@@ -179,8 +174,8 @@ export const getLogStorageInfo = ({
   group: ResourceGroupInfo;
   vaultInfo?: KeyVaultInfo;
 }): LogStorageInfo => {
-  const n = getStorageName(storageName);
-  const id = interpolate`/subscriptions/${subscriptionId}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${n}`;
+  const n = naming.getStorageName(storageName);
+  const id = interpolate`${defaultSubScope}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${n}`;
 
   const secrets = vaultInfo
     ? output(getStorageSecrets({ name: n, nameFormatted: true, vaultInfo }))
@@ -199,8 +194,8 @@ export const getAppInsightInfo = ({
   group,
   vaultInfo,
 }: ResourceWithVaultArgs): AppInsightInfo => {
-  const n = getAppInsightName(name);
-  const id = interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
+  const n = naming.getAppInsightName(name);
+  const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
 
   const instrumentationKey = vaultInfo
     ? output(
@@ -224,7 +219,7 @@ export const getLogInfo = (
   groupName: string,
   vaultInfo: KeyVaultInfo | undefined = undefined,
 ): LogInfoResults => {
-  const rgName = getResourceGroupName(groupName);
+  const rgName = naming.getResourceGroupName(groupName);
   const name = getResourceName(groupName, { suffix: 'logs' });
   const group = { resourceGroupName: rgName, location: currentRegionName };
 

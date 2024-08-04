@@ -8,7 +8,7 @@ import {
   getResponseHeadersRule,
   indexFileCacheRule,
 } from './CdnRules';
-import { cdnProfileInfo as globalCdnProfileInfo } from '../Common/GlobalEnv';
+
 import { OptsArgs, ResourceInfo } from '../types';
 
 export interface CdnEndpointProps extends OptsArgs {
@@ -17,7 +17,7 @@ export interface CdnEndpointProps extends OptsArgs {
   cors?: string[];
   domainNames: string[];
   securityResponseHeaders?: Record<string, string>;
-  cdnProfileInfo?: ResourceInfo;
+  cdnProfileInfo: ResourceInfo;
 }
 
 export default ({
@@ -26,7 +26,7 @@ export default ({
   origin,
   cors,
   securityResponseHeaders,
-  cdnProfileInfo = globalCdnProfileInfo,
+  cdnProfileInfo,
   dependsOn,
 }: CdnEndpointProps) => {
   name = getCdnEndpointName(name);

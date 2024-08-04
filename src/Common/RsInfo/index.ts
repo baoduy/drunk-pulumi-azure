@@ -1,14 +1,51 @@
 import rsHelper from './Helper';
-import { interpolate } from '@pulumi/pulumi';
-import { currentRegionCode, defaultSubScope } from '../AzureEnv';
-import { ResourceGroupWithIdInfo, ResourceInfo } from '../../types';
+import * as naming from '../Naming';
+import { interpolate, output, Output } from '@pulumi/pulumi';
+import {
+  currentCountryCode,
+  currentRegionName,
+  defaultSubScope,
+  subscriptionId,
+} from '../AzureEnv';
+import {
+  ResourceGroupInfo,
+  ResourceInfo,
+  ResourceInfoWithSub,
+} from '../../types';
+
+export const getResourceInfoFromId = (
+  id: string,
+): ResourceInfoWithSub | undefined => {
+  if (!id) return undefined;
+
+  const details = id.split('/');
+  let name = '';
+  let groupName = '';
+  let subId = '';
+
+  details.forEach((d, index) => {
+    if (d === 'subscriptions') subId = details[index + 1];
+    if (d === 'resourceGroups' || d === 'resourcegroups')
+      groupName = details[index + 1];
+    if (index === details.length - 1) name = d;
+  });
+
+  return {
+    name,
+    id: output(id),
+    group: { resourceGroupName: groupName, location: currentRegionName },
+    subscriptionId: subId ?? subscriptionId,
+  };
+};
 
 /** The method to get Resource group Name*/
-export const getResourceGroupInfo = (name: string): ResourceGroupWithIdInfo => {
-  const rgName = rsHelper.getResourceGroupName(name);
-  const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}`;
-  return { resourceGroupName: rgName, id, location: currentRegionCode };
-};
+export const getRGId = (group: ResourceGroupInfo) =>
+  interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}`;
+// export const getResourceGroupInfo = (name: string): ResourceGroupWithIdInfo => {
+//   const rgName = rsHelper.getResourceGroupName(name);
+//   const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}`;
+//   return { resourceGroupName: rgName, id, location: currentRegionCode };
+// };
 
 export const getStorageInfo = (name: string): ResourceInfo => {
   const info = rsHelper.getStorageName(name);
@@ -121,10 +158,39 @@ export const getVMInfo = (name: string): ResourceInfo => {
 // export const getVpnName = (name: string) =>
 //   getResourceName(name, { suffix: 'vpn' });
 
-export const getVnetInfo = (name: string): ResourceInfo => {
-  const info = rsHelper.getVnetName(name);
+export const getVnetInfo = (
+  name: string,
+  region: string = currentCountryCode,
+): ResourceInfo => {
+  const info = rsHelper.getVnetName(name, { region });
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.name}`;
   return { ...info, id };
+};
+
+export const getVnetIdFromSubnetId = (subnetId: string) => {
+  //The sample SubnetId is /subscriptions/63a31b41-eb5d-4160-9fc9-d30fc00286c9/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-vnet-trans/subnets/aks-main-nodes
+  return subnetId.split('/subnets')[0];
+};
+
+export const getSubnetIdByName = (
+  subnetName: string,
+  vnetAndGroupName: string,
+): Output<string> => {
+  const vnetName = naming.getVnetName(vnetAndGroupName);
+  const group = naming.getResourceGroupName(vnetAndGroupName);
+  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}`;
+};
+
+export const getIpAddressId = ({
+  name,
+  groupName,
+}: {
+  name: string;
+  groupName: string;
+}) => {
+  const n = naming.getIpAddressName(name);
+  const group = naming.getResourceGroupName(groupName);
+  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/publicIPAddresses/${n}`;
 };
 
 // export const getWanName = (name: string) =>
@@ -154,9 +220,11 @@ export const getVnetInfo = (name: string): ResourceInfo => {
 // export const getBastionName = (name: string) =>
 //   getResourceName(name, { suffix: 'bst' });
 
-/**Key vault allow to disable or custom the convention. The max length of vault name is 24*/
-export const getKeyVaultInfo = (name: string): ResourceInfo => {
-  const info = rsHelper.getKeyVaultName(name);
+export const getKeyVaultInfo = (
+  name: string,
+  region: string = currentCountryCode,
+): ResourceInfo => {
+  const info = rsHelper.getKeyVaultName(name, { region });
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.KeyVault/vaults/${info.name}`;
   return { ...info, id };
 };
@@ -167,14 +235,12 @@ export const getCdnProfileInfo = (name: string): ResourceInfo => {
   return { ...info, id };
 };
 
-/**The Azure Container Registry is created to Global group so no prefix*/
 export const getAcrInfo = (name: string): ResourceInfo => {
   const info = rsHelper.getAcrName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/${info.name}`;
   return { ...info, id };
 };
 
-/**The App Cert Order is created to Global group so no prefix*/
 export const getCertOrderInfo = (name: string): ResourceInfo => {
   const info = rsHelper.getCertOrderName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.CertificateRegistration/certificateOrders/${info.name}`;

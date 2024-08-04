@@ -3,8 +3,7 @@ import * as pulumi from '@pulumi/pulumi';
 import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
-import { getRGId } from '../Core/Helper';
-//import vmsDiagnostic from './VmSetMonitor';
+
 import {
   BasicEncryptResourceArgs,
   LockableType,
@@ -15,11 +14,12 @@ import {
   defaultSubScope,
   Environments,
   isPrd,
-  parseResourceInfoFromId,
+  rsInfo,
   tenantId,
   stack,
   getAksName,
   getResourceGroupName,
+  getRGId,
 } from '../Common';
 import Locker from '../Core/Locker';
 import aksIdentityCreator from './Identity';
@@ -526,7 +526,7 @@ export default async ({
             principalId: identity.principalId,
             roleName: 'Contributor',
             principalType: 'ServicePrincipal',
-            scope: getRGId(parseResourceInfoFromId(sId)!.group),
+            scope: getRGId(rsInfo.getResourceInfoFromId(sId)!.group),
           });
 
           //Add into EnvRoles

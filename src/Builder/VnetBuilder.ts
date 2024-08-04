@@ -1,61 +1,51 @@
-import { ResourceInfo } from "../types";
 import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
-} from "../VNet/IpAddressPrefix";
-import * as network from "@pulumi/azure-native/network";
-import { CustomSecurityRuleArgs, RouteArgs, VnetInfoType } from "../VNet/types";
-import Firewall, { FirewallResult } from "../VNet/Firewall";
-import Vnet, { VnetResult } from "../VNet/Vnet";
-import { SubnetProps } from "../VNet/Subnet";
-import NatGateway from "../VNet/NatGateway";
-import * as pulumi from "@pulumi/pulumi";
-import { input as inputs } from "@pulumi/azure-native/types";
-import NetworkPeering from "../VNet/NetworkPeering";
-import { LogInfoResults } from "../Logs/Helpers";
-import VPNGateway from "../VNet/VPNGateway";
-import PrivateDnsZoneBuilder from "./PrivateDnsZoneBuilder";
-import {
-  BastionCreationProps,
-  FirewallCreationProps,
-  IFireWallOrVnetBuilder,
-  IGatewayFireWallBuilder,
-  IPublicIpBuilder,
-  IVnetBuilder,
-  IVnetBuilderStart,
-  PeeringProps,
-  Builder,
-  SubnetCreationProps,
-  VnetBuilderProps,
-  VnetBuilderResults,
-  VpnGatewayCreationProps,
-  BuilderProps,
-  VnetPrivateDnsBuilderFunc,
-} from "./types";
-import { getVnetInfo, parseVnetInfoFromId } from "../VNet/Helper";
-import Bastion from "../VNet/Bastion";
+} from '../VNet/IpAddressPrefix';
+import * as network from '@pulumi/azure-native/network';
+import { CustomSecurityRuleArgs, RouteArgs } from '../VNet/types';
+import Firewall, { FirewallResult } from '../VNet/Firewall';
+import Vnet, { VnetResult } from '../VNet/Vnet';
+import { SubnetProps } from '../VNet/Subnet';
+import NatGateway from '../VNet/NatGateway';
+import * as pulumi from '@pulumi/pulumi';
+import { input as inputs } from '@pulumi/azure-native/types';
+import NetworkPeering from '../VNet/NetworkPeering';
+import { LogInfoResults } from '../Logs/Helpers';
+import VPNGateway from '../VNet/VPNGateway';
+import PrivateDnsZoneBuilder from './PrivateDnsZoneBuilder';
+import * as types from './types';
+import Bastion from '../VNet/Bastion';
+import { rsInfo } from '../Common';
+import { ResourceInfo, ResourceInfoWithSub } from '../types';
 
-const outboundIpName = "outbound";
+const outboundIpName = 'outbound';
 
 class VnetBuilder
-  extends Builder<VnetBuilderResults>
-  implements IGatewayFireWallBuilder, IVnetBuilder, IVnetBuilderStart
+  extends types.Builder<types.VnetBuilderResults>
+  implements
+    types.IGatewayFireWallBuilder,
+    types.IVnetBuilder,
+    types.IVnetBuilderStart
 {
   /** The Props */
-  private _subnetProps: SubnetCreationProps | undefined = undefined;
-  private _vnetProps: Partial<VnetBuilderProps> = {};
-  private _firewallProps: FirewallCreationProps | undefined = undefined;
-  private _bastionProps: BastionCreationProps | undefined = undefined;
+  private _subnetProps: types.SubnetCreationProps | undefined = undefined;
+  private _vnetProps: Partial<types.VnetBuilderProps> = {};
+  private _firewallProps: types.FirewallCreationProps | undefined = undefined;
+  private _bastionProps: types.BastionCreationProps | undefined = undefined;
   private _natGatewayEnabled?: boolean = false;
-  private _vpnGatewayProps: VpnGatewayCreationProps | undefined = undefined;
+  private _vpnGatewayProps: types.VpnGatewayCreationProps | undefined =
+    undefined;
   private _securityRules: CustomSecurityRuleArgs[] = [];
   private _enableSG: boolean = false;
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] = [];
   private _enableRoute: boolean = false;
-  private _peeringProps: PeeringProps[] = [];
+  private _peeringProps: types.PeeringProps[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
-  private _ipType: "prefix" | "individual" = "prefix";
-  private _privateDns: Record<string, VnetPrivateDnsBuilderFunc | undefined> =
-    {};
+  private _ipType: 'prefix' | 'individual' = 'prefix';
+  private _privateDns: Record<
+    string,
+    types.VnetPrivateDnsBuilderFunc | undefined
+  > = {};
 
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
@@ -67,11 +57,11 @@ class VnetBuilder
     undefined;
   private _privateDnsInstances: Record<string, ResourceInfo> = {};
 
-  constructor(commonProps: BuilderProps) {
+  constructor(commonProps: types.BuilderProps) {
     super(commonProps);
   }
 
-  public asHub(props: VnetBuilderProps = {}): IPublicIpBuilder {
+  public asHub(props: types.VnetBuilderProps = {}): types.IPublicIpBuilder {
     this._subnetProps = props.subnets;
     this._vnetProps = {
       dnsServers: props.dnsServers,
@@ -80,7 +70,7 @@ class VnetBuilder
 
     return this;
   }
-  public asSpoke(props: VnetBuilderProps = {}): IVnetBuilder {
+  public asSpoke(props: types.VnetBuilderProps = {}): types.IVnetBuilder {
     this._subnetProps = props.subnets;
     this._vnetProps = {
       dnsServers: props.dnsServers,
@@ -91,57 +81,61 @@ class VnetBuilder
   }
 
   public withPublicIpAddress(
-    type: "prefix" | "individual",
-  ): IGatewayFireWallBuilder {
+    type: 'prefix' | 'individual',
+  ): types.IGatewayFireWallBuilder {
     this._ipType = type;
     return this;
   }
 
-  public withNatGateway(): IFireWallOrVnetBuilder {
+  public withNatGateway(): types.IFireWallOrVnetBuilder {
     this._natGatewayEnabled = true;
     return this;
   }
 
-  public withVpnGateway(props: VpnGatewayCreationProps): IVnetBuilder {
+  public withVpnGateway(
+    props: types.VpnGatewayCreationProps,
+  ): types.IVnetBuilder {
     this._vpnGatewayProps = props;
     return this;
   }
 
-  public withFirewall(props: FirewallCreationProps): IVnetBuilder {
+  public withFirewall(props: types.FirewallCreationProps): types.IVnetBuilder {
     this._firewallProps = props;
     return this;
   }
 
-  public withBastion(props: BastionCreationProps): IVnetBuilder {
+  public withBastion(props: types.BastionCreationProps): types.IVnetBuilder {
     this._bastionProps = props;
     return this;
   }
 
-  public withSecurityRules(rules: CustomSecurityRuleArgs[]): IVnetBuilder {
+  public withSecurityRules(
+    rules: CustomSecurityRuleArgs[],
+  ): types.IVnetBuilder {
     this._securityRules.push(...rules);
     this._enableSG = true;
     return this;
   }
 
-  public withRouteRules(rules: RouteArgs[]): IVnetBuilder {
+  public withRouteRules(rules: RouteArgs[]): types.IVnetBuilder {
     this._routeRules.push(...rules);
     this._enableRoute = true;
     return this;
   }
   public withPrivateDns(
     domain: string,
-    builder?: VnetPrivateDnsBuilderFunc,
-  ): IVnetBuilder {
+    builder?: types.VnetPrivateDnsBuilderFunc,
+  ): types.IVnetBuilder {
     this._privateDns[domain] = builder;
     return this;
   }
 
-  public peeringTo(props: PeeringProps): IVnetBuilder {
+  public peeringTo(props: types.PeeringProps): types.IVnetBuilder {
     this._peeringProps.push(props);
     return this;
   }
 
-  public withLogInfo(info: LogInfoResults): IVnetBuilder {
+  public withLogInfo(info: LogInfoResults): types.IVnetBuilder {
     this._logInfo = info;
     return this;
   }
@@ -162,8 +156,8 @@ class VnetBuilder
     this._ipAddressInstance = IpAddressPrefix({
       ...this.commonProps,
       ipAddresses: ipNames.map((n) => ({ name: n })),
-      createPrefix: this._ipType === "prefix",
-      config: { version: "IPv4", allocationMethod: "Static" },
+      createPrefix: this._ipType === 'prefix',
+      config: { version: 'IPv4', allocationMethod: 'Static' },
     });
   }
 
@@ -174,14 +168,14 @@ class VnetBuilder
       ...this.commonProps,
 
       publicIpAddresses:
-        this._ipType === "individual"
+        this._ipType === 'individual'
           ? Object.keys(this._ipAddressInstance.addresses).map(
               (k) => this._ipAddressInstance!.addresses![k].id,
             )
           : undefined,
 
       publicIpPrefixes:
-        this._ipType === "prefix"
+        this._ipType === 'prefix'
           ? [this._ipAddressInstance.addressPrefix!.id]
           : undefined,
     });
@@ -213,7 +207,7 @@ class VnetBuilder
         securityGroup: {
           enabled: this._enableSG,
           allowOutboundInternetAccess:
-            !Boolean(this._ipAddressInstance) && !this._natGatewayEnabled,
+            !this._ipAddressInstance && !this._natGatewayEnabled,
           rules: this._securityRules,
         },
         //Route tables
@@ -231,7 +225,7 @@ class VnetBuilder
         //Bastion
         bastion: this._bastionProps
           ? {
-              ...this._bastionProps!.subnet,
+              ...this._bastionProps.subnet,
             }
           : undefined,
         //Gateway
@@ -243,9 +237,7 @@ class VnetBuilder
       //networkPeerings: peerings,
       dependsOn: this._firewallInstance?.firewall
         ? this._firewallInstance?.firewall
-        : this._natGatewayInstance
-          ? this._natGatewayInstance
-          : undefined,
+        : this._natGatewayInstance,
     });
   }
 
@@ -310,8 +302,8 @@ class VnetBuilder
     Bastion({
       ...this.commonProps,
       ...this._bastionProps,
-      subnetId: this._vnetInstance!.bastionSubnet.apply((s) => s!.id!),
-      dependsOn: [this._vnetInstance!.vnet!],
+      subnetId: this._vnetInstance.bastionSubnet.apply((s) => s!.id!),
+      dependsOn: [this._vnetInstance.vnet],
     });
   }
 
@@ -335,27 +327,30 @@ class VnetBuilder
     if (!this._peeringProps || !this._vnetInstance) return;
 
     this._peeringProps.forEach((p) => {
-      let info: pulumi.Input<VnetInfoType> | undefined = undefined;
+      let info: pulumi.Input<ResourceInfoWithSub> | undefined = undefined;
 
-      if ("groupName" in p) {
-        info = getVnetInfo(p.groupName);
-      } else if ("vnetId" in p) {
-        info = parseVnetInfoFromId(p.vnetId);
+      if ('groupName' in p) {
+        info = rsInfo.getVnetInfo(p.groupName);
+      } else if ('vnetId' in p) {
+        info = pulumi
+          .output(p.vnetId)
+          .apply((id) => rsInfo.getResourceInfoFromId(id)!);
       }
 
       if (info)
         NetworkPeering({
-          direction: p.direction ?? "Bidirectional",
+          direction: p.direction ?? 'Bidirectional',
           firstVnet: {
-            vnetName: this._vnetInstance!.vnet.name,
-            resourceGroupName: this.commonProps.group.resourceGroupName,
+            name: this._vnetInstance!.name,
+            group: this.commonProps.group,
+            id: this._vnetInstance!.id,
           },
           secondVnet: info,
         });
     });
   }
 
-  public build(): VnetBuilderResults {
+  public build(): types.VnetBuilderResults {
     //this.validate();
     this.buildIpAddress();
     this.buildNatGateway();
@@ -377,5 +372,5 @@ class VnetBuilder
   }
 }
 
-export default (props: BuilderProps) =>
-  new VnetBuilder(props) as IVnetBuilderStart;
+export default (props: types.BuilderProps) =>
+  new VnetBuilder(props) as types.IVnetBuilderStart;

@@ -7,8 +7,7 @@ import {
 } from './types/privateDnsZoneBuilder';
 import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
-import { getVnetIdFromSubnetId } from '../VNet/Helper';
-import { globalKeyName } from '../Common/GlobalEnv';
+import { getVnetIdFromSubnetId, globalKeyName } from '../Common';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];

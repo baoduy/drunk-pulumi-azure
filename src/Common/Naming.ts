@@ -24,8 +24,15 @@ export const getResourceGroupName = (
   });
 
 /** Get Azure Storage Account and CosmosDb Name*/
-export const getStorageName = (name: string): string => {
-  name = getResourceName(name, { includeOrgName: true, suffix: 'stg' });
+export const getStorageName = (
+  name: string,
+  convention: ConventionProps = {},
+): string => {
+  name = getResourceName(name, {
+    ...convention,
+    includeOrgName: true,
+    suffix: 'stg',
+  });
   name = replaceAll(name, '-', '');
   name = replaceAll(name, '.', '');
   name = name.toLowerCase().substring(0, 24);
@@ -41,8 +48,15 @@ export const getSecretName = (name: string) => {
   return replaceAll(name, '_', '-').toLowerCase();
 };
 
-export const getAppPlanName = (name: string) =>
-  getResourceName(name, { includeOrgName: false, suffix: 'app-plan' });
+export const getAppPlanName = (
+  name: string,
+  convention: ConventionProps = {},
+) =>
+  getResourceName(name, {
+    ...convention,
+    includeOrgName: false,
+    suffix: 'app-plan',
+  });
 
 export const getCertName = (name: string) => {
   name = getSecretName(name);
@@ -65,142 +79,197 @@ export const getPasswordName = (
     ? getResourceName(name, { suffix: 'pwd' })
     : `${getSecretName(name)}-pwd-${type}`;
 
-export const getAutomationAccountName = (name: string) =>
-  getResourceName(name, { suffix: 'acc-auto' });
+export const getAutomationAccountName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'acc-auto' });
 
-export const getB2cName = (name: string) =>
-  getResourceName(name, { suffix: 'b2c' });
+export const getB2cName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'b2c' });
 
-export const getCosmosDbName = (name: string) =>
-  getResourceName(name, { suffix: 'cdb' });
+export const getCosmosDbName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'cdb' });
 
-export const getAppConfigName = (name: string) =>
-  getResourceName(name, { suffix: 'cfg' });
+export const getAppConfigName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'cfg' });
 
-export const getApimName = (name: string) =>
-  getResourceName(name, { suffix: 'apim' });
+export const getApimName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'apim' });
 
-export const getDiskEncryptionName = (name: string) =>
-  getResourceName(name, { suffix: 'disk-encrypt' });
+export const getDiskEncryptionName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'disk-encrypt' });
 
-export const getSshName = (name: string) =>
-  getResourceName(name, { suffix: 'ssh' });
+export const getSshName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'ssh' });
 
 export const getIdentityName = (name: string) => getResourceName(name);
 
-export const getManagedIdentityName = (name: string) =>
-  getResourceName(name, { suffix: 'mid' });
+export const getManagedIdentityName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'mid' });
 
-export const getAksName = (name: string) =>
-  getResourceName(name, { suffix: 'aks' });
+export const getAksName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'aks' });
 
-export const getK8sProviderName = (name: string) =>
-  getResourceName(name, { suffix: 'ks-pvd' });
+export const getK8sProviderName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'ks-pvd' });
 
-export const getAppInsightName = (name: string) =>
-  getResourceName(name, { suffix: 'isg' });
+export const getAppInsightName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'isg' });
 
-export const getLogWpName = (name: string) =>
-  getResourceName(name, { suffix: 'wp' });
+export const getLogWpName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'wp' });
 
-export const getWebAppName = (name: string) =>
-  getResourceName(name, { suffix: 'web' });
+export const getWebAppName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'web' });
 
-export const getFuncAppName = (name: string) =>
-  getResourceName(name, { suffix: 'func' });
+export const getFuncAppName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'func' });
 
-export const getWebTestName = (name: string) =>
-  getResourceName(name, { suffix: 'hlz' });
+export const getWebTestName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'hlz' });
 
-export const getAlertName = (name: string) =>
-  getResourceName(name, { suffix: 'alt' });
+export const getAlertName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'alt' });
 
-export const getRedisCacheName = (name: string) =>
-  getResourceName(name, { suffix: 'rds' });
+export const getRedisCacheName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'rds' });
 
-export const getServiceBusName = (name: string) =>
-  getResourceName(name, { suffix: 'bus' });
+export const getServiceBusName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'bus' });
 
-export const getPrivateEndpointName = (name: string) =>
-  getResourceName(name, { suffix: 'pre' });
+export const getPrivateEndpointName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'pre' });
 
-export const getSignalRName = (name: string) =>
-  getResourceName(name, { suffix: 'sigr' });
+export const getSignalRName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'sigr' });
 
-export const getElasticPoolName = (name: string) =>
-  getResourceName(name, { suffix: 'elp' });
+export const getElasticPoolName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'elp' });
 
-export const getSqlDbName = (name: string) =>
-  getResourceName(name, { suffix: 'db' });
+export const getSqlDbName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'db' });
 
-export const getSqlServerName = (name: string) =>
-  getResourceName(name, { suffix: 'sql' });
+export const getSqlServerName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'sql' });
 
-export const getPostgresqlName = (name: string) =>
-  getResourceName(name, { suffix: 'postgres' });
+export const getPostgresqlName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'postgres' });
 
-export const getMySqlName = (name: string) =>
-  getResourceName(name, { suffix: 'mysql' });
+export const getMySqlName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'mysql' });
 
-export const getFirewallName = (name: string) =>
-  getResourceName(name, { suffix: 'fw' });
+export const getFirewallName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'fw' });
 
-export const getFirewallPolicyName = (name: string) =>
-  getResourceName(name, { suffix: 'fwp' });
+export const getFirewallPolicyName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'fwp' });
 
-export const getFirewallPolicyGroupName = (name: string) =>
-  getResourceName(name, { suffix: 'fw-pg' });
+export const getFirewallPolicyGroupName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'fw-pg' });
 
-export const getVMName = (name: string) =>
-  getResourceName(name, { suffix: 'vm' });
+export const getVMName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'vm' });
 
-export const getNICName = (name: string) =>
-  getResourceName(name, { suffix: 'nic' });
+export const getNICName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'nic' });
 
-export const getVdiName = (name: string) =>
-  getResourceName(name, { suffix: 'vdi' });
+export const getVdiName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'vdi' });
 
-export const getVpnName = (name: string) =>
-  getResourceName(name, { suffix: 'vpn' });
+export const getVpnName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'vpn' });
 
 export const getVnetName = (name: string, convention: ConventionProps = {}) =>
   getResourceName(name, { ...convention, suffix: 'vnt' });
 
-export const getWanName = (name: string) =>
-  getResourceName(name, { suffix: 'wan' });
+export const getWanName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'wan' });
 
-export const getHubName = (name: string) =>
-  getResourceName(name, { suffix: 'hub' });
+export const getHubName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'hub' });
 
-export const getIotHubName = (name: string) =>
-  getResourceName(name, { suffix: 'iot' });
+export const getIotHubName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'iot' });
 
-export const getRouteName = (name: string) =>
-  getResourceName(name, { suffix: 'route' });
+export const getRouteName = (name: string, convention: ConventionProps = {}) =>
+  getResourceName(name, { ...convention, suffix: 'route' });
 
-export const getRouteItemName = (name: string) =>
-  getResourceName(name, { suffix: '', includeOrgName: false });
+export const getRouteItemName = (
+  name: string,
+  convention: ConventionProps = {},
+) =>
+  getResourceName(name, { ...convention, suffix: '', includeOrgName: false });
 
-export const getWorkflowName = (name: string) =>
-  getResourceName(name, { suffix: 'wkp' });
+export const getWorkflowName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'wkp' });
 
-export const getNetworkSecurityGroupName = (name: string) =>
-  getResourceName(name, { suffix: 'nsg' });
+export const getNetworkSecurityGroupName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'nsg' });
 
-export const getIpAddressName = (name: string) =>
-  getResourceName(name, { suffix: 'ip' });
+export const getIpAddressName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'ip' });
 
-export const getIpAddressPrefixName = (name: string) =>
-  getResourceName(name, { suffix: 'ipx' });
+export const getIpAddressPrefixName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'ipx' });
 
-export const getAppGatewayName = (name: string) =>
-  getResourceName(name, { suffix: 'gtw' });
+export const getAppGatewayName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'gtw' });
 
-export const getNatGatewayName = (name: string) =>
-  getResourceName(name, { suffix: 'ngw' });
+export const getNatGatewayName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'ngw' });
 
-export const getBastionName = (name: string) =>
-  getResourceName(name, { suffix: 'bst' });
+export const getBastionName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'bst' });
 
 /**Key vault allow to disable or custom the convention. The max length of vault name is 24*/
 export const getKeyVaultName = (
@@ -215,17 +284,22 @@ export const getKeyVaultName = (
   return removeLeadingAndTrailingDash(name);
 };
 
-export const getCdnEndpointName = (name: string) =>
-  getResourceName(name, { suffix: 'cdn' });
+export const getCdnEndpointName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'cdn' });
 
 /**The CDN Profile is created to Global group so no prefix*/
-export const getCdnProfileName = (name: string) =>
-  getResourceName(name, { suffix: 'cdn-pfl' });
+export const getCdnProfileName = (
+  name: string,
+  convention: ConventionProps = {},
+) => getResourceName(name, { ...convention, suffix: 'cdn-pfl' });
 
 /**The Azure Container Registry is created to Global group so no prefix*/
-export const getAcrName = (name: string) => {
+export const getAcrName = (name: string, convention: ConventionProps = {}) => {
   name = replaceAll(
     getResourceName(name, {
+      ...convention,
       prefix: '',
       suffix: 'acr',
       region: currentCountryCode,
@@ -237,5 +311,12 @@ export const getAcrName = (name: string) => {
 };
 
 /**The App Cert Order is created to Global group so no prefix*/
-export const getCertOrderName = (name: string) =>
-  getResourceName(name.replace('.', '-'), { prefix: '', suffix: 'ca' });
+export const getCertOrderName = (
+  name: string,
+  convention: ConventionProps = {},
+) =>
+  getResourceName(name.replace('.', '-'), {
+    ...convention,
+    prefix: '',
+    suffix: 'ca',
+  });

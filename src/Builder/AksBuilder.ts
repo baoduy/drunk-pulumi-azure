@@ -1,6 +1,6 @@
 import { interpolate } from '@pulumi/pulumi';
 import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
-import { subscriptionId } from '../Common';
+import { defaultSubScope } from '../Common';
 import {
   AksImportProps,
   BuilderAsync,
@@ -139,7 +139,7 @@ class AksBuilder
         dependsOn: this._askInstance.instance,
         envRoles: this.commonProps.envRoles.info(),
         enableRGRoles: { readOnly: true },
-        scope: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
+        scope: interpolate`${defaultSubScope}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
       });
     }
   }

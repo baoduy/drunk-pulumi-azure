@@ -2,7 +2,7 @@ import {
   getIdentityName,
   getManagedIdentityName,
   getSecretName,
-  parseResourceInfoFromId,
+  rsInfo,
 } from '../Common';
 import { getSecret } from '../KeyVault/Helper';
 import {
@@ -148,7 +148,7 @@ export const getUserAssignedIdentityInfo = async (
     nameFormatted: true,
   });
 
-  const info = parseResourceInfoFromId(id!.value!);
+  const info = rsInfo.getResourceInfoFromId(id!.value!);
   return {
     name: info!.name!,
     group: info!.group!,

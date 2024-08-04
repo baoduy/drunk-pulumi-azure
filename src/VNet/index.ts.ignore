@@ -9,7 +9,7 @@ import { FirewallPolicyProps } from './types';
 import VnetPeering from './NetworkPeering';
 import { SubnetProps } from './Subnet';
 import Vnet from './Vnet';
-import { parseVnetInfoFromId } from './Helper';
+import { rsInfo } from '../Common';
 
 interface Props extends ResourceArgs {
   ddosId?: Input<string>;
@@ -217,11 +217,11 @@ export default ({
   //Vnet Peering
   if (features.vnetPeering) {
     features.vnetPeering.map((pp) => {
-      const info = parseVnetInfoFromId(pp.vnetId);
+      const info = rsInfo.getResourceInfoFromId(pp.vnetId);
       VnetPeering({
         firstVnet: {
-          vnetName: vnet.vnet.name,
-          resourceGroupName: group.resourceGroupName,
+          name: vnet.name,
+          group,
         },
         secondVnet: info,
       });

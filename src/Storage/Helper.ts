@@ -8,7 +8,7 @@ import {
 } from '../Common';
 import { getSecret } from '../KeyVault/Helper';
 import { BasicResourceArgs, KeyVaultInfo } from '../types';
-import { parseResourceInfoFromId } from '../Common/AzureEnv';
+import { rsInfo } from '../Common';
 
 export type StorageConnectionInfo = {
   primaryConnection: string;
@@ -76,7 +76,7 @@ export const getStorageSecretsById = async ({
   storageId: string;
   vaultInfo: KeyVaultInfo;
 }) => {
-  const info = parseResourceInfoFromId(storageId);
+  const info = rsInfo.getResourceInfoFromId(storageId);
   const secrets = info
     ? await getStorageSecrets({
         name: info.name,
