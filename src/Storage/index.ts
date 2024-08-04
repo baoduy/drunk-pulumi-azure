@@ -1,6 +1,5 @@
 import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
-import { createEnvRoles } from '../AzAd/EnvRoles';
 import {
   BasicEncryptResourceArgs,
   PrivateLinkPropsType,
@@ -11,14 +10,13 @@ import { addEncryptKey, getSecret } from '../KeyVault/Helper';
 import { isPrd } from '../Common';
 import { getConnectionName, getKeyName, getStorageName } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
-import Locker from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 import privateEndpoint from '../VNet/PrivateEndpoint';
 import {
   createManagementRules,
   DefaultManagementRules,
   ManagementRules,
 } from './ManagementRules';
-import { grantIdentityPermissions } from '../AzAd/Helper';
 
 export type ContainerProps = {
   name: string;
@@ -63,7 +61,7 @@ export type StorageResults = ResourceInfo & {
 };
 
 /** Storage Creator */
-export default ({
+function Storage({
   name,
   group,
   vaultInfo,
@@ -78,7 +76,7 @@ export default ({
   lock = true,
   dependsOn,
   ignoreChanges,
-}: StorageProps): StorageResults => {
+}: StorageProps): StorageResults {
   name = getStorageName(name);
 
   const primaryKeyName = getKeyName(name, 'primary');
@@ -311,4 +309,6 @@ export default ({
           getSecret({ name, nameFormatted: true, vaultInfo })
       : undefined,
   };
-};
+}
+
+export default Storage;

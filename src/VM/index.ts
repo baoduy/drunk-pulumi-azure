@@ -2,7 +2,7 @@ import { Input } from '@pulumi/pulumi';
 import * as compute from '@pulumi/azure-native/compute';
 import * as network from '@pulumi/azure-native/network';
 import { getNICName, getVMName } from '../Common';
-import Locker from '../Core/Locker';
+import {Locker} from '../Core/Locker';
 import { randomPassword } from '../Core/Random';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { addEncryptKey } from '../KeyVault/Helper';

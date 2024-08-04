@@ -3,7 +3,7 @@ import { Input } from "@pulumi/pulumi";
 import { BasicResourceArgs } from "../types";
 import { isPrd } from "../Common/AzureEnv";
 import { getIpAddressName } from "../Common/Naming";
-import Locker from "../Core/Locker";
+import {Locker} from "../Core/Locker";
 import { organization } from "../Common/StackEnv";
 
 interface Props extends BasicResourceArgs {

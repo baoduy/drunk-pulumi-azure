@@ -2,7 +2,7 @@ import * as native from "@pulumi/azure-native";
 
 import { getB2cName } from "../Common/Naming";
 import { BasicResourceArgs } from "../types";
-import Locker from "../Core/Locker";
+import {Locker} from "../Core/Locker";
 
 type Locations = "United States" | "Europe" | "Asia Pacific" | "Australia";
 

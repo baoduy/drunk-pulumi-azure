@@ -21,7 +21,7 @@ import {
   getResourceGroupName,
   getRGId,
 } from '../Common';
-import Locker from '../Core/Locker';
+import {Locker} from '../Core/Locker';
 import aksIdentityCreator from './Identity';
 import { createDiagnostic } from '../Logs/Helpers';
 import { roleAssignment } from '../AzAd/RoleAssignment';

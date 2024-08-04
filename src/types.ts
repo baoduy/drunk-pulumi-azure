@@ -1,4 +1,4 @@
-import { Input, Output, Resource } from '@pulumi/pulumi';
+import { CustomResourceOptions, Input, Output, Resource } from '@pulumi/pulumi';
 import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
 import { IEnvRoleBuilder } from './Builder';
 
@@ -28,6 +28,7 @@ export type OptsArgs = {
   importUri?: string;
   ignoreChanges?: string[];
 };
+
 export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
 export type WithNamedType = { name: string };
 export type WithOutputId = { id: Output<string> };
@@ -37,10 +38,12 @@ export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
 };
+
 export type WithVaultInfo = { vaultInfo?: KeyVaultInfo };
 export type WithResourceGroupInfo = { group: ResourceGroupInfo };
 export type WithEncryptionInfo = WithEnvRoles &
   WithVaultInfo & { enableEncryption?: boolean };
+export type WithPulumiOpts = { opts?: CustomResourceOptions };
 
 export type LoginWithEnvRolesArgs = LoginArgs & WithEnvRoles;
 

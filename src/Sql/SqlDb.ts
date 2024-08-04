@@ -1,5 +1,5 @@
 import * as sql from '@pulumi/azure-native/sql';
-import Locker from '../Core/Locker';
+import {Locker} from '../Core/Locker';
 import {
   BasicResourceArgs,
   LockableType,
