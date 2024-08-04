@@ -10,10 +10,12 @@
     "stripInternal": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
-    "strict": true
+    "strict": true,
+    "lib": ["ESNext", "Decorators"]
   },
   "ts-node": {
     "experimentalResolver": true
