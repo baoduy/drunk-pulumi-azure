@@ -11,7 +11,7 @@ import {
 import RG from '../Core/ResourceGroup';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { createVaultPrivateLink } from '../KeyVault';
-import { Input, Output } from '@pulumi/pulumi';
+import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
 import { subscriptionId, getKeyVaultInfo, cleanName } from '../Common';
@@ -156,6 +156,7 @@ class ResourceBuilder
   private buildRoles() {
     //If the EnvRoles is already provided then no need to re-build it
     if (this._envRoles) return;
+
     //Create new EnvRoles
     if (this._createRole) {
       this._envRoles = EnvRoleBuilder.create();
@@ -166,6 +167,7 @@ class ResourceBuilder
       this._envRoles = EnvRoleBuilder.loadForm(this._vaultInfo!);
     }
   }
+
   private buildRG() {
     if (!this._createRG) return;
     if (!this._createRGProps)

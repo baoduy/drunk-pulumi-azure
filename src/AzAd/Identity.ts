@@ -11,7 +11,7 @@ import {
 } from '@pulumi/azuread/types/input';
 import { WithNamedType, NamedWithVaultBasicArgs } from '../types';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
-import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
+import { getIdentitySecretNames } from './Helper';
 
 type PreAuthApplicationProps = {
   appId: string;
@@ -180,14 +180,6 @@ export default ({
       endDateRelative: '43800h',
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
-
-    // grantIdentityPermissions({
-    //   name,
-    //   envRole,
-    //   roles,
-    //   vaultInfo,
-    //   principalId: principal.objectId,
-    // });
 
     if (vaultInfo) {
       addCustomSecrets({

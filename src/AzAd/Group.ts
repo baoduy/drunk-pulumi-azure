@@ -75,13 +75,21 @@ export const addMemberToGroup = ({
   objectId: Input<string>;
   groupObjectId: Input<string>;
 }) =>
-  output([objectId, groupObjectId]).apply(
-    ([oId, gId]) =>
-      new azuread.GroupMember(`${name}-${gId}-${oId}`, {
-        groupObjectId,
-        memberObjectId: objectId,
-      }),
-  );
+  output([objectId, groupObjectId]).apply(([oId, gId]) => {
+    if (!oId || !gId) {
+      // throw new Error(
+      //   `Both 'objectId' and 'groupObjectId' are compulsory for the GroupMember to be added.`,
+      // );
+      console.warn(
+        `Either the 'objectId' or 'groupObjectId' empty. So the GroupMember will be ignored.`,
+      );
+      return undefined;
+    }
+    return new azuread.GroupMember(`${name}-${gId}-${oId}`, {
+      groupObjectId,
+      memberObjectId: objectId,
+    });
+  });
 
 export const addGroupToGroup = (
   groupMemberName: string,

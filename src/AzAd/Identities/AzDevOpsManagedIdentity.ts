@@ -1,15 +1,23 @@
-import { BasicResourceArgs } from '../../types';
+import {
+  BasicResourceArgs,
+  WithEncryptionInfo,
+  WithEnvRoles,
+  WithVaultInfo,
+} from '../../types';
 import UserAssignedIdentity from '../UserAssignedIdentity';
 import { defaultAzAdoName } from './AzDevOpsIdentity';
 
-interface Props extends Omit<BasicResourceArgs, 'name'> {
+interface Props
+  extends Omit<BasicResourceArgs, 'name'>,
+    WithVaultInfo,
+    WithEnvRoles {
   name?: string;
 }
 
-export default ({ name = defaultAzAdoName, ...others }: Props) => {
-  return UserAssignedIdentity({
+export default ({ name = defaultAzAdoName, envRoles, ...others }: Props) => {
+  const identity = UserAssignedIdentity({
     name,
-    role: 'admin',
     ...others,
   });
+  envRoles?.addMember('admin', identity.principalId);
 };

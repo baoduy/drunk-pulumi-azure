@@ -17,6 +17,7 @@ import * as types from './types';
 import Bastion from '../VNet/Bastion';
 import { rsInfo } from '../Common';
 import { ResourceInfo, ResourceInfoWithSub } from '../types';
+import { FirewallCreationProps, IVnetBuilder } from './types';
 
 const outboundIpName = 'outbound';
 
@@ -87,7 +88,7 @@ class VnetBuilder
     return this;
   }
 
-  public withNatGateway(): types.IFireWallOrVnetBuilder {
+  public withNatGateway(): types.IVnetBuilder {
     this._natGatewayEnabled = true;
     return this;
   }
@@ -102,6 +103,13 @@ class VnetBuilder
   public withFirewall(props: types.FirewallCreationProps): types.IVnetBuilder {
     this._firewallProps = props;
     return this;
+  }
+
+  public withFirewallAndNatGateway(
+    props: FirewallCreationProps,
+  ): types.IVnetBuilder {
+    this.withFirewall(props);
+    return this.withNatGateway();
   }
 
   public withBastion(props: types.BastionCreationProps): types.IVnetBuilder {

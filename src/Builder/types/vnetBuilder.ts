@@ -60,12 +60,10 @@ export interface IPublicIpBuilder {
   withPublicIpAddress(type: 'prefix' | 'individual'): IGatewayFireWallBuilder;
 }
 
-export interface IFireWallOrVnetBuilder extends IBuilder<VnetBuilderResults> {
+export interface IGatewayFireWallBuilder extends IBuilder<VnetBuilderResults> {
+  withFirewallAndNatGateway(props: FirewallCreationProps): IVnetBuilder;
   withFirewall(props: FirewallCreationProps): IVnetBuilder;
-}
-
-export interface IGatewayFireWallBuilder extends IFireWallOrVnetBuilder {
-  withNatGateway(): IFireWallOrVnetBuilder;
+  withNatGateway(): IVnetBuilder;
 }
 
 export interface IVnetBuilder extends IBuilder<VnetBuilderResults> {

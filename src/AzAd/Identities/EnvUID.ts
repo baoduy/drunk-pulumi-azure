@@ -1,18 +1,23 @@
-import { KeyVaultInfo } from '../../types';
+import { KeyVaultInfo, WithEnvRoles, WithVaultInfo } from '../../types';
 import { getUserAssignedIdentityInfo } from '../Helper';
 import UserAssignedIdentity, {
   UserAssignedIdentityProps,
 } from '../UserAssignedIdentity';
 import { currentEnv } from '../../Common';
 
-export const create = (
-  props: Omit<UserAssignedIdentityProps, 'name' | 'role'>,
-) => {
-  return UserAssignedIdentity({
-    ...props,
+export const create = ({
+  envRoles,
+  ...others
+}: Omit<UserAssignedIdentityProps, 'name' | 'role'> &
+  WithEnvRoles &
+  WithVaultInfo) => {
+  const identity = UserAssignedIdentity({
+    ...others,
     name: currentEnv,
-    role: 'readOnly',
   });
+  envRoles?.addMember('admin', identity.principalId);
+
+  return identity;
 };
 
 export const get = (vaultInfo: KeyVaultInfo) =>

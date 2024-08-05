@@ -1,9 +1,8 @@
 import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 import { FullSqlDbPropsType } from '../Builder';
-import {Locker} from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { roleAssignment } from '../AzAd/RoleAssignment';
 import { isPrd, subscriptionId, tenantId } from '../Common';
 import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
@@ -19,7 +18,6 @@ import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { grantIdentityPermissions } from '../AzAd/Helper';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -147,7 +145,7 @@ export default ({
           ? sql.AdministratorType.ActiveDirectory
           : undefined,
         azureADOnlyAuthentication: adminGroup
-          ? auth.azureAdOnlyAuthentication ?? true
+          ? (auth.azureAdOnlyAuthentication ?? true)
           : false,
 
         principalType: sql.PrincipalType.Group,
