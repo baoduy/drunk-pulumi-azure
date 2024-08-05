@@ -2,7 +2,7 @@ import { Input } from '@pulumi/pulumi';
 import * as compute from '@pulumi/azure-native/compute';
 import * as network from '@pulumi/azure-native/network';
 import { getNICName, getVMName } from '../Common';
-import {Locker} from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 import { randomPassword } from '../Core/Random';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { addEncryptKey } from '../KeyVault/Helper';
@@ -23,6 +23,7 @@ export type VmScheduleType = {
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
 interface Props extends BasicEncryptResourceArgs {
+  diskEncryptionSetId?: Input<string>;
   subnetId: Input<string>;
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
@@ -57,8 +58,8 @@ export default ({
   osDiskSizeGB = 128,
   dataDiskSizeGB,
   enableEncryption,
+  diskEncryptionSetId,
   vaultInfo,
-  envRoles,
   schedule = { timeZone: 'Singapore Standard Time' },
   login,
   image,
@@ -79,19 +80,21 @@ export default ({
     nicType: network.NetworkInterfaceNicType.Standard,
   });
 
-  //All VM will using the same Key
-  const keyEncryption = enableEncryption
-    ? addEncryptKey({ name: vmName, vaultInfo: vaultInfo! })
-    : undefined;
-  const diskEncryption = enableEncryption
-    ? addCustomSecret({
-        name: `${vmName}-disk-secret`,
-        vaultInfo: vaultInfo!,
-        formattedName: true,
-        value: randomPassword({ name: vmName, policy: false, length: 50 })
-          .result,
-      })
-    : undefined;
+  //All VM will use the same Key
+  const keyEncryption =
+    enableEncryption && vaultInfo
+      ? addEncryptKey({ name: vmName, vaultInfo: vaultInfo! })
+      : undefined;
+  const diskEncryption =
+    enableEncryption && vaultInfo
+      ? addCustomSecret({
+          name: `${vmName}-disk-secret`,
+          vaultInfo: vaultInfo!,
+          formattedName: true,
+          value: randomPassword({ name: vmName, policy: false, length: 50 })
+            .result,
+        })
+      : undefined;
 
   const vm = new compute.VirtualMachine(
     vmName,
@@ -106,6 +109,8 @@ export default ({
       networkProfile: {
         networkInterfaces: [{ id: nic.id, primary: true }],
       },
+      //az feature register --name EncryptionAtHost  --namespace Microsoft.Compute
+      securityProfile: { encryptionAtHost: true },
       osProfile: {
         computerName: name,
         adminUsername: login.adminLogin,
@@ -187,14 +192,21 @@ export default ({
             storageAccountType,
           },
         },
-
         dataDisks: dataDiskSizeGB
           ? [
               {
                 name: `${name}datadisk`,
                 diskSizeGB: dataDiskSizeGB,
                 createOption: compute.DiskCreateOptionTypes.Empty,
-                lun: 1,
+                lun: 0,
+                managedDisk: {
+                  diskEncryptionSet: diskEncryptionSetId
+                    ? {
+                        id: diskEncryptionSetId,
+                      }
+                    : undefined,
+                  storageAccountType: compute.StorageAccountTypes.Standard_LRS,
+                },
               },
             ]
           : [],
@@ -233,12 +245,12 @@ export default ({
   }
 
   //Add Identity to readonly to be able to read key from vault
-  if (envRoles) {
-    envRoles.addMember(
-      'readOnly',
-      vm.identity.apply((i) => i!.principalId),
-    );
-  }
+  // if (envRoles) {
+  //   envRoles.addMember(
+  //     'readOnly',
+  //     vm.identity.apply((i) => i!.principalId),
+  //   );
+  // }
 
   //Auto shutdown
   if (schedule?.autoShutdownTime) {

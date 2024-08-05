@@ -156,7 +156,7 @@ class VnetBuilder
     if (!this._natGatewayEnabled && !this._firewallProps) return;
 
     //Add outbound Ipaddress for Firewall alone
-    if (!this._natGatewayEnabled && this._firewallProps) {
+    if (this._natGatewayEnabled || this._firewallProps) {
       ipNames.push(outboundIpName);
     }
 
@@ -176,16 +176,15 @@ class VnetBuilder
       ...this.commonProps,
 
       publicIpAddresses:
-        this._ipType === 'individual'
+        this._ipType === 'individual' && !this._firewallProps
           ? Object.keys(this._ipAddressInstance.addresses).map(
               (k) => this._ipAddressInstance!.addresses![k].id,
             )
           : undefined,
 
-      publicIpPrefixes:
-        this._ipType === 'prefix'
-          ? [this._ipAddressInstance.addressPrefix!.id]
-          : undefined,
+      publicIpPrefixes: this._ipAddressInstance?.addressPrefix
+        ? [this._ipAddressInstance.addressPrefix!.id]
+        : undefined,
     });
   }
 
@@ -348,6 +347,7 @@ class VnetBuilder
       if (info)
         NetworkPeering({
           direction: p.direction ?? 'Bidirectional',
+          options: p.options,
           firstVnet: {
             name: this._vnetInstance!.name,
             group: this.commonProps.group,

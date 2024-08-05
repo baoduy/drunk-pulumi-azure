@@ -2,26 +2,28 @@ import * as compute from '@pulumi/azure-native/compute';
 import { Input } from '@pulumi/pulumi';
 import { getDiskEncryptionName } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { BasicResourceWithVaultArgs, KeyVaultInfo } from '../types';
+import {
+  BasicResourceWithVaultArgs,
+  KeyVaultInfo,
+  WithEnvRoles,
+} from '../types';
 
-interface DiskEncryptionProps extends BasicResourceWithVaultArgs {
-  vaultInfo: KeyVaultInfo;
-  /* Needs to ensure this userAssignedId is able to read key from Vault*/
-  userAssignedId: Input<string>;
-}
+interface DiskEncryptionProps
+  extends BasicResourceWithVaultArgs,
+    WithEnvRoles {}
 
 export default ({
   name,
   group,
   vaultInfo,
-  userAssignedId,
+  envUIDInfo,
   dependsOn,
   ignoreChanges,
   importUri,
 }: DiskEncryptionProps) => {
+  if (!envUIDInfo || !vaultInfo) return undefined;
   name = getDiskEncryptionName(name);
   const keyEncryption = addEncryptKey({ name, vaultInfo });
-
   return new compute.DiskEncryptionSet(
     name,
     {
@@ -29,8 +31,8 @@ export default ({
       rotationToLatestKeyVersionEnabled: true,
       encryptionType: 'EncryptionAtRestWithCustomerKey',
       identity: {
-        type: compute.ResourceIdentityType.UserAssigned,
-        userAssignedIdentities: [userAssignedId],
+        type: compute.ResourceIdentityType.SystemAssigned_UserAssigned,
+        userAssignedIdentities: [envUIDInfo!.id],
       },
       activeKey: { keyUrl: keyEncryption.url },
     },

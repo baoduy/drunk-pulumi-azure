@@ -5,25 +5,38 @@ import { VirtualNetworkPeeringArgs } from '@pulumi/azure-native/network/virtualN
 import { ResourceInfoWithSub } from '../types';
 
 export type PeeringDirectionType = 'Unidirectional' | 'Bidirectional';
+export type PeeringOptions = {
+  allowForwardedTraffic?: boolean;
+  allowVirtualNetworkAccess?: boolean;
+  allowGatewayTransit?: boolean;
+  syncRemoteAddressSpace?: boolean;
+  useRemoteGateways?: boolean;
+  doNotVerifyRemoteGateways?: boolean;
+};
 
 export interface VNetPeeringProps {
   firstVnet: Input<ResourceInfoWithSub>;
   secondVnet: Input<ResourceInfoWithSub>;
   direction?: PeeringDirectionType;
+  options?: PeeringOptions;
 }
 
 export default ({
   direction = 'Unidirectional',
   firstVnet,
   secondVnet,
-}: VNetPeeringProps) => {
-  const commonProps: Partial<VirtualNetworkPeeringArgs> = {
+  options = {
     allowForwardedTraffic: true,
     allowVirtualNetworkAccess: true,
     allowGatewayTransit: true,
-    syncRemoteAddressSpace: 'true',
+    syncRemoteAddressSpace: true,
     useRemoteGateways: false,
     doNotVerifyRemoteGateways: true,
+  },
+}: VNetPeeringProps) => {
+  const commonProps: Partial<VirtualNetworkPeeringArgs> = {
+    ...options,
+    syncRemoteAddressSpace: options.syncRemoteAddressSpace ? 'true' : 'false',
   };
 
   all([firstVnet, secondVnet]).apply(([first, second]) => {

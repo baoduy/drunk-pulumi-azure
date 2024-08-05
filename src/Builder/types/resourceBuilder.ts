@@ -58,7 +58,7 @@ export interface IResourceGroupBuilder {
 export interface IResourceVaultBuilder {
   createVault(name?: string): IResourceBuilder;
   withVault(props: KeyVaultInfo): IResourceBuilder;
-  getVaultInfoFrom(name: string): IResourceBuilder;
+  withVaultInfoFrom(name: string): IResourceBuilder;
 }
 
 export interface IResourceVaultItemsBuilder {

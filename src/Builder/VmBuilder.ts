@@ -8,6 +8,7 @@ import {
   IVmOsBuilder,
   IVmSizeBuilder,
   IVmVnetBuilder,
+  VmEncryptionType,
   VmOsBuilderLinuxProps,
   VmOsBuilderWindowsProps,
   VmSizeTypes,
@@ -33,12 +34,18 @@ class VmBuilder
   private _windowImage: VmOsBuilderWindowsProps | undefined = undefined;
   private _linuxImage: VmOsBuilderLinuxProps | undefined = undefined;
   private _schedule: VmScheduleType | undefined = undefined;
+  private _encryptionProps: VmEncryptionType | undefined = undefined;
 
   private _vmInstance: VirtualMachine | undefined = undefined;
 
   constructor(props: BuilderProps) {
     super(props);
   }
+  public enableEncryption(props: VmEncryptionType): IVmBuilder {
+    this._encryptionProps = props;
+    return this;
+  }
+
   public withSchedule(props: VmScheduleType): IVmBuilder {
     this._schedule = props;
     return this;
@@ -93,6 +100,9 @@ class VmBuilder
   private buildVm() {
     this._vmInstance = VM({
       ...this.commonProps,
+      enableEncryption:
+        Boolean(this._encryptionProps) || this.commonProps.enableEncryption,
+      diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
       subnetId: this._subnetProps!,
       vmSize: this._vmSize!,
       osType: Boolean(this._linuxImage) ? 'Linux' : 'Windows',

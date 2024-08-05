@@ -44,6 +44,7 @@ export type VmSizeTypes =
   | 'Standard_E64-16ads_v5'
   | 'Standard_E96-24ads_v5'
   | string;
+export type VmEncryptionType = { diskEncryptionSetId?: Input<string> };
 
 export interface IVmOsBuilder {
   withWindowsImage(props: VmOsBuilderWindowsProps): IVmSizeBuilder;
@@ -58,6 +59,7 @@ export interface IVmVnetBuilder {
   withSubnetId(props: Input<string>): IVmBuilder;
 }
 export interface IVmBuilder extends IBuilder<ResourceInfo> {
+  enableEncryption(props: VmEncryptionType): IVmBuilder;
   withTags(props: Record<string, Input<string>>): IVmBuilder;
   withSchedule(props: VmScheduleType): IVmBuilder;
 }

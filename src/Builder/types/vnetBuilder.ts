@@ -4,7 +4,10 @@ import { IBuilder, OmitBuilderProps } from './genericBuilder';
 import { VnetProps, VnetResult } from '../../VNet/Vnet';
 import { SubnetProps } from '../../VNet/Subnet';
 import { BasicResourceArgs } from '../../types';
-import { PeeringDirectionType } from '../../VNet/NetworkPeering';
+import {
+  PeeringDirectionType,
+  PeeringOptions,
+} from '../../VNet/NetworkPeering';
 import { FirewallProps, FirewallResult } from '../../VNet/Firewall';
 import { VpnGatewayProps } from '../../VNet/VPNGateway';
 import { CustomSecurityRuleArgs, RouteArgs } from '../../VNet/types';
@@ -33,10 +36,12 @@ export type PeeringProps =
   | {
       groupName: string;
       direction?: PeeringDirectionType;
+      options?: PeeringOptions;
     }
   | {
       vnetId: Input<string>;
       direction?: PeeringDirectionType;
+      options?: PeeringOptions;
     };
 export type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
