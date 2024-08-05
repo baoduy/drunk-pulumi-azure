@@ -103,7 +103,7 @@ class ResourceBuilder
     this._vaultInfo = VaultBuilderResults.from(props);
     return this;
   }
-  public getVaultInfoBy(name: string): types.IResourceBuilder {
+  public getVaultInfoFrom(name: string): types.IResourceBuilder {
     return this.withVault(getKeyVaultInfo(name));
   }
   public linkVaultTo(
