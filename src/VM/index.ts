@@ -6,7 +6,11 @@ import { Locker } from '../Core/Locker';
 import { randomPassword } from '../Core/Random';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { BasicEncryptResourceArgs, LoginArgs } from '../types';
+import {
+  BasicEncryptResourceArgs,
+  LoginArgs,
+  WithVmEncryption,
+} from '../types';
 import GlobalSchedule from './GlobalSchedule';
 import Extension, { VmExtensionProps } from './Extension';
 
@@ -22,8 +26,7 @@ export type VmScheduleType = {
 //https://az-vm-image.info/
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
-interface Props extends BasicEncryptResourceArgs {
-  diskEncryptionSetId?: Input<string>;
+interface Props extends BasicEncryptResourceArgs, WithVmEncryption {
   subnetId: Input<string>;
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;
@@ -59,7 +62,9 @@ export default ({
   dataDiskSizeGB,
   enableEncryption,
   diskEncryptionSetId,
+  encryptionAtHost,
   vaultInfo,
+  envUIDInfo,
   schedule = { timeZone: 'Singapore Standard Time' },
   login,
   image,
@@ -82,11 +87,11 @@ export default ({
 
   //All VM will use the same Key
   const keyEncryption =
-    enableEncryption && vaultInfo
+    enableEncryption && vaultInfo && !diskEncryptionSetId
       ? addEncryptKey({ name: vmName, vaultInfo: vaultInfo! })
       : undefined;
   const diskEncryption =
-    enableEncryption && vaultInfo
+    enableEncryption && vaultInfo && !diskEncryptionSetId
       ? addCustomSecret({
           name: `${vmName}-disk-secret`,
           vaultInfo: vaultInfo!,
@@ -104,13 +109,19 @@ export default ({
       ...others,
 
       hardwareProfile: { vmSize },
-      identity: { type: 'SystemAssigned' },
+      identity: {
+        type: envUIDInfo
+          ? compute.ResourceIdentityType.SystemAssigned_UserAssigned
+          : compute.ResourceIdentityType.SystemAssigned,
+        userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+      },
+
       licenseType: 'None',
       networkProfile: {
         networkInterfaces: [{ id: nic.id, primary: true }],
       },
       //az feature register --name EncryptionAtHost  --namespace Microsoft.Compute
-      securityProfile: { encryptionAtHost: true },
+      securityProfile: { encryptionAtHost },
       osProfile: {
         computerName: name,
         adminUsername: login.adminLogin,
@@ -165,14 +176,15 @@ export default ({
           caching: 'ReadWrite',
           createOption: 'FromImage',
           osType,
+
           encryptionSettings:
-            enableEncryption && vaultInfo
+            diskEncryption && keyEncryption
               ? {
                   diskEncryptionKey: diskEncryption
                     ? {
                         secretUrl: diskEncryption.id,
                         sourceVault: {
-                          id: vaultInfo.id,
+                          id: vaultInfo!.id,
                         },
                       }
                     : undefined,
@@ -180,15 +192,20 @@ export default ({
                     ? {
                         keyUrl: keyEncryption.url,
                         sourceVault: {
-                          id: vaultInfo.id,
+                          id: vaultInfo!.id,
                         },
                       }
                     : undefined,
                   enabled: enableEncryption,
                 }
               : undefined,
+
           managedDisk: {
-            //Changes storage account type need to be done manually through portal.
+            diskEncryptionSet: diskEncryptionSetId
+              ? {
+                  id: diskEncryptionSetId,
+                }
+              : undefined,
             storageAccountType,
           },
         },
@@ -198,14 +215,15 @@ export default ({
                 name: `${name}datadisk`,
                 diskSizeGB: dataDiskSizeGB,
                 createOption: compute.DiskCreateOptionTypes.Empty,
-                lun: 0,
+                lun: 1,
+
                 managedDisk: {
                   diskEncryptionSet: diskEncryptionSetId
                     ? {
                         id: diskEncryptionSetId,
                       }
                     : undefined,
-                  storageAccountType: compute.StorageAccountTypes.Standard_LRS,
+                  storageAccountType,
                 },
               },
             ]

@@ -14,36 +14,44 @@ export type PeeringOptions = {
   doNotVerifyRemoteGateways?: boolean;
 };
 
-export interface VNetPeeringProps {
-  firstVnet: Input<ResourceInfoWithSub>;
-  secondVnet: Input<ResourceInfoWithSub>;
-  direction?: PeeringDirectionType;
+export type VnetPeeringType = {
+  vnetInfo: Input<ResourceInfoWithSub>;
   options?: PeeringOptions;
+};
+
+export interface VNetPeeringProps {
+  from: VnetPeeringType;
+  to: VnetPeeringType;
+  direction?: PeeringDirectionType;
 }
+
+const defaultOptions: PeeringOptions = {
+  allowForwardedTraffic: true,
+  allowVirtualNetworkAccess: true,
+  allowGatewayTransit: false,
+  syncRemoteAddressSpace: true,
+  useRemoteGateways: false,
+  doNotVerifyRemoteGateways: true,
+};
 
 export default ({
   direction = 'Unidirectional',
-  firstVnet,
-  secondVnet,
-  options = {
-    allowForwardedTraffic: true,
-    allowVirtualNetworkAccess: true,
-    allowGatewayTransit: true,
-    syncRemoteAddressSpace: true,
-    useRemoteGateways: false,
-    doNotVerifyRemoteGateways: true,
-  },
+  from,
+  to,
 }: VNetPeeringProps) => {
-  const commonProps: Partial<VirtualNetworkPeeringArgs> = {
-    ...options,
-    syncRemoteAddressSpace: options.syncRemoteAddressSpace ? 'true' : 'false',
-  };
+  const firstOptions = from.options ?? defaultOptions;
+  const secondOptions = to.options ?? defaultOptions;
+  const firstVnet = from.vnetInfo;
+  const secondVnet = to.vnetInfo;
 
   all([firstVnet, secondVnet]).apply(([first, second]) => {
     new network.VirtualNetworkPeering(
       `${stack}-${first.name}-${second.name}-vlk`,
       {
-        ...commonProps,
+        ...firstOptions,
+        syncRemoteAddressSpace: firstOptions.syncRemoteAddressSpace
+          ? 'true'
+          : 'false',
         virtualNetworkPeeringName: `${stack}-${first.name}-${second.name}-vlk`,
         virtualNetworkName: first.name,
         resourceGroupName: first.group.resourceGroupName,
@@ -58,7 +66,10 @@ export default ({
       new network.VirtualNetworkPeering(
         `${stack}-${second.name}-${first.name}-vlk`,
         {
-          ...commonProps,
+          ...secondOptions,
+          syncRemoteAddressSpace: secondOptions.syncRemoteAddressSpace
+            ? 'true'
+            : 'false',
           virtualNetworkPeeringName: `${stack}-${second.name}-${first.name}-vlk`,
           virtualNetworkName: second.name,
           resourceGroupName: second.group.resourceGroupName,

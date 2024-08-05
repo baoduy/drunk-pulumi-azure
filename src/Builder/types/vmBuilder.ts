@@ -1,4 +1,4 @@
-import { ResourceInfo } from '../../types';
+import { ResourceInfo, WithVmEncryption } from '../../types';
 import { VmScheduleType } from '../../VM';
 import { IBuilder, ILoginBuilder } from './genericBuilder';
 import { Input } from '@pulumi/pulumi';
@@ -44,7 +44,11 @@ export type VmSizeTypes =
   | 'Standard_E64-16ads_v5'
   | 'Standard_E96-24ads_v5'
   | string;
-export type VmEncryptionType = { diskEncryptionSetId?: Input<string> };
+
+export type VmEncryptionType = Omit<
+  WithVmEncryption,
+  'vaultInfo' | 'envUIDInfo' | 'envRoles' | 'enableEncryption'
+>;
 
 export interface IVmOsBuilder {
   withWindowsImage(props: VmOsBuilderWindowsProps): IVmSizeBuilder;

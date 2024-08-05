@@ -100,9 +100,12 @@ class VmBuilder
   private buildVm() {
     this._vmInstance = VM({
       ...this.commonProps,
+
       enableEncryption:
         Boolean(this._encryptionProps) || this.commonProps.enableEncryption,
       diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
+      encryptionAtHost: this._encryptionProps?.encryptionAtHost,
+
       subnetId: this._subnetProps!,
       vmSize: this._vmSize!,
       osType: Boolean(this._linuxImage) ? 'Linux' : 'Windows',

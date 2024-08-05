@@ -1,6 +1,7 @@
 import IpAddressPrefix, {
   PublicIpAddressPrefixResult,
 } from '../VNet/IpAddressPrefix';
+import { BlockInternetSecurityRule } from '../VNet/NSGRules';
 import * as network from '@pulumi/azure-native/network';
 import { CustomSecurityRuleArgs, RouteArgs } from '../VNet/types';
 import Firewall, { FirewallResult } from '../VNet/Firewall';
@@ -17,7 +18,7 @@ import * as types from './types';
 import Bastion from '../VNet/Bastion';
 import { rsInfo } from '../Common';
 import { ResourceInfo, ResourceInfoWithSub } from '../types';
-import { FirewallCreationProps, IVnetBuilder } from './types';
+import { FirewallCreationProps } from './types';
 
 const outboundIpName = 'outbound';
 
@@ -189,6 +190,10 @@ class VnetBuilder
   }
 
   private buildVnet() {
+    if (!this._firewallProps) {
+      this.withSecurityRules(BlockInternetSecurityRule(this.commonProps.name));
+    }
+
     const subnets = this._subnetProps
       ? Object.keys(this._subnetProps!).map(
           (k) =>
@@ -347,13 +352,15 @@ class VnetBuilder
       if (info)
         NetworkPeering({
           direction: p.direction ?? 'Bidirectional',
-          options: p.options,
-          firstVnet: {
-            name: this._vnetInstance!.name,
-            group: this.commonProps.group,
-            id: this._vnetInstance!.id,
+          from: {
+            options: p.options,
+            vnetInfo: {
+              name: this._vnetInstance!.name,
+              group: this.commonProps.group,
+              id: this._vnetInstance!.id,
+            },
           },
-          secondVnet: info,
+          to: { vnetInfo: info },
         });
     });
   }

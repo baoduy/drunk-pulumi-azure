@@ -1,6 +1,8 @@
 import { CustomResourceOptions, Input, Output, Resource } from '@pulumi/pulumi';
 import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
 import { IEnvRoleBuilder } from './Builder';
+import is from '@sindresorhus/is';
+import boolean = is.boolean;
 
 export declare namespace NodeJS {
   interface ProcessEnv {
@@ -38,6 +40,10 @@ export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
 };
+export type WithVmEncryption = WithEncryptionInfo & {
+  diskEncryptionSetId?: Input<string>;
+  encryptionAtHost?: boolean;
+};
 
 export type WithVaultInfo = { vaultInfo?: KeyVaultInfo };
 export type WithResourceGroupInfo = { group: ResourceGroupInfo };
@@ -63,6 +69,7 @@ export type BasicResourceInfo = WithNamedType & WithOutputId;
 
 //Resource Output Info
 export type ResourceInfo = BasicResourceInfo & ResourceArgs;
+/** Resource Info with Subscription ID */
 export type ResourceInfoWithSub = ResourceInfo & WithSubId;
 export type KeyVaultInfo = ResourceInfo;
 export type IdentityInfo = WithOutputId & WithPrincipalId;

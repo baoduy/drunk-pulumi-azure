@@ -159,6 +159,7 @@
     "src/VNet/NSGRules/AppGatewaySecurityRule.ts",
     "src/VNet/NSGRules/AzADSecurityRule.ts",
     "src/VNet/NSGRules/BastionSecurityRule.ts",
+    "src/VNet/NSGRules/BlockInternetSecurityRule.ts",
     "src/VNet/NSGRules/index.ts",
     "src/VNet/NatGateway.ts",
     "src/VNet/NetworkPeering.ts",
