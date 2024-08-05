@@ -36,12 +36,18 @@ export type PeeringProps =
   | {
       groupName: string;
       direction?: PeeringDirectionType;
-      options?: PeeringOptions;
+      options?: Pick<
+        PeeringOptions,
+        'useRemoteGateways' | 'doNotVerifyRemoteGateways'
+      >;
     }
   | {
       vnetId: Input<string>;
       direction?: PeeringDirectionType;
-      options?: PeeringOptions;
+      options?: Pick<
+        PeeringOptions,
+        'useRemoteGateways' | 'doNotVerifyRemoteGateways'
+      >;
     };
 export type FirewallCreationProps = {
   subnet: SubnetPrefixCreationProps & { managementAddressPrefix: string };
@@ -62,7 +68,8 @@ export interface IVnetBuilderStart {
   asSpoke(props?: VnetBuilderProps): IVnetBuilder;
 }
 export interface IPublicIpBuilder {
-  withPublicIpAddress(type: 'prefix' | 'individual'): IGatewayFireWallBuilder;
+  withPublicIP(type: 'prefix' | 'individual'): IGatewayFireWallBuilder;
+  withPublicIPFrom(id: Input<string>): IGatewayFireWallBuilder;
 }
 
 export interface IGatewayFireWallBuilder extends IBuilder<VnetBuilderResults> {
@@ -77,8 +84,8 @@ export interface IVnetBuilder extends IBuilder<VnetBuilderResults> {
     domain: string,
     builder?: VnetPrivateDnsBuilderFunc,
   ): IVnetBuilder;
-  withSecurityRules(rules: CustomSecurityRuleArgs[]): IVnetBuilder;
-  withRouteRules(rules: RouteArgs[]): IVnetBuilder;
+  withSecurityRules(...rules: CustomSecurityRuleArgs[]): IVnetBuilder;
+  withRouteRules(...rules: RouteArgs[]): IVnetBuilder;
   withLogInfo(info: LogInfoResults): IVnetBuilder;
   withVpnGateway(props: VpnGatewayCreationProps): IVnetBuilder;
   peeringTo(props: PeeringProps): IVnetBuilder;

@@ -44,7 +44,7 @@ export default ({
         outbound: [
           {
             subnetId: firewall.subnetId,
-            publicIpAddress: firewall.publicIpAddress,
+            publicIpAddressId: firewall.publicIpAddress.id,
           },
         ],
       })

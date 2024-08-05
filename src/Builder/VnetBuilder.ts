@@ -18,7 +18,8 @@ import * as types from './types';
 import Bastion from '../VNet/Bastion';
 import { rsInfo } from '../Common';
 import { ResourceInfo, ResourceInfoWithSub } from '../types';
-import { FirewallCreationProps } from './types';
+import { FirewallCreationProps, IGatewayFireWallBuilder } from './types';
+import { Input } from '@pulumi/pulumi';
 
 const outboundIpName = 'outbound';
 
@@ -29,6 +30,17 @@ class VnetBuilder
     types.IVnetBuilder,
     types.IVnetBuilderStart
 {
+  /** The Instances */
+  private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
+    undefined;
+  private _firewallInstance: FirewallResult | undefined = undefined;
+  private _vnetInstance: VnetResult | undefined = undefined;
+  private _natGatewayInstance: network.NatGateway | undefined = undefined;
+  private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
+    undefined;
+  private _privateDnsInstances: Record<string, ResourceInfo> = {};
+  private _finalIpAddressIds: Input<string>[] = [];
+
   /** The Props */
   private _subnetProps: types.SubnetCreationProps | undefined = undefined;
   private _vnetProps: Partial<types.VnetBuilderProps> = {};
@@ -43,21 +55,11 @@ class VnetBuilder
   private _enableRoute: boolean = false;
   private _peeringProps: types.PeeringProps[] = [];
   private _logInfo: LogInfoResults | undefined = undefined;
-  private _ipType: 'prefix' | 'individual' = 'prefix';
+  private _ipType: 'prefix' | 'individual' | 'existing' = 'individual';
   private _privateDns: Record<
     string,
     types.VnetPrivateDnsBuilderFunc | undefined
   > = {};
-
-  /** The Instances */
-  private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
-    undefined;
-  private _firewallInstance: FirewallResult | undefined = undefined;
-  private _vnetInstance: VnetResult | undefined = undefined;
-  private _natGatewayInstance: network.NatGateway | undefined = undefined;
-  private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
-    undefined;
-  private _privateDnsInstances: Record<string, ResourceInfo> = {};
 
   constructor(commonProps: types.BuilderProps) {
     super(commonProps);
@@ -82,10 +84,15 @@ class VnetBuilder
     return this;
   }
 
-  public withPublicIpAddress(
+  public withPublicIP(
     type: 'prefix' | 'individual',
   ): types.IGatewayFireWallBuilder {
     this._ipType = type;
+    return this;
+  }
+  public withPublicIPFrom(id: Input<string>): IGatewayFireWallBuilder {
+    this._finalIpAddressIds.push(id);
+    this._ipType = 'existing';
     return this;
   }
 
@@ -119,14 +126,14 @@ class VnetBuilder
   }
 
   public withSecurityRules(
-    rules: CustomSecurityRuleArgs[],
+    ...rules: CustomSecurityRuleArgs[]
   ): types.IVnetBuilder {
     this._securityRules.push(...rules);
     this._enableSG = true;
     return this;
   }
 
-  public withRouteRules(rules: RouteArgs[]): types.IVnetBuilder {
+  public withRouteRules(...rules: RouteArgs[]): types.IVnetBuilder {
     this._routeRules.push(...rules);
     this._enableRoute = true;
     return this;
@@ -151,8 +158,10 @@ class VnetBuilder
 
   /** Builders methods */
   private buildIpAddress() {
-    const ipNames = [];
+    //IP Address Already provided
+    if (this._ipType === 'existing') return;
 
+    const ipNames = [];
     //No gateway and no firewall then Do nothing
     if (!this._natGatewayEnabled && !this._firewallProps) return;
 
@@ -168,21 +177,22 @@ class VnetBuilder
       createPrefix: this._ipType === 'prefix',
       config: { version: 'IPv4', allocationMethod: 'Static' },
     });
+
+    //Collect All IpAddresses
+    if (this._ipAddressInstance.addresses) {
+      Object.values(this._ipAddressInstance.addresses).forEach((ip) =>
+        this._finalIpAddressIds.push(ip.id),
+      );
+    }
   }
 
   private buildNatGateway() {
-    if (!this._natGatewayEnabled || !this._ipAddressInstance) return;
+    if (!this._natGatewayEnabled) return;
 
     this._natGatewayInstance = NatGateway({
       ...this.commonProps,
 
-      publicIpAddresses:
-        this._ipType === 'individual' && !this._firewallProps
-          ? Object.keys(this._ipAddressInstance.addresses).map(
-              (k) => this._ipAddressInstance!.addresses![k].id,
-            )
-          : undefined,
-
+      publicIpAddresses: this._finalIpAddressIds,
       publicIpPrefixes: this._ipAddressInstance?.addressPrefix
         ? [this._ipAddressInstance.addressPrefix!.id]
         : undefined,
@@ -191,7 +201,7 @@ class VnetBuilder
 
   private buildVnet() {
     if (!this._firewallProps) {
-      this.withSecurityRules(BlockInternetSecurityRule(this.commonProps.name));
+      this.withSecurityRules(...BlockInternetSecurityRule(this.commonProps));
     }
 
     const subnets = this._subnetProps
@@ -256,7 +266,6 @@ class VnetBuilder
   private buildFirewall() {
     if (!this._firewallProps) return;
 
-    const publicIpAddress = this._ipAddressInstance?.addresses[outboundIpName];
     const firewallSubnetId = this._vnetInstance?.firewallSubnet?.apply(
       (s) => s?.id!,
     );
@@ -272,9 +281,9 @@ class VnetBuilder
         {
           subnetId: firewallSubnetId!,
           //Using Force Tunneling mode if Nat gateway is enabled.
-          publicIpAddress: this._natGatewayEnabled
+          publicIpAddressId: this._natGatewayEnabled
             ? undefined
-            : publicIpAddress!,
+            : this._finalIpAddressIds[0],
         },
       ],
       //This is required for Force Tunneling mode
@@ -290,7 +299,11 @@ class VnetBuilder
           }
         : undefined,
 
-      dependsOn: this._ipAddressInstance?.addressPrefix,
+      dependsOn:
+        this._ipAddressInstance?.addressPrefix ??
+        (this._ipAddressInstance?.addresses
+          ? Object.values(this._ipAddressInstance.addresses)
+          : undefined),
     });
   }
 

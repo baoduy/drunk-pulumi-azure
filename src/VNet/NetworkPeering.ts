@@ -1,7 +1,6 @@
 import { stack, subscriptionId } from '../Common';
 import * as network from '@pulumi/azure-native/network';
 import { all, Input, interpolate } from '@pulumi/pulumi';
-import { VirtualNetworkPeeringArgs } from '@pulumi/azure-native/network/virtualNetworkPeering';
 import { ResourceInfoWithSub } from '../types';
 
 export type PeeringDirectionType = 'Unidirectional' | 'Bidirectional';
@@ -28,9 +27,8 @@ export interface VNetPeeringProps {
 const defaultOptions: PeeringOptions = {
   allowForwardedTraffic: true,
   allowVirtualNetworkAccess: true,
-  allowGatewayTransit: false,
+  allowGatewayTransit: true,
   syncRemoteAddressSpace: true,
-  useRemoteGateways: false,
   doNotVerifyRemoteGateways: true,
 };
 
@@ -39,8 +37,8 @@ export default ({
   from,
   to,
 }: VNetPeeringProps) => {
-  const firstOptions = from.options ?? defaultOptions;
-  const secondOptions = to.options ?? defaultOptions;
+  const firstOptions = { ...defaultOptions, ...from.options };
+  const secondOptions = { ...defaultOptions, ...to.options };
   const firstVnet = from.vnetInfo;
   const secondVnet = to.vnetInfo;
 
@@ -55,11 +53,15 @@ export default ({
         virtualNetworkPeeringName: `${stack}-${first.name}-${second.name}-vlk`,
         virtualNetworkName: first.name,
         resourceGroupName: first.group.resourceGroupName,
+        peeringSyncLevel: 'FullyInSync',
         remoteVirtualNetwork: {
           id: interpolate`/subscriptions/${second.subscriptionId ?? subscriptionId}/resourceGroups/${second.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${second.name}`,
         },
       },
-      { deleteBeforeReplace: true },
+      {
+        deleteBeforeReplace: true,
+        ignoreChanges: ['peeringSyncLevel', 'peeringState'],
+      },
     );
 
     if (direction === 'Bidirectional')
@@ -73,11 +75,15 @@ export default ({
           virtualNetworkPeeringName: `${stack}-${second.name}-${first.name}-vlk`,
           virtualNetworkName: second.name,
           resourceGroupName: second.group.resourceGroupName,
+          peeringSyncLevel: 'FullyInSync',
           remoteVirtualNetwork: {
             id: interpolate`/subscriptions/${first.subscriptionId ?? subscriptionId}/resourceGroups/${first.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${first.name}`,
           },
         },
-        { deleteBeforeReplace: true },
+        {
+          deleteBeforeReplace: true,
+          ignoreChanges: ['peeringSyncLevel', 'peeringState'],
+        },
       );
   });
 };

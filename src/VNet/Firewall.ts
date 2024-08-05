@@ -10,7 +10,8 @@ import IpAddress from './IpAddress';
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
-  publicIpAddress?: network.PublicIPAddress;
+  /** The IDs of public Ip Address.*/
+  publicIpAddressId?: pulumi.Input<string>;
 }
 
 export type FirewallSkus = {
@@ -19,10 +20,10 @@ export type FirewallSkus = {
 };
 
 export interface FirewallProps extends BasicResourceArgs {
-  /** The public outbound IP address ignores this property if want to enable the Force Tunneling mode */
+  /** The public outbound IP address can be ignores this property if want to enable the Force Tunneling mode */
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
-  management?: FwOutboundConfig;
+  management?: Pick<FwOutboundConfig, 'subnetId'>;
 
   snat?: {
     privateRanges?: Input<string>;
@@ -56,23 +57,11 @@ export default ({
   },
   ...others
 }: FirewallProps): FirewallResult => {
-  // Validation
-  if (!isDryRun) {
-    if (!outbound && !management)
-      throw new Error(
-        'Management Public Ip Address is required for the Force Tunneling mode.',
-      );
-
-    if (sku.tier === network.AzureFirewallSkuTier.Basic && !management)
-      throw new Error('Management Subnet is required for Firewall Basic tier.');
-  }
-
   const fwName = getFirewallName(name);
 
   //Create Public IpAddress for Management
   const manageIpAddress = management
-    ? management.publicIpAddress ??
-      IpAddress({
+    ? IpAddress({
         name: `${name}-mag`,
         group,
         lock: false,
@@ -132,8 +121,8 @@ export default ({
     ipConfigurations: outbound
       ? outbound.map((o, i) => ({
           name: `outbound-${i}`,
-          publicIPAddress: o.publicIpAddress
-            ? { id: o.publicIpAddress.id }
+          publicIPAddress: o.publicIpAddressId
+            ? { id: o.publicIpAddressId }
             : undefined,
           subnet: { id: o.subnetId },
         }))
