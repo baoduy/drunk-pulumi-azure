@@ -169,7 +169,7 @@ export interface AksProps
     snapshotController: { enabled: boolean };
   };
   //Azure Registry Container
-  acr?: { enable: boolean; id: Input<string> };
+  //acr?: { enable: boolean; id: Input<string> };
   defaultNodePool: DefaultAksNodePoolProps;
   network: AksNetworkProps;
   linux: {
@@ -203,7 +203,7 @@ export default async ({
   nodePools,
   network,
   logInfo,
-  acr,
+  //acr,
 
   features = { enableMaintenance: true },
   storageProfile,
@@ -508,7 +508,7 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile, network.subnetId])
       .apply(([identity, identityProfile, sId]) => {
-        const acrScope = acr?.id ?? defaultSubScope;
+        //const acrScope = acr?.id ?? defaultSubScope;
         if (identityProfile && identityProfile['kubeletidentity']) {
           // roleAssignment({
           //   name: `${name}-aks-identity-profile-pull`,
@@ -518,7 +518,7 @@ export default async ({
           //   scope: acrScope,
           // });
 
-          //Add into EnvRoles
+          //Add into EnvRoles for Database accessing
           envRoles?.addMember(
             'contributor',
             identityProfile['kubeletidentity'].objectId!,
@@ -535,8 +535,8 @@ export default async ({
             scope: rsInfo.getRGId(rsInfo.getResourceInfoFromId(sId)!.group),
           });
 
-          //Add into EnvRoles
-          envRoles?.addMember('contributor', identity.principalId);
+          //Add into EnvRoles for Database accessing
+          //envRoles?.addMember('contributor', identity.principalId);
         }
 
         //Link Private Dns to extra Vnet
