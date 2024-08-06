@@ -5,7 +5,6 @@ import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import {
   BasicEncryptResourceArgs,
-  BasicResourceArgs,
   LockableType,
   LogInfo,
   ResourceInfoWithInstance,
@@ -72,11 +71,10 @@ const defaultNodePoolProps = {
   maxPods: 50,
   enableFIPS: false,
   enableNodePublicIP: false,
-  //enableEncryptionAtHost: false,
-
+  enableEncryptionAtHost: true,
   enableUltraSSD: isPrd,
-  osDiskSizeGB: 128,
-  osDiskType: ccs.OSDiskType.Managed,
+  osDiskSizeGB: 256,
+  osDiskType: ccs.OSDiskType.Ephemeral,
 
   nodeLabels: {
     environment: currentEnv,
@@ -107,13 +105,16 @@ export enum VmSizes {
   Standard_A4m_v2 = 'Standard_A4m_v2',
 }
 
-export interface NodePoolProps
-  extends containerservice.ManagedClusterAgentPoolProfileArgs {
+export type NodePoolProps = {
+  name: pulumi.Input<string>;
   mode: ccs.AgentPoolMode;
   vmSize: VmSizes | string;
   osDiskSizeGB: number;
-  maxPods: number;
-}
+  osDiskType?: ccs.OSDiskType | string;
+  maxPods?: number;
+  //osType?: pulumi.Input<string | ccs.OSType>;
+  //role?: pulumi.Input<string>;
+};
 
 export type AskAddonProps = {
   enableAzureKeyVault?: boolean;
@@ -147,8 +148,7 @@ export type AksNetworkProps = {
   };
 };
 
-export type AksNodePoolProps = Omit<NodePoolProps, 'subnetId' | 'aksId'>;
-export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
+export type DefaultAksNodePoolProps = Omit<NodePoolProps, 'name' | 'mode'>;
 
 export interface AksProps
   extends BasicEncryptResourceArgs,
@@ -177,7 +177,7 @@ export interface AksProps
     sshKeys: Array<pulumi.Input<string>>;
   };
   //kubernetesVersion?: Input<string>;
-  nodePools?: Array<AksNodePoolProps>;
+  nodePools?: Array<NodePoolProps>;
   logInfo?: Partial<LogInfo> & { defenderEnabled?: boolean };
 }
 
@@ -194,6 +194,7 @@ export default async ({
   aksAccess,
 
   envRoles,
+  envUIDInfo,
   vaultInfo,
   diskEncryptionSetId,
 
@@ -316,8 +317,6 @@ export default async ({
             nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
           }),
-
-          enableEncryptionAtHost: true,
 
           name: 'defaultnodes',
           mode: 'System',
@@ -489,7 +488,9 @@ export default async ({
             enableAutoScaling: features.enableAutoScale,
           }),
 
-          enableEncryptionAtHost: true,
+          //This already added into defaultNodePoolProps
+          //enableEncryptionAtHost: true,
+
           count: p.mode === 'System' ? 1 : 0,
           vnetSubnetID: network.subnetId,
           kubeletDiskType: 'OS',

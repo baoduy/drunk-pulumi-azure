@@ -1,29 +1,25 @@
 import { CustomSecurityRuleArgs } from '../types';
-type Props = { name?: string; allowsVnetAccess?: boolean };
 
-export default (
-  { name, allowsVnetAccess }: Props = {
-    name: 'default',
-    allowsVnetAccess: true,
-  },
-) => {
+export default (name: string = 'default') => {
   const rs = new Array<CustomSecurityRuleArgs>();
-  if (allowsVnetAccess) {
-    rs.push({
-      name: `${name}-allows-vnet-outbound`,
-      description: 'Allows Vnet Internet Outbound',
-      priority: 4095,
-      protocol: '*',
-      access: 'Allow',
-      direction: 'Outbound',
 
-      sourceAddressPrefix: 'VirtualNetwork',
-      sourcePortRange: '*',
-      destinationAddressPrefix: 'VirtualNetwork',
-      destinationPortRange: '*',
-    });
-  }
+  //This should be added if not all internal access will be blocked
+  rs.push({
+    name: `${name}-allows-vnet-outbound`,
+    description: 'Allows Vnet Internet Outbound',
+    priority: 4095,
+    protocol: '*',
+    access: 'Allow',
+    direction: 'Outbound',
 
+    sourceAddressPrefix: 'VirtualNetwork',
+    sourcePortRange: '*',
+    destinationAddressPrefix: 'VirtualNetwork',
+    destinationPortRange: '*',
+  });
+
+  //TODO: This may not need if azure support private subnet
+  //Block direct access to internet
   rs.push({
     name: `${name}-block-internet-outbound`,
     description: 'Block Internet Outbound',

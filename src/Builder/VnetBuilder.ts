@@ -200,7 +200,9 @@ class VnetBuilder
 
   private buildVnet() {
     if (!this._firewallProps) {
-      this.withSecurityRules(...BlockInternetSecurityRule(this.commonProps));
+      this.withSecurityRules(
+        ...BlockInternetSecurityRule(this.commonProps.name),
+      );
     }
 
     const subnets = this._subnetProps

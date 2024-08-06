@@ -5,7 +5,7 @@ import { IBuilderAsync } from './genericBuilder';
 import {
   AksAccessProps,
   AksNetworkProps,
-  AksNodePoolProps,
+  NodePoolProps,
   AksResults,
   AskAddonProps,
   AskFeatureProps,
@@ -29,7 +29,7 @@ export interface IAksDefaultNodePoolBuilder {
 }
 export interface IAksBuilder extends IBuilderAsync<AksResults> {
   withAuth(props: Omit<AksAccessProps, 'envRoles'>): IAksBuilder;
-  withNodePool(props: AksNodePoolProps): IAksBuilder;
+  withNodePool(props: NodePoolProps): IAksBuilder;
   withAddon(props: AskAddonProps): IAksBuilder;
   withFeature(props: AskFeatureProps): IAksBuilder;
   withTier(tier: cs.ManagedClusterSKUTier): IAksBuilder;

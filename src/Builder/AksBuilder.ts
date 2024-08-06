@@ -18,7 +18,7 @@ import { ManagedClusterSKUTier } from '@pulumi/azure-native/containerservice';
 import Aks, {
   AksAccessProps,
   AksNetworkProps,
-  AksNodePoolProps,
+  NodePoolProps,
   AksResults,
   AskAddonProps,
   AskFeatureProps,
@@ -39,7 +39,7 @@ class AksBuilder
 
   //Props
   private _sshProps: SshBuilderProps | undefined = undefined;
-  private _nodePoolsProps: AksNodePoolProps[] = [];
+  private _nodePoolsProps: NodePoolProps[] = [];
   private _addonProps: AskAddonProps | undefined = undefined;
   private _featureProps: AskFeatureProps | undefined = undefined;
   private _authProps: Omit<AksAccessProps, 'envRoles'> | undefined = {};
@@ -60,7 +60,7 @@ class AksBuilder
     return this;
   }
 
-  public withNodePool(props: AksNodePoolProps): IAksBuilder {
+  public withNodePool(props: NodePoolProps): IAksBuilder {
     this._nodePoolsProps.push(props);
     return this;
   }
