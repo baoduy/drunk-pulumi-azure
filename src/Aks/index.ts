@@ -526,18 +526,19 @@ export default async ({
         }
 
         //Link service principal to Vnet Resources group
-        if (network.subnetId && identity) {
-          roleAssignment({
-            name: `${name}-system-net`,
-            principalId: identity.principalId,
-            roleName: 'Contributor',
-            principalType: 'ServicePrincipal',
-            scope: rsInfo.getRGId(rsInfo.getResourceInfoFromId(sId)!.group),
-          });
-
-          //Add into EnvRoles for Database accessing
-          //envRoles?.addMember('contributor', identity.principalId);
-        }
+        //This only need for public ask with direct public IP associated
+        // if (network.subnetId && identity) {
+        //   roleAssignment({
+        //     name: `${name}-system-net`,
+        //     principalId: identity.principalId,
+        //     roleName: 'Contributor',
+        //     principalType: 'ServicePrincipal',
+        //     scope: rsInfo.getRGId(rsInfo.getResourceInfoFromId(sId)!.group),
+        //   });
+        //
+        //   //Add into EnvRoles for Database accessing
+        //   //envRoles?.addMember('contributor', identity.principalId);
+        // }
 
         //Link Private Dns to extra Vnet
         if (features?.enablePrivateCluster && network.extraVnetIds) {
