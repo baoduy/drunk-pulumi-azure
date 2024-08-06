@@ -1,7 +1,11 @@
 import * as compute from '@pulumi/azure-native/compute';
 import { getDiskEncryptionName } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { BasicResourceWithVaultArgs, WithEnvRoles } from '../types';
+import {
+  BasicResourceWithVaultArgs,
+  ResourceInfoWithInstance,
+  WithEnvRoles,
+} from '../types';
 
 interface DiskEncryptionProps
   extends BasicResourceWithVaultArgs,
@@ -14,16 +18,21 @@ export default ({
   envUIDInfo,
   envRoles,
   dependsOn,
-  ignoreChanges,
+  ignoreChanges = [],
   importUri,
-}: DiskEncryptionProps) => {
-  if (!envUIDInfo || !vaultInfo) return undefined;
+}: DiskEncryptionProps): ResourceInfoWithInstance<compute.DiskEncryptionSet> => {
+  if (!envUIDInfo || !vaultInfo)
+    throw new Error(
+      'The "vaultInfo" and "envUIDInfo" are required for  DiskEncryptionSet.',
+    );
+
   name = getDiskEncryptionName(name);
   const keyEncryption = addEncryptKey({ name, vaultInfo });
   const diskEncrypt = new compute.DiskEncryptionSet(
     name,
     {
       ...group,
+      diskEncryptionSetName: name,
       rotationToLatestKeyVersionEnabled: true,
       encryptionType: 'EncryptionAtRestWithCustomerKey',
       identity: {
@@ -32,12 +41,16 @@ export default ({
       },
       activeKey: { keyUrl: keyEncryption.url },
     },
-    { dependsOn, ignoreChanges, import: importUri },
+    {
+      dependsOn,
+      ignoreChanges: [...ignoreChanges, 'diskEncryptionSetName'],
+      import: importUri,
+    },
   );
 
   diskEncrypt.identity.apply((i) => {
     if (i) envRoles?.addMember('readOnly', i.principalId);
   });
 
-  return diskEncrypt;
+  return { name, group, id: diskEncrypt.id, instance: diskEncrypt };
 };
