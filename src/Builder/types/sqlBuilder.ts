@@ -34,9 +34,10 @@ export type FullSqlDbPropsType = Omit<
   | 'sqlServerName'
 >;
 
-export type SqlBuilderVulnerabilityAssessmentType = {
-  logInfo: StorageInfo;
-} & Pick<SqlVulnerabilityAssessmentType, 'alertEmails'>;
+export type SqlBuilderVulnerabilityAssessmentType = Pick<
+  SqlVulnerabilityAssessmentType,
+  'alertEmails'
+>;
 
 export interface ISqlLoginBuilder extends ILoginBuilder<ISqlAuthBuilder> {}
 

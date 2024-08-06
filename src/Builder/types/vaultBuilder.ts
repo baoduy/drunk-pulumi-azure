@@ -1,5 +1,5 @@
 import { CertArgs } from '@drunk-pulumi/azure-providers';
-import { BasicMonitorArgs, KeyVaultInfo, WithNamedType } from '../../types';
+import { KeyVaultInfo, WithNamedType } from '../../types';
 import { Input } from '@pulumi/pulumi';
 
 export type CertBuilderType = WithNamedType & {
@@ -19,6 +19,6 @@ export interface IVaultBuilderResults extends KeyVaultInfo {
 }
 
 export interface IVaultBuilder {
-  withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder;
+  //withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder;
   build(): IVaultBuilderResults;
 }

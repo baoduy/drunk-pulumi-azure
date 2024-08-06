@@ -1,4 +1,3 @@
-import { Input } from '@pulumi/pulumi';
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
 import { LoginArgs } from '../types';
@@ -6,7 +5,6 @@ import {
   Builder,
   BuilderProps,
   FullSqlDbPropsType,
-  IResourceBuilder,
   ISqlAuthBuilder,
   ISqlBuilder,
   ISqlLoginBuilder,
@@ -128,7 +126,7 @@ class SqlBuilder
   }
 
   private buildSql() {
-    if (this._vulnerabilityAssessment && !this._vulnerabilityAssessment.logInfo)
+    if (this._vulnerabilityAssessment && !this.commonProps.logInfo)
       throw new Error(
         "The LogInfo's secrets are required to enable the vulnerability assessment.",
       );
@@ -140,14 +138,10 @@ class SqlBuilder
         ...this._loginInfo!,
         envRoles: this.commonProps.envRoles,
       },
-      vulnerabilityAssessment: this._vulnerabilityAssessment?.logInfo
-        ?.primaryKey
+      vulnerabilityAssessment: this._vulnerabilityAssessment
         ? {
-            logStorageId: this._vulnerabilityAssessment.logInfo.id,
-            alertEmails: this._vulnerabilityAssessment.alertEmails,
-            storageAccessKey: this._vulnerabilityAssessment.logInfo.primaryKey,
-            storageEndpoint:
-              this._vulnerabilityAssessment.logInfo.endpoints.blob,
+            ...this._vulnerabilityAssessment,
+            logStorage: this.commonProps.logInfo!.logStorage!,
           }
         : undefined,
       network: this._networkProps,

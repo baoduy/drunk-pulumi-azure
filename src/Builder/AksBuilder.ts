@@ -2,6 +2,7 @@ import { interpolate } from '@pulumi/pulumi';
 import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
 import { defaultSubScope } from '../Common';
 import {
+  AksEncryptionType,
   AksImportProps,
   BuilderAsync,
   BuilderProps,
@@ -47,6 +48,7 @@ class AksBuilder
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
   private _importProps: AksImportProps | undefined = undefined;
   private _lock: boolean = false;
+  private _encryptionProps: AksEncryptionType | undefined = undefined;
 
   constructor(props: BuilderProps) {
     super(props);
@@ -86,6 +88,11 @@ class AksBuilder
     this._defaultNode = props;
     return this;
   }
+  public enableEncryption(props: AksEncryptionType): IAksBuilder {
+    this._encryptionProps = props;
+    return this;
+  }
+
   public lock(): IBuilderAsync<AksResults> {
     this._lock = true;
     return this;
@@ -119,6 +126,7 @@ class AksBuilder
         adminUsername: this._sshInstance!.userName,
         sshKeys: [sshKey],
       },
+      diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
       defaultNodePool: this._defaultNode!,
       nodePools: this._nodePoolsProps,
       features: this._featureProps,

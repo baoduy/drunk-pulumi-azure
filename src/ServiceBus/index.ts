@@ -2,7 +2,6 @@ import * as bus from '@pulumi/azure-native/servicebus';
 import * as pulumi from '@pulumi/pulumi';
 import {
   OptsArgs,
-  BasicMonitorArgs,
   BasicResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
@@ -21,7 +20,7 @@ import {
 import creator from '../Core/ResourceCreator';
 import { getServiceBusName, isPrd } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
 
 type TransportTypes = 'AmqpWebSockets' | 'Amqp' | null;
@@ -456,7 +455,7 @@ interface Props
     partnerNamespace: pulumi.Input<string>;
   };
   network?: NetworkPropsType;
-  monitoring?: BasicMonitorArgs;
+  //monitoring?: BasicMonitorArgs;
   sku?: bus.SkuName;
   vaultInfo?: KeyVaultInfo;
   enableNamespaceConnections?: boolean;
@@ -477,7 +476,7 @@ export default ({
   enableTopicConnections,
   enableQueueConnections,
   sku = bus.SkuName.Basic,
-  monitoring,
+  //monitoring,
   ...others
 }: Props) => {
   name = getServiceBusName(name);
@@ -489,12 +488,12 @@ export default ({
 
     ...others,
 
-    monitoring: monitoring
-      ? {
-          ...monitoring,
-          logsCategories: ['OperationalLogs'],
-        }
-      : undefined,
+    // monitoring: monitoring
+    //   ? {
+    //       ...monitoring,
+    //       logsCategories: ['OperationalLogs'],
+    //     }
+    //   : undefined,
   } as bus.NamespaceArgs & OptsArgs);
 
   const namespace = resource as bus.Namespace;

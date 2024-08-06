@@ -110,19 +110,19 @@ export default ({
       : undefined,
 
     //keyVaultKeyId: encryptKey?.properties.id,
-    monitoring: {
-      logsCategories: [
-        'CassandraRequests',
-        'PartitionKeyStatistics',
-        'ControlPlaneRequests',
-        'MongoRequests',
-        'QueryRuntimeStatistics',
-        'GremlinRequests',
-        'PartitionKeyRUConsumption',
-        'DataPlaneRequests',
-      ],
-      metricsCategories: ['Requests'],
-    },
+    // monitoring: {
+    //   logsCategories: [
+    //     'CassandraRequests',
+    //     'PartitionKeyStatistics',
+    //     'ControlPlaneRequests',
+    //     'MongoRequests',
+    //     'QueryRuntimeStatistics',
+    //     'GremlinRequests',
+    //     'PartitionKeyRUConsumption',
+    //     'DataPlaneRequests',
+    //   ],
+    //   metricsCategories: ['Requests'],
+    // },
   } as unknown as documentdb.DatabaseAccountArgs & OptsArgs);
 
   if (

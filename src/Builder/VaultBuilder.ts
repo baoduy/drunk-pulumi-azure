@@ -5,13 +5,13 @@ import {
   IVaultBuilderResults,
 } from './types/vaultBuilder';
 import Vault, { createVaultPrivateLink } from '../KeyVault';
-import { BasicMonitorArgs, KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   VaultCertResource,
   VaultNetworkResource,
 } from '@drunk-pulumi/azure-providers';
-import { subscriptionId } from '../Common/AzureEnv';
+import { subscriptionId } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 export class VaultBuilderResults implements IVaultBuilderResults {
@@ -73,10 +73,15 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
-  public addCerts(items: Record<string, CertBuilderType>): IVaultBuilderResults {
+  public addCerts(
+    items: Record<string, CertBuilderType>,
+  ): IVaultBuilderResults {
     Object.keys(items).map((key) => {
       const val = items[key];
-      return  new VaultCertResource(val.name, { ...val, vaultName: this.vaultInfo.name });
+      return new VaultCertResource(val.name, {
+        ...val,
+        vaultName: this.vaultInfo.name,
+      });
     });
 
     return this;
@@ -85,20 +90,20 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
 class VaultBuilder implements IVaultBuilder {
   private readonly _props: Omit<BuilderProps, 'vaultInfo'>;
-  private _logInfo: BasicMonitorArgs | undefined = undefined;
+  //private _logInfo: BasicMonitorArgs | undefined = undefined;
 
   constructor(props: Omit<BuilderProps, 'vaultInfo'>) {
     this._props = props;
   }
 
-  public withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder {
-    this._logInfo = logInfo;
-    return this;
-  }
+  // public withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder {
+  //   this._logInfo = logInfo;
+  //   return this;
+  // }
 
   public build(): IVaultBuilderResults {
     const rs = Vault(this._props);
-    if (this._logInfo) rs.addDiagnostic(this._logInfo);
+    //if (this._logInfo) rs.addDiagnostic(this._logInfo);
     return VaultBuilderResults.from(rs.info());
   }
 }

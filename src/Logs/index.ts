@@ -1,8 +1,4 @@
-import {
-  BasicEncryptResourceArgs,
-  BasicMonitorArgs,
-  KeyVaultInfo,
-} from '../types';
+import { BasicEncryptResourceArgs, KeyVaultInfo } from '../types';
 import * as insights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';

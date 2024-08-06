@@ -62,7 +62,7 @@ export default ({
   dataDiskSizeGB,
   enableEncryption,
   diskEncryptionSetId,
-  encryptionAtHost,
+  //encryptionAtHost,
   vaultInfo,
   envUIDInfo,
   schedule = { timeZone: 'Singapore Standard Time' },
@@ -121,7 +121,7 @@ export default ({
         networkInterfaces: [{ id: nic.id, primary: true }],
       },
       //az feature register --name EncryptionAtHost  --namespace Microsoft.Compute
-      securityProfile: { encryptionAtHost },
+      securityProfile: { encryptionAtHost: true },
       osProfile: {
         computerName: name,
         adminUsername: login.adminLogin,

@@ -42,9 +42,8 @@ export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
 };
-export type WithVmEncryption = WithEncryptionInfo & {
+export type WithVmEncryption = {
   diskEncryptionSetId?: Input<string>;
-  encryptionAtHost?: boolean;
 };
 
 export type WithVaultInfo = { vaultInfo?: KeyVaultInfo };
@@ -157,13 +156,10 @@ export type ConventionProps = {
   includeOrgName?: boolean;
 };
 
-export type BasicMonitorArgs = OptsArgs & {
-  logWpId?: Input<string>;
-  logStorageId?: Input<string>;
-};
-
-export interface DiagnosticProps extends WithNamedType, BasicMonitorArgs {
-  targetResourceId: Input<string>;
-  metricsCategories?: string[];
-  logsCategories?: string[];
-}
+export type DiagnosticProps = WithNamedType &
+  WithDependsOn & {
+    logInfo: Partial<Omit<LogInfo, 'appInsight'>>;
+    targetResourceId: Input<string>;
+    metricsCategories?: string[];
+    logsCategories?: string[];
+  };

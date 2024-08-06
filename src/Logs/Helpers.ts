@@ -23,26 +23,24 @@ import {
 export const createDiagnostic = ({
   name,
   targetResourceId,
-  logWpId,
-  logStorageId,
+  logInfo,
   metricsCategories = ['AllMetrics'],
   logsCategories,
   dependsOn,
 }: DiagnosticProps) => {
   //Ensure logWpId or logStorageId is provided
-  if (!logWpId && !logStorageId) {
+  if (!logInfo.logWp && !logInfo.logStorage) {
     console.error(
-      `Diagnostic for "${name}" must have either a "logWpId" or "logStorageId".`,
+      `Diagnostic for "${name}" must have either a "logWp" or "storage".`,
     );
     return undefined;
   }
-
   //Ensure targetResourceId is valid
   if (!targetResourceId) {
-    console.error(`Target resource of "${name}" must beprovided .`);
+    console.error(`Target resource of "${name}" must be provided .`);
     return undefined;
   }
-
+  const wpId = logInfo.logWp?.workspaceId;
   const n = `${name}-diag`;
   return new native.insights.DiagnosticSetting(
     n,
@@ -51,8 +49,8 @@ export const createDiagnostic = ({
       resourceUri: targetResourceId,
       logAnalyticsDestinationType: 'AzureDiagnostics',
 
-      workspaceId: logWpId,
-      storageAccountId: logWpId ? undefined : logStorageId,
+      workspaceId: wpId,
+      storageAccountId: wpId ? undefined : logInfo.logStorage?.id,
 
       //Metric
       metrics: metricsCategories

@@ -45,10 +45,7 @@ export type VmSizeTypes =
   | 'Standard_E96-24ads_v5'
   | string;
 
-export type VmEncryptionType = Omit<
-  WithVmEncryption,
-  'vaultInfo' | 'envUIDInfo' | 'envRoles' | 'enableEncryption'
->;
+export type VmEncryptionType = Required<WithVmEncryption>;
 
 export interface IVmOsBuilder {
   withWindowsImage(props: VmOsBuilderWindowsProps): IVmSizeBuilder;
@@ -63,6 +60,7 @@ export interface IVmVnetBuilder {
   withSubnetId(props: Input<string>): IVmBuilder;
 }
 export interface IVmBuilder extends IBuilder<ResourceInfo> {
+  /** This must be enabled before resource be created*/
   enableEncryption(props: VmEncryptionType): IVmBuilder;
   withTags(props: Record<string, Input<string>>): IVmBuilder;
   withSchedule(props: VmScheduleType): IVmBuilder;

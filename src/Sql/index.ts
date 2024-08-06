@@ -9,6 +9,7 @@ import {
   BasicEncryptResourceArgs,
   BasicResourceArgs,
   LockableType,
+  LogInfo,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
   ResourceInfo,
@@ -83,11 +84,11 @@ export type SqlResults = ResourceInfo & {
   databases?: Record<string, ResourceInfoWithInstance<sql.Database>>;
 };
 
-export type SqlVulnerabilityAssessmentType = {
+export type SqlVulnerabilityAssessmentType = Pick<LogInfo, 'logStorage'> & {
   alertEmails: Array<string>;
-  logStorageId: Input<string>;
-  storageAccessKey: Input<string>;
-  storageEndpoint: Input<string>;
+  // logStorageId: Input<string>;
+  // storageAccessKey: Input<string>;
+  // storageEndpoint: Input<string>;
 };
 
 interface Props extends BasicEncryptResourceArgs, LockableType {
@@ -238,21 +239,12 @@ export default ({
     );
   }
 
-  if (vulnerabilityAssessment) {
+  if (vulnerabilityAssessment?.logStorage) {
     //Grant Storage permission
-    if (vulnerabilityAssessment.logStorageId) {
-      envRoles?.addMember(
-        'contributor',
-        sqlServer.identity.apply((i) => i!.principalId!),
-      );
-      // roleAssignment({
-      //   name,
-      //   principalId: sqlServer.identity.apply((i) => i?.principalId || ''),
-      //   principalType: 'ServicePrincipal',
-      //   roleName: 'Storage Blob Data Contributor',
-      //   scope: vulnerabilityAssessment.logStorageId,
-      // });
-    }
+    envRoles?.addMember(
+      'contributor',
+      sqlServer.identity.apply((i) => i!.principalId!),
+    );
 
     //ServerSecurityAlertPolicy
     const alertPolicy = new sql.ServerSecurityAlertPolicy(
@@ -266,8 +258,8 @@ export default ({
 
         retentionDays: 7,
 
-        storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
-        storageEndpoint: vulnerabilityAssessment.storageEndpoint,
+        storageAccountAccessKey: vulnerabilityAssessment.logStorage.primaryKey,
+        storageEndpoint: vulnerabilityAssessment.logStorage.endpoints.blob,
         state: 'Enabled',
       },
       { dependsOn: sqlServer },
@@ -294,9 +286,9 @@ export default ({
         state: 'Enabled',
         isDevopsAuditEnabled: true,
 
-        storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
+        storageAccountAccessKey: vulnerabilityAssessment.logStorage.primaryKey,
         storageAccountSubscriptionId: subscriptionId,
-        storageEndpoint: vulnerabilityAssessment.storageEndpoint,
+        storageEndpoint: vulnerabilityAssessment.logStorage.endpoints.blob,
       },
       { dependsOn: alertPolicy },
     );
@@ -315,8 +307,8 @@ export default ({
           emails: vulnerabilityAssessment.alertEmails,
         },
 
-        storageContainerPath: interpolate`${vulnerabilityAssessment.storageEndpoint}/${sqlName}`,
-        storageAccountAccessKey: vulnerabilityAssessment.storageAccessKey,
+        storageContainerPath: interpolate`${vulnerabilityAssessment.logStorage.endpoints.blob}/${sqlName}`,
+        storageAccountAccessKey: vulnerabilityAssessment.logStorage.primaryKey,
       },
       { dependsOn: alertPolicy },
     );

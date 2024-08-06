@@ -292,12 +292,7 @@ class VnetBuilder
           }
         : undefined,
 
-      monitorConfig: this.commonProps.logInfo?.logWp
-        ? {
-            logWpId: this.commonProps.logInfo.logWp.id,
-          }
-        : undefined,
-
+      logInfo: this.commonProps.logInfo,
       dependsOn:
         this._ipAddressInstance?.addressPrefix ??
         (this._ipAddressInstance?.addresses

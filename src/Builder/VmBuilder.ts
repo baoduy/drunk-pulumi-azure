@@ -104,7 +104,6 @@ class VmBuilder
       enableEncryption:
         Boolean(this._encryptionProps) || this.commonProps.enableEncryption,
       diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
-      encryptionAtHost: this._encryptionProps?.encryptionAtHost,
 
       subnetId: this._subnetProps!,
       vmSize: this._vmSize!,

@@ -11,9 +11,11 @@ import {
   AskFeatureProps,
   DefaultAksNodePoolProps,
 } from '../../Aks';
+import { WithVmEncryption } from '../../types';
 
 export type SshBuilderProps = Omit<SshGenerationProps, 'vaultInfo' | 'name'>;
 export type AksImportProps = { id: string; ignoreChanges?: string[] };
+export type AksEncryptionType = Required<WithVmEncryption>;
 
 export interface ISshBuilder {
   withNewSsh(props: SshBuilderProps): IAksNetworkBuilder;
@@ -31,6 +33,8 @@ export interface IAksBuilder extends IBuilderAsync<AksResults> {
   withAddon(props: AskAddonProps): IAksBuilder;
   withFeature(props: AskFeatureProps): IAksBuilder;
   withTier(tier: cs.ManagedClusterSKUTier): IAksBuilder;
+  /** This must be enabled before resource be created*/
+  enableEncryption(props: AksEncryptionType): IAksBuilder;
   import(props: AksImportProps): IAksBuilder;
   lock(): IBuilderAsync<AksResults>;
 }

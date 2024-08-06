@@ -1,30 +1,27 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 import { Input } from '@pulumi/pulumi';
-import { getFirewallName, isPrd, isDryRun } from '../Common';
-import ResourceCreator from '../Core/ResourceCreator';
-import { OptsArgs, BasicMonitorArgs, BasicResourceArgs } from '../types';
+import { getFirewallName, isPrd } from '../Common';
+import { BasicResourceArgs, LogInfo } from '../types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './types';
 import IpAddress from './IpAddress';
+import { createDiagnostic } from '../Logs/Helpers';
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
   /** The IDs of public Ip Address.*/
   publicIpAddressId?: pulumi.Input<string>;
 }
-
 export type FirewallSkus = {
   name: network.AzureFirewallSkuName;
   tier: network.AzureFirewallSkuTier;
 };
-
 export interface FirewallProps extends BasicResourceArgs {
   /** The public outbound IP address can be ignores this property if want to enable the Force Tunneling mode */
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
   management?: Pick<FwOutboundConfig, 'subnetId'>;
-
   snat?: {
     privateRanges?: Input<string>;
     autoLearnPrivateRanges?: boolean;
@@ -34,9 +31,9 @@ export interface FirewallProps extends BasicResourceArgs {
   policy: FirewallPolicyProps;
   enableDnsProxy?: boolean;
   sku?: FirewallSkus;
-  monitorConfig?: Omit<BasicMonitorArgs, 'dependsOn'>;
+  /**This is required in order to search firewall logs*/
+  logInfo?: LogInfo;
 }
-
 export type FirewallResult = {
   firewall: network.AzureFirewall;
   policy: network.FirewallPolicy | undefined;
@@ -49,13 +46,14 @@ export default ({
   policy,
   outbound,
   management,
-  monitorConfig,
+  logInfo,
   enableDnsProxy,
   sku = {
     name: network.AzureFirewallSkuName.AZFW_VNet,
     tier: network.AzureFirewallSkuTier.Basic,
   },
-  ...others
+  dependsOn,
+  ignoreChanges,
 }: FirewallProps): FirewallResult => {
   const fwName = getFirewallName(name);
 
@@ -97,50 +95,58 @@ export default ({
       })
     : undefined;
 
-  const { resource } = ResourceCreator(network.AzureFirewall, {
-    azureFirewallName: fwName,
-    ...group,
-    sku,
-    firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
-    zones: isPrd ? ['1', '2', '3'] : undefined,
+  const firewall = new network.AzureFirewall(
+    fwName,
+    {
+      azureFirewallName: fwName,
+      ...group,
+      sku,
+      firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
+      zones: isPrd ? ['1', '2', '3'] : undefined,
 
-    threatIntelMode:
-      sku.tier !== network.AzureFirewallSkuTier.Basic && sku.name !== 'AZFW_Hub'
-        ? network.AzureFirewallThreatIntelMode.Deny
+      threatIntelMode:
+        sku.tier !== network.AzureFirewallSkuTier.Basic &&
+        sku.name !== 'AZFW_Hub'
+          ? network.AzureFirewallThreatIntelMode.Deny
+          : undefined,
+
+      managementIpConfiguration:
+        management && manageIpAddress
+          ? {
+              name: 'management',
+              publicIPAddress: { id: manageIpAddress.id },
+              subnet: { id: management.subnetId },
+            }
+          : undefined,
+
+      ipConfigurations: outbound
+        ? outbound.map((o, i) => ({
+            name: `outbound-${i}`,
+            publicIPAddress: o.publicIpAddressId
+              ? { id: o.publicIpAddressId }
+              : undefined,
+            subnet: { id: o.subnetId },
+          }))
         : undefined,
 
-    managementIpConfiguration:
-      management && manageIpAddress
-        ? {
-            name: 'management',
-            publicIPAddress: { id: manageIpAddress.id },
-            subnet: { id: management.subnetId },
-          }
-        : undefined,
+      additionalProperties,
+    },
+    { dependsOn, ignoreChanges },
+  );
 
-    ipConfigurations: outbound
-      ? outbound.map((o, i) => ({
-          name: `outbound-${i}`,
-          publicIPAddress: o.publicIpAddressId
-            ? { id: o.publicIpAddressId }
-            : undefined,
-          subnet: { id: o.subnetId },
-        }))
-      : undefined,
-
-    additionalProperties,
-
-    monitoring: {
-      ...monitorConfig,
+  if (logInfo) {
+    createDiagnostic({
+      name,
+      targetResourceId: firewall.id,
+      logInfo,
       logsCategories: [
         'AzureFirewallApplicationRule',
         'AzureFirewallNetworkRule',
         'AzureFirewallDnsProxy',
       ],
-    },
-
-    ...others,
-  } as network.AzureFirewallArgs & OptsArgs);
+      dependsOn: firewall,
+    });
+  }
 
   //Link Rule to Policy
   if (fwPolicy && policy?.rules) {
@@ -149,9 +155,9 @@ export default ({
       //priority: 201,
       firewallPolicyName: fwPolicy.name,
       rules: policy.rules,
-      dependsOn: [fwPolicy, resource],
+      dependsOn: [fwPolicy, firewall],
     });
   }
 
-  return { firewall: resource as network.AzureFirewall, policy: fwPolicy };
+  return { firewall, policy: fwPolicy };
 };
