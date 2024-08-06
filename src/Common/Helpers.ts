@@ -43,26 +43,26 @@ export function isObject(item: any): boolean {
  * @param sources
  * @returns {T}
  */
-export function mergeDeep<T>(target: T, ...sources: any[]): T {
-  if (!sources.length) return target;
-
-  for (const source of sources) {
-    if (isObject(source)) {
-      for (const key of Object.keys(source)) {
-        const sourceValue = source[key];
-        const targetValue = (target as any)[key];
-
-        if (isObject(sourceValue)) {
-          if (!targetValue) {
-            (target as any)[key] = {};
-          }
-          mergeDeep((target as any)[key], sourceValue);
-        } else {
-          (target as any)[key] = sourceValue;
-        }
-      }
-    }
-  }
-
-  return target;
-}
+// export function mergeDeep<T>(target: T, ...sources: any[]): T {
+//   if (!sources.length) return target;
+//
+//   for (const source of sources) {
+//     if (isObject(source)) {
+//       for (const key of Object.keys(source)) {
+//         const sourceValue = source[key];
+//         const targetValue = (target as any)[key];
+//
+//         if (isObject(sourceValue)) {
+//           if (!targetValue) {
+//             (target as any)[key] = {};
+//           }
+//           mergeDeep((target as any)[key], sourceValue);
+//         } else {
+//           (target as any)[key] = sourceValue;
+//         }
+//       }
+//     }
+//   }
+//
+//   return target;
+// }

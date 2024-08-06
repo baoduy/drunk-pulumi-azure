@@ -5,7 +5,7 @@ import { KeyVaultInfo, NamedBasicArgs, NamedWithVaultType } from '../types';
 import { getSecret } from '../Common/ConfigHelper';
 
 interface Props extends Required<NamedWithVaultType> {
-  /** The value of the secret. If Value is not provided the secret will be get from config*/
+  /** The value of the secret. If Value is not provided the secret will be got from config*/
   value?: Input<string>;
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 }

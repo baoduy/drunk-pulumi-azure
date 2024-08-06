@@ -1,12 +1,11 @@
 import { EnvRolesInfo } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
 import {
+  EncryptResourceArgs,
   KeyVaultInfo,
   ResourceGroupInfo,
   ResourceInfo,
-  WithEnvRoles,
 } from '../../types';
-import { IEnvRoleBuilder } from './envRoleBuilder';
 import {
   BuilderProps,
   IBuilder,
@@ -21,11 +20,10 @@ import {
 } from './vnetBuilder';
 import { Input } from '@pulumi/pulumi';
 
-export type ResourceBuilderResults = BuilderProps &
-  WithEnvRoles & {
-    vnetInstance?: VnetBuilderResults;
-    otherInstances: Record<string, any>;
-  };
+export type ResourceBuilderResults = BuilderProps & {
+  vnetInstance?: VnetBuilderResults;
+  otherInstances: Record<string, any>;
+};
 
 export type BuilderFunctionType = (
   props: ResourceBuilderResults,
@@ -58,7 +56,7 @@ export interface IResourceGroupBuilder {
 export interface IResourceVaultBuilder {
   createVault(name?: string): IResourceBuilder;
   withVault(props: KeyVaultInfo): IResourceBuilder;
-  withVaultInfoFrom(name: string): IResourceBuilder;
+  withVaultFrom(name: string): IResourceBuilder;
 }
 
 export interface IResourceVaultItemsBuilder {
@@ -82,6 +80,7 @@ export interface IResourceBuilder
     IResourceVaultItemsBuilder,
     ILockable<IResourceBuilder> {
   enableEncryption(): IResourceBuilder;
+  withLogFrom(name: string): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
   withResource(builder: ResourceFunction): IResourceBuilder;

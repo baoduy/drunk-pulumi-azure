@@ -5,6 +5,7 @@ import { EnvRolesInfo } from '../AzAd/EnvRoles';
 import {
   IdentityInfo,
   KeyVaultInfo,
+  LogInfo,
   ResourceGroupInfo,
   ResourceInfo,
 } from '../types';
@@ -18,6 +19,7 @@ import { subscriptionId, getKeyVaultInfo, cleanName } from '../Common';
 import { CertBuilderType, IVaultBuilderResults } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
 import * as UIDCreator from '../AzAd/Identities/EnvUID';
+import { getLogInfo } from '../Logs/Helpers';
 
 class ResourceBuilder
   implements
@@ -32,6 +34,7 @@ class ResourceBuilder
   private _vnetInstance: types.VnetBuilderResults | undefined = undefined;
   private _otherResources: types.ResourceFunction[] = [];
   private _envUIDInfo: IdentityInfo | undefined = undefined;
+  private _logInfo: LogInfo | undefined = undefined;
 
   //Props
   private _createRGProps: RoleEnableTypes | undefined = undefined;
@@ -56,6 +59,7 @@ class ResourceBuilder
   private _pushEnvToVault: boolean = false;
   private _createEnvUID: boolean = false;
   private _loadEnvUIDFromVault: boolean = false;
+  private _loadLogInfoFrom: string | undefined = undefined;
 
   constructor(public name: string) {}
 
@@ -103,9 +107,10 @@ class ResourceBuilder
     this._vaultInfo = VaultBuilderResults.from(props);
     return this;
   }
-  public withVaultInfoFrom(name: string): types.IResourceBuilder {
+  public withVaultFrom(name: string): types.IResourceBuilder {
     return this.withVault(getKeyVaultInfo(name));
   }
+
   public linkVaultTo(
     props: types.ResourceVaultLinkingBuilderType,
   ): types.IResourceBuilder {
@@ -132,6 +137,10 @@ class ResourceBuilder
   }
   public enableEncryption(): types.IResourceBuilder {
     this._enableEncryption = true;
+    return this;
+  }
+  public withLogFrom(name: string): types.IResourceBuilder {
+    this._loadLogInfoFrom = name;
     return this;
   }
 
@@ -211,6 +220,11 @@ class ResourceBuilder
     //Add Secrets to Vaults
     if (this._secrets) this._vaultInfo!.addSecrets(this._secrets);
     if (this._certs) this._vaultInfo!.addCerts(this._certs);
+  }
+
+  private buildLogInfo() {
+    if (!this._loadLogInfoFrom || this._logInfo) return;
+    this._logInfo = getLogInfo(this._loadLogInfoFrom, this._vaultInfo);
   }
 
   private buildEnvUID() {
@@ -299,6 +313,7 @@ class ResourceBuilder
       enableEncryption: this._enableEncryption,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,
+      logInfo: this._logInfo,
       dependsOn: this._RGInstance,
     };
   }
@@ -307,6 +322,7 @@ class ResourceBuilder
     this.buildRoles();
     this.buildRG();
     this.buildVault();
+    this.buildLogInfo();
     this.buildEnvUID();
     this.buildVnet();
     this.buildVaultLinking();

@@ -13,7 +13,7 @@ import {
   SqlVulnerabilityAssessmentType,
 } from '../../Sql';
 import { SqlDbProps, SqlDbSku } from '../../Sql/SqlDb';
-import { LogStorageInfo } from '../../Logs/Helpers';
+import { StorageInfo } from '../../types';
 
 export type SqlBuilderAuthOptionsType = Omit<
   SqlAuthType,
@@ -35,7 +35,7 @@ export type FullSqlDbPropsType = Omit<
 >;
 
 export type SqlBuilderVulnerabilityAssessmentType = {
-  logInfo: LogStorageInfo;
+  logInfo: StorageInfo;
 } & Pick<SqlVulnerabilityAssessmentType, 'alertEmails'>;
 
 export interface ISqlLoginBuilder extends ILoginBuilder<ISqlAuthBuilder> {}

@@ -62,6 +62,7 @@ export default ({
   if (vaultInfo) {
     addCustomSecret({
       name,
+      formattedName: true,
       value: appInsight.instrumentationKey,
       vaultInfo,
       contentType: 'AppInsight',

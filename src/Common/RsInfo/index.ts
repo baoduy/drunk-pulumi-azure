@@ -8,6 +8,7 @@ import {
   subscriptionId,
 } from '../AzureEnv';
 import {
+  ConventionProps,
   ResourceGroupInfo,
   ResourceInfo,
   ResourceInfoWithSub,

@@ -25,8 +25,10 @@ export type ResourceGroupWithIdInfo = ResourceGroupInfo & {
   id: Input<string>;
 };
 
-export type OptsArgs = {
+export type WithDependsOn = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
+};
+export type OptsArgs = WithDependsOn & {
   importUri?: string;
   ignoreChanges?: string[];
 };
@@ -52,7 +54,6 @@ export type WithEncryptionInfo = WithEnvRoles &
 export type WithPulumiOpts = { opts?: CustomResourceOptions };
 
 export type LoginWithEnvRolesArgs = LoginArgs & WithEnvRoles;
-
 export type NamedWithVaultType = WithNamedType & WithVaultInfo;
 export type NamedBasicArgs = WithNamedType & OptsArgs;
 export type NamedWithVaultBasicArgs = NamedWithVaultType & OptsArgs;
@@ -73,6 +74,37 @@ export type ResourceInfo = BasicResourceInfo & ResourceArgs;
 export type ResourceInfoWithSub = ResourceInfo & WithSubId;
 export type KeyVaultInfo = ResourceInfo;
 export type IdentityInfo = WithOutputId & WithPrincipalId;
+//Log info
+export type StorageConnectionInfo = {
+  primaryConnection?: Output<string>;
+  secondaryConnection?: Output<string>;
+  primaryKey?: Output<string>;
+  secondaryKey?: Output<string>;
+};
+export type StorageInfo = ResourceInfo &
+  StorageConnectionInfo & {
+    endpoints: {
+      blob: string;
+      file: string;
+      table: string;
+    };
+  };
+export type AppInsightSecretsInfo = {
+  instrumentationKey?: Output<string>;
+};
+export type AppInsightInfo = ResourceInfo & AppInsightSecretsInfo;
+export type LogWorkspaceSecretsInfo = {
+  primarySharedKey?: Output<string>;
+  secondarySharedKey?: Output<string>;
+  workspaceId?: Output<string>;
+};
+export type LogWorkspaceInfo = ResourceInfo & LogWorkspaceSecretsInfo;
+export type LogInfo = {
+  logWp: LogWorkspaceInfo;
+  logStorage: StorageInfo;
+  appInsight: AppInsightInfo;
+};
+
 export interface IdentityInfoWithInstance<InstanceType>
   extends IdentityInfo,
     WithInstance<InstanceType> {}
@@ -80,6 +112,7 @@ export interface IdentityInfoWithInstance<InstanceType>
 export interface WithInstance<InstanceType> {
   instance: InstanceType;
 }
+
 /** Basic vs Info is Basic doesn't required of group info*/
 export interface BasicResourceInfoWithInstance<InstanceType>
   extends WithInstance<InstanceType>,

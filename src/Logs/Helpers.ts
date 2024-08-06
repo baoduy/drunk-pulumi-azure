@@ -1,23 +1,24 @@
 import * as native from '@pulumi/azure-native';
-import { Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { Input, interpolate } from '@pulumi/pulumi';
 import {
   currentRegionName,
-  rsInfo,
   naming,
   getResourceName,
   defaultSubScope,
 } from '../Common';
-import { getSecret } from '../KeyVault/Helper';
-import { getStorageSecrets, StorageConnectionInfo } from '../Storage/Helper';
+import { getSecrets } from '../KeyVault/Helper';
+import { getStorageInfo } from '../Storage/Helper';
 import {
   DiagnosticProps,
   KeyVaultInfo,
   WithNamedType,
-  ResourceGroupInfo,
-  ResourceInfo,
   ResourceWithVaultArgs,
+  LogWorkspaceSecretsInfo,
+  AppInsightSecretsInfo,
+  AppInsightInfo,
+  LogWorkspaceInfo,
+  LogInfo,
 } from '../types';
-import { getAppInsightKey } from './AppInsight';
 
 export const createDiagnostic = ({
   name,
@@ -90,150 +91,80 @@ export const createThreatProtection = ({
 
 //========================Log WP===========================
 
-export const getLogWpSecrets = async ({
-  fullName,
+const getLogWpSecrets = ({
+  workspaceName,
   vaultInfo,
 }: {
-  fullName: string;
+  workspaceName: string;
   vaultInfo: KeyVaultInfo;
-}) => {
-  const workspaceIdKeyName = `${fullName}-Id`;
-  const primaryKeyName = naming.getKeyName(fullName, 'primary');
-  const secondaryKeyName = naming.getKeyName(fullName, 'secondary');
+}): LogWorkspaceSecretsInfo => {
+  const workspaceId = `${workspaceName}-Id`;
+  const primarySharedKey = `${workspaceName}-primary`;
+  const secondarySharedKey = `${workspaceName}-secondary`;
 
-  const [wpId, primaryKey, secondaryKey] = await Promise.all([
-    getSecret({
-      name: workspaceIdKeyName,
-      nameFormatted: true,
-      vaultInfo,
-    }).then((i) => i?.value),
-    getSecret({ name: primaryKeyName, nameFormatted: true, vaultInfo }).then(
-      (i) => i?.value,
-    ),
-    getSecret({ name: secondaryKeyName, nameFormatted: true, vaultInfo }).then(
-      (i) => i?.value,
-    ),
-  ]);
-
-  return { wpId, primaryKey, secondaryKey };
+  return getSecrets({
+    nameFormatted: true,
+    vaultInfo,
+    names: { workspaceId, primarySharedKey, secondarySharedKey },
+  });
 };
 
-export const getLogWpSecretsById = async ({
-  logWpId,
-  vaultInfo,
-}: {
-  logWpId: string;
-  vaultInfo: KeyVaultInfo;
-}) => {
-  const info = rsInfo.getResourceInfoFromId(logWpId);
-  const secrets = info
-    ? await getLogWpSecrets({ fullName: info.name, vaultInfo })
-    : undefined;
-
-  return secrets ? { info, secrets } : undefined;
-};
-
-export type LogWpInfo = ResourceInfo & {
-  secrets?: Output<{
-    wpId: string | undefined;
-    secondaryKey: string | undefined;
-    primaryKey: string | undefined;
-  }>;
-};
-
-export const getLogWpInfo = ({
-  logWpName,
-  vaultInfo,
-  group,
-}: {
-  logWpName: string;
-  group: ResourceGroupInfo;
-  vaultInfo?: KeyVaultInfo;
-}): LogWpInfo => {
-  const n = naming.getLogWpName(logWpName);
-  const id = interpolate`${defaultSubScope}/resourcegroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${n}`;
-
-  const secrets = vaultInfo
-    ? output(getLogWpSecrets({ fullName: n, vaultInfo }))
-    : undefined;
-
-  return { name: n, group, id, secrets };
-};
-
-//========================Log Storage===========================
-export type LogStorageInfo = ResourceInfo & {
-  secrets?: Output<StorageConnectionInfo>;
-};
-
-export const getLogStorageInfo = ({
-  storageName,
+const getLogWpInfo = ({
+  name,
   group,
   vaultInfo,
-}: {
-  storageName: string;
-  group: ResourceGroupInfo;
-  vaultInfo?: KeyVaultInfo;
-}): LogStorageInfo => {
-  const n = naming.getStorageName(storageName);
-  const id = interpolate`${defaultSubScope}/resourcegroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${n}`;
+}: ResourceWithVaultArgs): LogWorkspaceInfo => {
+  const n = naming.getLogWpName(naming.cleanName(name));
+  const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${n}`;
 
   const secrets = vaultInfo
-    ? output(getStorageSecrets({ name: n, nameFormatted: true, vaultInfo }))
-    : undefined;
-
-  return { name: n, group, id, secrets };
+    ? getLogWpSecrets({ workspaceName: n, vaultInfo })
+    : {};
+  return { name: n, group, id, ...secrets };
 };
 
-//========================App Insight===========================
-export type AppInsightInfo = ResourceInfo & {
-  instrumentationKey?: Output<string>;
-};
+const getAppInsightSecrets = ({
+  insightName,
+  vaultInfo,
+}: {
+  insightName: string;
+  vaultInfo: KeyVaultInfo;
+}): AppInsightSecretsInfo =>
+  getSecrets({
+    nameFormatted: true,
+    vaultInfo,
+    names: { instrumentationKey: insightName },
+  });
 
-export const getAppInsightInfo = ({
+const getAppInsightInfo = ({
   name,
   group,
   vaultInfo,
 }: ResourceWithVaultArgs): AppInsightInfo => {
-  const n = naming.getAppInsightName(name);
+  const n = naming.getAppInsightName(naming.cleanName(name));
   const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
 
-  const instrumentationKey = vaultInfo
-    ? output(
-        getAppInsightKey({
-          resourceInfo: { name: n, group, id },
-          vaultInfo,
-        }),
-      )
-    : undefined;
-
-  return { name: n, group, id, instrumentationKey };
-};
-
-export type LogInfoResults = {
-  logWp: LogWpInfo;
-  logStorage: LogStorageInfo;
-  appInsight: AppInsightInfo;
+  const secrets = vaultInfo
+    ? getAppInsightSecrets({ insightName: n, vaultInfo })
+    : {};
+  return { name: n, group, id, ...secrets };
 };
 
 export const getLogInfo = (
   groupName: string,
   vaultInfo: KeyVaultInfo | undefined = undefined,
-): LogInfoResults => {
+): LogInfo => {
   const rgName = naming.getResourceGroupName(groupName);
-  const name = getResourceName(groupName, { suffix: 'logs' });
+  const name = getResourceName(naming.cleanName(groupName), { suffix: 'logs' });
   const group = { resourceGroupName: rgName, location: currentRegionName };
 
   const logWp = getLogWpInfo({
-    logWpName: name,
+    name,
     vaultInfo,
     group,
   });
 
-  const logStorage = getLogStorageInfo({
-    storageName: name,
-    vaultInfo,
-    group,
-  });
+  const logStorage = getStorageInfo({ name, group, vaultInfo });
 
   const appInsight = getAppInsightInfo({
     name,

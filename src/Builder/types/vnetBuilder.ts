@@ -3,7 +3,7 @@ import * as network from '@pulumi/azure-native/network';
 import { IBuilder, OmitBuilderProps } from './genericBuilder';
 import { VnetProps, VnetResult } from '../../VNet/Vnet';
 import { SubnetProps } from '../../VNet/Subnet';
-import { BasicResourceArgs } from '../../types';
+import { BasicResourceArgs, LogInfo } from '../../types';
 import {
   PeeringDirectionType,
   PeeringOptions,
@@ -11,7 +11,6 @@ import {
 import { FirewallProps, FirewallResult } from '../../VNet/Firewall';
 import { VpnGatewayProps } from '../../VNet/VPNGateway';
 import { CustomSecurityRuleArgs, RouteArgs } from '../../VNet/types';
-import { LogInfoResults } from '../../Logs/Helpers';
 import { PublicIpAddressPrefixResult } from '../../VNet/IpAddressPrefix';
 import { IPrivateDnsZoneBuilder } from './privateDnsZoneBuilder';
 
@@ -86,7 +85,7 @@ export interface IVnetBuilder extends IBuilder<VnetBuilderResults> {
   ): IVnetBuilder;
   withSecurityRules(...rules: CustomSecurityRuleArgs[]): IVnetBuilder;
   withRouteRules(...rules: RouteArgs[]): IVnetBuilder;
-  withLogInfo(info: LogInfoResults): IVnetBuilder;
+  // withLogInfo(info: LogInfo): IVnetBuilder;
   withVpnGateway(props: VpnGatewayCreationProps): IVnetBuilder;
   peeringTo(props: PeeringProps): IVnetBuilder;
 }

@@ -1,4 +1,4 @@
-import { getResourceGroupName, getSqlServerName } from '../Common/Naming';
+import { getResourceGroupName, getSqlServerName } from '../Common';
 
 export const getSqlServerInfo = ({
   name,

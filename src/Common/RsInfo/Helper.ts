@@ -7,9 +7,10 @@ type ResourceNamingType = Omit<
   NamingType,
   'cleanName' | 'getResourceGroupName'
 >;
+
 type ResourceNamingFunc = (
   groupName: string,
-  convention?: ConventionProps,
+  resourceNameOrConvention?: string | ConventionProps,
 ) => Omit<ResourceInfo, 'id'>;
 
 const resourceNamingCreator = () => {
@@ -19,13 +20,14 @@ const resourceNamingCreator = () => {
     const formater = (naming as any)[k];
     rs[k] = (
       groupName: string,
-      convention: ConventionProps = {},
+      resourceNameOrConvention?: string | ConventionProps,
     ): Omit<ResourceInfo, 'id'> => {
-      const resourceName = formater(
-        naming.cleanName(groupName),
-        convention,
-      ) as string;
       const rgName = naming.getResourceGroupName(groupName);
+      const resourceName =
+        typeof resourceNameOrConvention === 'string'
+          ? formater(naming.cleanName(resourceNameOrConvention))
+          : formater(naming.cleanName(groupName), resourceNameOrConvention);
+
       return {
         name: resourceName,
         group: { resourceGroupName: rgName, location: currentRegionCode },

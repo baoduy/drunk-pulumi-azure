@@ -20,8 +20,8 @@ export default ({
 }: Props) => {
   name = getLogWpName(name);
   const workspaceIdKeyName = `${name}-Id`;
-  const primaryKeyName = getKeyName(name, 'primary');
-  const secondaryKeyName = getKeyName(name, 'secondary');
+  const primaryKeyName = `${name}-primary`;
+  const secondaryKeyName = `${name}-secondary`;
 
   const log = new insights.Workspace(
     name,

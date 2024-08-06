@@ -128,10 +128,7 @@ class SqlBuilder
   }
 
   private buildSql() {
-    if (
-      this._vulnerabilityAssessment &&
-      !this._vulnerabilityAssessment.logInfo.secrets
-    )
+    if (this._vulnerabilityAssessment && !this._vulnerabilityAssessment.logInfo)
       throw new Error(
         "The LogInfo's secrets are required to enable the vulnerability assessment.",
       );
@@ -143,14 +140,14 @@ class SqlBuilder
         ...this._loginInfo!,
         envRoles: this.commonProps.envRoles,
       },
-      vulnerabilityAssessment: this._vulnerabilityAssessment
+      vulnerabilityAssessment: this._vulnerabilityAssessment?.logInfo
+        ?.primaryKey
         ? {
             logStorageId: this._vulnerabilityAssessment.logInfo.id,
             alertEmails: this._vulnerabilityAssessment.alertEmails,
-            storageAccessKey:
-              this._vulnerabilityAssessment.logInfo.secrets!.primaryKey!,
+            storageAccessKey: this._vulnerabilityAssessment.logInfo.primaryKey,
             storageEndpoint:
-              this._vulnerabilityAssessment.logInfo.secrets!.endpoints.blob!,
+              this._vulnerabilityAssessment.logInfo.endpoints.blob,
           }
         : undefined,
       network: this._networkProps,

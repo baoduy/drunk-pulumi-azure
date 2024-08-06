@@ -1,8 +1,11 @@
-import { SkuType } from "@pulumi/azure-native/apimanagement";
-import { Input } from "@pulumi/pulumi";
-import { IBuilder } from "./genericBuilder";
-import { PrivateLinkPropsType, ResourceInfo } from "../../types";
-import { AppInsightInfo } from "../../Logs/Helpers";
+import { SkuType } from '@pulumi/azure-native/apimanagement';
+import { Input } from '@pulumi/pulumi';
+import { IBuilder } from './genericBuilder';
+import {
+  AppInsightInfo,
+  PrivateLinkPropsType,
+  ResourceInfo,
+} from '../../types';
 
 export type ApimSkuBuilderType = {
   sku: SkuType;
@@ -14,7 +17,7 @@ export type ApimPublisherBuilderType = {
   publisherName?: Input<string>;
   /** default is apimgmt-noreply@mail.windowsazure.com */
   notificationSenderEmail?:
-    | "apimgmt-noreply@mail.windowsazure.com"
+    | 'apimgmt-noreply@mail.windowsazure.com'
     | Input<string>;
 };
 export type ApimCertBuilderType = {
@@ -29,7 +32,7 @@ export type ApimAdditionalLocationType = {
   location: string;
 };
 
-export type ApimZoneType = ["1", "2"] | ["1", "2", "3"];
+export type ApimZoneType = ['1', '2'] | ['1', '2', '3'];
 export type ApimVnetType = {
   enableGateway?: Input<boolean>;
   subnetId: Input<string>;
@@ -38,7 +41,7 @@ export type ApimVnetType = {
    * External means the API Management deployment is set up inside a Virtual Network having an Internet Facing Endpoint,
    * and Internal means that API Management deployment is setup inside a Virtual Network having an Intranet Facing Endpoint only.
    * */
-  type: "External" | "Internal";
+  type: 'External' | 'Internal';
 };
 export type ApimPrivateLinkType = PrivateLinkPropsType & {
   disablePublicAccess?: boolean;
@@ -48,12 +51,12 @@ export type ApimAuthType = {
   clientSecret: Input<string>;
   authority?: Input<string>;
   type:
-    | "facebook"
-    | "google"
-    | "microsoft"
-    | "twitter"
-    | "aad"
-    | "aadB2C"
+    | 'facebook'
+    | 'google'
+    | 'microsoft'
+    | 'twitter'
+    | 'aad'
+    | 'aadB2C'
     | string;
 };
 

@@ -11,13 +11,12 @@ import NatGateway from '../VNet/NatGateway';
 import * as pulumi from '@pulumi/pulumi';
 import { input as inputs } from '@pulumi/azure-native/types';
 import NetworkPeering from '../VNet/NetworkPeering';
-import { LogInfoResults } from '../Logs/Helpers';
 import VPNGateway from '../VNet/VPNGateway';
 import PrivateDnsZoneBuilder from './PrivateDnsZoneBuilder';
 import * as types from './types';
 import Bastion from '../VNet/Bastion';
 import { rsInfo } from '../Common';
-import { ResourceInfo, ResourceInfoWithSub } from '../types';
+import { LogInfo, ResourceInfo, ResourceInfoWithSub } from '../types';
 import { FirewallCreationProps, IGatewayFireWallBuilder } from './types';
 import { Input } from '@pulumi/pulumi';
 
@@ -54,7 +53,7 @@ class VnetBuilder
   private _routeRules: pulumi.Input<inputs.network.RouteArgs>[] = [];
   private _enableRoute: boolean = false;
   private _peeringProps: types.PeeringProps[] = [];
-  private _logInfo: LogInfoResults | undefined = undefined;
+  //private _logInfo: LogInfo | undefined = undefined;
   private _ipType: 'prefix' | 'individual' | 'existing' = 'individual';
   private _privateDns: Record<
     string,
@@ -151,10 +150,10 @@ class VnetBuilder
     return this;
   }
 
-  public withLogInfo(info: LogInfoResults): types.IVnetBuilder {
-    this._logInfo = info;
-    return this;
-  }
+  // public withLogInfo(info: LogInfo): types.IVnetBuilder {
+  //   this._logInfo = info;
+  //   return this;
+  // }
 
   /** Builders methods */
   private buildIpAddress() {
@@ -293,9 +292,9 @@ class VnetBuilder
           }
         : undefined,
 
-      monitorConfig: this._logInfo
+      monitorConfig: this.commonProps.logInfo?.logWp
         ? {
-            logWpId: this._logInfo.logWp.id,
+            logWpId: this.commonProps.logInfo.logWp.id,
           }
         : undefined,
 

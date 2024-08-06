@@ -1,18 +1,15 @@
 //Common Builder Types
-import { Input, Resource } from '@pulumi/pulumi';
 import {
   EncryptResourceArgs,
   LoginArgs,
+  LogInfo,
   ResourceInfo,
   TypeOmit,
-  WithEnvRoles,
+  WithDependsOn,
 } from '../../types';
-import { IEnvRoleBuilder } from './envRoleBuilder';
 
-export type BuilderProps = EncryptResourceArgs & {
-  dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
-};
-
+export type BuilderProps = EncryptResourceArgs &
+  WithDependsOn & { logInfo?: LogInfo };
 export type OmitBuilderProps<T> = TypeOmit<T, BuilderProps>;
 
 export interface ILoginBuilder<IReturnInterface> {
