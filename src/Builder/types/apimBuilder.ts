@@ -1,11 +1,9 @@
 import { SkuType } from '@pulumi/azure-native/apimanagement';
 import { Input } from '@pulumi/pulumi';
-import { IBuilder } from './genericBuilder';
-import {
-  AppInsightInfo,
-  PrivateLinkPropsType,
-  ResourceInfo,
-} from '../../types';
+import { BuilderProps, IBuilder } from './genericBuilder';
+import { PrivateLinkPropsType, ResourceInfo, WithLogInfo } from '../../types';
+
+export type ApimBuilderArgs = BuilderProps & WithLogInfo;
 
 export type ApimSkuBuilderType = {
   sku: SkuType;
@@ -75,7 +73,7 @@ export interface IApimBuilder extends IBuilder<ResourceInfo>, IApimAuthBuilder {
   withCACert(props: ApimCertBuilderType): IApimBuilder;
   withRootCert(props: ApimCertBuilderType): IApimBuilder;
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
-  withInsightLog(props: AppInsightInfo): IApimBuilder;
+  //withInsightLog(props: AppInsightInfo): IApimBuilder;
   /**Allows multi locations*/
   withAdditionalLocation(props: ApimAdditionalLocationType): IApimBuilder;
   withZones(props: ApimZoneType): IApimBuilder;

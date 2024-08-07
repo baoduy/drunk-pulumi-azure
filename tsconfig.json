@@ -168,7 +168,6 @@
     "src/VNet/SecurityGroup.ts",
     "src/VNet/Subnet.ts",
     "src/VNet/VPNGateway.ts",
-    "src/VNet/VirtualWAN.ts",
     "src/VNet/Vnet.ts",
     "src/VNet/types.ts",
     "src/Web/AppCertOrder.ts",

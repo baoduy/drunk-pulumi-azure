@@ -5,7 +5,12 @@ import {
   WithLogInfo,
 } from '../../types';
 import { VmScheduleType } from '../../VM';
-import { BuilderProps, IBuilder, ILoginBuilder } from './genericBuilder';
+import {
+  BuilderProps,
+  IBuilder,
+  IIgnoreChanges,
+  ILoginBuilder,
+} from './genericBuilder';
 import { Input } from '@pulumi/pulumi';
 
 export type VmBuilderArgs = BuilderProps & WithEncryption;
@@ -65,7 +70,9 @@ export interface IVmLoginBuilder extends ILoginBuilder<IVmVnetBuilder> {}
 export interface IVmVnetBuilder {
   withSubnetId(props: Input<string>): IVmBuilder;
 }
-export interface IVmBuilder extends IBuilder<ResourceInfo> {
+export interface IVmBuilder
+  extends IBuilder<ResourceInfo>,
+    IIgnoreChanges<IVmBuilder> {
   /** This must be enabled before resource be created*/
   enableEncryption(props: VmEncryptionType): IVmBuilder;
   withTags(props: Record<string, Input<string>>): IVmBuilder;

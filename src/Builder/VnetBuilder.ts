@@ -258,8 +258,8 @@ class VnetBuilder
       },
 
       //networkPeerings: peerings,
-      dependsOn: this._firewallInstance?.firewall
-        ? this._firewallInstance?.firewall
+      dependsOn: this._firewallInstance?.instance
+        ? this._firewallInstance?.instance
         : this._natGatewayInstance,
     });
   }

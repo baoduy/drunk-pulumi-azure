@@ -1,4 +1,4 @@
-import { Input } from '@pulumi/pulumi';
+import { Input, Output } from '@pulumi/pulumi';
 import {
   EnvRolesInfo,
   createEnvRoles,
@@ -23,7 +23,11 @@ export class EnvRoleBuilder implements IEnvRoleBuilder {
   public get admin() {
     return this.props.admin;
   }
-  addMember(type: EnvRoleKeyTypes, memberId: Input<string>): IEnvRoleBuilder {
+
+  public addMember(
+    type: EnvRoleKeyTypes,
+    memberId: Input<string>,
+  ): IEnvRoleBuilder {
     addMemberToGroup({
       name: type,
       groupObjectId: this.props[type].objectId,
@@ -32,7 +36,19 @@ export class EnvRoleBuilder implements IEnvRoleBuilder {
 
     return this;
   }
-  pushTo(vaultInfo: KeyVaultInfo): IEnvRoleBuilder {
+
+  public addIdentity(
+    type: EnvRoleKeyTypes,
+    identity: Output<{ principalId: string } | undefined>,
+  ): IEnvRoleBuilder {
+    identity.apply((id) => {
+      if (!id) return;
+      this.addMember(type, id.principalId);
+    });
+    return this;
+  }
+
+  public pushTo(vaultInfo: KeyVaultInfo): IEnvRoleBuilder {
     pushEnvRolesToVault(this.props, vaultInfo);
     return this;
   }

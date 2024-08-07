@@ -26,7 +26,7 @@ export default ({
     group,
     dependsOn,
   });
-  envRoles?.addMember('readOnly', identity.principalId);
+  envRoles?.addMember('contributor', identity.principalId);
 
   const encryption =
     enableEncryption && vaultInfo
@@ -65,6 +65,7 @@ export default ({
     },
     { dependsOn: identity.instance, ignoreChanges },
   );
+  envRoles?.addIdentity('contributor', auto.identity);
 
   return {
     name,

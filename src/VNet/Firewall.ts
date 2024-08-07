@@ -2,7 +2,7 @@ import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 import { Input } from '@pulumi/pulumi';
 import { getFirewallName, isPrd } from '../Common';
-import { BasicResourceArgs, LogInfo } from '../types';
+import { BasicResourceArgs, LogInfo, ResourceInfoWithInstance } from '../types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './types';
 import IpAddress from './IpAddress';
@@ -18,7 +18,7 @@ export type FirewallSkus = {
   tier: network.AzureFirewallSkuTier;
 };
 export interface FirewallProps extends BasicResourceArgs {
-  /** The public outbound IP address can be ignores this property if want to enable the Force Tunneling mode */
+  /** The public outbound IP address can be ignored this property if we want to enable the Force Tunneling mode */
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
   management?: Pick<FwOutboundConfig, 'subnetId'>;
@@ -34,8 +34,7 @@ export interface FirewallProps extends BasicResourceArgs {
   /**This is required in order to search firewall logs*/
   logInfo?: LogInfo;
 }
-export type FirewallResult = {
-  firewall: network.AzureFirewall;
+export type FirewallResult = ResourceInfoWithInstance<network.AzureFirewall> & {
   policy: network.FirewallPolicy | undefined;
 };
 
@@ -55,7 +54,7 @@ export default ({
   dependsOn,
   ignoreChanges,
 }: FirewallProps): FirewallResult => {
-  const fwName = getFirewallName(name);
+  name = getFirewallName(name);
 
   //Create Public IpAddress for Management
   const manageIpAddress = management
@@ -96,9 +95,9 @@ export default ({
     : undefined;
 
   const firewall = new network.AzureFirewall(
-    fwName,
+    name,
     {
-      azureFirewallName: fwName,
+      azureFirewallName: name,
       ...group,
       sku,
       firewallPolicy: fwPolicy ? { id: fwPolicy.id } : undefined,
@@ -159,5 +158,5 @@ export default ({
     });
   }
 
-  return { firewall, policy: fwPolicy };
+  return { name, group, id: firewall.id, instance: firewall, policy: fwPolicy };
 };
