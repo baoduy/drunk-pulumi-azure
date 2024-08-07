@@ -16,10 +16,15 @@ import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
 import { subscriptionId, getKeyVaultInfo, cleanName } from '../Common';
-import { CertBuilderType, IVaultBuilderResults } from './types/vaultBuilder';
+import {
+  CertBuilderType,
+  IVaultBuilderResults,
+  VaultBuilderSecretType,
+} from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
 import * as UIDCreator from '../AzAd/Identities/EnvUID';
 import { getLogInfo } from '../Logs/Helpers';
+import { requireSecret } from '../Common/ConfigHelper';
 
 class ResourceBuilder
   implements
@@ -118,9 +123,12 @@ class ResourceBuilder
     return this;
   }
 
-  public addSecrets(
-    items: Record<string, Input<string>>,
-  ): types.IResourceBuilder {
+  public addSecrets(items: VaultBuilderSecretType): types.IResourceBuilder {
+    if (typeof items === 'string') {
+      const key = items as string;
+      const val = requireSecret(key);
+      items = { [key]: val };
+    }
     this._secrets = { ...this._secrets, ...items };
     return this;
   }

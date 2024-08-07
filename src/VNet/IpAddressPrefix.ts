@@ -2,7 +2,7 @@ import * as network from '@pulumi/azure-native/network';
 import { PublicIPAddress } from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
 import { getIpAddressPrefixName } from '../Common';
-import {Locker} from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 import { BasicResourceArgs, WithNamedType } from '../types';
 import IpAddress from './IpAddress';
 
@@ -37,6 +37,7 @@ export default ({
     version: network.IPVersion.IPv4,
     allocationMethod: network.IPAllocationMethod.Static,
   },
+  dependsOn,
   lock = true,
 }: PublicIpAddressPrefixProps): PublicIpAddressPrefixResult => {
   const n = getIpAddressPrefixName(name);
@@ -51,7 +52,7 @@ export default ({
           prefixLength,
           sku,
         },
-        { ignoreChanges: ['prefixLength'] },
+        { dependsOn, ignoreChanges: ['prefixLength'] },
       )
     : undefined;
 
@@ -73,6 +74,7 @@ export default ({
         group,
         publicIPPrefix: addressPrefix,
         lock,
+        dependsOn,
       });
     });
   }

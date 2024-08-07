@@ -38,6 +38,7 @@ class VmBuilder
   private _encryptionProps: VmEncryptionType | undefined = undefined;
 
   private _vmInstance: VirtualMachine | undefined = undefined;
+  private _ignoreChanges: string[] | undefined = undefined;
 
   constructor(private args: VmBuilderArgs) {
     super(args);
@@ -79,6 +80,10 @@ class VmBuilder
     this._linuxImage = props;
     return this;
   }
+  public ignoreChangesFrom(...props: string[]): IVmBuilder {
+    this._ignoreChanges = props;
+    return this;
+  }
 
   private buildLogin() {
     if (!this._generateLogin) return;
@@ -113,6 +118,7 @@ class VmBuilder
       login: this._loginProps!,
       schedule: this._schedule,
       tags: this._tagsProps,
+      ignoreChanges: this._ignoreChanges,
     });
   }
 

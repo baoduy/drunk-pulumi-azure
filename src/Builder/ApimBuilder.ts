@@ -1,19 +1,4 @@
-import {
-  ApimAdditionalLocationType,
-  ApimAuthType,
-  ApimCertBuilderType,
-  ApimDomainBuilderType,
-  ApimPrivateLinkType,
-  ApimPublisherBuilderType,
-  ApimSkuBuilderType,
-  ApimVnetType,
-  ApimZoneType,
-  Builder,
-  BuilderProps,
-  IApimBuilder,
-  IApimPublisherBuilder,
-  IApimSkuBuilder,
-} from './types';
+import * as types from './types';
 import { AppInsightInfo, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { getApimName, organization, subscriptionId, tenantId } from '../Common';
@@ -29,88 +14,90 @@ import { interpolate } from '@pulumi/pulumi';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
 class ApimBuilder
-  extends Builder<ResourceInfo>
-  implements IApimSkuBuilder, IApimPublisherBuilder, IApimBuilder
+  extends types.Builder<ResourceInfo>
+  implements
+    types.IApimSkuBuilder,
+    types.IApimPublisherBuilder,
+    types.IApimBuilder
 {
-  private _insightLog: AppInsightInfo | undefined = undefined;
-  private _publisher: ApimPublisherBuilderType | undefined = undefined;
-  private _proxyDomain: ApimDomainBuilderType | undefined = undefined;
-  private _sku: ApimSkuBuilderType | undefined = undefined;
-  private _additionalLocations: ApimAdditionalLocationType[] = [];
-  private _zones: ApimZoneType | undefined = undefined;
+  private _publisher: types.ApimPublisherBuilderType | undefined = undefined;
+  private _proxyDomain: types.ApimDomainBuilderType | undefined = undefined;
+  private _sku: types.ApimSkuBuilderType | undefined = undefined;
+  private _additionalLocations: types.ApimAdditionalLocationType[] = [];
+  private _zones: types.ApimZoneType | undefined = undefined;
   private _restoreFromDeleted: boolean = false;
   private _enableEntraID: boolean = false;
   private _disableSignIn: boolean = false;
-  private _apimVnet: ApimVnetType | undefined = undefined;
-  private _privateLink: ApimPrivateLinkType | undefined = undefined;
-  private _rootCerts: ApimCertBuilderType[] = [];
-  private _caCerts: ApimCertBuilderType[] = [];
-  private _auths: ApimAuthType[] = [];
+  private _apimVnet: types.ApimVnetType | undefined = undefined;
+  private _privateLink: types.ApimPrivateLinkType | undefined = undefined;
+  private _rootCerts: types.ApimCertBuilderType[] = [];
+  private _caCerts: types.ApimCertBuilderType[] = [];
+  private _auths: types.ApimAuthType[] = [];
 
   private _instanceName: string | undefined = undefined;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
   private _apimInstance: apim.ApiManagementService | undefined = undefined;
 
-  public constructor(props: BuilderProps) {
-    super(props);
+  public constructor(private args: types.ApimBuilderArgs) {
+    super(args);
   }
-  public disableSignIn(): IApimBuilder {
+  public disableSignIn(): types.IApimBuilder {
     this._disableSignIn = true;
     return this;
   }
-  public withAuth(props: ApimAuthType): IApimBuilder {
+  public withAuth(props: types.ApimAuthType): types.IApimBuilder {
     this._auths.push(props);
     this._disableSignIn = false;
     return this;
   }
-  public withEntraID(): IApimBuilder {
+  public withEntraID(): types.IApimBuilder {
     this._enableEntraID = true;
     this._disableSignIn = false;
     return this;
   }
-  public withCACert(props: ApimCertBuilderType): IApimBuilder {
+  public withCACert(props: types.ApimCertBuilderType): types.IApimBuilder {
     this._caCerts.push(props);
     return this;
   }
-  public withRootCert(props: ApimCertBuilderType): IApimBuilder {
+  public withRootCert(props: types.ApimCertBuilderType): types.IApimBuilder {
     this._rootCerts.push(props);
     return this;
   }
-  public withPrivateLink(props: ApimPrivateLinkType): IApimBuilder {
+  public withPrivateLink(props: types.ApimPrivateLinkType): types.IApimBuilder {
     this._privateLink = props;
     return this;
   }
-  public withSubnet(props: ApimVnetType): IApimBuilder {
+  public withSubnet(props: types.ApimVnetType): types.IApimBuilder {
     this._apimVnet = props;
     return this;
   }
-  public restoreFomDeleted(): IApimBuilder {
+  public restoreFomDeleted(): types.IApimBuilder {
     this._restoreFromDeleted = true;
     return this;
   }
-  public withZones(props: ApimZoneType): IApimBuilder {
+  public withZones(props: types.ApimZoneType): types.IApimBuilder {
     this._zones = props;
     return this;
   }
   public withAdditionalLocation(
-    props: ApimAdditionalLocationType,
-  ): IApimBuilder {
+    props: types.ApimAdditionalLocationType,
+  ): types.IApimBuilder {
     this._additionalLocations.push(props);
     return this;
   }
-  public withInsightLog(props: AppInsightInfo): IApimBuilder {
-    this._insightLog = props;
-    return this;
-  }
-  public withProxyDomain(props: ApimDomainBuilderType): IApimBuilder {
+  public withProxyDomain(
+    props: types.ApimDomainBuilderType,
+  ): types.IApimBuilder {
     this._proxyDomain = props;
     return this;
   }
-  public withPublisher(props: ApimPublisherBuilderType): IApimBuilder {
+  public withPublisher(
+    props: types.ApimPublisherBuilderType,
+  ): types.IApimBuilder {
     this._publisher = props;
     return this;
   }
-  public withSku(props: ApimSkuBuilderType): IApimPublisherBuilder {
+  public withSku(props: types.ApimSkuBuilderType): types.IApimPublisherBuilder {
     this._sku = props;
     return this;
   }
@@ -351,7 +338,7 @@ class ApimBuilder
     });
   }
   private buildInsightLog() {
-    if (!this._insightLog) return;
+    if (!this.args.logInfo?.appInsight) return;
     //App Insight Logs
     new apim.Logger(
       `${this._instanceName}-insight`,
@@ -362,10 +349,10 @@ class ApimBuilder
         loggerType: apim.LoggerType.ApplicationInsights,
         description: 'App Insight Logger',
         loggerId: randomUuId(this._instanceName!).result,
-        resourceId: this._insightLog.id,
+        resourceId: this.args.logInfo.appInsight.id,
         credentials: {
-          //This credential will be add to NameValue automatically.
-          instrumentationKey: this._insightLog.instrumentationKey!,
+          //This credential will be added to NameValue automatically.
+          instrumentationKey: this.args.logInfo?.appInsight.instrumentationKey!,
         },
       },
       { dependsOn: this._apimInstance },
@@ -389,5 +376,5 @@ class ApimBuilder
   }
 }
 
-export default (props: BuilderProps) =>
-  new ApimBuilder(props) as IApimSkuBuilder;
+export default (props: types.ApimBuilderArgs) =>
+  new ApimBuilder(props) as types.IApimSkuBuilder;

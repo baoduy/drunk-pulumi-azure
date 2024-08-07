@@ -49,7 +49,7 @@ export default ({
       ipProtocols: ['TCP'],
       sourceAddresses: subnetSpaces,
       destinationAddresses: ['*'],
-      destinationPorts: ['443'],
+      destinationPorts: ['443', '80'],
     });
   }
 

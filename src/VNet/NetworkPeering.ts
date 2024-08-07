@@ -55,7 +55,7 @@ export default ({
         resourceGroupName: first.group.resourceGroupName,
         peeringSyncLevel: 'FullyInSync',
         remoteVirtualNetwork: {
-          id: interpolate`/subscriptions/${second.subscriptionId ?? subscriptionId}/resourceGroups/${second.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${second.name}`,
+          id: second.id,
         },
       },
       {
@@ -77,7 +77,7 @@ export default ({
           resourceGroupName: second.group.resourceGroupName,
           peeringSyncLevel: 'FullyInSync',
           remoteVirtualNetwork: {
-            id: interpolate`/subscriptions/${first.subscriptionId ?? subscriptionId}/resourceGroups/${first.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${first.name}`,
+            id: first.id,
           },
         },
         {

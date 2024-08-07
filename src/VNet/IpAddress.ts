@@ -1,10 +1,8 @@
-import * as network from "@pulumi/azure-native/network";
-import { Input } from "@pulumi/pulumi";
-import { BasicResourceArgs } from "../types";
-import { isPrd } from "../Common/AzureEnv";
-import { getIpAddressName } from "../Common/Naming";
-import {Locker} from "../Core/Locker";
-import { organization } from "../Common/StackEnv";
+import * as network from '@pulumi/azure-native/network';
+import { Input } from '@pulumi/pulumi';
+import { BasicResourceArgs } from '../types';
+import { isPrd, getIpAddressName, organization } from '../Common';
+import { Locker } from '../Core/Locker';
 
 interface Props extends BasicResourceArgs {
   version?: network.IPVersion;
@@ -30,6 +28,7 @@ export default ({
   allocationMethod = network.IPAllocationMethod.Static,
   tier = network.PublicIPAddressSkuTier.Regional,
   lock = isPrd,
+  dependsOn,
 }: Props) => {
   name = getIpName(name);
   const ipAddress = new network.PublicIPAddress(
@@ -44,14 +43,14 @@ export default ({
       ddosSettings:
         enableDdos && ddosCustomPolicyId
           ? {
-              protectionMode: enableDdos ? "Enabled" : "Disabled",
+              protectionMode: enableDdos ? 'Enabled' : 'Disabled',
               ddosProtectionPlan: { id: ddosCustomPolicyId },
             }
           : undefined,
-      sku: { name: "Standard", tier },
-      zones: enableZone ? ["1", "2", "3"] : undefined,
+      sku: { name: 'Standard', tier },
+      zones: enableZone ? ['1', '2', '3'] : undefined,
     },
-    { dependsOn: publicIPPrefix },
+    { dependsOn: publicIPPrefix ?? dependsOn },
   );
 
   if (lock) {

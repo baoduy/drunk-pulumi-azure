@@ -4,6 +4,7 @@ import {
   IVaultBuilder,
   IVaultBuilderResults,
   VaultBuilderArgs,
+  VaultBuilderSecretType,
 } from './types/vaultBuilder';
 import Vault, { createVaultPrivateLink } from '../KeyVault';
 import { KeyVaultInfo, ResourceGroupInfo, WithEnvRoles } from '../types';
@@ -14,6 +15,7 @@ import {
 } from '@drunk-pulumi/azure-providers';
 import { subscriptionId } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { requireSecret } from '../Common/ConfigHelper';
 
 export class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
@@ -58,9 +60,13 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
-  public addSecrets(
-    items: Record<string, Input<string>>,
-  ): IVaultBuilderResults {
+  public addSecrets(items: VaultBuilderSecretType): IVaultBuilderResults {
+    //Add secret from project secret
+    if (typeof items === 'string') {
+      const key = items as string;
+      const val = requireSecret(key);
+      items = { [key]: val };
+    }
     //Add Secrets to Vaults
     Object.keys(items).map((key) => {
       const val = items[key];
@@ -71,6 +77,7 @@ export class VaultBuilderResults implements IVaultBuilderResults {
         vaultInfo: this.vaultInfo,
       });
     });
+
     return this;
   }
 

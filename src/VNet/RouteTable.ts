@@ -8,13 +8,17 @@ interface Props extends BasicResourceArgs {
   routes?: Input<RouteArgs>[];
 }
 
-export default ({ name, group, routes }: Props) => {
+export default ({ name, group, routes, dependsOn }: Props) => {
   const routeName = getRouteName(name);
-  return new network.RouteTable(routeName, {
-    routeTableName: routeName,
-    ...group,
-    routes,
-  });
+  return new network.RouteTable(
+    routeName,
+    {
+      routeTableName: routeName,
+      ...group,
+      routes,
+    },
+    { dependsOn },
+  );
 };
 
 interface RouteItemsProps extends BasicResourceArgs, Omit<RouteArgs, 'name'> {

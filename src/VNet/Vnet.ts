@@ -180,6 +180,7 @@ export default ({
       name: vName,
       group,
       securityRules,
+      dependsOn,
     });
   }
 
@@ -190,6 +191,7 @@ export default ({
         name: vName,
         group,
         routes: routeRules,
+        dependsOn,
       })
     : undefined;
 
