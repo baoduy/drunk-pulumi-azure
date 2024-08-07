@@ -40,7 +40,7 @@ export const createDiagnostic = ({
     console.error(`Target resource of "${name}" must be provided .`);
     return undefined;
   }
-  const wpId = logInfo.logWp?.workspaceId;
+  const wpId = logInfo.logWp?.id;
   const n = `${name}-diag`;
   return new native.insights.DiagnosticSetting(
     n,

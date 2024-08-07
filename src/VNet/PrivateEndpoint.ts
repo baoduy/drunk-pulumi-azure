@@ -27,8 +27,8 @@ export default ({
       new network.PrivateEndpoint(
         `${name}-${index}`,
         {
-          privateEndpointName: `${name}-${index}`,
           ...resourceInfo.group,
+          privateEndpointName: `${name}-${index}`,
           subnet: { id: s },
           privateLinkServiceConnections: [
             {
