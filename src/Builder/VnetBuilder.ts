@@ -16,12 +16,8 @@ import PrivateDnsZoneBuilder from './PrivateDnsZoneBuilder';
 import * as types from './types';
 import Bastion from '../VNet/Bastion';
 import { rsInfo } from '../Common';
-import { LogInfo, ResourceInfo, ResourceInfoWithSub } from '../types';
-import {
-  FirewallCreationProps,
-  IGatewayFireWallBuilder,
-  VnetBuilderArgs,
-} from './types';
+import { ResourceInfo, ResourceInfoWithSub } from '../types';
+import { FirewallCreationProps, IGatewayFireWallBuilder } from './types';
 import { Input } from '@pulumi/pulumi';
 
 const outboundIpName = 'outbound';
