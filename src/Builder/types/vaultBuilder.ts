@@ -9,8 +9,10 @@ export type CertBuilderType = WithNamedType & {
 };
 export interface IVaultBuilderResults extends KeyVaultInfo {
   info(): KeyVaultInfo;
-
-  addSecrets(items: Record<string, Input<string>>): IVaultBuilderResults;
+  /**Add secrets to vault. If parameter is a string the secret will be loaded from project secret*/
+  addSecrets(
+    items: Record<string, Input<string>> | string,
+  ): IVaultBuilderResults;
   //addKeys () : IVaultBuilderResults;
   addCerts(items: Record<string, CertBuilderType>): IVaultBuilderResults;
   privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults;

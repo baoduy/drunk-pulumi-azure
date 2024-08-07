@@ -14,6 +14,7 @@ import {
 } from '@drunk-pulumi/azure-providers';
 import { subscriptionId } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { requireSecret } from '../Common/ConfigHelper';
 
 export class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
@@ -59,18 +60,31 @@ export class VaultBuilderResults implements IVaultBuilderResults {
   }
 
   public addSecrets(
-    items: Record<string, Input<string>>,
+    items: Record<string, Input<string>> | string,
   ): IVaultBuilderResults {
-    //Add Secrets to Vaults
-    Object.keys(items).map((key) => {
-      const val = items[key];
-      return addCustomSecret({
+    //Add secret from project secret
+    if (typeof items === 'string') {
+      const key = items as string;
+      const val = requireSecret(key);
+      addCustomSecret({
         name: key,
         value: val,
         contentType: `${this.vaultInfo.name}-${key}`,
         vaultInfo: this.vaultInfo,
       });
-    });
+    }
+    //Add Secrets to Vaults
+    else {
+      Object.keys(items).map((key) => {
+        const val = items[key];
+        return addCustomSecret({
+          name: key,
+          value: val,
+          contentType: `${this.vaultInfo.name}-${key}`,
+          vaultInfo: this.vaultInfo,
+        });
+      });
+    }
     return this;
   }
 
