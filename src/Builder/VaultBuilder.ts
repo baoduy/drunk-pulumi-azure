@@ -4,6 +4,7 @@ import {
   IVaultBuilder,
   IVaultBuilderResults,
   VaultBuilderArgs,
+  VaultBuilderSecretType,
 } from './types/vaultBuilder';
 import Vault, { createVaultPrivateLink } from '../KeyVault';
 import { KeyVaultInfo, ResourceGroupInfo, WithEnvRoles } from '../types';
@@ -59,32 +60,24 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
-  public addSecrets(
-    items: Record<string, Input<string>> | string,
-  ): IVaultBuilderResults {
+  public addSecrets(items: VaultBuilderSecretType): IVaultBuilderResults {
     //Add secret from project secret
     if (typeof items === 'string') {
       const key = items as string;
       const val = requireSecret(key);
-      addCustomSecret({
+      items = { [key]: val };
+    }
+    //Add Secrets to Vaults
+    Object.keys(items).map((key) => {
+      const val = items[key];
+      return addCustomSecret({
         name: key,
         value: val,
         contentType: `${this.vaultInfo.name}-${key}`,
         vaultInfo: this.vaultInfo,
       });
-    }
-    //Add Secrets to Vaults
-    else {
-      Object.keys(items).map((key) => {
-        const val = items[key];
-        return addCustomSecret({
-          name: key,
-          value: val,
-          contentType: `${this.vaultInfo.name}-${key}`,
-          vaultInfo: this.vaultInfo,
-        });
-      });
-    }
+    });
+
     return this;
   }
 

@@ -14,7 +14,7 @@ import {
   IBuilderAsync,
   ILockable,
 } from './genericBuilder';
-import { CertBuilderType } from './vaultBuilder';
+import { CertBuilderType, VaultBuilderSecretType } from './vaultBuilder';
 import {
   IVnetBuilder,
   IVnetBuilderStart,
@@ -64,7 +64,7 @@ export interface IResourceVaultBuilder {
 }
 
 export interface IResourceVaultItemsBuilder {
-  addSecrets(items: Record<string, Input<string>>): IResourceBuilder;
+  addSecrets(items: VaultBuilderSecretType): IResourceBuilder;
   //addKeys () : IResourceBuilder;
   addCerts(props: CertBuilderType): IResourceBuilder;
 }
