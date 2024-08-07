@@ -301,6 +301,7 @@ export const getAcrName = (name: string, convention: ConventionProps = {}) => {
       prefix: '',
       suffix: 'acr',
       region: currentCountryCode,
+      includeOrgName: true,
     }),
     '-',
     '',
