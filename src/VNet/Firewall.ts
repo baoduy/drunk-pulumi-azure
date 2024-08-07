@@ -62,6 +62,7 @@ export default ({
         name: `${name}-mag`,
         group,
         lock: false,
+        dependsOn,
       })
     : undefined;
 
@@ -91,6 +92,7 @@ export default ({
                 enableProxy: true,
               }
             : undefined,
+        dependsOn,
       })
     : undefined;
 

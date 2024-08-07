@@ -259,8 +259,8 @@ class VnetBuilder
 
       //networkPeerings: peerings,
       dependsOn: this._firewallInstance?.instance
-        ? this._firewallInstance?.instance
-        : this._natGatewayInstance,
+        ? this._firewallInstance.instance
+        : (this._natGatewayInstance ?? this.commonProps.dependsOn),
     });
   }
 
