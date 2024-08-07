@@ -165,6 +165,7 @@
     "src/VNet/NetworkPeering.ts",
     "src/VNet/PrivateEndpoint.ts",
     "src/VNet/RouteTable.ts",
+    "src/VNet/RuoteRules/RuoteTo.ts",
     "src/VNet/SecurityGroup.ts",
     "src/VNet/Subnet.ts",
     "src/VNet/VPNGateway.ts",
