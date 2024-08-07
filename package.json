@@ -18,10 +18,9 @@
   },
   "scripts": {
     "fastBuild": "cross-env NODE_ENV=production && NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc",
-    "build": "npm run fix-issue && npm run update-tsconfig && npm run fastBuild && npm run copy-pkg",
-    "ciBuild": "npm run fix-issue && npm run fastBuild",
+    "build": "npm run update-tsconfig && npm run fastBuild && npm run copy-pkg",
+    "ciBuild": "npm run fastBuild",
     "copy-pkg": "ts-node ./.tasks/npm-package.ts && cpy README.md .out-bin/",
-    "fix-issue": "node --max-old-space-size=8192 -r ts-node/register ./.tasks/fix-issues.ts",
     "update-tsconfig": "ts-node ./.tasks/update-tsconfig.ts",
     "pack": "cd .out-bin && npm pack && cd ../",
     "postinstall": "husky install",

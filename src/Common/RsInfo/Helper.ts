@@ -22,7 +22,11 @@ const resourceNamingCreator = () => {
       groupName: string,
       resourceNameOrConvention?: string | ConventionProps,
     ): Omit<ResourceInfo, 'id'> => {
-      const rgName = naming.getResourceGroupName(groupName);
+      const rgName =
+        typeof resourceNameOrConvention === 'object'
+          ? naming.getResourceGroupName(groupName, resourceNameOrConvention)
+          : naming.getResourceGroupName(groupName);
+
       const resourceName =
         typeof resourceNameOrConvention === 'string'
           ? formater(naming.cleanName(resourceNameOrConvention))
