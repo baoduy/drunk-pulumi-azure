@@ -61,6 +61,7 @@ export default ({
               value: key.connectionString,
               contentType: `AppConfig ${name} ${key.name}`,
               vaultInfo,
+              dependsOn: app,
             });
           }
         });

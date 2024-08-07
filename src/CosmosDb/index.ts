@@ -1,6 +1,6 @@
 import * as documentdb from '@pulumi/azure-native/documentdb';
 import { getCosmosDbName } from '../Common';
-import { NamedType, OptsArgs, ResourceWithVaultArgs } from '../types';
+import { WithNamedType, OptsArgs, ResourceWithVaultArgs } from '../types';
 import ResourceCreator from '../Core/ResourceCreator';
 import { isPrd } from '../Common';
 import { createThreatProtection } from '../Logs/Helpers';
@@ -20,9 +20,9 @@ interface CosmosDbProps extends ResourceWithVaultArgs {
   };
 
   sqlDbs?: Array<
-    NamedType & {
+    WithNamedType & {
       containers?: Array<
-        NamedType & {
+        WithNamedType & {
           partitionKeyPath: string;
           /** auto expired items in seconds*/
           ttl?: number;
@@ -110,19 +110,19 @@ export default ({
       : undefined,
 
     //keyVaultKeyId: encryptKey?.properties.id,
-    monitoring: {
-      logsCategories: [
-        'CassandraRequests',
-        'PartitionKeyStatistics',
-        'ControlPlaneRequests',
-        'MongoRequests',
-        'QueryRuntimeStatistics',
-        'GremlinRequests',
-        'PartitionKeyRUConsumption',
-        'DataPlaneRequests',
-      ],
-      metricsCategories: ['Requests'],
-    },
+    // monitoring: {
+    //   logsCategories: [
+    //     'CassandraRequests',
+    //     'PartitionKeyStatistics',
+    //     'ControlPlaneRequests',
+    //     'MongoRequests',
+    //     'QueryRuntimeStatistics',
+    //     'GremlinRequests',
+    //     'PartitionKeyRUConsumption',
+    //     'DataPlaneRequests',
+    //   ],
+    //   metricsCategories: ['Requests'],
+    // },
   } as unknown as documentdb.DatabaseAccountArgs & OptsArgs);
 
   if (

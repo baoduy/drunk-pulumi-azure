@@ -1,39 +1,56 @@
 import * as compute from '@pulumi/azure-native/compute';
-import { Input } from '@pulumi/pulumi';
 import { getDiskEncryptionName } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { BasicResourceWithVaultArgs, KeyVaultInfo } from '../types';
+import {
+  BasicResourceWithVaultArgs,
+  ResourceInfoWithInstance,
+  WithEnvRoles,
+} from '../types';
 
-interface DiskEncryptionProps extends BasicResourceWithVaultArgs {
-  vaultInfo: KeyVaultInfo;
-  /* Needs to ensure this userAssignedId is able to read key from Vault*/
-  userAssignedId: Input<string>;
-}
+interface DiskEncryptionProps
+  extends BasicResourceWithVaultArgs,
+    WithEnvRoles {}
 
 export default ({
   name,
   group,
   vaultInfo,
-  userAssignedId,
+  envUIDInfo,
+  envRoles,
   dependsOn,
-  ignoreChanges,
+  ignoreChanges = [],
   importUri,
-}: DiskEncryptionProps) => {
+}: DiskEncryptionProps): ResourceInfoWithInstance<compute.DiskEncryptionSet> => {
+  if (!envUIDInfo || !vaultInfo)
+    throw new Error(
+      'The "vaultInfo" and "envUIDInfo" are required for  DiskEncryptionSet.',
+    );
+
   name = getDiskEncryptionName(name);
   const keyEncryption = addEncryptKey({ name, vaultInfo });
-
-  return new compute.DiskEncryptionSet(
+  const diskEncrypt = new compute.DiskEncryptionSet(
     name,
     {
       ...group,
+      diskEncryptionSetName: name,
       rotationToLatestKeyVersionEnabled: true,
       encryptionType: 'EncryptionAtRestWithCustomerKey',
       identity: {
-        type: compute.ResourceIdentityType.UserAssigned,
-        userAssignedIdentities: [userAssignedId],
+        type: compute.ResourceIdentityType.SystemAssigned_UserAssigned,
+        userAssignedIdentities: [envUIDInfo!.id],
       },
       activeKey: { keyUrl: keyEncryption.url },
     },
-    { dependsOn, ignoreChanges, import: importUri },
+    {
+      dependsOn,
+      ignoreChanges: [...ignoreChanges, 'diskEncryptionSetName'],
+      import: importUri,
+    },
   );
+
+  diskEncrypt.identity.apply((i) => {
+    if (i) envRoles?.addMember('readOnly', i.principalId);
+  });
+
+  return { name, group, id: diskEncrypt.id, instance: diskEncrypt };
 };

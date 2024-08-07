@@ -1,5 +1,6 @@
-import * as authorization from "@pulumi/azure-native/authorization";
-import { CustomResource } from "@pulumi/pulumi";
+import * as authorization from '@pulumi/azure-native/authorization';
+import { CustomResource } from '@pulumi/pulumi';
+import { ResourceInfoWithInstance } from '../types';
 
 interface Props {
   name: string;
@@ -9,7 +10,7 @@ interface Props {
 }
 
 /** Lock Delete from Resource group level.*/
-export default ({
+export const Locker = ({
   name,
   resource,
   level = authorization.LockLevel.CanNotDelete,
@@ -28,3 +29,31 @@ export default ({
     { dependsOn: resource, protect },
   );
 };
+
+export function LockerDeco() {
+  return function actualDecorator(
+    originalMethod: any,
+    context: ClassMethodDecoratorContext,
+  ) {
+    //const methodName = String(context.name);
+
+    function replacementMethod(this: any, ...args: any[]) {
+      const result = originalMethod.call(
+        this,
+        ...args,
+      ) as ResourceInfoWithInstance<CustomResource>;
+
+      if ('lock' in args && args.lock && result.instance) {
+        Locker({
+          name: result.name,
+          level: 'CanNotDelete',
+          protect: true,
+          resource: result.instance,
+        });
+      }
+      return result;
+    }
+
+    return replacementMethod;
+  };
+}

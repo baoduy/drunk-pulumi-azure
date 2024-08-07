@@ -3,27 +3,25 @@ import * as pulumi from '@pulumi/pulumi';
 import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
-import { getRGId } from '../Core/Helper';
-import vmsDiagnostic from './VmSetMonitor';
 import {
   BasicEncryptResourceArgs,
   LockableType,
+  LogInfo,
   ResourceInfoWithInstance,
+  WithDiskEncryption,
 } from '../types';
 import {
   currentEnv,
   defaultSubScope,
   Environments,
   isPrd,
-  parseResourceInfoFromId,
+  rsInfo,
   tenantId,
   stack,
-  getAksName,
-  getResourceGroupName,
+  naming,
 } from '../Common';
-import Locker from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 import aksIdentityCreator from './Identity';
-import { createDiagnostic } from '../Logs/Helpers';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -73,11 +71,10 @@ const defaultNodePoolProps = {
   maxPods: 50,
   enableFIPS: false,
   enableNodePublicIP: false,
-  //enableEncryptionAtHost: false,
-
+  enableEncryptionAtHost: true,
   enableUltraSSD: isPrd,
-  osDiskSizeGB: 128,
-  osDiskType: ccs.OSDiskType.Managed,
+  osDiskSizeGB: 256,
+  osDiskType: ccs.OSDiskType.Ephemeral,
 
   nodeLabels: {
     environment: currentEnv,
@@ -108,13 +105,16 @@ export enum VmSizes {
   Standard_A4m_v2 = 'Standard_A4m_v2',
 }
 
-export interface NodePoolProps
-  extends containerservice.ManagedClusterAgentPoolProfileArgs {
+export type NodePoolProps = {
+  name: pulumi.Input<string>;
   mode: ccs.AgentPoolMode;
   vmSize: VmSizes | string;
   osDiskSizeGB: number;
-  maxPods: number;
-}
+  osDiskType?: ccs.OSDiskType | string;
+  maxPods?: number;
+  //osType?: pulumi.Input<string | ccs.OSType>;
+  //role?: pulumi.Input<string>;
+};
 
 export type AskAddonProps = {
   enableAzureKeyVault?: boolean;
@@ -148,10 +148,12 @@ export type AksNetworkProps = {
   };
 };
 
-export type AksNodePoolProps = Omit<NodePoolProps, 'subnetId' | 'aksId'>;
-export type DefaultAksNodePoolProps = Omit<AksNodePoolProps, 'name' | 'mode'>;
+export type DefaultAksNodePoolProps = Omit<NodePoolProps, 'name' | 'mode'>;
 
-export interface AksProps extends BasicEncryptResourceArgs, LockableType {
+export interface AksProps
+  extends BasicEncryptResourceArgs,
+    LockableType,
+    WithDiskEncryption {
   tier?: ccs.ManagedClusterSKUTier;
   addon?: AskAddonProps;
   features?: AskFeatureProps;
@@ -167,7 +169,7 @@ export interface AksProps extends BasicEncryptResourceArgs, LockableType {
     snapshotController: { enabled: boolean };
   };
   //Azure Registry Container
-  acr?: { enable: boolean; id: Input<string> };
+  //acr?: { enable: boolean; id: Input<string> };
   defaultNodePool: DefaultAksNodePoolProps;
   network: AksNetworkProps;
   linux: {
@@ -175,8 +177,8 @@ export interface AksProps extends BasicEncryptResourceArgs, LockableType {
     sshKeys: Array<pulumi.Input<string>>;
   };
   //kubernetesVersion?: Input<string>;
-  nodePools?: Array<AksNodePoolProps>;
-  logWpId?: Input<string>;
+  nodePools?: Array<NodePoolProps>;
+  logInfo?: Partial<LogInfo> & { defenderEnabled?: boolean };
 }
 
 export type AksResults = ResourceInfoWithInstance<ccs.ManagedCluster> & {
@@ -189,16 +191,20 @@ export type AksResults = ResourceInfoWithInstance<ccs.ManagedCluster> & {
 export default async ({
   group,
   name,
+  aksAccess,
+
+  envRoles,
+  envUIDInfo,
+  vaultInfo,
+  diskEncryptionSetId,
+
   linux,
   defaultNodePool,
   nodePools,
   network,
-  logWpId,
-  acr,
-  aksAccess,
-  vaultInfo,
-  enableEncryption,
-  envRoles,
+  logInfo,
+  //acr,
+
   features = { enableMaintenance: true },
   storageProfile,
   addon = {
@@ -210,9 +216,9 @@ export default async ({
   importUri,
   ignoreChanges = [],
 }: AksProps): Promise<AksResults> => {
-  const aksName = getAksName(name);
+  const aksName = naming.getAksName(name);
   const secretName = `${aksName}-config`;
-  const nodeResourceGroup = getResourceGroupName(`${aksName}-nodes`);
+  const nodeResourceGroup = naming.getResourceGroupName(`${aksName}-nodes`);
 
   //Auto detect and disable Local Account
   if (aksAccess.disableLocalAccounts === undefined && vaultInfo) {
@@ -236,9 +242,6 @@ export default async ({
     vaultInfo,
     dependsOn,
   });
-
-  //TODO: Implement Disk Encryption
-  // const diskEncryptionSet =enableEncryption? compute.
 
   //Create AKS Cluster
   const aks = new ccs.ManagedCluster(
@@ -290,12 +293,11 @@ export default async ({
               }
             : undefined,
         },
-
         omsAgent: {
-          enabled: Boolean(logWpId),
-          config: logWpId
+          enabled: Boolean(logInfo?.logWp?.workspaceId),
+          config: logInfo?.logWp?.workspaceId
             ? {
-                logAnalyticsWorkspaceResourceID: logWpId,
+                logAnalyticsWorkspaceResourceID: logInfo.logWp.workspaceId!,
               }
             : undefined,
         },
@@ -315,7 +317,7 @@ export default async ({
             nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
           }),
-          enableEncryptionAtHost: true,
+
           name: 'defaultnodes',
           mode: 'System',
           count: 1,
@@ -364,7 +366,8 @@ export default async ({
       //azureMonitorProfile: { metrics: { enabled } },
       //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
       //enablePodSecurityPolicy: true,
-      diskEncryptionSetID: '',
+      diskEncryptionSetID: diskEncryptionSetId,
+
       servicePrincipalProfile: {
         clientId: serviceIdentity.clientId,
         secret: serviceIdentity.clientSecret,
@@ -372,9 +375,9 @@ export default async ({
       oidcIssuerProfile: { enabled: Boolean(features?.enableWorkloadIdentity) },
       securityProfile: {
         defender:
-          logWpId && isPrd
+          logInfo?.logWp && logInfo?.defenderEnabled
             ? {
-                logAnalyticsWorkspaceResourceId: logWpId,
+                logAnalyticsWorkspaceResourceId: logInfo?.logWp.workspaceId,
                 securityMonitoring: { enabled: true },
               }
             : undefined,
@@ -484,7 +487,10 @@ export default async ({
             nodeType: p.mode,
             enableAutoScaling: features.enableAutoScale,
           }),
-          enableEncryptionAtHost: true,
+
+          //This already added into defaultNodePoolProps
+          //enableEncryptionAtHost: true,
+
           count: p.mode === 'System' ? 1 : 0,
           vnetSubnetID: network.subnetId,
           kubeletDiskType: 'OS',
@@ -502,7 +508,7 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile, network.subnetId])
       .apply(([identity, identityProfile, sId]) => {
-        const acrScope = acr?.id ?? defaultSubScope;
+        //const acrScope = acr?.id ?? defaultSubScope;
         if (identityProfile && identityProfile['kubeletidentity']) {
           // roleAssignment({
           //   name: `${name}-aks-identity-profile-pull`,
@@ -512,7 +518,7 @@ export default async ({
           //   scope: acrScope,
           // });
 
-          //Add into EnvRoles
+          //Add into EnvRoles for Database accessing
           envRoles?.addMember(
             'contributor',
             identityProfile['kubeletidentity'].objectId!,
@@ -520,18 +526,19 @@ export default async ({
         }
 
         //Link service principal to Vnet Resources group
-        if (network.subnetId && identity) {
-          roleAssignment({
-            name: `${name}-system-net`,
-            principalId: identity.principalId,
-            roleName: 'Contributor',
-            principalType: 'ServicePrincipal',
-            scope: getRGId(parseResourceInfoFromId(sId)!.group),
-          });
-
-          //Add into EnvRoles
-          envRoles?.addMember('contributor', identity.principalId);
-        }
+        //This only need for public ask with direct public IP associated
+        // if (network.subnetId && identity) {
+        //   roleAssignment({
+        //     name: `${name}-system-net`,
+        //     principalId: identity.principalId,
+        //     roleName: 'Contributor',
+        //     principalType: 'ServicePrincipal',
+        //     scope: rsInfo.getRGId(rsInfo.getResourceInfoFromId(sId)!.group),
+        //   });
+        //
+        //   //Add into EnvRoles for Database accessing
+        //   //envRoles?.addMember('contributor', identity.principalId);
+        // }
 
         //Link Private Dns to extra Vnet
         if (features?.enablePrivateCluster && network.extraVnetIds) {
@@ -572,32 +579,32 @@ export default async ({
     }
 
     //Diagnostic
-    if (logWpId) {
-      createDiagnostic({
-        name,
-        targetResourceId: id,
-        logWpId,
-        logsCategories: [
-          'guard',
-          'kube-controller-manager',
-          'kube-audit-admin',
-          'kube-audit',
-          'kube-scheduler',
-          'cluster-autoscaler',
-        ],
-        dependsOn: aks,
-      });
-
-      if (vaultInfo) {
-        //Apply monitoring for VMScale Sets
-        vmsDiagnostic({
-          group: { resourceGroupName: nodeResourceGroup },
-          logWpId,
-          vaultInfo,
-          dependsOn: aks,
-        });
-      }
-    }
+    // if (logInfo) {
+    //   createDiagnostic({
+    //     name,
+    //     targetResourceId: id,
+    //     logInfo,
+    //     logsCategories: [
+    //       'guard',
+    //       'kube-controller-manager',
+    //       'kube-audit-admin',
+    //       'kube-audit',
+    //       'kube-scheduler',
+    //       'cluster-autoscaler',
+    //     ],
+    //     dependsOn: aks,
+    //   });
+    //
+    //   // if (vaultInfo) {
+    //   //   //Apply monitoring for VMScale Sets
+    //   //   vmsDiagnostic({
+    //   //     group: { resourceGroupName: nodeResourceGroup },
+    //   //     logWpId,
+    //   //     vaultInfo,
+    //   //     dependsOn: aks,
+    //   //   });
+    //   // }
+    // }
   });
 
   return {

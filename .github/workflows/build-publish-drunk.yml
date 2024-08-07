@@ -29,12 +29,6 @@ jobs:
         run: |
           echo ${{ env.NEXT_VERSION }}
 
-      #- uses: actions-ecosystem/action-bump-semver@v1
-      #  id: bump-semver
-      #  with:
-      #    current_version: ${{ steps.versioning.outputs.semver }}
-      #    level: patch
-
       - name: Cache node modules
         id: cache-npm
         uses: actions/cache@v3

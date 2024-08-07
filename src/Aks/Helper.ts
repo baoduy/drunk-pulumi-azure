@@ -1,7 +1,7 @@
 import * as cs from '@pulumi/azure-native/containerservice';
-import { getAksName, getResourceGroupName } from '../Common';
+import { defaultSubScope, getAksName, getResourceGroupName } from '../Common';
 import { globalKeyName } from '../Common/GlobalEnv';
-import { KeyVaultInfo, ResourceInfo, NamedType } from '../types';
+import { KeyVaultInfo, ResourceInfo, WithNamedType } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate, Output } from '@pulumi/pulumi';
 import { subscriptionId } from '../Common/AzureEnv';
@@ -12,7 +12,7 @@ export const getAksConfig = async ({
   groupName,
   formattedName,
   disableLocalAccounts,
-}: NamedType & {
+}: WithNamedType & {
   groupName: string;
   formattedName?: boolean;
   disableLocalAccounts?: boolean;
@@ -39,7 +39,7 @@ export const getAksVaultConfig = async ({
   version,
   vaultInfo,
   formattedName,
-}: NamedType & {
+}: WithNamedType & {
   version?: string;
   vaultInfo: KeyVaultInfo;
   formattedName?: boolean;
@@ -70,7 +70,7 @@ export const getAksPrivateDnz = (
     return {
       name: dnsName,
       group: { resourceGroupName: rsGroup, location: globalKeyName },
-      id: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
+      id: interpolate`${defaultSubScope}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
     } as ResourceInfo;
   });
 };

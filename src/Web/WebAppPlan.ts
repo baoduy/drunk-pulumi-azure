@@ -1,7 +1,7 @@
 import * as native from "@pulumi/azure-native";
 import { BasicResourceArgs } from "../types";
 import { getAppPlanName } from "../Common/Naming";
-import Locker from "../Core/Locker";
+import {Locker} from "../Core/Locker";
 
 interface Props extends BasicResourceArgs {
   kind: "Linux";

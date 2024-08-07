@@ -1,13 +1,7 @@
 import { enums, input as inputs } from '@pulumi/azure-native/types';
 import { Input, Output } from '@pulumi/pulumi';
 import * as pulumi from '@pulumi/pulumi';
-import { NamedType } from '../types';
-
-export type VnetInfoType = {
-  vnetName: Input<string>;
-  resourceGroupName: Input<string>;
-  subscriptionId?: Input<string>;
-};
+import { WithNamedType } from '../types';
 
 export interface RouteArgs {
   name?: Input<string>;
@@ -100,7 +94,7 @@ export interface ApplicationRuleArgs {
   webCategories?: Input<Input<string>[]>;
 }
 
-export type FirewallPolicyRuleCollectionResults = NamedType & {
+export type FirewallPolicyRuleCollectionResults = WithNamedType & {
   priority: number;
   ruleCollections: Input<
     Input<
@@ -110,7 +104,7 @@ export type FirewallPolicyRuleCollectionResults = NamedType & {
   >;
 };
 
-export type FirewallPolicyResults = NamedType & {
+export type FirewallPolicyResults = WithNamedType & {
   dnatRules?: Array<Input<NatRuleArgs>>;
   netRules?: Array<Input<NetworkRuleArgs>>;
   appRules?: Array<Input<ApplicationRuleArgs>>;

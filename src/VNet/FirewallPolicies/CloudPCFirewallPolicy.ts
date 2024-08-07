@@ -311,7 +311,7 @@ export default ({
       name: `${name}-app-allow-ip-checks`,
       description: 'Allows Ip Checks',
       sourceAddresses: subnetSpaces,
-      targetFqdns: ['ip.me', 'ifconfig.me', '*.ifconfig.me'],
+      targetFqdns: ['api.ipify.org'],
       protocols: [{ protocolType: 'Https', port: 443 }],
     });
   }

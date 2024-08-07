@@ -8,7 +8,7 @@ export function replaceAll(value: string, search: string, replace: string) {
 }
 
 export const toBase64 = (value: string) =>
-  Buffer.from(value).toString("base64");
+  Buffer.from(value).toString('base64');
 
 export const shallowEquals = (obj1: any, obj2: any) =>
   Object.keys(obj1).length === Object.keys(obj2).length &&
@@ -16,12 +16,12 @@ export const shallowEquals = (obj1: any, obj2: any) =>
 
 /** Get Domain from Url*/
 export const getDomainFromUrl = (url: string) =>
-  url.replace("https://", "").replace("http://", "").split("/")[0];
+  url.replace('https://', '').replace('http://', '').split('/')[0];
 
 /** Get Root Domain from Url or Sub domain*/
 export const getRootDomainFromUrl = (url: string) => {
-  const array = getDomainFromUrl(url).split(".");
-  return array.slice(Math.max(array.length - 2, 0)).join(".");
+  const array = getDomainFromUrl(url).split('.');
+  return array.slice(Math.max(array.length - 2, 0)).join('.');
 };
 
 /** Create Range*/
@@ -34,7 +34,7 @@ export const RangeOf = (length: number) =>
  * @returns {boolean}
  */
 export function isObject(item: any): boolean {
-  return item !== null && typeof item === "object" && !Array.isArray(item);
+  return item !== null && typeof item === 'object' && !Array.isArray(item);
 }
 
 /**
@@ -43,26 +43,26 @@ export function isObject(item: any): boolean {
  * @param sources
  * @returns {T}
  */
-export function mergeDeep<T>(target: T, ...sources: any[]): T {
-  if (!sources.length) return target;
-
-  for (const source of sources) {
-    if (isObject(source)) {
-      for (const key of Object.keys(source)) {
-        const sourceValue = source[key];
-        const targetValue = (target as any)[key];
-
-        if (isObject(sourceValue)) {
-          if (!targetValue) {
-            (target as any)[key] = {};
-          }
-          mergeDeep((target as any)[key], sourceValue);
-        } else {
-          (target as any)[key] = sourceValue;
-        }
-      }
-    }
-  }
-
-  return target;
-}
+// export function mergeDeep<T>(target: T, ...sources: any[]): T {
+//   if (!sources.length) return target;
+//
+//   for (const source of sources) {
+//     if (isObject(source)) {
+//       for (const key of Object.keys(source)) {
+//         const sourceValue = source[key];
+//         const targetValue = (target as any)[key];
+//
+//         if (isObject(sourceValue)) {
+//           if (!targetValue) {
+//             (target as any)[key] = {};
+//           }
+//           mergeDeep((target as any)[key], sourceValue);
+//         } else {
+//           (target as any)[key] = sourceValue;
+//         }
+//       }
+//     }
+//   }
+//
+//   return target;
+// }

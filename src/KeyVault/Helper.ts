@@ -1,6 +1,6 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { Input, Output, output, Resource } from '@pulumi/pulumi';
-import { NamedWithVaultType } from '../types';
+import { NamedWithVaultType, WithVaultInfo } from '../types';
 import { getSecretName, isDryRun, replaceAll } from '../Common';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
@@ -134,6 +134,24 @@ export const getSecret = async ({
   const n = nameFormatted ? name : getSecretName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getSecret(n, version);
+};
+
+export const getSecrets = <T extends Record<string, string>>({
+  names,
+  vaultInfo,
+  nameFormatted,
+}: Required<WithVaultInfo> & {
+  nameFormatted?: boolean;
+  names: T;
+}): Record<keyof T, Output<string>> => {
+  const rs: Record<string, Output<string>> = {};
+
+  Object.keys(names).forEach((k) => {
+    const name = names[k];
+    const item = output(getSecret({ name, vaultInfo, nameFormatted }));
+    rs[k] = item?.apply((i) => i?.value!);
+  });
+  return rs as Record<keyof T, Output<string>>;
 };
 
 interface KeyResult {

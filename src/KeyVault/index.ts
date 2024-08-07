@@ -1,11 +1,9 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { enums } from '@pulumi/azure-native/types';
 import { Input } from '@pulumi/pulumi';
-import { tenantId } from '../Common/AzureEnv';
-import { getKeyVaultName } from '../Common';
+import { getKeyVaultName, tenantId } from '../Common';
 import { createDiagnostic } from '../Logs/Helpers';
 import {
-  BasicMonitorArgs,
   BasicResourceArgs,
   KeyVaultInfo,
   NetworkPropsType,
@@ -31,19 +29,19 @@ export const createVaultPrivateLink = ({
     linkServiceGroupIds: props.type ? [props.type] : ['keyVault'],
   });
 
-export const createVaultDiagnostic = ({
-  vaultInfo,
-  logInfo,
-}: {
-  vaultInfo: KeyVaultInfo;
-  logInfo: BasicMonitorArgs;
-}) =>
-  createDiagnostic({
-    name: `${vaultInfo.name}-vault`,
-    targetResourceId: vaultInfo.id,
-    ...logInfo,
-    logsCategories: ['AuditEvent'],
-  });
+// export const createVaultDiagnostic = ({
+//   vaultInfo,
+//   logInfo,
+// }: {
+//   vaultInfo: KeyVaultInfo;
+//   logInfo: BasicMonitorArgs;
+// }) =>
+//   createDiagnostic({
+//     name: `${vaultInfo.name}-vault`,
+//     targetResourceId: vaultInfo.id,
+//     ...logInfo,
+//     logsCategories: ['AuditEvent'],
+//   });
 
 export default ({
   name,
@@ -123,14 +121,14 @@ export default ({
   }
 
   //Add Diagnostic
-  const addDiagnostic = (logInfo: BasicMonitorArgs) =>
-    createVaultDiagnostic({ vaultInfo: info(), logInfo });
+  // const addDiagnostic = (logInfo: BasicMonitorArgs) =>
+  //   createVaultDiagnostic({ vaultInfo: info(), logInfo });
 
   return {
     name: vaultName,
     vault,
     info,
-    addDiagnostic,
+    //addDiagnostic,
     createPrivateLink,
   };
 };

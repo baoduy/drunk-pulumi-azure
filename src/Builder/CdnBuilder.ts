@@ -1,12 +1,12 @@
-import CdnEndpoint from "../Cdn/CdnEndpoint";
-import Cdn from "../Cdn";
-import { ResourceInfo } from "../types";
+import CdnEndpoint from '../Cdn/CdnEndpoint';
+import Cdn from '../Cdn';
+import { ResourceInfo } from '../types';
 import {
   Builder,
   BuilderProps,
   CdnBuilderEndpointType,
   ICdnBuilder,
-} from "./types";
+} from './types';
 
 export class CdnBuilder extends Builder<ResourceInfo> implements ICdnBuilder {
   private _profileInfo: ResourceInfo | undefined;
@@ -31,7 +31,7 @@ export class CdnBuilder extends Builder<ResourceInfo> implements ICdnBuilder {
     this._endpoints.map((entry) =>
       CdnEndpoint({
         ...entry,
-        cdnProfileInfo: this._profileInfo,
+        cdnProfileInfo: this._profileInfo!,
       }),
     );
   }

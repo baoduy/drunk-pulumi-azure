@@ -14,20 +14,17 @@ import {
   IApimPublisherBuilder,
   IApimSkuBuilder,
 } from './types';
-import { ResourceInfo } from '../types';
+import { AppInsightInfo, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
-import { getApimName } from '../Common';
-import { organization } from '../Common/StackEnv';
+import { getApimName, organization, subscriptionId, tenantId } from '../Common';
 import {
   ApimSignInSettingsResource,
   ApimSignUpSettingsResource,
 } from '@drunk-pulumi/azure-providers';
 import { randomUuId } from '../Core/Random';
-import { AppInsightInfo } from '../Logs/Helpers';
 import * as network from '@pulumi/azure-native/network';
 import IpAddress from '../VNet/IpAddress';
 import Identity from '../AzAd/Identity';
-import { subscriptionId, tenantId } from '../Common/AzureEnv';
 import { interpolate } from '@pulumi/pulumi';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
@@ -142,7 +139,8 @@ class ApimBuilder
     this._instanceName = getApimName(this.commonProps.name);
     const sku = {
       name: this._sku!.sku,
-      capacity: this._sku!.sku === 'Consumption' ? 0 : this._sku!.capacity ?? 1,
+      capacity:
+        this._sku!.sku === 'Consumption' ? 0 : (this._sku!.capacity ?? 1),
     };
     const zones = sku.name === 'Premium' ? this._zones : undefined;
 

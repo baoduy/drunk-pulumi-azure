@@ -1,6 +1,6 @@
 import * as native from '@pulumi/azure-native';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { NamedType, ResourceGroupInfo } from '../types';
+//import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import { WithNamedType, ResourceGroupInfo } from '../types';
 import { global, getAcrName } from '../Common';
 
 export interface ImageInfo {
@@ -9,7 +9,7 @@ export interface ImageInfo {
   tags: Tag[];
 }
 
-export interface Tag extends NamedType {
+export interface Tag extends WithNamedType {
   signed: boolean;
 }
 
@@ -34,37 +34,37 @@ export const getAcrCredentials = async (name: string) => {
   };
 };
 
-export const getLastAcrImage = async ({
-  acrName,
-  repository,
-  group,
-}: LatestAcrImageProps) => {
-  const credentials = await native.containerregistry.listRegistryCredentials({
-    registryName: acrName,
-    ...group,
-  });
-
-  if (credentials == undefined) return;
-
-  const token = Buffer.from(
-    `${credentials.username!}:${credentials.passwords![0].value!}`,
-  ).toString('base64');
-
-  const url = `https://${acrName}.azurecr.io/acr/v1/${repository}/_tags?last=1&n=1&orderby=timedesc`;
-  const rs = await axios
-    .get<ImageInfo>(url, {
-      headers: { Authorization: `Basic ${token}` },
-    } as AxiosRequestConfig)
-    .then((rs) => rs.data)
-    .catch((err: AxiosError) => {
-      console.log(`getLastAcrImage: "${url}" Error`, err.response?.data);
-      return undefined;
-    });
-
-  const latestImage = rs
-    ? `${rs.registry}/${rs.imageName}:${rs.tags[0].name}`
-    : `${acrName}.azurecr.io/${repository}:latest`;
-
-  console.log(`getLastAcrImage: ${acrName}`, latestImage);
-  return latestImage;
-};
+// export const getLastAcrImage = async ({
+//   acrName,
+//   repository,
+//   group,
+// }: LatestAcrImageProps) => {
+//   const credentials = await native.containerregistry.listRegistryCredentials({
+//     registryName: acrName,
+//     ...group,
+//   });
+//
+//   if (credentials == undefined) return;
+//
+//   const token = Buffer.from(
+//     `${credentials.username!}:${credentials.passwords![0].value!}`,
+//   ).toString('base64');
+//
+//   const url = `https://${acrName}.azurecr.io/acr/v1/${repository}/_tags?last=1&n=1&orderby=timedesc`;
+//   const rs = await axios
+//     .get<ImageInfo>(url, {
+//       headers: { Authorization: `Basic ${token}` },
+//     } as AxiosRequestConfig)
+//     .then((rs) => rs.data)
+//     .catch((err: AxiosError) => {
+//       console.log(`getLastAcrImage: "${url}" Error`, err.response?.data);
+//       return undefined;
+//     });
+//
+//   const latestImage = rs
+//     ? `${rs.registry}/${rs.imageName}:${rs.tags[0].name}`
+//     : `${acrName}.azurecr.io/${repository}:latest`;
+//
+//   console.log(`getLastAcrImage: ${acrName}`, latestImage);
+//   return latestImage;
+// };

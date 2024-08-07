@@ -1,17 +1,16 @@
-import { Input } from '@pulumi/pulumi';
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
-import { LoginArgs } from '../types';
+import { LoginArgs, WithEnvRoles } from '../types';
 import {
   Builder,
   BuilderProps,
   FullSqlDbPropsType,
-  IResourceBuilder,
   ISqlAuthBuilder,
   ISqlBuilder,
   ISqlLoginBuilder,
   ISqlNetworkBuilder,
   ISqlTierBuilder,
+  SqlBuilderArgs,
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
@@ -46,8 +45,8 @@ class SqlBuilder
   private _ignoreChanges: string[] | undefined = undefined;
   private _lock: boolean = false;
 
-  constructor(props: BuilderProps) {
-    super(props);
+  constructor(private args: SqlBuilderArgs) {
+    super(args);
   }
 
   withVulnerabilityAssessment(
@@ -128,10 +127,7 @@ class SqlBuilder
   }
 
   private buildSql() {
-    if (
-      this._vulnerabilityAssessment &&
-      !this._vulnerabilityAssessment.logInfo.secrets
-    )
+    if (this._vulnerabilityAssessment && !this.args.logInfo)
       throw new Error(
         "The LogInfo's secrets are required to enable the vulnerability assessment.",
       );
@@ -141,16 +137,12 @@ class SqlBuilder
       auth: {
         ...this._authOptions,
         ...this._loginInfo!,
-        envRoles: this.commonProps.envRoles,
+        envRoles: this.args.envRoles,
       },
       vulnerabilityAssessment: this._vulnerabilityAssessment
         ? {
-            logStorageId: this._vulnerabilityAssessment.logInfo.id,
-            alertEmails: this._vulnerabilityAssessment.alertEmails,
-            storageAccessKey:
-              this._vulnerabilityAssessment.logInfo.secrets!.primaryKey!,
-            storageEndpoint:
-              this._vulnerabilityAssessment.logInfo.secrets!.endpoints.blob!,
+            ...this._vulnerabilityAssessment,
+            logStorage: this.args.logInfo!.logStorage!,
           }
         : undefined,
       network: this._networkProps,
@@ -169,5 +161,5 @@ class SqlBuilder
   }
 }
 
-export default (props: BuilderProps) =>
+export default (props: SqlBuilderArgs) =>
   new SqlBuilder(props) as ISqlLoginBuilder;

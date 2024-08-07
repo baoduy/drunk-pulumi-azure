@@ -1,8 +1,14 @@
-import { ResourceInfo } from '../../types';
+import {
+  ResourceInfo,
+  WithDiskEncryption,
+  WithEncryption,
+  WithLogInfo,
+} from '../../types';
 import { VmScheduleType } from '../../VM';
-import { IBuilder, ILoginBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILoginBuilder } from './genericBuilder';
 import { Input } from '@pulumi/pulumi';
 
+export type VmBuilderArgs = BuilderProps & WithEncryption;
 export type VmOsBuilderWindowsProps = {
   offer: 'WindowsServer' | 'CentOS' | 'Windows-10' | 'windows-11' | string;
   publisher: 'MicrosoftWindowsServer' | 'MicrosoftWindowsDesktop' | string;
@@ -45,6 +51,8 @@ export type VmSizeTypes =
   | 'Standard_E96-24ads_v5'
   | string;
 
+export type VmEncryptionType = Required<WithDiskEncryption>;
+
 export interface IVmOsBuilder {
   withWindowsImage(props: VmOsBuilderWindowsProps): IVmSizeBuilder;
   withLinuxImage(props: VmOsBuilderLinuxProps): IVmSizeBuilder;
@@ -58,6 +66,8 @@ export interface IVmVnetBuilder {
   withSubnetId(props: Input<string>): IVmBuilder;
 }
 export interface IVmBuilder extends IBuilder<ResourceInfo> {
+  /** This must be enabled before resource be created*/
+  enableEncryption(props: VmEncryptionType): IVmBuilder;
   withTags(props: Record<string, Input<string>>): IVmBuilder;
   withSchedule(props: VmScheduleType): IVmBuilder;
 }

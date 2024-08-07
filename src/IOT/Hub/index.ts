@@ -224,6 +224,7 @@ export default ({
           value: conn,
           vaultInfo,
           contentType: 'IOT Hub',
+          dependsOn: hub
         });
       });
     });

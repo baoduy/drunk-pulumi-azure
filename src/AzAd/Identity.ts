@@ -9,9 +9,9 @@ import {
   ApplicationOptionalClaims,
   ApplicationRequiredResourceAccess,
 } from '@pulumi/azuread/types/input';
-import { NamedType, NamedWithVaultBasicArgs } from '../types';
+import { WithNamedType, NamedWithVaultBasicArgs } from '../types';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
-import { getIdentitySecretNames, grantIdentityPermissions } from './Helper';
+import { getIdentitySecretNames } from './Helper';
 
 type PreAuthApplicationProps = {
   appId: string;
@@ -40,7 +40,7 @@ interface IdentityProps extends NamedWithVaultBasicArgs {
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
 }
 
-export type IdentityResult = NamedType & {
+export type IdentityResult = WithNamedType & {
   objectId: Output<string>;
   clientId: Output<string>;
   clientSecret: Output<string> | undefined;
@@ -155,6 +155,7 @@ export default ({
         value: clientSecret,
         vaultInfo,
         contentType: 'Identity',
+        dependsOn: app,
       });
     }
   }
@@ -180,18 +181,11 @@ export default ({
       //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
-    // grantIdentityPermissions({
-    //   name,
-    //   envRole,
-    //   roles,
-    //   vaultInfo,
-    //   principalId: principal.objectId,
-    // });
-
     if (vaultInfo) {
       addCustomSecrets({
         vaultInfo,
         contentType: 'Identity',
+        dependsOn: principal,
         items: [
           { name: secretNames.principalIdKeyName, value: principal.objectId },
           { name: secretNames.principalSecretKeyName, value: principalSecret },

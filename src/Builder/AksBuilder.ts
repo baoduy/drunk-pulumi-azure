@@ -1,7 +1,9 @@
 import { interpolate } from '@pulumi/pulumi';
 import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
-import { subscriptionId } from '../Common';
+import { defaultSubScope } from '../Common';
 import {
+  AksBuilderArgs,
+  AksEncryptionType,
   AksImportProps,
   BuilderAsync,
   BuilderProps,
@@ -17,12 +19,13 @@ import { ManagedClusterSKUTier } from '@pulumi/azure-native/containerservice';
 import Aks, {
   AksAccessProps,
   AksNetworkProps,
-  AksNodePoolProps,
+  NodePoolProps,
   AksResults,
   AskAddonProps,
   AskFeatureProps,
   DefaultAksNodePoolProps,
 } from '../Aks';
+import { WithEnvRoles } from '../types';
 
 class AksBuilder
   extends BuilderAsync<AksResults>
@@ -38,7 +41,7 @@ class AksBuilder
 
   //Props
   private _sshProps: SshBuilderProps | undefined = undefined;
-  private _nodePoolsProps: AksNodePoolProps[] = [];
+  private _nodePoolsProps: NodePoolProps[] = [];
   private _addonProps: AskAddonProps | undefined = undefined;
   private _featureProps: AskFeatureProps | undefined = undefined;
   private _authProps: Omit<AksAccessProps, 'envRoles'> | undefined = {};
@@ -47,9 +50,10 @@ class AksBuilder
   private _defaultNode: DefaultAksNodePoolProps | undefined = undefined;
   private _importProps: AksImportProps | undefined = undefined;
   private _lock: boolean = false;
+  private _encryptionProps: AksEncryptionType | undefined = undefined;
 
-  constructor(props: BuilderProps) {
-    super(props);
+  constructor(private args: AksBuilderArgs) {
+    super(args);
   }
 
   //Info collection methods
@@ -58,7 +62,7 @@ class AksBuilder
     return this;
   }
 
-  public withNodePool(props: AksNodePoolProps): IAksBuilder {
+  public withNodePool(props: NodePoolProps): IAksBuilder {
     this._nodePoolsProps.push(props);
     return this;
   }
@@ -86,6 +90,11 @@ class AksBuilder
     this._defaultNode = props;
     return this;
   }
+  public enableEncryption(props: AksEncryptionType): IAksBuilder {
+    this._encryptionProps = props;
+    return this;
+  }
+
   public lock(): IBuilderAsync<AksResults> {
     this._lock = true;
     return this;
@@ -119,6 +128,7 @@ class AksBuilder
         adminUsername: this._sshInstance!.userName,
         sshKeys: [sshKey],
       },
+      diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
       defaultNodePool: this._defaultNode!,
       nodePools: this._nodePoolsProps,
       features: this._featureProps,
@@ -130,16 +140,13 @@ class AksBuilder
     });
 
     //Grant read permission to AKS Node Group
-    if (
-      this.commonProps.envRoles &&
-      this._askInstance.instance.nodeResourceGroup
-    ) {
+    if (this.args.envRoles && this._askInstance.instance.nodeResourceGroup) {
       grantEnvRolesAccess({
         name: `${this._askInstance.name}-node-group`,
         dependsOn: this._askInstance.instance,
-        envRoles: this.commonProps.envRoles.info(),
+        envRoles: this.args.envRoles.info(),
         enableRGRoles: { readOnly: true },
-        scope: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
+        scope: interpolate`${defaultSubScope}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
       });
     }
   }
@@ -152,4 +159,4 @@ class AksBuilder
   }
 }
 
-export default (props: BuilderProps) => new AksBuilder(props) as ISshBuilder;
+export default (props: AksBuilderArgs) => new AksBuilder(props) as ISshBuilder;

@@ -1,7 +1,7 @@
 import * as native from "@pulumi/azure-native";
 import { BasicResourceArgs } from "../types";
 import { getFuncAppName } from "../Common/Naming";
-import Locker from "../Core/Locker";
+import {Locker} from "../Core/Locker";
 import * as pulumi from "@pulumi/pulumi";
 import { SiteConfigArgs } from "./types";
 

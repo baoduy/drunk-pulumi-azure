@@ -1,60 +1,89 @@
-import { stack } from "../Common/StackEnv";
-import * as network from "@pulumi/azure-native/network";
-import { all, Input, interpolate } from "@pulumi/pulumi";
-import { VirtualNetworkPeeringArgs } from "@pulumi/azure-native/network/virtualNetworkPeering";
-import { VnetInfoType } from "./types";
-import { subscriptionId } from "../Common/AzureEnv";
+import { stack, subscriptionId } from '../Common';
+import * as network from '@pulumi/azure-native/network';
+import { all, Input, interpolate } from '@pulumi/pulumi';
+import { ResourceInfoWithSub } from '../types';
 
-export type PeeringDirectionType = "Unidirectional" | "Bidirectional";
+export type PeeringDirectionType = 'Unidirectional' | 'Bidirectional';
+export type PeeringOptions = {
+  allowForwardedTraffic?: boolean;
+  allowVirtualNetworkAccess?: boolean;
+  allowGatewayTransit?: boolean;
+  syncRemoteAddressSpace?: boolean;
+  useRemoteGateways?: boolean;
+  doNotVerifyRemoteGateways?: boolean;
+};
+
+export type VnetPeeringType = {
+  vnetInfo: Input<ResourceInfoWithSub>;
+  options?: PeeringOptions;
+};
 
 export interface VNetPeeringProps {
-  firstVnet: Input<VnetInfoType>;
-  secondVnet: Input<VnetInfoType>;
+  from: VnetPeeringType;
+  to: VnetPeeringType;
   direction?: PeeringDirectionType;
 }
 
+const defaultOptions: PeeringOptions = {
+  allowForwardedTraffic: true,
+  allowVirtualNetworkAccess: true,
+  allowGatewayTransit: true,
+  syncRemoteAddressSpace: true,
+  doNotVerifyRemoteGateways: true,
+};
+
 export default ({
-  direction = "Unidirectional",
-  firstVnet,
-  secondVnet,
+  direction = 'Unidirectional',
+  from,
+  to,
 }: VNetPeeringProps) => {
-  const commonProps: Partial<VirtualNetworkPeeringArgs> = {
-    allowForwardedTraffic: true,
-    allowVirtualNetworkAccess: true,
-    allowGatewayTransit: true,
-    syncRemoteAddressSpace: "true",
-    useRemoteGateways: false,
-    doNotVerifyRemoteGateways: true,
-  };
+  const firstOptions = { ...defaultOptions, ...from.options };
+  const secondOptions = { ...defaultOptions, ...to.options };
+  const firstVnet = from.vnetInfo;
+  const secondVnet = to.vnetInfo;
 
   all([firstVnet, secondVnet]).apply(([first, second]) => {
     new network.VirtualNetworkPeering(
-      `${stack}-${first.vnetName}-${second.vnetName}-vlk`,
+      `${stack}-${first.name}-${second.name}-vlk`,
       {
-        ...commonProps,
-        virtualNetworkPeeringName: `${stack}-${first.vnetName}-${second.vnetName}-vlk`,
-        virtualNetworkName: first.vnetName,
-        resourceGroupName: first.resourceGroupName,
+        ...firstOptions,
+        syncRemoteAddressSpace: firstOptions.syncRemoteAddressSpace
+          ? 'true'
+          : 'false',
+        virtualNetworkPeeringName: `${stack}-${first.name}-${second.name}-vlk`,
+        virtualNetworkName: first.name,
+        resourceGroupName: first.group.resourceGroupName,
+        peeringSyncLevel: 'FullyInSync',
         remoteVirtualNetwork: {
-          id: interpolate`/subscriptions/${second.subscriptionId ?? subscriptionId}/resourceGroups/${second.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${second.vnetName}`,
+          id: interpolate`/subscriptions/${second.subscriptionId ?? subscriptionId}/resourceGroups/${second.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${second.name}`,
         },
       },
-      { deleteBeforeReplace: true },
+      {
+        deleteBeforeReplace: true,
+        ignoreChanges: ['peeringSyncLevel', 'peeringState'],
+      },
     );
 
-    if (direction === "Bidirectional")
+    if (direction === 'Bidirectional')
       new network.VirtualNetworkPeering(
-        `${stack}-${second.vnetName}-${first.vnetName}-vlk`,
+        `${stack}-${second.name}-${first.name}-vlk`,
         {
-          ...commonProps,
-          virtualNetworkPeeringName: `${stack}-${second.vnetName}-${first.vnetName}-vlk`,
-          virtualNetworkName: second.vnetName,
-          resourceGroupName: second.resourceGroupName,
+          ...secondOptions,
+          syncRemoteAddressSpace: secondOptions.syncRemoteAddressSpace
+            ? 'true'
+            : 'false',
+          virtualNetworkPeeringName: `${stack}-${second.name}-${first.name}-vlk`,
+          virtualNetworkName: second.name,
+          resourceGroupName: second.group.resourceGroupName,
+          peeringSyncLevel: 'FullyInSync',
           remoteVirtualNetwork: {
-            id: interpolate`/subscriptions/${first.subscriptionId ?? subscriptionId}/resourceGroups/${first.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${first.vnetName}`,
+            id: interpolate`/subscriptions/${first.subscriptionId ?? subscriptionId}/resourceGroups/${first.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${first.name}`,
           },
         },
-        { deleteBeforeReplace: true },
+        {
+          deleteBeforeReplace: true,
+          ignoreChanges: ['peeringSyncLevel', 'peeringState'],
+        },
       );
   });
 };

@@ -1,20 +1,14 @@
 import * as network from '@pulumi/azure-native/network';
-import { Input, interpolate, output, Output } from '@pulumi/pulumi';
+import { output } from '@pulumi/pulumi';
 import * as netmask from 'netmask';
 import dns from 'node:dns/promises';
-import {
-  currentCountryCode,
-  parseResourceInfoFromId,
-  subscriptionId,
-} from '../Common';
+
 import {
   getFirewallName,
   getIpAddressName,
   getResourceGroupName,
-  getVnetName,
 } from '../Common';
 import { ResourceArgs } from '../types';
-import { VnetInfoType } from './types';
 
 export const appGatewaySubnetName = 'app-gateway';
 export const gatewaySubnetName = 'GatewaySubnet';
@@ -36,38 +30,11 @@ export const convertToIpRange = (
     return { start: ip, end: ip };
   });
 
-export const getVnetIdFromSubnetId = (subnetId: string) => {
-  //The sample SubnetId is /subscriptions/63a31b41-eb5d-4160-9fc9-d30fc00286c9/resourceGroups/sg-dev-aks-vnet/providers/Microsoft.Network/virtualNetworks/sg-vnet-trans/subnets/aks-main-nodes
-  return subnetId.split('/subnets')[0];
-};
-
 interface SubnetProps {
   subnetName: string;
   //The Key name used to create resource group and Vnet
   vnetAndGroupName: string;
 }
-
-/**Get Subnet Id from Naming rules*/
-export const getSubnetIdByName = ({
-  subnetName,
-  vnetAndGroupName,
-}: SubnetProps): Output<string> => {
-  const vnetName = getVnetName(vnetAndGroupName);
-  const group = getResourceGroupName(vnetAndGroupName);
-  return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}`;
-};
-
-export const getIpAddressId = ({
-  name,
-  groupName,
-}: {
-  name: string;
-  groupName: string;
-}) => {
-  const n = getIpAddressName(name);
-  const group = getResourceGroupName(groupName);
-  return interpolate`/subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.Network/publicIPAddresses/${n}`;
-};
 
 export const getIpAddressResource = ({
   name,
@@ -84,40 +51,6 @@ export const getIpAddressResource = ({
     resourceGroupName: group,
   });
 };
-
-export const getVnetInfo = (
-  groupName: string,
-  region: string = currentCountryCode,
-): VnetInfoType => {
-  const vnetName = getVnetName(groupName, { region });
-  const rsName = getResourceGroupName(groupName, { region });
-
-  return {
-    vnetName,
-    resourceGroupName: rsName,
-    subscriptionId,
-  };
-};
-
-export const getVnetIdByName = (
-  groupName: string,
-  region: string = currentCountryCode,
-) => {
-  const info = getVnetInfo(groupName, region);
-  return interpolate`/subscriptions/${info.subscriptionId}/resourceGroups/${info.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.vnetName}`;
-};
-
-export const parseVnetInfoFromId = (
-  vnetId: Input<string>,
-): Output<VnetInfoType> =>
-  output(vnetId).apply((id) => {
-    const info = parseResourceInfoFromId(id)!;
-    return {
-      vnetName: info.name,
-      resourceGroupName: info.group.resourceGroupName,
-      subscriptionId: info.subscriptionId,
-    } as VnetInfoType;
-  });
 
 export const getFirewallIpAddress = ({ name, group }: ResourceArgs) => {
   const firewall = network.getAzureFirewallOutput({

@@ -67,7 +67,7 @@ export const generateSsh = ({
       getPublicKey: (): Output<string> =>
         output(
           getSecret({ name: publicKeyName, nameFormatted: true, vaultInfo })!,
-        ).apply((i) => i!.value!),
+        ).apply((i) => i?.value!),
       getPrivateKey: (): Output<string> =>
         output(
           getSecret({ name: privateKeyName, nameFormatted: true, vaultInfo })!,

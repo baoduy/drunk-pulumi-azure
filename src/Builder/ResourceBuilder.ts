@@ -1,43 +1,40 @@
 import { RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
 import { EnvRoleBuilder } from './EnvRoleBuilder';
-import {
-  BuilderAsyncFunctionType,
-  BuilderFunctionType,
-  IEnvRoleBuilder,
-  IResourceBuilder,
-  IResourceGroupBuilder,
-  IResourceRoleBuilder,
-  IResourceVaultBuilder,
-  ResourceBuilderResults,
-  ResourceFunction,
-  ResourceVaultLinkingBuilderType,
-  ResourceVnetBuilderType,
-  VnetBuilderResults,
-} from './types';
+import * as types from './types';
 import { EnvRolesInfo } from '../AzAd/EnvRoles';
-import { KeyVaultInfo, ResourceGroupInfo, ResourceInfo } from '../types';
+import {
+  IdentityInfo,
+  KeyVaultInfo,
+  LogInfo,
+  ResourceGroupInfo,
+  ResourceInfo,
+} from '../types';
 import RG from '../Core/ResourceGroup';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { createVaultPrivateLink } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
-import { subscriptionId, getKeyVaultInfo } from '../Common';
+import { subscriptionId, getKeyVaultInfo, cleanName } from '../Common';
 import { CertBuilderType, IVaultBuilderResults } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
+import * as UIDCreator from '../AzAd/Identities/EnvUID';
+import { getLogInfo } from '../Logs/Helpers';
 
 class ResourceBuilder
   implements
-    IResourceRoleBuilder,
-    IResourceGroupBuilder,
-    IResourceVaultBuilder,
-    IResourceBuilder
+    types.IResourceRoleBuilder,
+    types.IResourceGroupBuilder,
+    types.IResourceVaultBuilder,
+    types.IResourceBuilder
 {
   //Instances
   private _RGInstance: ResourceGroup | undefined = undefined;
   private _otherInstances: Record<string, ResourceInfo> = {};
-  private _vnetInstance: VnetBuilderResults | undefined = undefined;
-  private _otherResources: ResourceFunction[] = [];
+  private _vnetInstance: types.VnetBuilderResults | undefined = undefined;
+  private _otherResources: types.ResourceFunction[] = [];
+  private _envUIDInfo: IdentityInfo | undefined = undefined;
+  private _logInfo: LogInfo | undefined = undefined;
 
   //Props
   private _createRGProps: RoleEnableTypes | undefined = undefined;
@@ -48,97 +45,127 @@ class ResourceBuilder
   private _createVault: boolean = false;
   private _createVaultName: string | undefined = undefined;
   private _loadRolesFromVault: boolean = false;
-  private _envRoles: IEnvRoleBuilder | undefined = undefined;
-  private _otherBuilders = new Array<BuilderFunctionType>();
-  private _otherBuildersAsync = new Array<BuilderAsyncFunctionType>();
+  private _envRoles: types.IEnvRoleBuilder | undefined = undefined;
+  private _otherBuilders = new Array<types.BuilderFunctionType>();
+  private _otherBuildersAsync = new Array<types.BuilderAsyncFunctionType>();
   private _vaultInfo: IVaultBuilderResults | undefined = undefined;
-  private _vnetBuilder: ResourceVnetBuilderType | undefined = undefined;
+  private _vnetBuilder: types.ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
   private _certs: Record<string, CertBuilderType> = {};
-  private _vaultLinkingProps: ResourceVaultLinkingBuilderType | undefined =
-    undefined;
+  private _vaultLinkingProps:
+    | types.ResourceVaultLinkingBuilderType
+    | undefined = undefined;
   private _enableEncryption: boolean = false;
   private _pushEnvToVault: boolean = false;
+  private _createEnvUID: boolean = false;
+  private _loadEnvUIDFromVault: boolean = false;
+  private _loadLogInfoFrom: string | undefined = undefined;
 
   constructor(public name: string) {}
 
-  public createRoles(): IResourceGroupBuilder {
+  public createRoles(): types.IResourceGroupBuilder {
     this._createRole = true;
     return this;
   }
-  public withRoles(props: EnvRolesInfo): IResourceGroupBuilder {
+  public withRoles(props: EnvRolesInfo): types.IResourceGroupBuilder {
     this._envRoles = EnvRoleBuilder.form(props);
     return this;
   }
-  public withRolesFromVault(): IResourceGroupBuilder {
+  /** Create User Assigned Identity for encryption purposes*/
+  public createEnvUID(): types.IResourceBuilder {
+    this._createEnvUID = true;
+    return this;
+  }
+  /** Create User Assigned Identity for encryption purposes*/
+  public withEnvUIDFromVault(): types.IResourceBuilder {
+    this._loadEnvUIDFromVault = true;
+    return this;
+  }
+  public withRolesFromVault(): types.IResourceGroupBuilder {
     this._loadRolesFromVault = true;
     return this;
   }
   public createRG(
     props: RoleEnableTypes | undefined = undefined,
-  ): IResourceVaultBuilder {
+  ): types.IResourceVaultBuilder {
     this._createRGProps = props;
     this._createRG = true;
     return this;
   }
-  public withRG(props: ResourceGroupInfo): IResourceVaultBuilder {
+  public withRG(props: ResourceGroupInfo): types.IResourceVaultBuilder {
     this._RGInfo = props;
     return this;
   }
-  public createVault(name: string | undefined = undefined): IResourceBuilder {
+  public createVault(
+    name: string | undefined = undefined,
+  ): types.IResourceBuilder {
     this._createVault = true;
     this._createVaultName = name;
     return this;
   }
-  public withVault(props: KeyVaultInfo): IResourceBuilder {
+  public withVault(props: KeyVaultInfo): types.IResourceBuilder {
     this._vaultInfo = VaultBuilderResults.from(props);
     return this;
   }
-  public getVaultInfoBy(name: string): IResourceBuilder {
+  public withVaultFrom(name: string): types.IResourceBuilder {
     return this.withVault(getKeyVaultInfo(name));
   }
-  public linkVaultTo(props: ResourceVaultLinkingBuilderType): IResourceBuilder {
+
+  public linkVaultTo(
+    props: types.ResourceVaultLinkingBuilderType,
+  ): types.IResourceBuilder {
     this._vaultLinkingProps = props;
     return this;
   }
 
-  public addSecrets(items: Record<string, Input<string>>): IResourceBuilder {
+  public addSecrets(
+    items: Record<string, Input<string>>,
+  ): types.IResourceBuilder {
     this._secrets = { ...this._secrets, ...items };
     return this;
   }
-  public addCerts(props: CertBuilderType): IResourceBuilder {
+  public addCerts(props: CertBuilderType): types.IResourceBuilder {
     this._certs[props.name] = props;
     return this;
   }
 
-  public withVnet(props: ResourceVnetBuilderType): IResourceBuilder {
+  public withVnet(
+    props: types.ResourceVnetBuilderType,
+  ): types.IResourceBuilder {
     this._vnetBuilder = props;
     return this;
   }
-  public enableEncryption(): IResourceBuilder {
+  public enableEncryption(): types.IResourceBuilder {
     this._enableEncryption = true;
     return this;
   }
+  public withLogFrom(name: string): types.IResourceBuilder {
+    this._loadLogInfoFrom = name;
+    return this;
+  }
 
-  public withBuilder(props: BuilderFunctionType): IResourceBuilder {
+  public withBuilder(props: types.BuilderFunctionType): types.IResourceBuilder {
     this._otherBuilders.push(props);
     return this;
   }
-  public withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder {
+  public withBuilderAsync(
+    props: types.BuilderAsyncFunctionType,
+  ): types.IResourceBuilder {
     this._otherBuildersAsync.push(props);
     return this;
   }
-  public withResource(builder: ResourceFunction): IResourceBuilder {
+  public withResource(builder: types.ResourceFunction): types.IResourceBuilder {
     this._otherResources.push(builder);
     return this;
   }
-  public lock(): IResourceBuilder {
+  public lock(): types.IResourceBuilder {
     this._lock = true;
     return this;
   }
   private buildRoles() {
     //If the EnvRoles is already provided then no need to re-build it
     if (this._envRoles) return;
+
     //Create new EnvRoles
     if (this._createRole) {
       this._envRoles = EnvRoleBuilder.create();
@@ -149,6 +176,7 @@ class ResourceBuilder
       this._envRoles = EnvRoleBuilder.loadForm(this._vaultInfo!);
     }
   }
+
   private buildRG() {
     if (!this._createRG) return;
     if (!this._createRGProps)
@@ -174,9 +202,8 @@ class ResourceBuilder
     //Create Vault
     if (this._createVault) {
       this._vaultInfo = VaultBuilder({
-        name: this._createVaultName ?? this.name,
+        name: this._createVaultName ?? cleanName(this.name),
         group: this._RGInfo!,
-        envRoles: this._envRoles!,
         dependsOn: this._RGInstance,
       }).build();
 
@@ -192,6 +219,20 @@ class ResourceBuilder
     //Add Secrets to Vaults
     if (this._secrets) this._vaultInfo!.addSecrets(this._secrets);
     if (this._certs) this._vaultInfo!.addCerts(this._certs);
+  }
+
+  private buildLogInfo() {
+    if (!this._loadLogInfoFrom || this._logInfo) return;
+    this._logInfo = getLogInfo(this._loadLogInfoFrom, this._vaultInfo);
+  }
+
+  private buildEnvUID() {
+    if (!this._vaultInfo) return;
+
+    if (this._createEnvUID)
+      this._envUIDInfo = UIDCreator.create(this.getResults());
+    else if (this._loadEnvUIDFromVault)
+      this._envUIDInfo = UIDCreator.get(this._vaultInfo.info());
   }
 
   //This linking need to be called after Vnet created
@@ -261,23 +302,27 @@ class ResourceBuilder
     );
   }
 
-  private getResults(): ResourceBuilderResults {
+  private getResults(): types.ResourceBuilderResults {
     return {
-      name: this.name,
+      name: cleanName(this.name),
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!.info(),
       envRoles: this._envRoles!,
+      envUIDInfo: this._envUIDInfo,
       enableEncryption: this._enableEncryption,
       vnetInstance: this._vnetInstance,
       otherInstances: this._otherInstances!,
+      logInfo: this._logInfo,
       dependsOn: this._RGInstance,
     };
   }
 
-  public async build(): Promise<ResourceBuilderResults> {
+  public async build(): Promise<types.ResourceBuilderResults> {
     this.buildRoles();
     this.buildRG();
     this.buildVault();
+    this.buildLogInfo();
+    this.buildEnvUID();
     this.buildVnet();
     this.buildVaultLinking();
     this.buildOthers();
@@ -287,4 +332,4 @@ class ResourceBuilder
 }
 
 export default (name: string) =>
-  new ResourceBuilder(name) as IResourceRoleBuilder;
+  new ResourceBuilder(name) as types.IResourceRoleBuilder;

@@ -1,23 +1,9 @@
-import {
-  getIdentityName,
-  getManagedIdentityName,
-  getSecretName,
-  parseResourceInfoFromId,
-} from '../Common';
+import { getIdentityName, getUIDName, getSecretName } from '../Common';
 import { getSecret } from '../KeyVault/Helper';
-import {
-  IdentityInfo,
-  IdentityRoleAssignment,
-  KeyVaultInfo,
-  NamedType,
-  NamedWithVaultType,
-} from '../types';
-import { Input, output } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes, getEnvRole } from './EnvRoles';
-import { roleAssignment } from './RoleAssignment';
-import { addMemberToGroup } from './Group';
+import { IdentityInfo, KeyVaultInfo, WithNamedType } from '../types';
+import { output } from '@pulumi/pulumi';
 
-interface Props extends NamedType {
+interface Props extends WithNamedType {
   includePrincipal?: boolean;
   vaultInfo: KeyVaultInfo;
 }
@@ -72,92 +58,89 @@ export const getIdentityInfo = async ({
 export const getIdentityInfoOutput = (props: Props) =>
   output<IdentityInfoResults>(getIdentityInfo(props));
 
-const grantIdentityToResourceRoles = ({
-  name,
-  roles,
-  principalId,
-}: NamedType & {
-  roles: Array<{ name: string; scope: Input<string> }>;
-  principalId: Input<string>;
-}) =>
-  roles.map((r) =>
-    roleAssignment({
-      name,
-      roleName: r.name,
-      principalId: principalId,
-      principalType: 'ServicePrincipal',
-      scope: r.scope,
+// const grantIdentityToResourceRoles = ({
+//   name,
+//   roles,
+//   principalId,
+// }: WithNamedType & {
+//   roles: Array<{ name: string; scope: Input<string> }>;
+//   principalId: Input<string>;
+// }) =>
+//   roles.map((r) =>
+//     roleAssignment({
+//       name,
+//       roleName: r.name,
+//       principalId: principalId,
+//       principalType: 'ServicePrincipal',
+//       scope: r.scope,
+//     }),
+//   );
+
+// const grantIdentityEnvRolesGroup = ({
+//   name,
+//   roleType,
+//   vaultInfo,
+//   principalId,
+// }: Required<NamedWithVaultType> & {
+//   roleType: EnvRoleKeyTypes;
+//   principalId: Input<string>;
+// }) => {
+//   const role = output(getEnvRole(roleType, vaultInfo));
+//   return role.apply((r) => {
+//     if (!role.objectId) return;
+//     return addMemberToGroup({
+//       name,
+//       objectId: principalId,
+//       groupObjectId: r.objectId,
+//     });
+//   });
+// };
+
+// export const grantIdentityPermissions = ({
+//   name,
+//   principalId,
+//   vaultInfo,
+//   role,
+// }: IdentityRoleAssignment &
+//   WithNamedType & {
+//     principalId: Input<string>;
+//   }) => {
+//   // if (roles) {
+//   //   grantIdentityToResourceRoles({ name, roles, principalId });
+//   // }
+//   if (role && vaultInfo) {
+//     grantIdentityEnvRolesGroup({
+//       name,
+//       roleType: role,
+//       principalId,
+//       vaultInfo,
+//     });
+//   }
+// };
+
+export const getUserAssignedIdentityInfo = (
+  name: string,
+  vaultInfo: KeyVaultInfo,
+): IdentityInfo => {
+  name = getUIDName(name);
+
+  const id = output(
+    getSecret({
+      name: `${name}-id`,
+      vaultInfo,
+      nameFormatted: true,
+    }),
+  );
+  const principalId = output(
+    getSecret({
+      name: `${name}-principalId`,
+      vaultInfo,
+      nameFormatted: true,
     }),
   );
 
-const grantIdentityEnvRolesGroup = ({
-  name,
-  roleType,
-  vaultInfo,
-  principalId,
-}: Required<NamedWithVaultType> & {
-  roleType: EnvRoleKeyTypes;
-  principalId: Input<string>;
-}) => {
-  const role = output(getEnvRole(roleType, vaultInfo));
-  return role.apply((r) => {
-    if (!role.objectId) return;
-    return addMemberToGroup({
-      name,
-      objectId: principalId,
-      groupObjectId: r.objectId,
-    });
-  });
-};
-
-export const grantIdentityPermissions = ({
-  name,
-  principalId,
-  vaultInfo,
-  role,
-}: IdentityRoleAssignment &
-  NamedType & {
-    principalId: Input<string>;
-  }) => {
-  // if (roles) {
-  //   grantIdentityToResourceRoles({ name, roles, principalId });
-  // }
-  if (role && vaultInfo) {
-    grantIdentityEnvRolesGroup({
-      name,
-      roleType: role,
-      principalId,
-      vaultInfo,
-    });
-  }
-};
-
-export const getUserAssignedIdentityInfo = async (
-  name: string,
-  vaultInfo: KeyVaultInfo,
-): Promise<IdentityInfo> => {
-  name = getManagedIdentityName(name);
-  const id = await getSecret({
-    name: `${name}-id`,
-    vaultInfo,
-    nameFormatted: true,
-  });
-  const principalId = await getSecret({
-    name: `${name}-principalId`,
-    vaultInfo,
-    nameFormatted: true,
-  });
-
-  const info = parseResourceInfoFromId(id!.value!);
   return {
-    name: info!.name!,
-    group: info!.group!,
-    id: info!.id!,
-    principalId: principalId!.value!,
+    id: id?.apply((i) => i?.value!),
+    principalId: principalId?.apply((i) => i?.value!),
   };
 };
-
-export const getUserAssignedIdentityInfoOutput = (
-  name: string,
-  vaultInfo: KeyVaultInfo,
-) => output<IdentityInfo>(getUserAssignedIdentityInfo(name, vaultInfo));

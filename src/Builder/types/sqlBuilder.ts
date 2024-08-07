@@ -1,5 +1,6 @@
 import { Input } from '@pulumi/pulumi';
 import {
+  BuilderProps,
   IBuilder,
   IIgnoreChanges,
   ILockable,
@@ -13,8 +14,9 @@ import {
   SqlVulnerabilityAssessmentType,
 } from '../../Sql';
 import { SqlDbProps, SqlDbSku } from '../../Sql/SqlDb';
-import { LogStorageInfo } from '../../Logs/Helpers';
+import { StorageInfo, WithEnvRoles, WithLogInfo } from '../../types';
 
+export type SqlBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
 export type SqlBuilderAuthOptionsType = Omit<
   SqlAuthType,
   'password' | 'adminLogin' | 'envRoles'
@@ -34,9 +36,10 @@ export type FullSqlDbPropsType = Omit<
   | 'sqlServerName'
 >;
 
-export type SqlBuilderVulnerabilityAssessmentType = {
-  logInfo: LogStorageInfo;
-} & Pick<SqlVulnerabilityAssessmentType, 'alertEmails'>;
+export type SqlBuilderVulnerabilityAssessmentType = Pick<
+  SqlVulnerabilityAssessmentType,
+  'alertEmails'
+>;
 
 export interface ISqlLoginBuilder extends ILoginBuilder<ISqlAuthBuilder> {}
 
