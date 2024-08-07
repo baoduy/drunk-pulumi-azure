@@ -1,9 +1,9 @@
 import { Input } from '@pulumi/pulumi';
 import * as network from '@pulumi/azure-native/network';
-import { IBuilder, OmitBuilderProps } from './genericBuilder';
+import { BuilderProps, IBuilder, OmitBuilderProps } from './genericBuilder';
 import { VnetProps, VnetResult } from '../../VNet/Vnet';
 import { SubnetProps } from '../../VNet/Subnet';
-import { BasicResourceArgs, LogInfo } from '../../types';
+import { BasicResourceArgs, WithLogInfo } from '../../types';
 import {
   PeeringDirectionType,
   PeeringOptions,
@@ -14,6 +14,7 @@ import { CustomSecurityRuleArgs, RouteArgs } from '../../VNet/types';
 import { PublicIpAddressPrefixResult } from '../../VNet/IpAddressPrefix';
 import { IPrivateDnsZoneBuilder } from './privateDnsZoneBuilder';
 
+export type VnetBuilderArgs = BuilderProps & WithLogInfo;
 //VNet Builder Types
 export type VnetBuilderResults = VnetResult & {
   publicIpAddress: PublicIpAddressPrefixResult | undefined;

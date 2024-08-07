@@ -9,7 +9,7 @@ import { addEncryptKey } from '../KeyVault/Helper';
 import {
   BasicEncryptResourceArgs,
   LoginArgs,
-  WithVmEncryption,
+  WithDiskEncryption,
 } from '../types';
 import GlobalSchedule from './GlobalSchedule';
 import Extension, { VmExtensionProps } from './Extension';
@@ -26,7 +26,7 @@ export type VmScheduleType = {
 //https://az-vm-image.info/
 // az vm image list --output table
 // az vm image list --location EastAsia --publisher MicrosoftWindowsDesktop --offer windows-11 --output table --all
-interface Props extends BasicEncryptResourceArgs, WithVmEncryption {
+interface Props extends BasicEncryptResourceArgs, WithDiskEncryption {
   subnetId: Input<string>;
   storageAccountType?: compute.StorageAccountTypes;
   vmSize?: Input<string>;

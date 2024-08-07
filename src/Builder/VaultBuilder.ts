@@ -3,9 +3,10 @@ import {
   CertBuilderType,
   IVaultBuilder,
   IVaultBuilderResults,
+  VaultBuilderArgs,
 } from './types/vaultBuilder';
 import Vault, { createVaultPrivateLink } from '../KeyVault';
-import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import { KeyVaultInfo, ResourceGroupInfo, WithEnvRoles } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   VaultCertResource,
@@ -89,12 +90,7 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 }
 
 class VaultBuilder implements IVaultBuilder {
-  private readonly _props: Omit<BuilderProps, 'vaultInfo'>;
-  //private _logInfo: BasicMonitorArgs | undefined = undefined;
-
-  constructor(props: Omit<BuilderProps, 'vaultInfo'>) {
-    this._props = props;
-  }
+  constructor(private args: VaultBuilderArgs) {}
 
   // public withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder {
   //   this._logInfo = logInfo;
@@ -102,11 +98,11 @@ class VaultBuilder implements IVaultBuilder {
   // }
 
   public build(): IVaultBuilderResults {
-    const rs = Vault(this._props);
+    const rs = Vault(this.args);
     //if (this._logInfo) rs.addDiagnostic(this._logInfo);
     return VaultBuilderResults.from(rs.info());
   }
 }
 
-export default (props: Omit<BuilderProps, 'vaultInfo'>) =>
+export default (props: VaultBuilderArgs) =>
   new VaultBuilder(props) as IVaultBuilder;

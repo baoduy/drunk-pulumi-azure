@@ -5,6 +5,8 @@ import {
   KeyVaultInfo,
   ResourceGroupInfo,
   ResourceInfo,
+  WithEncryptionInfo,
+  WithLogInfo,
 } from '../../types';
 import {
   BuilderProps,
@@ -20,10 +22,12 @@ import {
 } from './vnetBuilder';
 import { Input } from '@pulumi/pulumi';
 
-export type ResourceBuilderResults = BuilderProps & {
-  vnetInstance?: VnetBuilderResults;
-  otherInstances: Record<string, any>;
-};
+export type ResourceBuilderResults = BuilderProps &
+  WithEncryptionInfo &
+  WithLogInfo & {
+    vnetInstance?: VnetBuilderResults;
+    otherInstances: Record<string, any>;
+  };
 
 export type BuilderFunctionType = (
   props: ResourceBuilderResults,

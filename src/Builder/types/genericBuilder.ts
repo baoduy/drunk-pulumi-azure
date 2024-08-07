@@ -1,15 +1,13 @@
 //Common Builder Types
 import {
-  EncryptResourceArgs,
+  BasicResourceWithVaultArgs,
   LoginArgs,
-  LogInfo,
   ResourceInfo,
   TypeOmit,
   WithDependsOn,
 } from '../../types';
 
-export type BuilderProps = EncryptResourceArgs &
-  WithDependsOn & { logInfo?: LogInfo };
+export type BuilderProps = BasicResourceWithVaultArgs & WithDependsOn;
 export type OmitBuilderProps<T> = TypeOmit<T, BuilderProps>;
 
 export interface ILoginBuilder<IReturnInterface> {

@@ -1,5 +1,6 @@
 import { Input } from '@pulumi/pulumi';
 import {
+  BuilderProps,
   IBuilder,
   IIgnoreChanges,
   ILockable,
@@ -13,8 +14,9 @@ import {
   SqlVulnerabilityAssessmentType,
 } from '../../Sql';
 import { SqlDbProps, SqlDbSku } from '../../Sql/SqlDb';
-import { StorageInfo } from '../../types';
+import { StorageInfo, WithEnvRoles, WithLogInfo } from '../../types';
 
+export type SqlBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
 export type SqlBuilderAuthOptionsType = Omit<
   SqlAuthType,
   'password' | 'adminLogin' | 'envRoles'

@@ -2,6 +2,7 @@ import { interpolate } from '@pulumi/pulumi';
 import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
 import { defaultSubScope } from '../Common';
 import {
+  AksBuilderArgs,
   AksEncryptionType,
   AksImportProps,
   BuilderAsync,
@@ -24,6 +25,7 @@ import Aks, {
   AskFeatureProps,
   DefaultAksNodePoolProps,
 } from '../Aks';
+import { WithEnvRoles } from '../types';
 
 class AksBuilder
   extends BuilderAsync<AksResults>
@@ -50,8 +52,8 @@ class AksBuilder
   private _lock: boolean = false;
   private _encryptionProps: AksEncryptionType | undefined = undefined;
 
-  constructor(props: BuilderProps) {
-    super(props);
+  constructor(private args: AksBuilderArgs) {
+    super(args);
   }
 
   //Info collection methods
@@ -138,14 +140,11 @@ class AksBuilder
     });
 
     //Grant read permission to AKS Node Group
-    if (
-      this.commonProps.envRoles &&
-      this._askInstance.instance.nodeResourceGroup
-    ) {
+    if (this.args.envRoles && this._askInstance.instance.nodeResourceGroup) {
       grantEnvRolesAccess({
         name: `${this._askInstance.name}-node-group`,
         dependsOn: this._askInstance.instance,
-        envRoles: this.commonProps.envRoles.info(),
+        envRoles: this.args.envRoles.info(),
         enableRGRoles: { readOnly: true },
         scope: interpolate`${defaultSubScope}/resourceGroups/${this._askInstance.instance.nodeResourceGroup}`,
       });
@@ -160,4 +159,4 @@ class AksBuilder
   }
 }
 
-export default (props: BuilderProps) => new AksBuilder(props) as ISshBuilder;
+export default (props: AksBuilderArgs) => new AksBuilder(props) as ISshBuilder;

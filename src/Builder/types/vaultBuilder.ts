@@ -1,7 +1,9 @@
 import { CertArgs } from '@drunk-pulumi/azure-providers';
 import { KeyVaultInfo, WithNamedType } from '../../types';
 import { Input } from '@pulumi/pulumi';
+import { BuilderProps } from './genericBuilder';
 
+export type VaultBuilderArgs = Omit<BuilderProps, 'vaultInfo'>;
 export type CertBuilderType = WithNamedType & {
   cert: CertArgs;
 };

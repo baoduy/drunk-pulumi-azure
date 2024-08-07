@@ -8,7 +8,7 @@ import {
   LockableType,
   LogInfo,
   ResourceInfoWithInstance,
-  WithVmEncryption,
+  WithDiskEncryption,
 } from '../types';
 import {
   currentEnv,
@@ -153,7 +153,7 @@ export type DefaultAksNodePoolProps = Omit<NodePoolProps, 'name' | 'mode'>;
 export interface AksProps
   extends BasicEncryptResourceArgs,
     LockableType,
-    WithVmEncryption {
+    WithDiskEncryption {
   tier?: ccs.ManagedClusterSKUTier;
   addon?: AskAddonProps;
   features?: AskFeatureProps;

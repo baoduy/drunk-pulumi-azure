@@ -1,6 +1,6 @@
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
-import { LoginArgs } from '../types';
+import { LoginArgs, WithEnvRoles } from '../types';
 import {
   Builder,
   BuilderProps,
@@ -10,6 +10,7 @@ import {
   ISqlLoginBuilder,
   ISqlNetworkBuilder,
   ISqlTierBuilder,
+  SqlBuilderArgs,
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
@@ -44,8 +45,8 @@ class SqlBuilder
   private _ignoreChanges: string[] | undefined = undefined;
   private _lock: boolean = false;
 
-  constructor(props: BuilderProps) {
-    super(props);
+  constructor(private args: SqlBuilderArgs) {
+    super(args);
   }
 
   withVulnerabilityAssessment(
@@ -126,7 +127,7 @@ class SqlBuilder
   }
 
   private buildSql() {
-    if (this._vulnerabilityAssessment && !this.commonProps.logInfo)
+    if (this._vulnerabilityAssessment && !this.args.logInfo)
       throw new Error(
         "The LogInfo's secrets are required to enable the vulnerability assessment.",
       );
@@ -136,12 +137,12 @@ class SqlBuilder
       auth: {
         ...this._authOptions,
         ...this._loginInfo!,
-        envRoles: this.commonProps.envRoles,
+        envRoles: this.args.envRoles,
       },
       vulnerabilityAssessment: this._vulnerabilityAssessment
         ? {
             ...this._vulnerabilityAssessment,
-            logStorage: this.commonProps.logInfo!.logStorage!,
+            logStorage: this.args.logInfo!.logStorage!,
           }
         : undefined,
       network: this._networkProps,
@@ -160,5 +161,5 @@ class SqlBuilder
   }
 }
 
-export default (props: BuilderProps) =>
+export default (props: SqlBuilderArgs) =>
   new SqlBuilder(props) as ISqlLoginBuilder;

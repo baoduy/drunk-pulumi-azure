@@ -17,7 +17,11 @@ import * as types from './types';
 import Bastion from '../VNet/Bastion';
 import { rsInfo } from '../Common';
 import { LogInfo, ResourceInfo, ResourceInfoWithSub } from '../types';
-import { FirewallCreationProps, IGatewayFireWallBuilder } from './types';
+import {
+  FirewallCreationProps,
+  IGatewayFireWallBuilder,
+  VnetBuilderArgs,
+} from './types';
 import { Input } from '@pulumi/pulumi';
 
 const outboundIpName = 'outbound';
@@ -60,8 +64,8 @@ class VnetBuilder
     types.VnetPrivateDnsBuilderFunc | undefined
   > = {};
 
-  constructor(commonProps: types.BuilderProps) {
-    super(commonProps);
+  constructor(private args: types.VnetBuilderArgs) {
+    super(args);
   }
 
   public asHub(props: types.VnetBuilderProps = {}): types.IPublicIpBuilder {
@@ -294,7 +298,7 @@ class VnetBuilder
           }
         : undefined,
 
-      logInfo: this.commonProps.logInfo,
+      logInfo: this.args.logInfo,
       dependsOn:
         this._ipAddressInstance?.addressPrefix ??
         (this._ipAddressInstance?.addresses
@@ -396,5 +400,5 @@ class VnetBuilder
   }
 }
 
-export default (props: types.BuilderProps) =>
+export default (props: types.VnetBuilderArgs) =>
   new VnetBuilder(props) as types.IVnetBuilderStart;

@@ -42,14 +42,17 @@ export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
 };
-export type WithVmEncryption = {
+export type WithEncryption = {
+  enableEncryption?: boolean;
+};
+export type WithDiskEncryption = {
   diskEncryptionSetId?: Input<string>;
 };
 
 export type WithVaultInfo = { vaultInfo?: KeyVaultInfo };
 export type WithResourceGroupInfo = { group: ResourceGroupInfo };
-export type WithEncryptionInfo = WithEnvRoles &
-  WithVaultInfo & { enableEncryption?: boolean };
+export type WithLogInfo = { logInfo?: LogInfo };
+export type WithEncryptionInfo = WithEnvRoles & WithVaultInfo & WithEncryption;
 export type WithPulumiOpts = { opts?: CustomResourceOptions };
 
 export type LoginWithEnvRolesArgs = LoginArgs & WithEnvRoles;

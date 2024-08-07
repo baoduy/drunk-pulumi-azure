@@ -1,7 +1,7 @@
 //AKS Builder types
 import * as cs from '@pulumi/azure-native/containerservice';
 import { SshGenerationProps } from '../../Core/KeyGenerators';
-import { IBuilderAsync } from './genericBuilder';
+import { BuilderProps, IBuilderAsync } from './genericBuilder';
 import {
   AksAccessProps,
   AksNetworkProps,
@@ -11,11 +11,12 @@ import {
   AskFeatureProps,
   DefaultAksNodePoolProps,
 } from '../../Aks';
-import { WithVmEncryption } from '../../types';
+import { WithDiskEncryption, WithEnvRoles } from '../../types';
 
+export type AksBuilderArgs = BuilderProps & WithEnvRoles;
 export type SshBuilderProps = Omit<SshGenerationProps, 'vaultInfo' | 'name'>;
 export type AksImportProps = { id: string; ignoreChanges?: string[] };
-export type AksEncryptionType = Required<WithVmEncryption>;
+export type AksEncryptionType = Required<WithDiskEncryption>;
 
 export interface ISshBuilder {
   withNewSsh(props: SshBuilderProps): IAksNetworkBuilder;

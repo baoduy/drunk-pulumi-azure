@@ -1,5 +1,5 @@
 import { Input } from '@pulumi/pulumi';
-import { LoginArgs, ResourceInfo } from '../types';
+import { LoginArgs, ResourceInfo, WithEncryption } from '../types';
 import {
   Builder,
   BuilderProps,
@@ -8,6 +8,7 @@ import {
   IVmOsBuilder,
   IVmSizeBuilder,
   IVmVnetBuilder,
+  VmBuilderArgs,
   VmEncryptionType,
   VmOsBuilderLinuxProps,
   VmOsBuilderWindowsProps,
@@ -38,8 +39,8 @@ class VmBuilder
 
   private _vmInstance: VirtualMachine | undefined = undefined;
 
-  constructor(props: BuilderProps) {
-    super(props);
+  constructor(private args: VmBuilderArgs) {
+    super(args);
   }
   public enableEncryption(props: VmEncryptionType): IVmBuilder {
     this._encryptionProps = props;
@@ -102,7 +103,7 @@ class VmBuilder
       ...this.commonProps,
 
       enableEncryption:
-        Boolean(this._encryptionProps) || this.commonProps.enableEncryption,
+        Boolean(this._encryptionProps) || this.args.enableEncryption,
       diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
 
       subnetId: this._subnetProps!,
@@ -127,4 +128,4 @@ class VmBuilder
   }
 }
 
-export default (props: BuilderProps) => new VmBuilder(props) as IVmOsBuilder;
+export default (props: VmBuilderArgs) => new VmBuilder(props) as IVmOsBuilder;
