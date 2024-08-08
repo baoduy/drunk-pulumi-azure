@@ -41,6 +41,8 @@ export const getResourceInfoFromId = (
   };
 };
 
+export const getNameFromId = (id: string) => id.split('/').pop();
+
 /** The method to get Resource group Name*/
 export const getRGId = (group: ResourceGroupInfo) =>
   interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}`;

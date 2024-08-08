@@ -7,7 +7,7 @@ import {
 } from './types/privateDnsZoneBuilder';
 import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
-import { getVnetIdFromSubnetId, globalKeyName } from '../Common';
+import { rsInfo, globalKeyName } from '../Common';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -87,21 +87,25 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
 
   private buildVnetLinks() {
     if (this._vnetLinks.length <= 0) return;
-    this._vnetLinks.forEach((lik, index) =>
-      [
-        //Link all subnets first
-        ...(lik.subnetIds ?? []).map((s) =>
-          output(s).apply((i) => getVnetIdFromSubnetId(i)),
-        ),
-        //Then link the extra Vnet
-        ...(lik.vnetIds ?? []),
-      ].map((v, i) => {
+    const linkName = this.commonProps.name.split('.')[0];
+    const vnetIds = this._vnetLinks.flatMap((lik) => [
+      //Link all subnets first
+      ...(lik.subnetIds ?? []).map((s) =>
+        output(s).apply((i) => rsInfo.getVnetIdFromSubnetId(i)),
+      ),
+      //Then link the extra Vnet
+      ...(lik.vnetIds ?? []),
+    ]);
+
+    output(vnetIds).apply((vids) =>
+      vids.map((v) => {
+        const n = rsInfo.getNameFromId(v);
         return new native.network.VirtualNetworkLink(
-          `${this.commonProps.name.split('.')[0]}-${index}-${i}-link`,
+          `${linkName}-${n}-link`,
           {
             privateZoneName: this._dnsInfo!.name,
             ...this._dnsInfo!.group,
-            registrationEnabled: Boolean(lik.registrationEnabled),
+            registrationEnabled: false,
             virtualNetwork: { id: v },
           },
           { dependsOn: this._zoneInstance, deleteBeforeReplace: true },

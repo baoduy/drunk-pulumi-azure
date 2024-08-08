@@ -1,7 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import { output } from '@pulumi/pulumi';
 import { OptsArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
-import { getPrivateEndpointName } from '../Common';
+import { getPrivateEndpointName, rsInfo } from '../Common';
 import { PrivateDnsZoneBuilder } from '../Builder';
 
 export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
@@ -22,13 +22,14 @@ export default ({
 }: PrivateEndpointProps) => {
   const name = getPrivateEndpointName(resourceInfo.name);
 
-  const endpoints = subnetIds.map(
-    (s, index) =>
-      new network.PrivateEndpoint(
-        `${name}-${index}`,
+  const endpoints = output(subnetIds).apply((ss) =>
+    ss.map((s) => {
+      const n = rsInfo.getNameFromId(s);
+      const ep = new network.PrivateEndpoint(
+        `${name}-${n}`,
         {
           ...resourceInfo.group,
-          privateEndpointName: `${name}-${index}`,
+          privateEndpointName: `${name}-${n}`,
           subnet: { id: s },
           privateLinkServiceConnections: [
             {
@@ -39,15 +40,21 @@ export default ({
           ],
         },
         { dependsOn },
-      ),
+      );
+
+      return {
+        instance: ep,
+        ipAddresses: ep.customDnsConfigs.apply((c) =>
+          c!.flatMap((i) => i!.ipAddresses!),
+        ),
+      };
+    }),
   );
 
   //Get IpAddress in
-  const ipAddresses = output(
-    endpoints.map((e) =>
-      e.customDnsConfigs.apply((c) => c!.flatMap((i) => i.ipAddresses!)),
-    ),
-  ).apply((a) => a.flatMap((i) => i!));
+  const ipAddresses = output(endpoints).apply((a) =>
+    a.flatMap((i) => i.ipAddresses!),
+  );
 
   output(ipAddresses).apply((ip) =>
     PrivateDnsZoneBuilder({
@@ -56,7 +63,7 @@ export default ({
       dependsOn,
     })
       .withARecord({ ipAddresses: ip, recordName: '@' })
-      .linkTo({ subnetIds, vnetIds: extraVnetIds, registrationEnabled: false })
+      .linkTo({ subnetIds, vnetIds: extraVnetIds })
       .build(),
   );
 
