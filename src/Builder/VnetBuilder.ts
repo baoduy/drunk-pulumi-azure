@@ -4,7 +4,7 @@ import IpAddressPrefix, {
 import { BlockInternetSecurityRule } from '../VNet/NSGRules';
 import * as network from '@pulumi/azure-native/network';
 import { CustomSecurityRuleArgs, RouteArgs } from '../VNet/types';
-import Firewall, { FirewallResult } from '../VNet/Firewall';
+import * as Firewall from '../VNet/Firewall';
 import Vnet, { VnetResult } from '../VNet/Vnet';
 import { SubnetProps } from '../VNet/Subnet';
 import NatGateway from '../VNet/NatGateway';
@@ -32,7 +32,7 @@ class VnetBuilder
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
     undefined;
-  private _firewallInstance: FirewallResult | undefined = undefined;
+  private _firewallInstance: Firewall.FirewallResult | undefined = undefined;
   private _vnetInstance: VnetResult | undefined = undefined;
   private _natGatewayInstance: network.NatGateway | undefined = undefined;
   private _vnpGatewayInstance: network.VirtualNetworkGateway | undefined =
@@ -274,7 +274,7 @@ class VnetBuilder
       (s) => s?.id!,
     );
 
-    this._firewallInstance = Firewall({
+    this._firewallInstance = Firewall.create({
       ...this.commonProps,
       ...this._firewallProps,
 

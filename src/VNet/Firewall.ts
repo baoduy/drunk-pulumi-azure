@@ -1,11 +1,16 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
-import { Input } from '@pulumi/pulumi';
-import { getFirewallName, isPrd } from '../Common';
-import { BasicResourceArgs, LogInfo, ResourceInfoWithInstance } from '../types';
+import { Input, Output } from '@pulumi/pulumi';
+import { getFirewallName, rsInfo, isPrd } from '../Common';
+import {
+  BasicResourceArgs,
+  LogInfo,
+  ResourceInfo,
+  ResourceInfoWithInstance,
+} from '../types';
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './types';
-import IpAddress from './IpAddress';
+import * as IpAddress from './IpAddress';
 import { createDiagnostic } from '../Logs/Helpers';
 
 export interface FwOutboundConfig {
@@ -38,7 +43,8 @@ export type FirewallResult = ResourceInfoWithInstance<network.AzureFirewall> & {
   policy: network.FirewallPolicy | undefined;
 };
 
-export default ({
+/**Create Firewall*/
+export const create = ({
   name,
   group,
   snat,
@@ -58,7 +64,7 @@ export default ({
 
   //Create Public IpAddress for Management
   const manageIpAddress = management
-    ? IpAddress({
+    ? IpAddress.create({
         name: `${name}-mag`,
         group,
         lock: false,
@@ -161,4 +167,43 @@ export default ({
   }
 
   return { name, group, id: firewall.id, instance: firewall, policy: fwPolicy };
+};
+
+type FirewallIPOutputType = {
+  publicIPAddress?: string;
+  privateIPAddress: string;
+};
+
+export const getFirewallIPAddresses = (
+  info: ResourceInfo,
+): Output<FirewallIPOutputType> => {
+  const firewall = network.getAzureFirewallOutput({
+    azureFirewallName: info.name,
+    ...info.group,
+  });
+
+  return firewall.ipConfigurations!.apply(async (cf) => {
+    const privateIPAddress = cf![0]!.privateIPAddress!;
+    let publicIPAddress: string | undefined = undefined;
+
+    if (cf![0]!.publicIPAddress?.id) {
+      const publicInfo = rsInfo.getResourceInfoFromId(
+        cf![0]!.publicIPAddress!.id,
+      )!;
+      publicIPAddress = await IpAddress.getPublicIPAddress(publicInfo);
+    }
+
+    return { publicIPAddress, privateIPAddress };
+  });
+};
+
+export const getFirewallInfoWithIPAddresses = (
+  groupName: string,
+): ResourceInfo & {
+  ipAddresses: Output<FirewallIPOutputType>;
+} => {
+  const info = rsInfo.getFirewallInfo(groupName);
+  const ipAddresses = getFirewallIPAddresses(info);
+
+  return { ...info, ipAddresses };
 };

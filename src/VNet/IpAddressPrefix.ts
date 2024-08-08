@@ -4,7 +4,7 @@ import { Input } from '@pulumi/pulumi';
 import { getIpAddressPrefixName } from '../Common';
 import { Locker } from '../Core/Locker';
 import { BasicResourceArgs, WithNamedType } from '../types';
-import IpAddress from './IpAddress';
+import * as IpAddress from './IpAddress';
 
 type AddressNameType = Array<WithNamedType>;
 
@@ -68,7 +68,7 @@ export default ({
   if (ipAddresses) {
     ipAddresses.forEach((ip, i) => {
       const n = ip.name ?? `${name}-${i}`;
-      addresses[n] = IpAddress({
+      addresses[n] = IpAddress.create({
         ...config,
         name: n,
         group,

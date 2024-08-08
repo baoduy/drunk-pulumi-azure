@@ -1,12 +1,12 @@
-import { BasicResourceArgs } from "../types";
-import IpAddress from "./IpAddress";
-import * as network from "@pulumi/azure-native/network";
-import { Input } from "@pulumi/pulumi";
-import { getBastionName } from "../Common/Naming";
+import { BasicResourceArgs } from '../types';
+import * as IpAddress from './IpAddress';
+import * as network from '@pulumi/azure-native/network';
+import { Input } from '@pulumi/pulumi';
+import { getBastionName } from '../Common';
 
 export interface BastionProps extends BasicResourceArgs {
   subnetId: Input<string>;
-  sku?: "Basic" | "Standard" | "Developer" | string;
+  sku?: 'Basic' | 'Standard' | 'Developer' | string;
 }
 
 export default ({
@@ -16,11 +16,11 @@ export default ({
   dependsOn,
   importUri,
   ignoreChanges,
-  sku = "Basic",
+  sku = 'Basic',
 }: BastionProps) => {
   name = getBastionName(name);
 
-  const ipAddressId = IpAddress({
+  const ipAddressId = IpAddress.create({
     name,
     group,
   }).id;
@@ -33,7 +33,7 @@ export default ({
       sku: { name: sku },
       ipConfigurations: [
         {
-          name: "IpConfig",
+          name: 'IpConfig',
           publicIPAddress: { id: ipAddressId },
           subnet: { id: subnetId },
           privateIPAllocationMethod: network.IPAllocationMethod.Dynamic,

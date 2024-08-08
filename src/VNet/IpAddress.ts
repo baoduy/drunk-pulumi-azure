@@ -1,7 +1,13 @@
 import * as network from '@pulumi/azure-native/network';
-import { Input } from '@pulumi/pulumi';
-import { BasicResourceArgs } from '../types';
-import { isPrd, getIpAddressName, organization } from '../Common';
+import { Input, Output } from '@pulumi/pulumi';
+import { BasicResourceArgs, ResourceInfo } from '../types';
+import {
+  isPrd,
+  rsInfo,
+  naming,
+  organization,
+  getIpAddressInfo,
+} from '../Common';
 import { Locker } from '../Core/Locker';
 
 interface Props extends BasicResourceArgs {
@@ -15,9 +21,7 @@ interface Props extends BasicResourceArgs {
   lock?: boolean;
 }
 
-const getIpName = (name: string) => getIpAddressName(name);
-
-export default ({
+export const create = ({
   name,
   group,
   version = network.IPVersion.IPv4,
@@ -30,7 +34,7 @@ export default ({
   lock = isPrd,
   dependsOn,
 }: Props) => {
-  name = getIpName(name);
+  name = naming.getIpAddressName(name);
   const ipAddress = new network.PublicIPAddress(
     name,
     {
@@ -58,4 +62,35 @@ export default ({
   }
 
   return ipAddress;
+};
+
+export const getPublicIPAddress = async (info: ResourceInfo) => {
+  const ip = await network.getPublicIPAddress({
+    publicIpAddressName: info.name,
+    ...info.group,
+  });
+
+  return ip.ipAddress!;
+};
+
+export const getPublicIPAddressOutput = (info: ResourceInfo) => {
+  const ip = network.getPublicIPAddressOutput({
+    publicIpAddressName: info.name,
+    ...info.group,
+  });
+
+  return ip.ipAddress!.apply((i) => i!);
+};
+
+export const getIPInfoWithAddress = (
+  name: string,
+  groupName: string,
+): ResourceInfo & { publicIPAddress: Output<string> } => {
+  const ipInfo = rsInfo.getIpAddressInfo({ name, groupName });
+  const publicIPAddress = getPublicIPAddressOutput(ipInfo);
+
+  return {
+    ...ipInfo,
+    publicIPAddress,
+  };
 };

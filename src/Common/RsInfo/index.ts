@@ -3,6 +3,7 @@ import * as naming from '../Naming';
 import { interpolate, output, Output } from '@pulumi/pulumi';
 import {
   currentCountryCode,
+  currentRegionCode,
   currentRegionName,
   defaultSubScope,
   subscriptionId,
@@ -182,16 +183,22 @@ export const getSubnetIdByName = (
   return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}`;
 };
 
-export const getIpAddressId = ({
+export const getIpAddressInfo = ({
   name,
   groupName,
 }: {
   name: string;
   groupName: string;
-}) => {
-  const n = naming.getIpAddressName(name);
-  const group = naming.getResourceGroupName(groupName);
-  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/publicIPAddresses/${n}`;
+}): ResourceInfo => {
+  name = naming.getIpAddressName(name);
+  const rgName = naming.getResourceGroupName(groupName);
+  const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}/providers/Microsoft.Network/publicIPAddresses/${name}`;
+
+  return {
+    name,
+    group: { resourceGroupName: rgName, location: currentRegionCode },
+    id,
+  };
 };
 
 // export const getWanName = (name: string) =>

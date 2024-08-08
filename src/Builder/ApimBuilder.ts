@@ -1,5 +1,5 @@
 import * as types from './types';
-import { AppInsightInfo, ResourceInfo } from '../types';
+import { ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { getApimName, organization, subscriptionId, tenantId } from '../Common';
 import {
@@ -8,7 +8,7 @@ import {
 } from '@drunk-pulumi/azure-providers';
 import { randomUuId } from '../Core/Random';
 import * as network from '@pulumi/azure-native/network';
-import IpAddress from '../VNet/IpAddress';
+import * as IpAddress from '../VNet/IpAddress';
 import Identity from '../AzAd/Identity';
 import { interpolate } from '@pulumi/pulumi';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -111,11 +111,11 @@ class ApimBuilder
       enableZone: this._sku!.sku === 'Premium',
     };
 
-    this._ipAddressInstances[this.commonProps.name] = IpAddress(ipPros);
+    this._ipAddressInstances[this.commonProps.name] = IpAddress.create(ipPros);
 
     if (this._additionalLocations) {
       this._additionalLocations.forEach((j) => {
-        this._ipAddressInstances[j.location] = IpAddress({
+        this._ipAddressInstances[j.location] = IpAddress.create({
           ...ipPros,
           name: `${this.commonProps.name}-${j.location}-apim`,
         });
