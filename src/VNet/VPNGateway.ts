@@ -1,9 +1,8 @@
-import { BasicResourceArgs } from "../types";
-import { getVpnName } from "../Common/Naming";
-import { Input, interpolate } from "@pulumi/pulumi";
-import * as network from "@pulumi/azure-native/network";
-import { tenantId } from "../Common/AzureEnv";
-import IpAddress from "./IpAddress";
+import { BasicResourceArgs } from '../types';
+import { tenantId, getVpnName } from '../Common';
+import { Input, interpolate } from '@pulumi/pulumi';
+import * as network from '@pulumi/azure-native/network';
+import * as IpAddress from './IpAddress';
 
 export interface VpnGatewayProps extends BasicResourceArgs {
   subnetId: Input<string>;
@@ -19,7 +18,7 @@ export default ({
   name,
   group,
   subnetId,
-  vpnClientAddressPools = ["172.16.100.0/24"],
+  vpnClientAddressPools = ['172.16.100.0/24'],
   sku = {
     name: network.VirtualNetworkGatewaySkuName.VpnGw1,
     tier: network.VirtualNetworkGatewaySkuTier.VpnGw1,
@@ -27,7 +26,7 @@ export default ({
   dependsOn,
 }: VpnGatewayProps) => {
   name = getVpnName(name);
-  const ipAddress = IpAddress({
+  const ipAddress = IpAddress.create({
     name,
     group,
     enableZone: false,
@@ -42,8 +41,8 @@ export default ({
       ...group,
       sku,
 
-      gatewayType: "Vpn",
-      vpnType: "RouteBased",
+      gatewayType: 'Vpn',
+      vpnType: 'RouteBased',
       enableBgp: false,
       activeActive: false,
       enableDnsForwarding: false,
@@ -51,7 +50,7 @@ export default ({
 
       ipConfigurations: [
         {
-          name: "vnetGatewayConfig",
+          name: 'vnetGatewayConfig',
           publicIPAddress: {
             id: ipAddress.id,
           },
@@ -76,7 +75,7 @@ export default ({
         // vpnClientRevokedCertificates?: pulumi.Input<pulumi.Input<inputs.network.VpnClientRevokedCertificateArgs>[]>;
         // vpnClientRootCertificates?: pulumi.Input<pulumi.Input<inputs.network.VpnClientRootCertificateArgs>[]>;
 
-        vpnClientProtocols: ["OpenVPN"],
+        vpnClientProtocols: ['OpenVPN'],
         vpnClientAddressPool: vpnClientAddressPools
           ? {
               addressPrefixes: vpnClientAddressPools,
@@ -84,12 +83,12 @@ export default ({
           : undefined,
         vpnClientRootCertificates: [],
         vpnClientRevokedCertificates: [],
-        radiusServerAddress: "",
-        radiusServerSecret: "",
+        radiusServerAddress: '',
+        radiusServerSecret: '',
 
         vpnAuthenticationTypes: [network.VpnAuthenticationType.AAD],
         aadTenant: interpolate`https://login.microsoftonline.com/${tenantId}`,
-        aadAudience: "41b23e61-6c1e-4545-b367-cd054e0ed4b4",
+        aadAudience: '41b23e61-6c1e-4545-b367-cd054e0ed4b4',
         aadIssuer: interpolate`https://sts.windows.net/${tenantId}/`,
       },
     },

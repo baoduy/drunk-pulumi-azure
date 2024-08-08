@@ -1,7 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import { output } from '@pulumi/pulumi';
 import { OptsArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
-import { getPrivateEndpointName, rsInfo } from '../Common';
+import { getPrivateEndpointName } from '../Common';
 import { PrivateDnsZoneBuilder } from '../Builder';
 
 export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
@@ -49,17 +49,16 @@ export default ({
     ),
   ).apply((a) => a.flatMap((i) => i!));
 
-  output([resourceInfo.id, ipAddresses]).apply(([id, ip]) => {
-    const resourceInfo = rsInfo.getResourceInfoFromId(id as string);
-    return PrivateDnsZoneBuilder({
+  output(ipAddresses).apply((ip) =>
+    PrivateDnsZoneBuilder({
       name: `${resourceInfo!.name}.${privateDnsZoneName}`,
       group: resourceInfo!.group,
       dependsOn,
     })
-      .withARecord({ ipAddresses: ip as string[], recordName: '@' })
+      .withARecord({ ipAddresses: ip, recordName: '@' })
       .linkTo({ subnetIds, vnetIds: extraVnetIds, registrationEnabled: false })
-      .build();
-  });
+      .build(),
+  );
 
   return endpoints;
 };

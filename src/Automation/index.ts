@@ -1,12 +1,14 @@
 import {
   BasicEncryptResourceArgs,
-  BasicResourceWithVaultArgs,
   ResourceInfoWithInstance,
+  WithDependsOn,
 } from '../types';
 import * as automation from '@pulumi/azure-native/automation';
-import { getAutomationAccountName } from '../Common';
+import { defaultSubScope, getAutomationAccountName } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
+import { roleAssignment } from '../AzAd/RoleAssignment';
+import { Input } from '@pulumi/pulumi';
 
 interface Props extends BasicEncryptResourceArgs {}
 
@@ -14,19 +16,40 @@ export default ({
   name,
   group,
   enableEncryption,
-  envRoles,
   vaultInfo,
   dependsOn,
   ignoreChanges,
 }: Props): ResourceInfoWithInstance<automation.AutomationAccount> => {
   name = getAutomationAccountName(name);
 
+  const grantPermission = ({
+    name,
+    principalId,
+    dependsOn,
+  }: {
+    name: string;
+    principalId: Input<string>;
+  } & WithDependsOn) =>
+    roleAssignment({
+      name,
+      dependsOn,
+      principalId,
+      principalType: 'ServicePrincipal',
+      roleName: 'Contributor',
+      scope: defaultSubScope,
+    });
+
   const identity = UserAssignedIdentity({
     name,
     group,
     dependsOn,
   });
-  envRoles?.addMember('contributor', identity.principalId);
+  //Grant permission as contributor of subscription
+  grantPermission({
+    name: `${name}-UID`,
+    dependsOn: identity.instance,
+    principalId: identity.principalId,
+  });
 
   const encryption =
     enableEncryption && vaultInfo
@@ -65,7 +88,14 @@ export default ({
     },
     { dependsOn: identity.instance, ignoreChanges },
   );
-  envRoles?.addIdentity('contributor', auto.identity);
+
+  auto.identity.apply((id) =>
+    grantPermission({
+      name: `${name}-identity`,
+      dependsOn: auto,
+      principalId: id!.principalId,
+    }),
+  );
 
   return {
     name,

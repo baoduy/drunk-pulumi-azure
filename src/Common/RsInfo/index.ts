@@ -3,6 +3,7 @@ import * as naming from '../Naming';
 import { interpolate, output, Output } from '@pulumi/pulumi';
 import {
   currentCountryCode,
+  currentRegionCode,
   currentRegionName,
   defaultSubScope,
   subscriptionId,
@@ -10,6 +11,7 @@ import {
 import {
   ConventionProps,
   ResourceGroupInfo,
+  ResourceGroupWithIdInfo,
   ResourceInfo,
   ResourceInfoWithSub,
 } from '../../types';
@@ -42,11 +44,12 @@ export const getResourceInfoFromId = (
 /** The method to get Resource group Name*/
 export const getRGId = (group: ResourceGroupInfo) =>
   interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}`;
-// export const getResourceGroupInfo = (name: string): ResourceGroupWithIdInfo => {
-//   const rgName = rsHelper.getResourceGroupName(name);
-//   const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}`;
-//   return { resourceGroupName: rgName, id, location: currentRegionCode };
-// };
+
+export const getRGInfo = (name: string): ResourceGroupWithIdInfo => {
+  const rgName = naming.getResourceGroupName(name);
+  const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}`;
+  return { resourceGroupName: rgName, id, location: currentRegionCode };
+};
 
 export const getStorageInfo = (name: string): ResourceInfo => {
   const info = rsHelper.getStorageName(name);
@@ -144,8 +147,11 @@ export const getMySqlInfo = (name: string): ResourceInfo => {
   return { ...info, id };
 };
 
-export const getFirewallInfo = (name: string): ResourceInfo => {
-  const info = rsHelper.getFirewallName(name);
+export const getFirewallInfo = (
+  name: string,
+  ops: ConventionProps | undefined = undefined,
+): ResourceInfo => {
+  const info = rsHelper.getFirewallName(name, ops);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/azureFirewalls/${info.name}`;
   return { ...info, id };
 };
@@ -161,9 +167,9 @@ export const getVMInfo = (name: string): ResourceInfo => {
 
 export const getVnetInfo = (
   name: string,
-  region: string = currentCountryCode,
+  ops: ConventionProps | undefined = undefined,
 ): ResourceInfo => {
-  const info = rsHelper.getVnetName(name, { region });
+  const info = rsHelper.getVnetName(name, ops);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.name}`;
   return { ...info, id };
 };
@@ -177,21 +183,27 @@ export const getSubnetIdByName = (
   subnetName: string,
   vnetAndGroupName: string,
 ): Output<string> => {
-  const vnetName = naming.getVnetName(vnetAndGroupName);
+  const vnetName = naming.getVnetName(naming.cleanName(vnetAndGroupName));
   const group = naming.getResourceGroupName(vnetAndGroupName);
-  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}`;
+  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${naming.cleanName(subnetName)}`;
 };
 
-export const getIpAddressId = ({
+export const getIpAddressInfo = ({
   name,
   groupName,
 }: {
   name: string;
   groupName: string;
-}) => {
-  const n = naming.getIpAddressName(name);
-  const group = naming.getResourceGroupName(groupName);
-  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/publicIPAddresses/${n}`;
+}): ResourceInfo => {
+  name = naming.getIpAddressName(name);
+  const rgName = naming.getResourceGroupName(groupName);
+  const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}/providers/Microsoft.Network/publicIPAddresses/${name}`;
+
+  return {
+    name,
+    group: { resourceGroupName: rgName, location: currentRegionCode },
+    id,
+  };
 };
 
 // export const getWanName = (name: string) =>

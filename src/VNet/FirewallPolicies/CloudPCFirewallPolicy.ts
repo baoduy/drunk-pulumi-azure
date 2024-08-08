@@ -111,6 +111,7 @@ export default ({
         '*.msecnd.net',
         '*.msftauth.net',
         '*.msftauthimages.net',
+        'www.microsoft.com',
       ],
       protocols: [{ protocolType: 'Https', port: 443 }],
     });

@@ -169,6 +169,7 @@
     "src/VNet/Subnet.ts",
     "src/VNet/VPNGateway.ts",
     "src/VNet/Vnet.ts",
+    "src/VNet/index.ts",
     "src/VNet/types.ts",
     "src/Web/AppCertOrder.ts",
     "src/Web/AppConfig.ts",
