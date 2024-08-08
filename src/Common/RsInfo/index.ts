@@ -145,8 +145,11 @@ export const getMySqlInfo = (name: string): ResourceInfo => {
   return { ...info, id };
 };
 
-export const getFirewallInfo = (name: string): ResourceInfo => {
-  const info = rsHelper.getFirewallName(name);
+export const getFirewallInfo = (
+  name: string,
+  ops: ConventionProps | undefined = undefined,
+): ResourceInfo => {
+  const info = rsHelper.getFirewallName(name, ops);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/azureFirewalls/${info.name}`;
   return { ...info, id };
 };
@@ -162,9 +165,9 @@ export const getVMInfo = (name: string): ResourceInfo => {
 
 export const getVnetInfo = (
   name: string,
-  region: string = currentCountryCode,
+  ops: ConventionProps | undefined = undefined,
 ): ResourceInfo => {
-  const info = rsHelper.getVnetName(name, { region });
+  const info = rsHelper.getVnetName(name, ops);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.name}`;
   return { ...info, id };
 };

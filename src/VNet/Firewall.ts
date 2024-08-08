@@ -4,6 +4,7 @@ import { Input, Output } from '@pulumi/pulumi';
 import { getFirewallName, rsInfo, isPrd } from '../Common';
 import {
   BasicResourceArgs,
+  ConventionProps,
   LogInfo,
   ResourceInfo,
   ResourceInfoWithInstance,
@@ -199,11 +200,11 @@ export const getFirewallIPAddresses = (
 
 export const getFirewallInfoWithIPAddresses = (
   groupName: string,
+  ops: ConventionProps | undefined = undefined,
 ): ResourceInfo & {
   ipAddresses: Output<FirewallIPOutputType>;
 } => {
-  const info = rsInfo.getFirewallInfo(groupName);
+  const info = rsInfo.getFirewallInfo(groupName, ops);
   const ipAddresses = getFirewallIPAddresses(info);
-
   return { ...info, ipAddresses };
 };
