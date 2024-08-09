@@ -21,7 +21,7 @@ export const getResourceInfoFromId = (
 ): ResourceInfoWithSub | undefined => {
   if (!id) return undefined;
 
-  const details = id.split('/');
+  const details = id.trim().split('/');
   let name = '';
   let groupName = '';
   let subId = '';
@@ -41,7 +41,18 @@ export const getResourceInfoFromId = (
   };
 };
 
-export const getNameFromId = (id: string) => id.split('/').pop();
+export const getNameFromId = (id: string) => {
+  id = id.trim();
+
+  //Resource ID
+  if (id.includes('/')) {
+    return id.split('/').pop();
+  }
+  //Domain
+  if (id.includes('.')) return id.split('.')[0];
+  //If not just get last 25 character
+  return id.slice(-25);
+};
 
 /** The method to get Resource group Name*/
 export const getRGId = (group: ResourceGroupInfo) =>

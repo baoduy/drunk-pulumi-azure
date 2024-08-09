@@ -86,8 +86,9 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   }
 
   private buildVnetLinks() {
-    if (this._vnetLinks.length <= 0) return;
-    const linkName = this.commonProps.name.split('.')[0];
+    if (this._vnetLinks.length <= 0 || !this._dnsInfo) return;
+
+    const linkName = rsInfo.getNameFromId(this._dnsInfo.name);
     const vnetIds = this._vnetLinks.flatMap((lik) => [
       //Link all subnets first
       ...(lik.subnetIds ?? []).map((s) =>
@@ -103,8 +104,8 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
         return new native.network.VirtualNetworkLink(
           `${linkName}-${n}-link`,
           {
-            privateZoneName: this._dnsInfo!.name,
             ...this._dnsInfo!.group,
+            privateZoneName: this._dnsInfo!.name,
             registrationEnabled: false,
             virtualNetwork: { id: v },
           },
