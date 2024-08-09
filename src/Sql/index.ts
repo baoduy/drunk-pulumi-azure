@@ -166,7 +166,7 @@ export default ({
   );
   //Lock from delete
   if (lock) {
-    Locker({ name, resource: sqlServer });
+    Locker({ name: sqlName, resource: sqlServer });
   }
 
   //Allows to Read Key Vault
@@ -174,12 +174,6 @@ export default ({
     'readOnly',
     sqlServer.identity.apply((s) => s!.principalId),
   );
-  // grantIdentityPermissions({
-  //   name,
-  //   vaultInfo,
-  //   role: 'readOnly',
-  //   principalId: sqlServer.identity.apply((s) => s!.principalId),
-  // });
 
   const ep = elasticPool
     ? createElasticPool({
@@ -206,7 +200,7 @@ export default ({
   if (network?.privateLink) {
     privateEndpointCreator({
       ...network.privateLink,
-      resourceInfo: { name, group, id: sqlServer.id },
+      resourceInfo: { name: sqlName, group, id: sqlServer.id },
       privateDnsZoneName: 'privatelink.database.windows.net',
       linkServiceGroupIds: network.privateLink.type
         ? [network.privateLink.type]
@@ -248,7 +242,7 @@ export default ({
 
     //ServerSecurityAlertPolicy
     const alertPolicy = new sql.ServerSecurityAlertPolicy(
-      name,
+      sqlName,
       {
         securityAlertPolicyName: 'default',
         ...group,
@@ -267,7 +261,7 @@ export default ({
 
     //Server Audit
     new sql.ExtendedServerBlobAuditingPolicy(
-      name,
+      sqlName,
       {
         auditActionsAndGroups: [
           'SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP',
@@ -295,9 +289,9 @@ export default ({
 
     //ServerVulnerabilityAssessment
     new sql.ServerVulnerabilityAssessment(
-      name,
+      sqlName,
       {
-        vulnerabilityAssessmentName: name,
+        vulnerabilityAssessmentName: sqlName,
         ...group,
         serverName: sqlServer.name,
 
