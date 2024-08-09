@@ -97,7 +97,8 @@ function Storage({
   const encryptionKey = enableEncryption
     ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
-
+  const allowSharedKeyAccess =
+    features.allowSharedKeyAccess || features.enableStaticWebsite;
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
   const stg = new storage.StorageAccount(
     name,
@@ -116,7 +117,7 @@ function Storage({
       isHnsEnabled: true,
       enableHttpsTrafficOnly: true,
       allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
-      allowSharedKeyAccess: Boolean(features.allowSharedKeyAccess),
+      allowSharedKeyAccess,
       allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
       defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
       isSftpEnabled: Boolean(features.isSftpEnabled),
@@ -281,7 +282,7 @@ function Storage({
     if (envRoles) envRoles.addIdentity('readOnly', stg.identity);
 
     //Add connection into Key vault
-    if (vaultInfo && features?.allowSharedKeyAccess) {
+    if (vaultInfo && allowSharedKeyAccess) {
       const keys = (
         await storage.listStorageAccountKeys({
           accountName: name,
