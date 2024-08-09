@@ -13,8 +13,7 @@ import {
   SqlBuilderAuthOptionsType,
   SqlBuilderVulnerabilityAssessmentType,
   SqlDbBuilderType,
-  SqlDbCopyType,
-  SqlDbReplicaType,
+  SqlFromDbType,
 } from './types';
 import { randomLogin } from '../Core/Random';
 
@@ -48,6 +47,13 @@ class SqlBuilder
     super(args);
   }
 
+  withVulnerabilityAssessmentIf(
+    condition: boolean,
+    props: SqlBuilderVulnerabilityAssessmentType,
+  ): ISqlBuilder {
+    if (condition) this.withVulnerabilityAssessment(props);
+    return this;
+  }
   withVulnerabilityAssessment(
     props: SqlBuilderVulnerabilityAssessmentType,
   ): ISqlBuilder {
@@ -68,19 +74,23 @@ class SqlBuilder
     this._databasesProps[props.name] = props;
     return this;
   }
-  public copyDbFrom(props: SqlDbCopyType): ISqlBuilder {
+
+  //Copy Db
+  public copyDb(props: SqlFromDbType): ISqlBuilder {
     if (!props.sku) props.sku = this._defaultSku;
     this._databasesProps[props.name] = {
       ...props,
-      copyFrom: props.copyFromDbId,
+      copyFrom: props.fromDbId,
     };
     return this;
   }
-  public replicaDbFrom(props: SqlDbReplicaType): ISqlBuilder {
+
+  //ReplicateDb
+  public replicaDb(props: SqlFromDbType): ISqlBuilder {
     if (!props.sku) props.sku = this._defaultSku;
     this._databasesProps[props.name] = {
       ...props,
-      asSecondaryFrom: props.replicaFromDbId,
+      asSecondaryFrom: props.fromDbId,
     };
     return this;
   }
