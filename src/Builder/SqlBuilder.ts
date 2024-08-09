@@ -1,9 +1,8 @@
 import Sql, { SqlElasticPoolType, SqlNetworkType, SqlResults } from '../Sql';
 import { SqlDbSku } from '../Sql/SqlDb';
-import { LoginArgs, WithEnvRoles } from '../types';
+import { LoginArgs } from '../types';
 import {
   Builder,
-  BuilderProps,
   FullSqlDbPropsType,
   ISqlAuthBuilder,
   ISqlBuilder,
