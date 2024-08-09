@@ -1,7 +1,7 @@
 import { BasicResourceArgs, ResourceInfo } from '../types';
 import { DnsZoneARecordType, IDnsZoneBuilder } from './types';
 import * as network from '@pulumi/azure-native/network';
-import { globalKeyName } from '../Common/GlobalEnv';
+import { globalKeyName } from '../Common';
 
 class DnsZoneBuilder implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];

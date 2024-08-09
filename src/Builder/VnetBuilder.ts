@@ -336,7 +336,6 @@ class VnetBuilder
         name: k,
       }).linkTo({
         vnetIds: [this._vnetInstance!.id],
-        registrationEnabled: false,
       });
 
       if (bFunc) bFunc(builder);
