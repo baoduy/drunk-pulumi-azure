@@ -38,13 +38,23 @@ export type StoragePolicyType = {
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
 };
+
+export type StorageEndpointTypes =
+  | 'blob'
+  | 'table'
+  | 'queue'
+  | 'file'
+  | 'web'
+  | 'dfs';
+
 export type StorageNetworkType = {
   defaultByPass?: 'AzureServices' | 'None';
   vnet?: Array<{ subnetId?: Input<string>; ipAddresses?: Array<string> }>;
   privateEndpoint?: Omit<PrivateLinkPropsType, 'type'> & {
-    type: 'blob' | 'table' | 'queue' | 'file' | 'web' | 'dfs';
+    type: StorageEndpointTypes | StorageEndpointTypes[];
   };
 };
+
 interface StorageProps extends BasicEncryptResourceArgs {
   containers?: Array<ContainerProps>;
   queues?: Array<string>;
@@ -67,6 +77,7 @@ function Storage({
   vaultInfo,
   enableEncryption,
   envRoles,
+  envUIDInfo,
   containers = [],
   queues = [],
   fileShares = [],
@@ -86,7 +97,8 @@ function Storage({
   const encryptionKey = enableEncryption
     ? addEncryptKey({ name, vaultInfo: vaultInfo! })
     : undefined;
-
+  const allowSharedKeyAccess =
+    features.allowSharedKeyAccess || features.enableStaticWebsite;
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
   const stg = new storage.StorageAccount(
     name,
@@ -105,7 +117,7 @@ function Storage({
       isHnsEnabled: true,
       enableHttpsTrafficOnly: true,
       allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
-      allowSharedKeyAccess: Boolean(features.allowSharedKeyAccess),
+      allowSharedKeyAccess,
       allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
       defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
       isSftpEnabled: Boolean(features.isSftpEnabled),
@@ -113,7 +125,14 @@ function Storage({
       allowCrossTenantReplication: Boolean(
         features.allowCrossTenantReplication,
       ),
-      identity: { type: 'SystemAssigned' },
+
+      identity: {
+        type: envUIDInfo
+          ? storage.IdentityType.SystemAssigned_UserAssigned
+          : storage.IdentityType.SystemAssigned,
+        userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+      },
+
       minimumTlsVersion: 'TLS1_2',
 
       //1 Year Months
@@ -171,14 +190,21 @@ function Storage({
   );
 
   if (network?.privateEndpoint) {
+    const linkTypes = Array.isArray(network.privateEndpoint.type)
+      ? network.privateEndpoint.type
+      : [network.privateEndpoint.type];
+
     //Create Private Endpoints
-    privateEndpoint({
-      ...network.privateEndpoint,
-      resourceInfo: { name, group, id: stg.id },
-      privateDnsZoneName: `privatelink.${network.privateEndpoint.type}.core.windows.net`,
-      linkServiceGroupIds: [network.privateEndpoint.type],
-    });
+    linkTypes.map((type) =>
+      privateEndpoint({
+        ...network.privateEndpoint!,
+        resourceInfo: { name, group, id: stg.id },
+        privateDnsZoneName: `privatelink.${type}.core.windows.net`,
+        linkServiceGroupIds: [type],
+      }),
+    );
   }
+
   //Life Cycle Management
   if (policies?.defaultManagementRules) {
     createManagementRules({
@@ -253,14 +279,10 @@ function Storage({
     if (!id) return;
 
     //Allows to Read Key Vault
-    if (envRoles)
-      envRoles.addMember(
-        'readOnly',
-        stg.identity.apply((s) => s!.principalId),
-      );
+    if (envRoles) envRoles.addIdentity('readOnly', stg.identity);
 
     //Add connection into Key vault
-    if (vaultInfo && features?.allowSharedKeyAccess) {
+    if (vaultInfo && allowSharedKeyAccess) {
       const keys = (
         await storage.listStorageAccountKeys({
           accountName: name,
