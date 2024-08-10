@@ -107,6 +107,7 @@ export default ({
   elasticPool,
   databases,
   vaultInfo,
+  envUIDInfo,
   enableEncryption,
   envRoles,
   network,
@@ -136,7 +137,12 @@ export default ({
       version: '12.0',
       minimalTlsVersion: '1.2',
 
-      identity: { type: 'SystemAssigned' },
+      identity: {
+        type: envUIDInfo
+          ? sql.IdentityType.SystemAssigned_UserAssigned
+          : sql.IdentityType.SystemAssigned,
+        userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+      },
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
       keyId: encryptKey?.url,
