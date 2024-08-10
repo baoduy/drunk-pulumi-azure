@@ -52,9 +52,7 @@ export default ({
   });
 
   const encryption =
-    enableEncryption && vaultInfo
-      ? addEncryptKey({ name, vaultInfo })
-      : undefined;
+    enableEncryption && vaultInfo ? addEncryptKey(name, vaultInfo) : undefined;
 
   const auto = new automation.AutomationAccount(
     name,

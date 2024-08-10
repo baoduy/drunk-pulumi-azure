@@ -1,15 +1,14 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { Input, Output, output, Resource } from '@pulumi/pulumi';
-import { NamedWithVaultType, WithVaultInfo } from '../types';
+import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import { getSecretName, isDryRun, replaceAll } from '../Common';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
 type SecretProps = Required<NamedWithVaultType> & {
   value: Input<string>;
-
   contentType?: Input<string>;
-
   tags?: Input<{
     [key: string]: Input<string>;
   }>;
@@ -18,83 +17,45 @@ type SecretProps = Required<NamedWithVaultType> & {
 
 type GetVaultItemProps = Required<NamedWithVaultType> & {
   version?: string;
-
   nameFormatted?: boolean;
-};
-
-export const addKey = ({
-  name,
-  vaultInfo,
-  tags,
-  dependsOn,
-}: Omit<SecretProps, 'value' | 'contentType'>) => {
-  const n = getSecretName(name);
-
-  return new keyvault.Key(
-    replaceAll(name, '.', '-'),
-    {
-      keyName: n,
-      vaultName: vaultInfo.name,
-      ...vaultInfo.group,
-      properties: {
-        keySize: 4096,
-        kty: 'RSA',
-        keyOps: [
-          'decrypt',
-          'encrypt',
-          'sign',
-          'verify',
-          'wrapKey',
-          'unwrapKey',
-        ],
-        //curveName: keyvault.JsonWebKeyCurveName.P_521,
-        attributes: { enabled: true, exportable: false },
-        rotationPolicy: {
-          lifetimeActions: [
-            {
-              action: { type: keyvault.KeyRotationPolicyActionType.Rotate },
-              trigger: { timeBeforeExpiry: 'P30D' },
-            },
-          ],
-          attributes: { expiryTime: 'P1Y' },
-        },
-      },
-      tags,
-    },
-    { dependsOn, ignoreChanges: ['attributes.expires'] },
-  );
 };
 
 interface KeyVaultPropertiesResults {
   keyName: Output<string>;
   url: Output<string>;
-  keyVaultUri: string;
+  keyVaultUri: Output<string>;
   keyVersion: Output<string>;
 }
 
 export const addEncryptKey = (
-  props: Omit<SecretProps, 'value' | 'contentType'>,
+  name: string,
+  vaultInfo: KeyVaultInfo,
 ): KeyVaultPropertiesResults => {
-  const key = addKey({ ...props, name: `${props.name}-encryptKey` });
+  const key = new VaultKeyResource(`${name}-encryptKey`, {
+    name: `${name}-encryptKey`,
+    vaultName: vaultInfo.name,
+    key: { keySize: 4096 },
+  });
+
   return {
     keyName: key.name,
-    keyVaultUri: `https://${props.vaultInfo.name}.vault.azure.net`,
-    keyVersion: key.keyUriWithVersion.apply((u) => u.split('/').pop()!),
-    url: key.keyUriWithVersion,
+    keyVaultUri: key.vaultUrl,
+    keyVersion: key.version,
+    url: key.id,
   };
 };
 
 /** Get Key */
-export const getKey = async ({
-  name,
-  version,
-  vaultInfo,
-  nameFormatted,
-}: GetVaultItemProps) => {
-  const n = nameFormatted ? name : getSecretName(name);
-  const client = getKeyVaultBase(vaultInfo.name);
-  return client.getKey(n, version);
-};
+// export const getKey = async ({
+//   name,
+//   version,
+//   vaultInfo,
+//   nameFormatted,
+// }: GetVaultItemProps) => {
+//   const n = nameFormatted ? name : getSecretName(name);
+//   const client = getKeyVaultBase(vaultInfo.name);
+//   return client.getKey(n, version);
+// };
 
 interface EncryptionPropertiesArgs {
   keySource: 'Microsoft.KeyVault';

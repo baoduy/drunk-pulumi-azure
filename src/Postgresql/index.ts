@@ -10,7 +10,7 @@ import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import {Locker} from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 
 export interface PostgresProps extends BasicEncryptResourceArgs {
   // auth: LoginWithEnvRolesArgs;
@@ -58,7 +58,7 @@ export default ({
   }).result;
 
   const encryptKey = enableEncryption
-    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
+    ? addEncryptKey(name, vaultInfo!)
     : undefined;
 
   const userIdentity = enableEncryption

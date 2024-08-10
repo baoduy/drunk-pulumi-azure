@@ -118,7 +118,7 @@ export default ({
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
-    ? addEncryptKey({ name: sqlName, vaultInfo: vaultInfo! })
+    ? addEncryptKey(sqlName, vaultInfo!)
     : undefined;
 
   const adminGroup = auth.envRoles?.contributor;
