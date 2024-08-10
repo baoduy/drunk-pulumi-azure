@@ -31,11 +31,15 @@ export const addEncryptKey = (
   name: string,
   vaultInfo: KeyVaultInfo,
 ): KeyVaultPropertiesResults => {
-  const key = new VaultKeyResource(`${name}-encryptKey`, {
-    name: `${name}-encryptKey`,
-    vaultName: vaultInfo.name,
-    key: { keySize: 4096 },
-  });
+  const key = new VaultKeyResource(
+    `${name}-encryptKey`,
+    {
+      name: `${name}-encryptKey`,
+      vaultName: vaultInfo.name,
+      key: { keySize: 4096 },
+    },
+    { retainOnDelete: true },
+  );
 
   return {
     keyName: key.name,

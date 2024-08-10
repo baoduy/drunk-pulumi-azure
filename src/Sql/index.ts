@@ -76,6 +76,7 @@ export type SqlNetworkType = NetworkPropsType & {
 export type SqlElasticPoolType = {
   name: 'Standard' | 'Basic';
   capacity: ElasticPoolCapacityProps;
+  maxSizeBytesGb?: 50 | number;
 };
 
 export type SqlResults = ResourceInfo & {
@@ -174,7 +175,6 @@ export default ({
   if (lock) {
     Locker({ name: sqlName, resource: sqlServer });
   }
-
   //Allows to Read Key Vault
   envRoles?.addMember(
     'readOnly',
@@ -187,6 +187,7 @@ export default ({
         group,
         sqlName: sqlServer.name,
         sku: elasticPool,
+        maxSizeBytesGb: elasticPool.maxSizeBytesGb,
       })
     : undefined;
 
