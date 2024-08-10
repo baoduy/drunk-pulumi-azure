@@ -41,7 +41,6 @@ class SqlBuilder
     | SqlBuilderVulnerabilityAssessmentType
     | undefined = undefined;
   private _ignoreChanges: string[] | undefined = undefined;
-  private _lock: boolean = false;
 
   constructor(private args: SqlBuilderArgs) {
     super(args);
@@ -114,8 +113,8 @@ class SqlBuilder
     this._ignoreChanges = props;
     return this;
   }
-  public lock(): ISqlBuilder {
-    this._lock = true;
+  public lock(lock: boolean = true): ISqlBuilder {
+    this.args.lock = lock;
     return this;
   }
   private buildLogin() {
@@ -142,7 +141,7 @@ class SqlBuilder
       );
 
     this._sqlInstance = Sql({
-      ...this.commonProps,
+      ...this.args,
       auth: {
         ...this._authOptions,
         ...this._loginInfo!,
@@ -157,7 +156,6 @@ class SqlBuilder
       network: this._networkProps,
       elasticPool: this._elasticPoolProps,
       databases: this._databasesProps,
-      lock: this._lock,
       ignoreChanges: this._ignoreChanges,
     });
   }

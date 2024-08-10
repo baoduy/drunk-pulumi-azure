@@ -8,7 +8,7 @@ import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
   BasicEncryptResourceArgs,
   BasicResourceArgs,
-  LockableType,
+  WithLockable,
   LogInfo,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
@@ -91,7 +91,7 @@ export type SqlVulnerabilityAssessmentType = Pick<LogInfo, 'logStorage'> & {
   // storageEndpoint: Input<string>;
 };
 
-interface Props extends BasicEncryptResourceArgs, LockableType {
+interface Props extends BasicEncryptResourceArgs, WithLockable {
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
   elasticPool?: SqlElasticPoolType;

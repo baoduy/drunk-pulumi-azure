@@ -166,8 +166,8 @@ class ResourceBuilder
     this._otherResources.push(builder);
     return this;
   }
-  public lock(): types.IResourceBuilder {
-    this._lock = true;
+  public lock(lock: boolean = true): types.IResourceBuilder {
+    this._lock = lock;
     return this;
   }
   private buildRoles() {

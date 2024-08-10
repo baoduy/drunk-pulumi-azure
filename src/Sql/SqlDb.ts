@@ -1,8 +1,8 @@
 import * as sql from '@pulumi/azure-native/sql';
-import {Locker} from '../Core/Locker';
+import { Locker } from '../Core/Locker';
 import {
   BasicResourceArgs,
-  LockableType,
+  WithLockable,
   ResourceInfoWithInstance,
 } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
@@ -20,7 +20,7 @@ export type SqlDbSku =
   | 'P6'
   | 'P11';
 
-export interface SqlDbProps extends BasicResourceArgs, LockableType {
+export interface SqlDbProps extends BasicResourceArgs, WithLockable {
   sqlServerName: Input<string>;
   elasticPoolId?: Output<string>;
   /** Provide this if elasticPoolId is not provided. Default is S0 */

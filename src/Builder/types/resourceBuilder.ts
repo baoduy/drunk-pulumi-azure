@@ -1,7 +1,6 @@
 import { EnvRolesInfo } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
 import {
-  EncryptResourceArgs,
   KeyVaultInfo,
   ResourceGroupInfo,
   ResourceInfo,

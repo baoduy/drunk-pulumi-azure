@@ -1,8 +1,6 @@
 import { CustomResourceOptions, Input, Output, Resource } from '@pulumi/pulumi';
 import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
 import { IEnvRoleBuilder } from './Builder';
-import is from '@sindresorhus/is';
-import boolean = is.boolean;
 
 export declare namespace NodeJS {
   interface ProcessEnv {
@@ -15,7 +13,6 @@ export declare namespace NodeJS {
 /** Omit all the key of OT from T */
 export type TypeOmit<T, OT> = Omit<T, keyof OT>;
 export type OmitOpts<T> = TypeOmit<T, OptsArgs>;
-export type LockableType = { lock?: boolean };
 
 export type ResourceGroupInfo = {
   resourceGroupName: string;
@@ -25,6 +22,7 @@ export type ResourceGroupWithIdInfo = ResourceGroupInfo & {
   id: Input<string>;
 };
 
+export type WithLockable = { lock?: boolean };
 export type WithDependsOn = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };

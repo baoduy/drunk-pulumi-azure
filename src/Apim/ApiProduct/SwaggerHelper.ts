@@ -1,5 +1,5 @@
-import { replaceAll } from "../../Common/Helpers";
-import { OpenAPI3 } from "./OpenApi";
+import { replaceAll } from '../../Common';
+import { OpenAPI3 } from './OpenApi';
 
 const removeVersion = (data: OpenAPI3, version: string): OpenAPI3 => {
   if (!data?.paths) {
@@ -11,7 +11,7 @@ const removeVersion = (data: OpenAPI3, version: string): OpenAPI3 => {
 
   //Replace version from path
   Object.keys(data.paths).forEach((k) => {
-    const newKey = replaceAll(k, `/${version}`, "");
+    const newKey = replaceAll(k, `/${version}`, '');
     newPaths[newKey] = data.paths[k];
   });
 
@@ -23,8 +23,8 @@ const downloadSpecFile = async (
   fileUrl: string,
 ): Promise<OpenAPI3 | undefined> => {
   //Get specs json from URL
-  return await fetch(fileUrl, { method: "GET" })
-    .then<OpenAPI3>((rs) => rs.json())
+  return await fetch(fileUrl, { method: 'GET' })
+    .then((rs) => rs.json() as unknown as OpenAPI3)
     .catch((error) => {
       console.error(`Not able to get spec file from: ${fileUrl}`, error);
       return undefined;

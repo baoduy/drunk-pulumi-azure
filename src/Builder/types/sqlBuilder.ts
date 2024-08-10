@@ -14,9 +14,12 @@ import {
   SqlVulnerabilityAssessmentType,
 } from '../../Sql';
 import { SqlDbProps, SqlDbSku } from '../../Sql/SqlDb';
-import { StorageInfo, WithEnvRoles, WithLogInfo } from '../../types';
+import { WithEnvRoles, WithLockable, WithLogInfo } from '../../types';
 
-export type SqlBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
+export type SqlBuilderArgs = BuilderProps &
+  WithEnvRoles &
+  WithLogInfo &
+  WithLockable;
 export type SqlBuilderAuthOptionsType = Omit<
   SqlAuthType,
   'password' | 'adminLogin' | 'envRoles'
