@@ -70,7 +70,7 @@ export default ({
       encryption: {
         keySource: encryption ? 'Microsoft.Keyvault' : 'Microsoft.Automation',
         identity: encryption
-          ? { userAssignedIdentity: [identity.id] }
+          ? { userAssignedIdentity: identity.id }
           : undefined,
         keyVaultProperties: encryption
           ? {
