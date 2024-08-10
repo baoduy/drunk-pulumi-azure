@@ -26,6 +26,9 @@ interface ElasticPoolProps extends BasicResourceArgs {
   sqlName: Output<string>;
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
+  preferredEnclaveType?:
+    | sql.v20230501preview.AlwaysEncryptedEnclaveType
+    | string;
   sku?: { name: 'Standard' | 'Basic'; capacity: ElasticPoolCapacityProps };
 }
 
@@ -34,31 +37,41 @@ const createElasticPool = ({
   name,
   sqlName,
   //Minimum is 50 GD
-  maxSizeBytesGb = 50,
+  maxSizeBytesGb,
+  preferredEnclaveType = sql.v20230501preview.AlwaysEncryptedEnclaveType.VBS,
   sku = { name: isPrd ? 'Standard' : 'Basic', capacity: 50 },
+  dependsOn,
 }: ElasticPoolProps): ResourceInfoWithInstance<sql.ElasticPool> => {
   //Create Sql Elastic
   const elasticName = getElasticPoolName(name);
 
-  const ep = new sql.ElasticPool(elasticName, {
-    elasticPoolName: elasticName,
-    serverName: sqlName,
-    ...group,
+  const ep = new sql.v20230501preview.ElasticPool(
+    elasticName,
+    {
+      elasticPoolName: elasticName,
+      serverName: sqlName,
+      ...group,
 
-    maxSizeBytes: isPrd ? maxSizeBytesGb * 1024 * 1024 * 1024 : undefined,
-    sku: {
-      name: `${sku.name}Pool`,
-      tier: sku.name,
-      capacity: sku.capacity,
+      maxSizeBytes: maxSizeBytesGb
+        ? maxSizeBytesGb * 1024 * 1024 * 1024
+        : undefined,
+
+      sku: {
+        name: `${sku.name}Pool`,
+        tier: sku.name,
+        capacity: sku.capacity,
+      },
+      perDatabaseSettings: {
+        minCapacity: 0,
+        maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
+      },
+      preferredEnclaveType,
+      zoneRedundant: isPrd,
+      //licenseType: sql.ElasticPoolLicenseType.BasePrice,
+      //zoneRedundant: isPrd,
     },
-    perDatabaseSettings: {
-      minCapacity: 0,
-      maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
-    },
-    zoneRedundant: isPrd,
-    //licenseType: sql.ElasticPoolLicenseType.BasePrice,
-    //zoneRedundant: isPrd,
-  });
+    { dependsOn },
+  );
 
   return { name: elasticName, group, id: ep.id, instance: ep };
 };
@@ -183,11 +196,12 @@ export default ({
 
   const ep = elasticPool
     ? createElasticPool({
+        ...elasticPool,
+        sku: elasticPool,
         name,
         group,
         sqlName: sqlServer.name,
-        sku: elasticPool,
-        maxSizeBytesGb: elasticPool.maxSizeBytesGb,
+        dependsOn: sqlServer,
       })
     : undefined;
 
@@ -355,8 +369,8 @@ export default ({
         name: n,
         group,
         sqlServerName: sqlName,
-        dependsOn: sqlServer,
-        elasticPoolId: ep ? ep.id : undefined,
+        dependsOn: ep?.instance ? [ep.instance, sqlServer] : sqlServer,
+        elasticPoolId: ep?.id,
         lock,
       });
 
