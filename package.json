@@ -28,7 +28,7 @@
     "up": "pulumi up --yes --skip-preview",
     "reup": "pulumi up --refresh --yes --skip-preview",
     "destroy": "pulumi destroy --yes --skip-preview",
-    "update": "npx npm-check-updates -u --deprecated && npm install --force",
+    "update": "npx npm-check-updates -u && npm install --force",
     "check": "npx depcheck --detailed",
     "export": "pulumi stack export --file state.json",
     "import": "pulumi stack import --file state.json",
@@ -62,7 +62,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@drunk-pulumi/azure-providers": "^1.0.4",
+    "@drunk-pulumi/azure-providers": "^1.0.5",
     "@pulumi/azure-native": "^2.55.0",
     "@pulumi/azuread": "5.53.3",
     "@pulumi/pulumi": "^3.128.0",

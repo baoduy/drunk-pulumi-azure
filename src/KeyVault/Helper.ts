@@ -1,11 +1,10 @@
-import * as keyvault from '@pulumi/azure-native/keyvault';
 import { Input, Output, output, Resource } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
-import { getSecretName, isDryRun, replaceAll } from '../Common';
+import { getSecretName } from '../Common';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
-//known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 
+//known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
 type SecretProps = Required<NamedWithVaultType> & {
   value: Input<string>;
   contentType?: Input<string>;
@@ -30,13 +29,14 @@ interface KeyVaultPropertiesResults {
 export const addEncryptKey = (
   name: string,
   vaultInfo: KeyVaultInfo,
+  keySize: 2048 | 3072 | 4096 = 4096,
 ): KeyVaultPropertiesResults => {
   const key = new VaultKeyResource(
     `${name}-encryptKey`,
     {
       name: `${name}-encryptKey`,
       vaultName: vaultInfo.name,
-      key: { keySize: 4096 },
+      key: { keySize },
     },
     { retainOnDelete: true },
   );
@@ -119,21 +119,21 @@ export const getSecrets = <T extends Record<string, string>>({
   return rs as Record<keyof T, Output<string>>;
 };
 
-interface KeyResult {
-  name: string;
-  /** The version may be empty if it is not found in the url */
-  version: string;
-  keyIdentityUrl: string;
-  vaultUrl: string;
-}
+// interface KeyResult {
+//   name: string;
+//   /** The version may be empty if it is not found in the url */
+//   version: string;
+//   keyIdentityUrl: string;
+//   vaultUrl: string;
+// }
 
 /** Convert VaultId to VaultInfo */
-export const parseKeyUrl = (keyUrl: string): KeyResult => {
-  const splits = keyUrl.split('/');
-  return {
-    keyIdentityUrl: keyUrl,
-    name: splits[4],
-    version: splits.length > 4 ? splits[5] : '',
-    vaultUrl: `https://${splits[2]}`,
-  };
-};
+// export const parseKeyUrl = (keyUrl: string): KeyResult => {
+//   const splits = keyUrl.split('/');
+//   return {
+//     keyIdentityUrl: keyUrl,
+//     name: splits[4],
+//     version: splits.length > 4 ? splits[5] : '',
+//     vaultUrl: `https://${splits[2]}`,
+//   };
+// };
