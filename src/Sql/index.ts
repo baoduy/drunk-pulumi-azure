@@ -157,6 +157,7 @@ export default ({
           : sql.IdentityType.SystemAssigned,
         userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
       },
+      primaryUserAssignedIdentityId: envUIDInfo ? envUIDInfo.id : undefined,
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
       keyId: encryptKey?.url,
