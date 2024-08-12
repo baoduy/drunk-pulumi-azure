@@ -19,6 +19,7 @@ import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import * as console from 'node:console';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -137,7 +138,7 @@ export default ({
 
   const adminGroup = auth.envRoles?.contributor;
 
-  ignoreChanges.push('keyId');
+  //ignoreChanges.push('keyId');
   if (auth.azureAdOnlyAuthentication) {
     ignoreChanges.push('administratorLogin');
     ignoreChanges.push('administratorLoginPassword');
@@ -243,7 +244,6 @@ export default ({
     all(network.ipAddresses).apply((ips) =>
       convertToIpRange(ips).map((ip, i) => {
         const n = `${sqlName}-fwRule-${i}`;
-
         return new sql.FirewallRule(n, {
           firewallRuleName: n,
           serverName: sqlServer.name,
@@ -332,20 +332,18 @@ export default ({
 
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
-    const keyName = interpolate`${vaultInfo?.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
-
+    const keyName = interpolate`${vaultInfo!.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
     const serverKey = new sql.ServerKey(
       `${sqlName}-serverKey`,
       {
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
-        serverKeyType: 'AzureKeyVault',
-        keyName: keyName,
+        serverKeyType: sql.ServerKeyType.AzureKeyVault,
+        keyName,
         uri: encryptKey.url,
       },
-      { dependsOn: sqlServer, ignoreChanges },
+      { dependsOn: sqlServer },
     );
-
     new sql.EncryptionProtector(
       `${sqlName}-encryptionProtector`,
       {
