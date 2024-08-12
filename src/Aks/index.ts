@@ -5,7 +5,7 @@ import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import {
   BasicEncryptResourceArgs,
-  LockableType,
+  WithLockable,
   LogInfo,
   ResourceInfoWithInstance,
   WithDiskEncryption,
@@ -152,7 +152,7 @@ export type DefaultAksNodePoolProps = Omit<NodePoolProps, 'name' | 'mode'>;
 
 export interface AksProps
   extends BasicEncryptResourceArgs,
-    LockableType,
+    WithLockable,
     WithDiskEncryption {
   tier?: ccs.ManagedClusterSKUTier;
   addon?: AskAddonProps;

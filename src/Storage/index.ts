@@ -95,7 +95,7 @@ function Storage({
   const primaryConnectionKeyName = getConnectionName(name, 'primary');
   const secondConnectionKeyName = getConnectionName(name, 'secondary');
   const encryptionKey = enableEncryption
-    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
+    ? addEncryptKey(name, vaultInfo!)
     : undefined;
   const allowSharedKeyAccess =
     features.allowSharedKeyAccess || features.enableStaticWebsite;

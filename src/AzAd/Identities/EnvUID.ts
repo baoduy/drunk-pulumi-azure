@@ -15,7 +15,7 @@ export const create = ({
     ...others,
     name: currentEnv,
   });
-  envRoles?.addMember('admin', identity.principalId);
+  envRoles?.addMember('readOnly', identity.principalId);
 
   return identity;
 };

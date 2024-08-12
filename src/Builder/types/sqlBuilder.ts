@@ -14,18 +14,19 @@ import {
   SqlVulnerabilityAssessmentType,
 } from '../../Sql';
 import { SqlDbProps, SqlDbSku } from '../../Sql/SqlDb';
-import { StorageInfo, WithEnvRoles, WithLogInfo } from '../../types';
+import { WithEnvRoles, WithLockable, WithLogInfo } from '../../types';
 
-export type SqlBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
+export type SqlBuilderArgs = BuilderProps &
+  WithEnvRoles &
+  WithLogInfo &
+  WithLockable;
 export type SqlBuilderAuthOptionsType = Omit<
   SqlAuthType,
   'password' | 'adminLogin' | 'envRoles'
 >;
 export type SqlDbBuilderType = { name: string; sku?: SqlDbSku };
-export type SqlDbCopyType = SqlDbBuilderType & { copyFromDbId: Input<string> };
-export type SqlDbReplicaType = SqlDbBuilderType & {
-  replicaFromDbId: Input<string>;
-};
+export type SqlFromDbType = SqlDbBuilderType & { fromDbId: Input<string> };
+
 export type FullSqlDbPropsType = Omit<
   SqlDbProps,
   | 'dependsOn'
@@ -58,9 +59,14 @@ export interface ISqlBuilder
     ILockable<ISqlBuilder>,
     IIgnoreChanges<ISqlBuilder> {
   withDatabases(props: SqlDbBuilderType): ISqlBuilder;
-  copyDbFrom(props: SqlDbCopyType): ISqlBuilder;
-  replicaDbFrom(props: SqlDbReplicaType): ISqlBuilder;
+  copyDb(props: SqlFromDbType): ISqlBuilder;
+  replicaDb(props: SqlFromDbType): ISqlBuilder;
   withVulnerabilityAssessment(
+    props: SqlBuilderVulnerabilityAssessmentType,
+  ): ISqlBuilder;
+  /** Allows to on/off the Assessment based on environment condition */
+  withVulnerabilityAssessmentIf(
+    condition: boolean,
     props: SqlBuilderVulnerabilityAssessmentType,
   ): ISqlBuilder;
 }

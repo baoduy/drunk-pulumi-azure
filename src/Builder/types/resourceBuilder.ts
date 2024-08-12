@@ -1,7 +1,6 @@
 import { EnvRolesInfo } from '../../AzAd/EnvRoles';
 import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
 import {
-  EncryptResourceArgs,
   KeyVaultInfo,
   ResourceGroupInfo,
   ResourceInfo,
@@ -12,6 +11,7 @@ import {
   BuilderProps,
   IBuilder,
   IBuilderAsync,
+  IEncryptable,
   ILockable,
 } from './genericBuilder';
 import { CertBuilderType, VaultBuilderSecretType } from './vaultBuilder';
@@ -82,8 +82,8 @@ export interface IResourceBuilder
   extends IResourceVnetBuilder,
     IEnvUserAssignedIdentityBuilder,
     IResourceVaultItemsBuilder,
-    ILockable<IResourceBuilder> {
-  enableEncryption(): IResourceBuilder;
+    ILockable<IResourceBuilder>,
+    IEncryptable<IResourceBuilder> {
   withLogFrom(name: string): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;

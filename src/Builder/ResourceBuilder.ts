@@ -143,8 +143,8 @@ class ResourceBuilder
     this._vnetBuilder = props;
     return this;
   }
-  public enableEncryption(): types.IResourceBuilder {
-    this._enableEncryption = true;
+  public enableEncryption(enabled: boolean = true): types.IResourceBuilder {
+    this._enableEncryption = enabled;
     return this;
   }
   public withLogFrom(name: string): types.IResourceBuilder {
@@ -166,8 +166,8 @@ class ResourceBuilder
     this._otherResources.push(builder);
     return this;
   }
-  public lock(): types.IResourceBuilder {
-    this._lock = true;
+  public lock(lock: boolean = true): types.IResourceBuilder {
+    this._lock = lock;
     return this;
   }
   private buildRoles() {

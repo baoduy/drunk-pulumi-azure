@@ -6,7 +6,6 @@ import {
   AksEncryptionType,
   AksImportProps,
   BuilderAsync,
-  BuilderProps,
   IAksBuilder,
   IAksDefaultNodePoolBuilder,
   IAksNetworkBuilder,

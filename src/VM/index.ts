@@ -88,7 +88,7 @@ export default ({
   //All VM will use the same Key
   const keyEncryption =
     enableEncryption && vaultInfo && !diskEncryptionSetId
-      ? addEncryptKey({ name: vmName, vaultInfo: vaultInfo! })
+      ? addEncryptKey(vmName, vaultInfo!)
       : undefined;
   const diskEncryption =
     enableEncryption && vaultInfo && !diskEncryptionSetId

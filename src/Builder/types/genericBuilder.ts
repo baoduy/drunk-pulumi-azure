@@ -42,8 +42,11 @@ export abstract class BuilderAsync<TResults extends ResourceInfo>
 }
 
 //Other interface
+export interface IEncryptable<TBuilderResults> {
+  enableEncryption(enabled?: boolean): TBuilderResults;
+}
 export interface ILockable<TBuilderResults> {
-  lock(): TBuilderResults;
+  lock(lock?: boolean): TBuilderResults;
 }
 export interface IIgnoreChanges<TBuilderResults> {
   ignoreChangesFrom(...props: string[]): TBuilderResults;

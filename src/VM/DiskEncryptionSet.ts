@@ -27,7 +27,7 @@ export default ({
     );
 
   name = getDiskEncryptionName(name);
-  const keyEncryption = addEncryptKey({ name, vaultInfo });
+  const keyEncryption = addEncryptKey(name, vaultInfo);
   const diskEncrypt = new compute.DiskEncryptionSet(
     name,
     {

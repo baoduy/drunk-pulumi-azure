@@ -8,7 +8,7 @@ import { getElasticPoolName, getSqlServerName } from '../Common';
 import {
   BasicEncryptResourceArgs,
   BasicResourceArgs,
-  LockableType,
+  WithLockable,
   LogInfo,
   LoginWithEnvRolesArgs,
   NetworkPropsType,
@@ -19,6 +19,7 @@ import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import * as console from 'node:console';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -26,6 +27,9 @@ interface ElasticPoolProps extends BasicResourceArgs {
   sqlName: Output<string>;
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
+  preferredEnclaveType?:
+    | sql.v20230501preview.AlwaysEncryptedEnclaveType
+    | string;
   sku?: { name: 'Standard' | 'Basic'; capacity: ElasticPoolCapacityProps };
 }
 
@@ -34,31 +38,41 @@ const createElasticPool = ({
   name,
   sqlName,
   //Minimum is 50 GD
-  maxSizeBytesGb = 50,
+  maxSizeBytesGb,
+  preferredEnclaveType = sql.v20230501preview.AlwaysEncryptedEnclaveType.VBS,
   sku = { name: isPrd ? 'Standard' : 'Basic', capacity: 50 },
+  dependsOn,
 }: ElasticPoolProps): ResourceInfoWithInstance<sql.ElasticPool> => {
   //Create Sql Elastic
   const elasticName = getElasticPoolName(name);
 
-  const ep = new sql.ElasticPool(elasticName, {
-    elasticPoolName: elasticName,
-    serverName: sqlName,
-    ...group,
+  const ep = new sql.v20230501preview.ElasticPool(
+    elasticName,
+    {
+      elasticPoolName: elasticName,
+      serverName: sqlName,
+      ...group,
 
-    maxSizeBytes: isPrd ? maxSizeBytesGb * 1024 * 1024 * 1024 : undefined,
-    sku: {
-      name: `${sku.name}Pool`,
-      tier: sku.name,
-      capacity: sku.capacity,
+      maxSizeBytes: maxSizeBytesGb
+        ? maxSizeBytesGb * 1024 * 1024 * 1024
+        : undefined,
+
+      sku: {
+        name: `${sku.name}Pool`,
+        tier: sku.name,
+        capacity: sku.capacity,
+      },
+      perDatabaseSettings: {
+        minCapacity: 0,
+        maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
+      },
+      preferredEnclaveType,
+      zoneRedundant: isPrd,
+      //licenseType: sql.ElasticPoolLicenseType.BasePrice,
+      //zoneRedundant: isPrd,
     },
-    perDatabaseSettings: {
-      minCapacity: 0,
-      maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
-    },
-    zoneRedundant: isPrd,
-    //licenseType: sql.ElasticPoolLicenseType.BasePrice,
-    //zoneRedundant: isPrd,
-  });
+    { dependsOn },
+  );
 
   return { name: elasticName, group, id: ep.id, instance: ep };
 };
@@ -76,6 +90,7 @@ export type SqlNetworkType = NetworkPropsType & {
 export type SqlElasticPoolType = {
   name: 'Standard' | 'Basic';
   capacity: ElasticPoolCapacityProps;
+  maxSizeBytesGb?: 50 | number;
 };
 
 export type SqlResults = ResourceInfo & {
@@ -91,7 +106,7 @@ export type SqlVulnerabilityAssessmentType = Pick<LogInfo, 'logStorage'> & {
   // storageEndpoint: Input<string>;
 };
 
-interface Props extends BasicEncryptResourceArgs, LockableType {
+interface Props extends BasicEncryptResourceArgs, WithLockable {
   /** if Auth is not provided it will be auto generated */
   auth: SqlAuthType;
   elasticPool?: SqlElasticPoolType;
@@ -107,6 +122,7 @@ export default ({
   elasticPool,
   databases,
   vaultInfo,
+  envUIDInfo,
   enableEncryption,
   envRoles,
   network,
@@ -117,12 +133,12 @@ export default ({
 }: Props): SqlResults => {
   const sqlName = getSqlServerName(name);
   const encryptKey = enableEncryption
-    ? addEncryptKey({ name: sqlName, vaultInfo: vaultInfo! })
+    ? addEncryptKey(sqlName, vaultInfo!, 3072)
     : undefined;
 
   const adminGroup = auth.envRoles?.contributor;
 
-  ignoreChanges.push('keyId');
+  //ignoreChanges.push('keyId');
   if (auth.azureAdOnlyAuthentication) {
     ignoreChanges.push('administratorLogin');
     ignoreChanges.push('administratorLoginPassword');
@@ -136,7 +152,13 @@ export default ({
       version: '12.0',
       minimalTlsVersion: '1.2',
 
-      identity: { type: 'SystemAssigned' },
+      identity: {
+        type: envUIDInfo
+          ? sql.IdentityType.SystemAssigned_UserAssigned
+          : sql.IdentityType.SystemAssigned,
+        userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+      },
+      primaryUserAssignedIdentityId: envUIDInfo ? envUIDInfo.id : undefined,
       administratorLogin: auth?.adminLogin,
       administratorLoginPassword: auth?.password,
       keyId: encryptKey?.url,
@@ -168,7 +190,6 @@ export default ({
   if (lock) {
     Locker({ name: sqlName, resource: sqlServer });
   }
-
   //Allows to Read Key Vault
   envRoles?.addMember(
     'readOnly',
@@ -177,10 +198,12 @@ export default ({
 
   const ep = elasticPool
     ? createElasticPool({
+        ...elasticPool,
+        sku: elasticPool,
         name,
         group,
         sqlName: sqlServer.name,
-        sku: elasticPool,
+        dependsOn: sqlServer,
       })
     : undefined;
 
@@ -221,7 +244,6 @@ export default ({
     all(network.ipAddresses).apply((ips) =>
       convertToIpRange(ips).map((ip, i) => {
         const n = `${sqlName}-fwRule-${i}`;
-
         return new sql.FirewallRule(n, {
           firewallRuleName: n,
           serverName: sqlServer.name,
@@ -310,31 +332,32 @@ export default ({
 
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
-    const keyName = interpolate`${vaultInfo?.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
+    const keyName = interpolate`${vaultInfo!.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
+    //Server key maybe auto created by Azure
+    // const serverKey = new sql.ServerKey(
+    //   `${sqlName}-serverKey`,
+    //   {
+    //     resourceGroupName: group.resourceGroupName,
+    //     serverName: sqlName,
+    //     serverKeyType: sql.ServerKeyType.AzureKeyVault,
+    //     keyName,
+    //     uri: encryptKey.url,
+    //   },
+    //   { dependsOn: sqlServer, retainOnDelete: true },
+    // );
 
-    const serverKey = new sql.ServerKey(
-      `${sqlName}-serverKey`,
-      {
-        resourceGroupName: group.resourceGroupName,
-        serverName: sqlName,
-        serverKeyType: 'AzureKeyVault',
-        keyName: keyName,
-        uri: encryptKey.url,
-      },
-      { dependsOn: sqlServer, ignoreChanges },
-    );
-
+    //enable the EncryptionProtector
     new sql.EncryptionProtector(
       `${sqlName}-encryptionProtector`,
       {
         encryptionProtectorName: 'current',
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
-        serverKeyType: 'AzureKeyVault',
-        serverKeyName: serverKey.name,
+        serverKeyType: sql.ServerKeyType.AzureKeyVault,
+        serverKeyName: keyName, //serverKey.name,
         autoRotationEnabled: true,
       },
-      { dependsOn: serverKey },
+      { dependsOn: sqlServer },
     );
   }
 
@@ -348,8 +371,8 @@ export default ({
         name: n,
         group,
         sqlServerName: sqlName,
-        dependsOn: sqlServer,
-        elasticPoolId: ep ? ep.id : undefined,
+        dependsOn: ep?.instance ? [ep.instance, sqlServer] : sqlServer,
+        elasticPoolId: ep?.id,
         lock,
       });
 
@@ -357,8 +380,8 @@ export default ({
         //Refer here to build connection correctly: https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/azure-active-directory-authentication?view=sql-server-ver16
         const connectionString = auth?.azureAdOnlyAuthentication
           ? auth?.defaultLoginManagedId
-            ? interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication=Active Directory Managed Identity; User Id=${auth.defaultLoginManagedId}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
-            : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication=Active Directory Default; MultipleActiveResultSets=False;Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
+            ? interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication="Active Directory Managed Identity"; User Id=${auth.defaultLoginManagedId}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
+            : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication="Active Directory Default"; MultipleActiveResultSets=False;Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
           : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; User Id=${auth.adminLogin}; Password=${auth.password}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`;
 
         addCustomSecret({

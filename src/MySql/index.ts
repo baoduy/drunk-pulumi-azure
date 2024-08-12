@@ -67,7 +67,7 @@ export default ({
     }).result;
 
   const encryptKey = enableEncryption
-    ? addEncryptKey({ name, vaultInfo: vaultInfo! })
+    ? addEncryptKey(name, vaultInfo!)
     : undefined;
 
   const userIdentity = enableEncryption
