@@ -18,6 +18,7 @@ export default ({
   extraVnetIds,
   privateDnsZoneName,
   linkServiceGroupIds,
+  privateIpAddress,
   dependsOn,
 }: PrivateEndpointProps) => {
   const name = getPrivateEndpointName(resourceInfo.name);
@@ -31,6 +32,13 @@ export default ({
           ...resourceInfo.group,
           privateEndpointName: `${name}-${n}`,
           subnet: { id: s },
+          customDnsConfigs: privateIpAddress
+            ? [
+                {
+                  ipAddresses: [privateIpAddress],
+                },
+              ]
+            : undefined,
           privateLinkServiceConnections: [
             {
               groupIds: linkServiceGroupIds,

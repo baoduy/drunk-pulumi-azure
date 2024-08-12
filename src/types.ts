@@ -123,6 +123,7 @@ export interface ResourceInfoWithInstance<InstanceType>
     ResourceInfo {}
 
 export type PrivateLinkPropsType = {
+  privateIpAddress?: Input<string>;
   /** The Subnet that private links will be created.*/
   subnetIds: Input<string>[];
   /** The extra Vnet that Private DNS Zone will be linked.*/

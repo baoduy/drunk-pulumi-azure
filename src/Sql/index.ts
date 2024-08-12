@@ -333,28 +333,31 @@ export default ({
   if (encryptKey) {
     // Enable a server key in the SQL Server with reference to the Key Vault Key
     const keyName = interpolate`${vaultInfo!.name}_${encryptKey.keyName}_${encryptKey.keyVersion}`;
-    const serverKey = new sql.ServerKey(
-      `${sqlName}-serverKey`,
-      {
-        resourceGroupName: group.resourceGroupName,
-        serverName: sqlName,
-        serverKeyType: sql.ServerKeyType.AzureKeyVault,
-        keyName,
-        uri: encryptKey.url,
-      },
-      { dependsOn: sqlServer },
-    );
+    //Server key maybe auto created by Azure
+    // const serverKey = new sql.ServerKey(
+    //   `${sqlName}-serverKey`,
+    //   {
+    //     resourceGroupName: group.resourceGroupName,
+    //     serverName: sqlName,
+    //     serverKeyType: sql.ServerKeyType.AzureKeyVault,
+    //     keyName,
+    //     uri: encryptKey.url,
+    //   },
+    //   { dependsOn: sqlServer, retainOnDelete: true },
+    // );
+
+    //enable the EncryptionProtector
     new sql.EncryptionProtector(
       `${sqlName}-encryptionProtector`,
       {
         encryptionProtectorName: 'current',
         resourceGroupName: group.resourceGroupName,
         serverName: sqlName,
-        serverKeyType: 'AzureKeyVault',
-        serverKeyName: serverKey.name,
+        serverKeyType: sql.ServerKeyType.AzureKeyVault,
+        serverKeyName: keyName, //serverKey.name,
         autoRotationEnabled: true,
       },
-      { dependsOn: serverKey },
+      { dependsOn: sqlServer },
     );
   }
 
