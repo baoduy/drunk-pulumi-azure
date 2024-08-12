@@ -6,8 +6,10 @@ import {
   StorageNetworkType,
   StoragePolicyType,
 } from '../../Storage';
-import { ResourceInfo } from '../../types';
-import { IBuilder } from './genericBuilder';
+import { ResourceInfo, WithEncryptionInfo } from '../../types';
+import { BuilderProps, IBuilder } from './genericBuilder';
+
+export type StorageBuilderArgs = BuilderProps & WithEncryptionInfo;
 
 export type StorageCdnType = Pick<
   CdnEndpointProps,

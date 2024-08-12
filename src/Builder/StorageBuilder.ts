@@ -14,6 +14,7 @@ import {
   IStorageBuilder,
   IStorageSharedBuilder,
   IStorageStarterBuilder,
+  StorageBuilderArgs,
   StorageCdnType,
   StorageFeatureBuilderType,
 } from './types';
@@ -36,7 +37,7 @@ class StorageBuilder
   private _network: StorageNetworkType | undefined = undefined;
   private _lock: boolean = false;
 
-  public constructor(props: BuilderProps) {
+  public constructor(props: StorageBuilderArgs) {
     super(props);
   }
   public asStorage(props: StorageFeatureBuilderType = {}): IStorageBuilder {
@@ -120,5 +121,5 @@ class StorageBuilder
   }
 }
 
-export default (props: BuilderProps) =>
+export default (props: StorageBuilderArgs) =>
   new StorageBuilder(props) as IStorageStarterBuilder;
