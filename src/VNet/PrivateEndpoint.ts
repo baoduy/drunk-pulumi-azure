@@ -39,10 +39,20 @@ export default ({
                 },
               ]
             : undefined,
+          ipConfigurations: privateIpAddress
+            ? [
+                {
+                  name: `${name}-ipconfig`,
+                  groupId: linkServiceGroupIds[0],
+                  memberName: linkServiceGroupIds[0],
+                  privateIPAddress: privateIpAddress,
+                },
+              ]
+            : undefined,
           privateLinkServiceConnections: [
             {
-              groupIds: linkServiceGroupIds,
               name: `${name}-conn`,
+              groupIds: linkServiceGroupIds,
               privateLinkServiceId: resourceInfo.id,
             },
           ],
