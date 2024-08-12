@@ -62,12 +62,12 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   }
 
   private buildRecords() {
-    this._aRecords.forEach((a, index) => {
+    this._aRecords.forEach((a) => {
       const n =
         a.recordName === '*'
-          ? `All-${index}-ARecord`
+          ? `All-ARecord`
           : a.recordName === '@'
-            ? `Root-${index}-ARecord`
+            ? `Root-ARecord`
             : `${a.recordName}-ARecord`;
 
       return new network.PrivateRecordSet(
