@@ -19,7 +19,6 @@ import { convertToIpRange } from '../VNet/Helper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
-import * as console from 'node:console';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -67,7 +66,6 @@ const createElasticPool = ({
         maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
       },
       preferredEnclaveType,
-      zoneRedundant: isPrd,
       //licenseType: sql.ElasticPoolLicenseType.BasePrice,
       //zoneRedundant: isPrd,
     },
