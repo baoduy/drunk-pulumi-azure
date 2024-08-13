@@ -506,39 +506,20 @@ export default async ({
 
     //Grant Permission for Identity
     pulumi
-      .all([aks.identity, aks.identityProfile, network.subnetId])
-      .apply(([identity, identityProfile, sId]) => {
+      .all([aks.identity, aks.identityProfile])
+      .apply(([identity, identityProfile]) => {
         //const acrScope = acr?.id ?? defaultSubScope;
         if (identityProfile && identityProfile['kubeletidentity']) {
-          // roleAssignment({
-          //   name: `${name}-aks-identity-profile-pull`,
-          //   principalId: identityProfile['kubeletidentity'].objectId!,
-          //   principalType: 'ServicePrincipal',
-          //   roleName: 'AcrPull',
-          //   scope: acrScope,
-          // });
-
           //Add into EnvRoles for Database accessing
           envRoles?.addMember(
             'contributor',
             identityProfile['kubeletidentity'].objectId!,
           );
         }
-
-        //Link service principal to Vnet Resources group
-        //This only need for public ask with direct public IP associated
-        // if (network.subnetId && identity) {
-        //   roleAssignment({
-        //     name: `${name}-system-net`,
-        //     principalId: identity.principalId,
-        //     roleName: 'Contributor',
-        //     principalType: 'ServicePrincipal',
-        //     scope: rsInfo.getRGId(rsInfo.getResourceInfoFromId(sId)!.group),
-        //   });
-        //
-        //   //Add into EnvRoles for Database accessing
-        //   //envRoles?.addMember('contributor', identity.principalId);
-        // }
+        if (identity) {
+          //Add into EnvRoles for Database accessing
+          envRoles?.addMember('contributor', identity.principalId);
+        }
 
         //Link Private Dns to extra Vnet
         if (features?.enablePrivateCluster && network.extraVnetIds) {
