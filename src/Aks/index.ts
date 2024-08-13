@@ -522,7 +522,7 @@ export default async ({
             principalId: identity.principalId,
             principalType: 'ServicePrincipal',
             scope: rsInfo.getRGId(group),
-            roleName: 'Reader',
+            roleName: 'Contributor',
           });
         }
 
