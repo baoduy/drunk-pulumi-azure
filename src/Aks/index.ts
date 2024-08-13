@@ -1,6 +1,5 @@
 import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
-import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import {
@@ -12,17 +11,14 @@ import {
 } from '../types';
 import {
   currentEnv,
-  defaultSubScope,
   Environments,
   isPrd,
-  rsInfo,
   tenantId,
   stack,
   naming,
 } from '../Common';
 import { Locker } from '../Core/Locker';
 import aksIdentityCreator from './Identity';
-import { roleAssignment } from '../AzAd/RoleAssignment';
 import { getAksConfig, getAksPrivateDnz } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
