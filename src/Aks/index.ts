@@ -258,7 +258,8 @@ export default async ({
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        enablePrivateClusterPublicFQDN: false,
+        //TODO: to make the life simple we enable this to allows IP DNS query from public internet.
+        enablePrivateClusterPublicFQDN: true,
         privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
         //privateDNSZone: privateDnsZone?.id,
       },
