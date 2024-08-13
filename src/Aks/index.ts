@@ -1,6 +1,5 @@
 import * as ccs from '@pulumi/azure-native/containerservice';
 import * as pulumi from '@pulumi/pulumi';
-import { containerservice } from '@pulumi/azure-native/types/input';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import {
@@ -12,21 +11,20 @@ import {
 } from '../types';
 import {
   currentEnv,
-  defaultSubScope,
   Environments,
-  isPrd,
   rsInfo,
+  isPrd,
   tenantId,
   stack,
   naming,
 } from '../Common';
 import { Locker } from '../Core/Locker';
 import aksIdentityCreator from './Identity';
-import { roleAssignment } from '../AzAd/RoleAssignment';
-import { getAksConfig, getAksPrivateDnz } from './Helper';
+import { getAksConfig } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { IdentityResult } from '../AzAd/Identity';
+import { roleAssignment } from '../AzAd/RoleAssignment';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -203,7 +201,6 @@ export default async ({
   nodePools,
   network,
   logInfo,
-  //acr,
 
   features = { enableMaintenance: true },
   storageProfile,
@@ -239,6 +236,7 @@ export default async ({
 
   const serviceIdentity = aksIdentityCreator({
     name: aksName,
+    group,
     vaultInfo,
     dependsOn,
   });
@@ -508,34 +506,37 @@ export default async ({
     //Grant Permission for Identity
     pulumi
       .all([aks.identity, aks.identityProfile])
-      .apply(([identity, identityProfile]) => {
-        //const acrScope = acr?.id ?? defaultSubScope;
+      .apply(async ([identity, identityProfile]) => {
         if (identityProfile && identityProfile['kubeletidentity']) {
-          //Add into EnvRoles for Database accessing
+          //Add into EnvRoles for Other resources accessing and download container images
           envRoles?.addMember(
             'contributor',
             identityProfile['kubeletidentity'].objectId!,
           );
         }
         if (identity) {
-          //Add into EnvRoles for Database accessing
-          envRoles?.addMember('contributor', identity.principalId);
+          //This ask identity needs to have contributor role into resource group
+          roleAssignment({
+            name: `${aksName}-rg`,
+            dependsOn: aks,
+            principalId: identity.principalId,
+            principalType: 'ServicePrincipal',
+            scope: rsInfo.getRGId(group),
+            roleName: 'Reader',
+          });
         }
 
         //Link Private Dns to extra Vnet
         if (features?.enablePrivateCluster && network.extraVnetIds) {
-          const dns = getAksPrivateDnz({
-            name: aksName,
-            group,
-            id: aks.id,
-          });
-
-          dns.apply((s) =>
-            dnsBuilder
-              .from(s!)
-              .linkTo({ vnetIds: network.extraVnetIds })
-              .build(),
-          );
+          (
+            await dnsBuilder.fromPrivateAks({
+              name: aksName,
+              group,
+              id: aks.id,
+            })
+          )
+            ?.linkTo({ vnetIds: network.extraVnetIds })
+            .build();
         }
       });
 

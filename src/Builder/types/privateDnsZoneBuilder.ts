@@ -1,5 +1,4 @@
 import { Input } from '@pulumi/pulumi';
-import { IBuilder } from './genericBuilder';
 import { ResourceInfo } from '../../types';
 import { DnsZoneARecordType } from './dnsZoneBuilder';
 

@@ -54,23 +54,21 @@ export const getAksVaultConfig = async ({
   return rs?.value || '';
 };
 
-export const getAksPrivateDnz = (
+export const getAksPrivateDnz = async (
   aksInfo: ResourceInfo,
-): Output<ResourceInfo | undefined> => {
-  const aks = cs.getManagedClusterOutput({
+): Promise<ResourceInfo | undefined> => {
+  const aks = await cs.getManagedCluster({
     resourceName: aksInfo.name,
     resourceGroupName: aksInfo.group.resourceGroupName,
   });
 
-  return aks.apply((a) => {
-    if (!a.privateFQDN) return undefined;
-    const dnsName = a.privateFQDN.split('.').slice(1).join('.');
-    const rsGroup = a.nodeResourceGroup!;
+  if (!aks.privateFQDN) return undefined;
+  const dnsName = aks.privateFQDN.split('.').slice(1).join('.');
+  const rsGroup = aks.nodeResourceGroup!;
 
-    return {
-      name: dnsName,
-      group: { resourceGroupName: rsGroup, location: globalKeyName },
-      id: interpolate`${defaultSubScope}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
-    } as ResourceInfo;
-  });
+  return {
+    name: dnsName,
+    group: { resourceGroupName: rsGroup, location: globalKeyName },
+    id: interpolate`${defaultSubScope}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
+  } as ResourceInfo;
 };

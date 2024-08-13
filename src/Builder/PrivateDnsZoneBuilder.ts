@@ -8,6 +8,7 @@ import {
 import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
 import { rsInfo, globalKeyName } from '../Common';
+import { getAksPrivateDnz } from '../Aks/Helper';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -124,8 +125,15 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   }
 }
 
-export const from = (info: ResourceInfo) =>
-  PrivateDnsZoneBuilder.from(info) as IPrivateDnsZoneBuilder;
+export const from = (dnsZoneInfo: ResourceInfo) =>
+  PrivateDnsZoneBuilder.from(dnsZoneInfo) as IPrivateDnsZoneBuilder;
+
+export const fromPrivateAks = async (
+  aks: ResourceInfo,
+): Promise<IPrivateDnsZoneBuilder | undefined> => {
+  const dns = await getAksPrivateDnz(aks);
+  return dns ? from(dns) : undefined;
+};
 
 export default (props: BasicResourceArgs) =>
   new PrivateDnsZoneBuilder(props) as IPrivateDnsZoneBuilder;
