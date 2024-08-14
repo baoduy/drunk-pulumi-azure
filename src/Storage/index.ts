@@ -26,15 +26,16 @@ export type ContainerProps = {
 };
 export type StorageFeatureType = {
   allowSharedKeyAccess?: boolean;
+  allowBlobPublicAccess?: boolean;
   /** Enable this storage as static website. */
   enableStaticWebsite?: boolean;
   allowCrossTenantReplication?: boolean;
+
   isSftpEnabled?: boolean;
 };
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
   isBlobVersioningEnabled?: boolean;
-  allowBlobPublicAccess?: boolean;
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
 };
@@ -116,7 +117,7 @@ function Storage({
 
       isHnsEnabled: true,
       enableHttpsTrafficOnly: true,
-      allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
+      allowBlobPublicAccess: Boolean(features?.allowBlobPublicAccess),
       allowSharedKeyAccess,
       allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
       defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),

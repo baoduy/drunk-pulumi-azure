@@ -16,9 +16,9 @@ export type StorageCdnType = Pick<
   'cdnProfileInfo' | 'cors' | 'domainNames'
 > & { securityResponse?: CdnSecurityHeaderTypes };
 
-export type StorageFeatureBuilderType = Pick<
+export type StorageFeatureBuilderType = Omit<
   StorageFeatureType,
-  'allowSharedKeyAccess'
+  'enableStaticWebsite'
 >;
 export interface IStorageStarterBuilder {
   asStorage(props?: StorageFeatureBuilderType): IStorageBuilder;
