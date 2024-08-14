@@ -87,7 +87,7 @@ function Storage({
   policies = { keyExpirationPeriodInDays: 365 },
   lock = true,
   dependsOn,
-  ignoreChanges,
+  ignoreChanges = [],
 }: StorageProps): StorageResults {
   name = getStorageName(name);
 
@@ -100,6 +100,7 @@ function Storage({
     : undefined;
   const allowSharedKeyAccess =
     features.allowSharedKeyAccess || features.enableStaticWebsite;
+
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
   const stg = new storage.StorageAccount(
     name,
@@ -143,20 +144,34 @@ function Storage({
 
       encryption: encryptionKey
         ? {
+            encryptionIdentity: {
+              //encryptionFederatedIdentityClientId?: pulumi.Input<string>;
+              encryptionUserAssignedIdentity: envUIDInfo?.id,
+            },
             services: {
               blob: {
                 enabled: true,
-                keyType: storage.KeyType.Account,
+                //keyType: storage.KeyType.Account,
               },
               file: {
                 enabled: true,
-                keyType: storage.KeyType.Account,
+                //keyType: storage.KeyType.Account,
+              },
+              queue: {
+                enabled: true,
+                //keyType: storage.KeyType.Account,
+              },
+              table: {
+                enabled: true,
+                //keyType: storage.KeyType.Account,
               },
             },
             keySource: 'Microsoft.KeyVault',
             keyVaultProperties: encryptionKey,
+            requireInfrastructureEncryption: true,
           }
-        : undefined,
+        : //Default infra encryption
+          { requireInfrastructureEncryption: true },
 
       sasPolicy: {
         expirationAction: storage.ExpirationAction.Log,
@@ -187,7 +202,13 @@ function Storage({
           : undefined,
       },
     },
-    { dependsOn, ignoreChanges },
+    {
+      dependsOn,
+      ignoreChanges: [
+        ...ignoreChanges,
+        'encryption.requireInfrastructureEncryption',
+      ],
+    },
   );
 
   if (network?.privateEndpoint) {
