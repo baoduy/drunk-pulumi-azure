@@ -39,7 +39,7 @@ export interface IServiceBusSkuBuilder {
 }
 
 export interface IServiceBusBuilder extends IBuilder<ResourceInfo> {
-  enableGlobalConnection(enabled?: boolean): IServiceBusBuilder;
+  //enableGlobalConnection(enabled?: boolean): IServiceBusBuilder;
   withNetwork(props: NetworkPropsType): IServiceBusBuilder;
   withQueues(props: Record<string, ServiceBusQueueArgs>): IServiceBusBuilder;
   withTopics(props: Record<string, ServiceBusTopicArgs>): IServiceBusBuilder;
