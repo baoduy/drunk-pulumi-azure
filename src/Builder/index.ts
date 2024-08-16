@@ -6,6 +6,7 @@ export { default as DnsZoneBuilder } from './DnsZoneBuilder';
 export { EnvRoleBuilder } from './EnvRoleBuilder';
 export { default as PrivateDnsZoneBuilder } from './PrivateDnsZoneBuilder';
 export { default as ResourceBuilder } from './ResourceBuilder';
+export { default as ServiceBusBuilder } from './ServiceBusBuilder';
 export { default as SqlBuilder } from './SqlBuilder';
 export { default as StorageBuilder } from './StorageBuilder';
 export { default as VaultBuilder } from './VaultBuilder';

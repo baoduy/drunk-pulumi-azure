@@ -8,6 +8,7 @@ export * from './dnsZoneBuilder';
 export * from './envRoleBuilder';
 export * from './genericBuilder';
 export * from './resourceBuilder';
+export * from './serviceBusBuilder';
 export * from './sqlBuilder';
 export * from './storageBuilder';
 export * from './vdiBuilder';

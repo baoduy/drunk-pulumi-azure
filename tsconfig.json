@@ -128,8 +128,6 @@
     "src/MySql/index.ts",
     "src/Postgresql/index.ts",
     "src/RedisCache/index.ts",
-    "src/ServiceBus/ServiceBusHelper.ts",
-    "src/ServiceBus/index.ts",
     "src/SignalR/index.ts",
     "src/Sql/Auditing.ts",
     "src/Sql/Helper.ts",

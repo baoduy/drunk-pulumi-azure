@@ -128,26 +128,29 @@ function Storage({
         features.allowCrossTenantReplication,
       ),
 
-      identity: {
-        type: envUIDInfo
-          ? storage.IdentityType.SystemAssigned_UserAssigned
-          : storage.IdentityType.SystemAssigned,
-        userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
-      },
-
+      //NO Needs userAssignedIdentities here as encryption is allows custom identity
+      // identity: {
+      //   type: envUIDInfo
+      //     ? storage.IdentityType.SystemAssigned_UserAssigned
+      //     : storage.IdentityType.SystemAssigned,
+      //   userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+      // },
+      identity: { type: 'SystemAssigned' },
       minimumTlsVersion: 'TLS1_2',
-
       //1 Year Months
       keyPolicy: {
         keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
       },
-
       encryption: encryptionKey
         ? {
+            keySource: 'Microsoft.KeyVault',
+            keyVaultProperties: encryptionKey,
+            requireInfrastructureEncryption: true,
             encryptionIdentity: {
               //encryptionFederatedIdentityClientId?: pulumi.Input<string>;
               encryptionUserAssignedIdentity: envUIDInfo?.id,
             },
+
             services: {
               blob: {
                 enabled: true,
@@ -166,9 +169,6 @@ function Storage({
                 //keyType: storage.KeyType.Account,
               },
             },
-            keySource: 'Microsoft.KeyVault',
-            keyVaultProperties: encryptionKey,
-            requireInfrastructureEncryption: true,
           }
         : //Default infra encryption
           { requireInfrastructureEncryption: true },

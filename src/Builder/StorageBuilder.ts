@@ -73,8 +73,8 @@ class StorageBuilder
     this._network = props;
     return this;
   }
-  public lock(): IStorageSharedBuilder {
-    this._lock = true;
+  public lock(lock: boolean = true): IStorageSharedBuilder {
+    this._lock = lock;
     return this;
   }
 
