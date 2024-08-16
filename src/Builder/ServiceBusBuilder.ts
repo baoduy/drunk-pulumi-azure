@@ -23,7 +23,7 @@ import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 
 const defaultQueueOptions: ServiceBusQueueArgs = {
-  duplicateDetectionHistoryTimeWindow: 'P10M',
+  //duplicateDetectionHistoryTimeWindow: 'P10M',
   //maxMessageSizeInKilobytes: 1024,
   //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
   maxDeliveryCount: 10,
@@ -37,7 +37,7 @@ const defaultQueueOptions: ServiceBusQueueArgs = {
 };
 
 const defaultTopicOptions: ServiceBusTopicArgs = {
-  duplicateDetectionHistoryTimeWindow: 'P10M',
+  //duplicateDetectionHistoryTimeWindow: 'P10M',
   //maxMessageSizeInKilobytes: 1024,
   //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
   defaultMessageTimeToLive: isPrd ? 'P30D' : 'P5D',
@@ -303,8 +303,8 @@ class ServiceBusBuilder
   } & WithDependsOn &
     WithNamedType) {
     if (this._options?.disableLocalAuth || !this.args.vaultInfo) return;
-    const n = `${this._instanceName}-${name}-rule`;
-    const authorizationRuleName = `${name}-rule`;
+    const authorizationRuleName = `${level}-${name}-${type}`;
+    const n = `${this._instanceName}-${authorizationRuleName}`;
 
     const permissions =
       type == 'both'
@@ -356,7 +356,7 @@ class ServiceBusBuilder
 
       return addCustomSecrets({
         vaultInfo: this.args.vaultInfo!,
-        contentType: `ServiceBus ${level} ${this._instanceName}/${name}`,
+        contentType: `ServiceBus ${n}`,
         dependsOn: rule,
         items: [
           { name: `${n}-${type}-primary`, value: keys.primaryConnectionString },
