@@ -272,23 +272,55 @@ class ServiceBusBuilder
       );
 
       //Subscriptions
-      if (tpOps.subscriptions) {
-        Object.keys(tpOps.subscriptions).map((subscriptionName) => {
-          const subOps = tpOps.subscriptions![subscriptionName];
-          return new bus.Subscription(
-            `${this._instanceName}-${topicName}-${subscriptionName}`,
-            {
-              ...this.args.group,
-              subscriptionName: subscriptionName,
-              topicName,
-              namespaceName: this._instanceName,
-              ...defaultSubOptions,
-              ...subOps,
-            },
-            { dependsOn: topic },
-          );
-        });
+      this.buildSubscriptions({
+        name: topicName,
+        topic,
+        subs: tpOps.subscriptions,
+      });
+
+      return topic;
+    });
+  }
+
+  private buildSubscriptions({
+    name,
+    topic,
+    subs,
+  }: {
+    topic: bus.Topic;
+    subs?: Record<string, ServiceBusSubArgs>;
+  } & WithNamedType) {
+    if (!subs) return;
+
+    Object.keys(subs).map((subscriptionName) => {
+      const subOps = subs[subscriptionName];
+      const sub = new bus.Subscription(
+        `${this._instanceName}-${name}-${subscriptionName}`,
+        {
+          ...this.args.group,
+          subscriptionName: subscriptionName,
+          namespaceName: this._instanceName,
+          topicName: name,
+          ...defaultSubOptions,
+          ...subOps,
+        },
+        { dependsOn: topic },
+      );
+
+      if (subOps.rules) {
+        new bus.Rule(
+          `${this._instanceName}-${name}-${subscriptionName}-rule`,
+          {
+            ...this.args.group,
+            namespaceName: this._instanceName,
+            topicName: name,
+            subscriptionName,
+            ...subOps.rules,
+          },
+          { dependsOn: sub },
+        );
       }
+      return sub;
     });
   }
 

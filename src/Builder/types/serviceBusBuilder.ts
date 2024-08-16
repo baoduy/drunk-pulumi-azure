@@ -25,7 +25,16 @@ export type ServiceBusSubArgs = Omit<
   | 'resourceGroupName'
   | 'status'
   | 'subscriptionName'
-> & {};
+> & {
+  rules?: Omit<
+    bus.RuleArgs,
+    | 'namespaceName'
+    | 'subscriptionName'
+    | 'topicName'
+    | 'ruleName'
+    | 'resourceGroupName'
+  >;
+};
 
 export type ServiceBusTopicArgs = Omit<
   bus.TopicArgs,
