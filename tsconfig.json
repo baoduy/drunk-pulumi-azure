@@ -12,7 +12,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "noImplicitAny": true,
     "strict": true,
     "lib": [
@@ -23,6 +23,14 @@
   "ts-node": {
     "experimentalResolver": true
   },
+  "exclude": [
+    "node_modules",
+    "z_tests",
+    ".out-bin",
+    ".tools",
+    "**/*.test.ts",
+    "pulumi-test"
+  ],
   "files": [
     "src/Aks/Helper.ts",
     "src/Aks/Identity.ts",
@@ -113,7 +121,6 @@
     "src/Core/Locker.ts",
     "src/Core/Random.ts",
     "src/Core/ResourceCreator.ts",
-    "src/Core/ResourceGroup.ts",
     "src/CosmosDb/index.ts",
     "src/CustomRoles/index.ts",
     "src/IOT/Hub/index.ts",
@@ -179,16 +186,5 @@
     "src/Web/types.ts",
     "src/index.ts",
     "src/types.ts"
-  ],
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "z_tests",
-    ".out-bin",
-    ".tools",
-    "**/*.test.ts",
-    "pulumi-test"
   ]
 }

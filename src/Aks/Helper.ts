@@ -1,10 +1,14 @@
 import * as cs from '@pulumi/azure-native/containerservice';
-import { defaultSubScope, getAksName, getResourceGroupName } from '../Common';
-import { globalKeyName } from '../Common/GlobalEnv';
+import {
+  defaultSubScope,
+  getAksName,
+  getResourceGroupName,
+  globalKeyName,
+} from '../Common';
+
 import { KeyVaultInfo, ResourceInfo, WithNamedType } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate, Output } from '@pulumi/pulumi';
-import { subscriptionId } from '../Common/AzureEnv';
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
