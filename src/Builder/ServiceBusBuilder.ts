@@ -17,32 +17,32 @@ import {
   WithNamedType,
 } from '../types';
 import { getServiceBusName, isPrd } from '../Common';
-import * as bus from '@pulumi/azure-native/servicebus';
+import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
 import { addEncryptKey } from '../KeyVault/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 
 const defaultQueueOptions: ServiceBusQueueArgs = {
+  duplicateDetectionHistoryTimeWindow: 'P10M',
+  //maxMessageSizeInKilobytes: 1024,
+  //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
   maxDeliveryCount: 10,
   enableBatchedOperations: true,
   enablePartitioning: true,
-  maxSizeInMegabytes: 1024,
+  maxSizeInMegabytes: isPrd ? 10 * 1024 : 1024,
   //Default is 'PT1M' (1 minute) and max is 5 minutes.
   lockDuration: 'PT1M',
   defaultMessageTimeToLive: isPrd ? 'P30D' : 'P5D',
   deadLetteringOnMessageExpiration: true,
-  //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
-  duplicateDetectionHistoryTimeWindow: 'P10M',
-  maxMessageSizeInKilobytes: 1024,
 };
 
 const defaultTopicOptions: ServiceBusTopicArgs = {
   duplicateDetectionHistoryTimeWindow: 'P10M',
-  maxMessageSizeInKilobytes: 1024,
+  //maxMessageSizeInKilobytes: 1024,
   //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
   defaultMessageTimeToLive: isPrd ? 'P30D' : 'P5D',
   enablePartitioning: true,
-  maxSizeInMegabytes: 1024,
+  maxSizeInMegabytes: isPrd ? 10 * 1024 : 1024,
   enableBatchedOperations: true,
 };
 
@@ -135,36 +135,41 @@ class ServiceBusBuilder
         minimumTlsVersion: '1.2',
         zoneRedundant: isPrd,
 
-        //NO Needs userAssignedIdentities here as encryption is allows custom identity
-        // identity: {
-        //   type: this.args.envUIDInfo
-        //     ? bus.ManagedServiceIdentityType.SystemAssigned_UserAssigned
-        //     : bus.ManagedServiceIdentityType.SystemAssigned,
-        //   userAssignedIdentities: this.args.envUIDInfo
-        //     ? [this.args.envUIDInfo.id]
-        //     : undefined,
-        // },
-        identity: { type: 'SystemAssigned' },
-        encryption: encryptionKey
-          ? {
-              keySource: 'Microsoft.KeyVault',
-              keyVaultProperties: [
-                {
-                  ...encryptionKey,
-                  identity: { userAssignedIdentity: envUIDInfo?.id },
-                },
-              ],
-              requireInfrastructureEncryption: true,
-            }
-          : undefined,
+        identity: {
+          type: this.args.envUIDInfo
+            ? bus.ManagedServiceIdentityType.SystemAssigned_UserAssigned
+            : bus.ManagedServiceIdentityType.SystemAssigned,
+          //all uuid must assigned here before use
+          userAssignedIdentities: this.args.envUIDInfo
+            ? [this.args.envUIDInfo.id]
+            : undefined,
+        },
+
+        encryption:
+          encryptionKey && this._sku === 'Premium'
+            ? {
+                keySource: bus.KeySource.Microsoft_KeyVault,
+                keyVaultProperties: [
+                  {
+                    ...encryptionKey,
+                    identity: envUIDInfo
+                      ? { userAssignedIdentity: envUIDInfo.id }
+                      : undefined,
+                  },
+                ],
+                requireInfrastructureEncryption: true,
+              }
+            : undefined,
         publicNetworkAccess: this._network?.privateLink
           ? 'Disabled'
           : 'Enabled',
       },
       {
         dependsOn,
+        deleteBeforeReplace: true,
         ignoreChanges: [
           ...ignoreChanges,
+          'requireInfrastructureEncryption',
           'encryption.requireInfrastructureEncryption',
         ],
       },

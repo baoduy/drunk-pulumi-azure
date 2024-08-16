@@ -5,13 +5,13 @@ import {
   WithEncryption,
   WithEnvRoles,
 } from '../../types';
-import * as bus from '@pulumi/azure-native/servicebus';
+import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
 
 export type ServiceBusBuilderArgs = BuilderProps &
   WithEnvRoles &
   WithEncryption;
 
-export type ServiceBusSkuTypes = bus.SkuName | string;
+export type ServiceBusSkuTypes = bus.SkuTier;
 
 export type ServiceBusQueueArgs = Omit<
   bus.QueueArgs,

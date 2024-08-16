@@ -17,6 +17,7 @@ import {
   DefaultManagementRules,
   ManagementRules,
 } from './ManagementRules';
+import { BlobServicePropertiesArgs } from '@pulumi/azure-native/storage/blobServiceProperties';
 
 export type ContainerProps = {
   name: string;
@@ -36,6 +37,10 @@ export type StorageFeatureType = {
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
   isBlobVersioningEnabled?: boolean;
+  blobProperties?: Omit<
+    storage.BlobServicePropertiesArgs,
+    'blobServicesName' | 'resourceGroupName' | 'accountName'
+  >;
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
 };
@@ -128,14 +133,14 @@ function Storage({
         features.allowCrossTenantReplication,
       ),
 
-      //NO Needs userAssignedIdentities here as encryption is allows custom identity
-      // identity: {
-      //   type: envUIDInfo
-      //     ? storage.IdentityType.SystemAssigned_UserAssigned
-      //     : storage.IdentityType.SystemAssigned,
-      //   userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
-      // },
-      identity: { type: 'SystemAssigned' },
+      identity: {
+        type: envUIDInfo
+          ? storage.IdentityType.SystemAssigned_UserAssigned
+          : storage.IdentityType.SystemAssigned,
+        //all uuid must assign here before use
+        userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+      },
+
       minimumTlsVersion: 'TLS1_2',
       //1 Year Months
       keyPolicy: {
@@ -143,13 +148,15 @@ function Storage({
       },
       encryption: encryptionKey
         ? {
-            keySource: 'Microsoft.KeyVault',
+            keySource: storage.KeySource.Microsoft_Keyvault,
             keyVaultProperties: encryptionKey,
             requireInfrastructureEncryption: true,
-            encryptionIdentity: {
-              //encryptionFederatedIdentityClientId?: pulumi.Input<string>;
-              encryptionUserAssignedIdentity: envUIDInfo?.id,
-            },
+            encryptionIdentity: envUIDInfo
+              ? {
+                  //encryptionFederatedIdentityClientId?: pulumi.Input<string>;
+                  encryptionUserAssignedIdentity: envUIDInfo!.id,
+                }
+              : undefined,
 
             services: {
               blob: {
@@ -171,13 +178,16 @@ function Storage({
             },
           }
         : //Default infra encryption
-          { requireInfrastructureEncryption: true },
+          {
+            keySource: storage.KeySource.Microsoft_Storage,
+            requireInfrastructureEncryption: true,
+          },
 
       sasPolicy: {
         expirationAction: storage.ExpirationAction.Log,
         sasExpirationPeriod: '00.00:30:00',
       },
-
+      //isLocalUserEnabled: false,
       publicNetworkAccess: network?.privateEndpoint ? 'Disabled' : 'Enabled',
       networkRuleSet: {
         bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
@@ -228,12 +238,26 @@ function Storage({
   }
 
   //Life Cycle Management
+  const props = policies?.blobProperties
+    ? new storage.BlobServiceProperties(
+        name,
+        {
+          ...group,
+          accountName: stg.name,
+          blobServicesName: 'default',
+          ...policies.blobProperties,
+        },
+        { dependsOn: stg },
+      )
+    : undefined;
+
   if (policies?.defaultManagementRules) {
     createManagementRules({
       name,
       group,
       storageAccount: stg,
       rules: policies.defaultManagementRules,
+      dependsOn: props,
     });
   }
 
