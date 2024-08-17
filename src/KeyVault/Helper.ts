@@ -2,11 +2,13 @@ import { Output, output } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
+import { stack } from '../Common';
 
 /** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
-export const getVaultItemName = (name: string) =>
+export const getVaultItemName = (name: string, currentStack: string = stack) =>
   name
-    .replace(/stack|\.|_|\s/g, '-') // Replace "stack", ".", "_", and spaces with "-"
+    .replace(new RegExp(currentStack, 'g'), '') // Replace occurrences of "stack" variable with "-"
+    .replace(/\.|_|\s/g, '-') // Replace ".", "_", and spaces with "-"
     .replace(/-+/g, '-') // Replace multiple dashes with a single dash
     .toLowerCase(); // Convert the result to lowercase
 

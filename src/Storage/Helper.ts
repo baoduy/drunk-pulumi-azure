@@ -15,10 +15,10 @@ const getStorageSecrets = ({
   storageName: string;
   vaultInfo: KeyVaultInfo;
 }): StorageConnectionInfo => {
-  const primaryKey = `${getVaultItemName(storageName)}-primary`;
-  const secondaryKey = `${getVaultItemName(storageName)}-secondary`;
-  const primaryConnection = `${getVaultItemName(storageName)}-primary-conn`;
-  const secondaryConnection = `${getVaultItemName(storageName)}-secondary-conn`;
+  const primaryKey = `${getVaultItemName(storageName)}-key-primary`;
+  const secondaryKey = `${getVaultItemName(storageName)}-key-secondary`;
+  const primaryConnection = `${getVaultItemName(storageName)}-conn-primary`;
+  const secondaryConnection = `${getVaultItemName(storageName)}-conn-secondary`;
 
   return getSecrets({
     nameFormatted: true,

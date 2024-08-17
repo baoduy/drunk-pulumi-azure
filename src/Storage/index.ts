@@ -317,10 +317,10 @@ function Storage({
 
     //Add connection into Key vault
     if (vaultInfo && allowSharedKeyAccess) {
-      const primaryKeyName = `${getVaultItemName(name)}-primary`;
-      const secondaryKeyName = `${getVaultItemName(name)}-secondary`;
-      const primaryConnectionKeyName = `${getVaultItemName(name)}-primary-conn`;
-      const secondConnectionKeyName = `${getVaultItemName(name)}-secondary-conn`;
+      const primaryKeyName = `${getVaultItemName(name)}-key-primary`;
+      const secondaryKeyName = `${getVaultItemName(name)}-key-secondary`;
+      const primaryConnectionKeyName = `${getVaultItemName(name)}-conn-primary`;
+      const secondConnectionKeyName = `${getVaultItemName(name)}-conn-secondary`;
 
       const keys = (
         await storage.listStorageAccountKeys({
