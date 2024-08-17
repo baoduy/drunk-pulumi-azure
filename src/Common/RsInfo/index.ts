@@ -1,5 +1,5 @@
 import rsHelper from './Helper';
-import naming from '../Naming';
+import naming, { cleanName } from '../Naming';
 import { interpolate, output, Output } from '@pulumi/pulumi';
 import {
   currentCountryCode,
@@ -15,7 +15,6 @@ import {
   ResourceInfo,
   ResourceInfoWithSub,
 } from '../../types';
-import { cleanName } from '../ResourceEnv';
 
 export const getResourceInfoFromId = (
   id: string,

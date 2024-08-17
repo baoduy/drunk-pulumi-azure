@@ -9,4 +9,4 @@ export * from './Helpers';
 export * from './AzureEnv';
 export * from './StackEnv';
 export * from './GlobalEnv';
-export * from './ResourceEnv';
+export * from './Naming';
