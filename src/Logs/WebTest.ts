@@ -1,6 +1,6 @@
 import * as native from '@pulumi/azure-native';
 import { randomUuId } from '../Core/Random';
-import { getWebTestName, getAlertName } from '../Common';
+import { naming } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import { ResourceInfo } from '../types';
 
@@ -29,7 +29,7 @@ export const addInsightMonitor = ({
     if (!g) return;
 
     const webTest = new native.insights.WebTest(name, {
-      webTestName: getWebTestName(name),
+      webTestName: naming.getWebTestName(name),
       resourceGroupName: appInsight.group.resourceGroupName,
       syntheticMonitorId: g,
 
@@ -66,7 +66,7 @@ export const addInsightMonitor = ({
     if (alertGroupAction) {
       const alertGroup = await native.insights.getActionGroup(alertGroupAction);
 
-      const alertName = getAlertName(name);
+      const alertName = naming.getAlertName(name);
       new native.insights.MetricAlert(alertName, {
         resourceGroupName: appInsight.group.resourceGroupName,
         enabled: true,

@@ -1,5 +1,5 @@
 import { KeyVaultInfo, NamedWithVaultType } from '../types';
-import { getSshName } from '../Common';
+import { naming } from '../Common';
 import { SshKeyResource } from '@drunk-pulumi/azure-providers/SshKeyGenerator';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getSecret } from '../KeyVault/Helper';
@@ -29,7 +29,7 @@ export const generateSsh = ({
   maxUserNameLength,
   vaultInfo,
 }: SshGenerationProps): SshResults => {
-  name = getSshName(name);
+  name = naming.getSshName(name);
 
   const userNameKey = `${name}-user`;
   const passwordKeyName = `${name}-password`;

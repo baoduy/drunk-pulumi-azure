@@ -1,5 +1,5 @@
 import * as compute from '@pulumi/azure-native/compute';
-import { getDiskEncryptionName } from '../Common';
+import { naming } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
 import {
   BasicResourceWithVaultArgs,
@@ -26,7 +26,7 @@ export default ({
       'The "vaultInfo" and "envUIDInfo" are required for  DiskEncryptionSet.',
     );
 
-  name = getDiskEncryptionName(name);
+  name = naming.getDiskEncryptionName(name);
   const keyEncryption = addEncryptKey(name, vaultInfo);
   const diskEncrypt = new compute.DiskEncryptionSet(
     name,

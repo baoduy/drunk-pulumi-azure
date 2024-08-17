@@ -1,5 +1,5 @@
 import rsHelper from './Helper';
-import * as naming from '../Naming';
+import naming from '../Naming';
 import { interpolate, output, Output } from '@pulumi/pulumi';
 import {
   currentCountryCode,
@@ -15,6 +15,7 @@ import {
   ResourceInfo,
   ResourceInfoWithSub,
 } from '../../types';
+import { cleanName } from '../ResourceEnv';
 
 export const getResourceInfoFromId = (
   id: string,
@@ -196,9 +197,9 @@ export const getSubnetIdByName = (
   subnetName: string,
   vnetAndGroupName: string,
 ): Output<string> => {
-  const vnetName = naming.getVnetName(naming.cleanName(vnetAndGroupName));
+  const vnetName = naming.getVnetName(vnetAndGroupName);
   const group = naming.getResourceGroupName(vnetAndGroupName);
-  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${naming.cleanName(subnetName)}`;
+  return interpolate`${defaultSubScope}/resourceGroups/${group}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${cleanName(subnetName)}`;
 };
 
 export const getIpAddressInfo = ({

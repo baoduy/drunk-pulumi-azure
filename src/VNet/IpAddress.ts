@@ -1,13 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import { Input, Output } from '@pulumi/pulumi';
 import { BasicResourceArgs, ResourceInfo } from '../types';
-import {
-  isPrd,
-  rsInfo,
-  naming,
-  organization,
-  getIpAddressInfo,
-} from '../Common';
+import { isPrd, rsInfo, naming, organization } from '../Common';
 import { Locker } from '../Core/Locker';
 
 interface Props extends BasicResourceArgs {

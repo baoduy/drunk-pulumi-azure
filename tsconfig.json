@@ -109,7 +109,8 @@
     "src/Common/Helpers.ts",
     "src/Common/Location.ts",
     "src/Common/LocationBuiltIn.ts",
-    "src/Common/Naming.ts",
+    "src/Common/Naming/Rulers.ts",
+    "src/Common/Naming/index.ts",
     "src/Common/ResourceEnv.ts",
     "src/Common/RsInfo/Helper.ts",
     "src/Common/RsInfo/index.ts",
@@ -181,8 +182,6 @@
     "src/Web/AppCertOrder.ts",
     "src/Web/AppConfig.ts",
     "src/Web/AppGateway.ts",
-    "src/Web/FuncApp.ts",
-    "src/Web/WebAppPlan.ts",
     "src/Web/types.ts",
     "src/index.ts",
     "src/types.ts"

@@ -1,6 +1,6 @@
-import { stack, subscriptionId } from '../Common';
+import { stack } from '../Common';
 import * as network from '@pulumi/azure-native/network';
-import { all, Input, interpolate } from '@pulumi/pulumi';
+import { all, Input } from '@pulumi/pulumi';
 import { ResourceInfoWithSub } from '../types';
 
 export type PeeringDirectionType = 'Unidirectional' | 'Bidirectional';

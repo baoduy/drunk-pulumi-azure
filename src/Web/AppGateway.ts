@@ -2,7 +2,7 @@ import * as network from '@pulumi/azure-native/network';
 import { BasicResourceArgs } from '../types';
 import creator from '../Core/ResourceCreator';
 import { Input } from '@pulumi/pulumi';
-import { getAppGatewayName } from '../Common';
+import { naming } from '../Common';
 
 interface Props extends BasicResourceArgs {
   publicIpAddressId: Input<string>;
@@ -10,7 +10,7 @@ interface Props extends BasicResourceArgs {
 }
 
 export default ({ name, group, subnetId, publicIpAddressId }: Props) => {
-  name = getAppGatewayName(name);
+  name = naming.getAppGatewayName(name);
 
   const rs = creator(network.ApplicationGateway, {
     applicationGatewayName: name,

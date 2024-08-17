@@ -2,14 +2,12 @@ import Storage, {
   ContainerProps,
   StorageNetworkType,
   StoragePolicyType,
-  StorageResults,
 } from '../Storage';
 import CdnEndpoint from '../Cdn/CdnEndpoint';
 import { getDefaultResponseHeaders } from '../Cdn/CdnRules';
-import { ResourceInfo } from '../types';
+import { ResourceInfo, ResourceInfoWithInstance } from '../types';
 import {
   Builder,
-  BuilderProps,
   IStaticWebStorageBuilder,
   IStorageBuilder,
   IStorageSharedBuilder,
@@ -18,13 +16,16 @@ import {
   StorageCdnType,
   StorageFeatureBuilderType,
 } from './types';
+import * as storage from '@pulumi/azure-native/storage';
 
 class StorageBuilder
   extends Builder<ResourceInfo>
   implements IStorageStarterBuilder, IStorageBuilder, IStaticWebStorageBuilder
 {
   //Instance
-  private _storageInstance: StorageResults | undefined = undefined;
+  private _storageInstance:
+    | ResourceInfoWithInstance<storage.StorageAccount>
+    | undefined = undefined;
 
   //Props
   private _type: 'storage' | 'staticWeb' = 'storage';

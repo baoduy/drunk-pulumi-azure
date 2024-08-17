@@ -1,12 +1,12 @@
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import { addEncryptKey } from '../KeyVault/Helper';
 import { BasicEncryptResourceArgs, NetworkPropsType } from '../types';
-import { getPostgresqlName, isPrd, tenantId } from '../Common';
+import { naming, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as azure from '@pulumi/azure-native';
 import { randomPassword } from '../Core/Random';
 import * as inputs from '@pulumi/azure-native/types/input';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { RandomString } from '@pulumi/random';
 import { convertToIpRange } from '../VNet/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -43,7 +43,7 @@ export default ({
   dependsOn,
   lock = true,
 }: PostgresProps) => {
-  name = getPostgresqlName(name);
+  name = naming.getPostgresqlName(name);
 
   const username = new RandomString(name, {
     special: false,

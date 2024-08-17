@@ -1,5 +1,5 @@
-import { CustomSecurityRuleArgs } from "../types";
-import { currentRegionCode } from "../../Common/AzureEnv";
+import { CustomSecurityRuleArgs } from '../types';
+import { currentRegionCode } from '../../Common';
 
 interface Props {
   startPriority?: number;
@@ -11,30 +11,30 @@ export default ({ startPriority = 310 }: Props = {}) => {
   //Inbound
   rs.push(
     {
-      name: "allow_apim_out_storage",
-      description: "Allow APIM out to Storage",
+      name: 'allow_apim_out_storage',
+      description: 'Allow APIM out to Storage',
       priority: startPriority++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Outbound",
+      protocol: 'Tcp',
+      access: 'Allow',
+      direction: 'Outbound',
 
-      sourceAddressPrefix: "*",
-      sourcePortRange: "*",
+      sourceAddressPrefix: '*',
+      sourcePortRange: '*',
       destinationAddressPrefix: `Storage.${currentRegionCode}`,
-      destinationPortRanges: ["443"],
+      destinationPortRanges: ['443'],
     },
     {
-      name: "allow_apim_out_keyvault",
-      description: "Allow APIM out to Key Vault",
+      name: 'allow_apim_out_keyvault',
+      description: 'Allow APIM out to Key Vault',
       priority: startPriority++,
-      protocol: "Tcp",
-      access: "Allow",
-      direction: "Outbound",
+      protocol: 'Tcp',
+      access: 'Allow',
+      direction: 'Outbound',
 
-      sourceAddressPrefix: "*",
-      sourcePortRange: "*",
+      sourceAddressPrefix: '*',
+      sourcePortRange: '*',
       destinationAddressPrefix: `AzureKeyVault.${currentRegionCode}`,
-      destinationPortRanges: ["443"],
+      destinationPortRanges: ['443'],
     },
   );
 

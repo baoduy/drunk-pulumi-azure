@@ -1,6 +1,6 @@
 import { BasicResourceArgs } from '../types';
 import { RouteArgs } from './types';
-import { getRouteName, getRouteItemName } from '../Common';
+import { naming } from '../Common';
 import * as network from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
 
@@ -9,7 +9,7 @@ interface Props extends BasicResourceArgs {
 }
 
 export default ({ name, group, routes, dependsOn }: Props) => {
-  const routeName = getRouteName(name);
+  const routeName = naming.getRouteName(name);
   return new network.RouteTable(
     routeName,
     {
@@ -30,9 +30,8 @@ export const updateRouteItems = ({
   group,
   ...others
 }: RouteItemsProps) => {
-  const routeName = getRouteItemName(name);
-  return new network.Route(routeName, {
-    name: routeName,
+  return new network.Route(name, {
+    name,
     ...group,
     ...others,
   });

@@ -1,4 +1,4 @@
-import { stack } from '../Common/StackEnv';
+import { stack } from '../Common';
 import * as network from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
 

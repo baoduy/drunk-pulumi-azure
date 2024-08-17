@@ -4,7 +4,7 @@ import {
   LoginWithEnvRolesArgs,
   NetworkPropsType,
 } from '../types';
-import { getMySqlName, isPrd, tenantId } from '../Common';
+import { naming, isPrd, tenantId } from '../Common';
 import * as pulumi from '@pulumi/pulumi';
 import * as dbformysql from '@pulumi/azure-native/dbformysql';
 import { randomPassword } from '../Core/Random';
@@ -47,7 +47,7 @@ export default ({
   vaultInfo,
   dependsOn,
 }: MySqlProps) => {
-  name = getMySqlName(name);
+  name = naming.getMySqlName(name);
 
   const username =
     auth?.adminLogin ||

@@ -1,14 +1,12 @@
-import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
 import {
   BasicEncryptResourceArgs,
   PrivateLinkPropsType,
-  ResourceInfo,
+  ResourceInfoWithInstance,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
-import { addEncryptKey, getSecret } from '../KeyVault/Helper';
-import { isPrd } from '../Common';
-import { getConnectionName, getKeyName, getStorageName } from '../Common';
+import { addEncryptKey, getVaultItemName } from '../KeyVault/Helper';
+import { isPrd, naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
 import privateEndpoint from '../VNet/PrivateEndpoint';
@@ -17,7 +15,6 @@ import {
   DefaultManagementRules,
   ManagementRules,
 } from './ManagementRules';
-import { BlobServicePropertiesArgs } from '@pulumi/azure-native/storage/blobServiceProperties';
 
 export type ContainerProps = {
   name: string;
@@ -71,11 +68,6 @@ interface StorageProps extends BasicEncryptResourceArgs {
   lock?: boolean;
 }
 
-export type StorageResults = ResourceInfo & {
-  instance: storage.StorageAccount;
-  getConnectionString?: (name?: string) => Promise<KeyVaultSecret | undefined>;
-};
-
 /** Storage Creator */
 function Storage({
   name,
@@ -93,13 +85,9 @@ function Storage({
   lock = true,
   dependsOn,
   ignoreChanges = [],
-}: StorageProps): StorageResults {
-  name = getStorageName(name);
+}: StorageProps): ResourceInfoWithInstance<storage.StorageAccount> {
+  name = naming.getStorageName(name);
 
-  const primaryKeyName = getKeyName(name, 'primary');
-  const secondaryKeyName = getKeyName(name, 'secondary');
-  const primaryConnectionKeyName = getConnectionName(name, 'primary');
-  const secondConnectionKeyName = getConnectionName(name, 'secondary');
   const encryptionKey = enableEncryption
     ? addEncryptKey(name, vaultInfo!)
     : undefined;
@@ -329,6 +317,11 @@ function Storage({
 
     //Add connection into Key vault
     if (vaultInfo && allowSharedKeyAccess) {
+      const primaryKeyName = `${getVaultItemName(name)}-primary`;
+      const secondaryKeyName = `${getVaultItemName(name)}-secondary`;
+      const primaryConnectionKeyName = `${getVaultItemName(name)}-primary-conn`;
+      const secondConnectionKeyName = `${getVaultItemName(name)}-secondary-conn`;
+
       const keys = (
         await storage.listStorageAccountKeys({
           accountName: name,
@@ -372,10 +365,6 @@ function Storage({
     group,
     id: stg.id,
     instance: stg,
-    getConnectionString: vaultInfo
-      ? (name: string = primaryConnectionKeyName) =>
-          getSecret({ name, nameFormatted: true, vaultInfo })
-      : undefined,
   };
 }
 

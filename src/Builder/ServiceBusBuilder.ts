@@ -16,7 +16,7 @@ import {
   WithDependsOn,
   WithNamedType,
 } from '../types';
-import { getServiceBusName, isPrd } from '../Common';
+import { naming, isPrd } from '../Common';
 import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
 import { addEncryptKey } from '../KeyVault/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
@@ -72,7 +72,7 @@ class ServiceBusBuilder
 
   constructor(private args: ServiceBusBuilderArgs) {
     super(args);
-    this._instanceName = getServiceBusName(args.name);
+    this._instanceName = naming.getServiceBusName(args.name);
   }
 
   public withSku(sku: ServiceBusSkuTypes): IServiceBusBuilder {

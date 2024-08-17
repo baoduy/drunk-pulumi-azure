@@ -5,7 +5,7 @@ import {
   WithVaultInfo,
 } from '../types';
 import * as mid from '@pulumi/azure-native/managedidentity';
-import { getUIDName } from '../Common';
+import { naming } from '../Common';
 
 export interface UserAssignedIdentityProps
   extends BasicResourceArgs,
@@ -19,7 +19,7 @@ export default ({
   importUri,
   ignoreChanges,
 }: UserAssignedIdentityProps): IdentityInfoWithInstance<mid.UserAssignedIdentity> => {
-  name = getUIDName(name);
+  name = naming.getUIDName(name);
   const managedIdentity = new mid.UserAssignedIdentity(
     name,
     {

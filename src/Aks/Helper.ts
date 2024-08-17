@@ -1,14 +1,9 @@
 import * as cs from '@pulumi/azure-native/containerservice';
-import {
-  defaultSubScope,
-  getAksName,
-  getResourceGroupName,
-  globalKeyName,
-} from '../Common';
+import { defaultSubScope, naming, globalKeyName } from '../Common';
 
 import { KeyVaultInfo, ResourceInfo, WithNamedType } from '../types';
 import { getSecret } from '../KeyVault/Helper';
-import { interpolate, Output } from '@pulumi/pulumi';
+import { interpolate } from '@pulumi/pulumi';
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
@@ -21,8 +16,10 @@ export const getAksConfig = async ({
   formattedName?: boolean;
   disableLocalAccounts?: boolean;
 }): Promise<string> => {
-  const aksName = formattedName ? name : getAksName(name);
-  const group = formattedName ? groupName : getResourceGroupName(groupName);
+  const aksName = formattedName ? name : naming.getAksName(name);
+  const group = formattedName
+    ? groupName
+    : naming.getResourceGroupName(groupName);
 
   const aks = disableLocalAccounts
     ? await cs.listManagedClusterUserCredentials({
@@ -48,7 +45,7 @@ export const getAksVaultConfig = async ({
   vaultInfo: KeyVaultInfo;
   formattedName?: boolean;
 }): Promise<string> => {
-  const aksName = formattedName ? name : getAksName(name);
+  const aksName = formattedName ? name : naming.getAksName(name);
   const rs = await getSecret({
     name: `${aksName}-config`,
     version,

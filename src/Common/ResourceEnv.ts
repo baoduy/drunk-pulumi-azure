@@ -1,8 +1,31 @@
 import * as process from 'node:process';
 import { currentCountryCode } from './AzureEnv';
-import { replaceAll } from './Helpers';
-import { ConventionProps } from '../types';
+import { ConventionProps, ReplacePattern } from '../types';
 import { organization, stack } from './StackEnv';
+
+const replaceInString = (val: string, pattern: ReplacePattern): string => {
+  let regex: RegExp;
+
+  if (pattern.from instanceof RegExp) {
+    // If 'from' is already a RegExp, use it directly
+    regex = pattern.from;
+  } else {
+    // If 'from' is a string, convert it to a RegExp
+    regex = new RegExp(pattern.from, 'g');
+  }
+  // Replace occurrences of 'from' with 'to'
+  return val.replace(regex, pattern.to);
+};
+
+const removeNumberAndDash = (s: string) => s.replace(/^\d+-/, '');
+const removeLeadingAndTrailingDash = (s: string) => s.replace(/^-|-$/g, '');
+const replaceSpaceWithDash = (s: string) => s.replace(/\s+/g, '-');
+
+export const cleanName = (name: string): string => {
+  name = removeNumberAndDash(name);
+  name = removeLeadingAndTrailingDash(name);
+  return name;
+};
 
 export const getResourceName = (
   name: string,
@@ -21,7 +44,10 @@ export const getResourceName = (
     convention.region = currentCountryCode;
 
   if (!name) return name;
-  name = replaceAll(name, ' ', '-').toLowerCase();
+
+  name = replaceSpaceWithDash(name).toLowerCase();
+  if (convention.cleanName) name = cleanName(name);
+
   const rs: string[] = [];
 
   //Add prefix
@@ -45,5 +71,15 @@ export const getResourceName = (
   if (convention.suffix && !name.endsWith(convention.suffix.toLowerCase()))
     rs.push(convention.suffix.toLowerCase());
 
-  return rs.join('-');
+  name = rs.join('-');
+
+  if (convention.replaces)
+    convention.replaces.forEach((p) => (name = replaceInString(name, p)));
+
+  if (convention.maxLength && name.length > convention.maxLength)
+    name = removeLeadingAndTrailingDash(
+      name.substring(0, convention.maxLength),
+    );
+
+  return name;
 };

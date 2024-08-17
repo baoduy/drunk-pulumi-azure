@@ -1,7 +1,6 @@
 import * as native from '@pulumi/azure-native';
-//import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { WithNamedType, ResourceGroupInfo } from '../types';
-import { global, getAcrName } from '../Common';
+import { global, naming } from '../Common';
 
 export interface ImageInfo {
   registry: string;
@@ -21,7 +20,7 @@ interface LatestAcrImageProps {
 
 /**Get ACR credentials from Global Resource Group*/
 export const getAcrCredentials = async (name: string) => {
-  const n = getAcrName(name);
+  const n = naming.getAcrName(name);
   const credentials = await native.containerregistry.listRegistryCredentials({
     registryName: n,
     ...global.groupInfo,

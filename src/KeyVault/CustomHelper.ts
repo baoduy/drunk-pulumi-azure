@@ -1,8 +1,9 @@
 import { Input, output, Resource } from '@pulumi/pulumi';
-import { getSecretName, replaceAll } from '../Common';
+import { replaceAll } from '../Common';
 import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
 import { KeyVaultInfo, NamedBasicArgs, NamedWithVaultType } from '../types';
 import { getSecret } from '../Common/ConfigHelper';
+import { getVaultItemName } from './Helper';
 
 interface Props extends Required<NamedWithVaultType> {
   /** The value of the secret. If Value is not provided the secret will be got from config*/
@@ -50,12 +51,12 @@ export const addCustomSecret = ({
   dependsOn,
   ...others
 }: SecretProps) => {
-  const n = formattedName ? name : getSecretName(name);
+  const n = formattedName ? name : getVaultItemName(name);
   //This KeyVault Secret is not auto recovery the deleted one.
   return new VaultSecretResource(
     replaceAll(name, '.', '-'),
     {
-      name: replaceAll(n, '.', '-'),
+      name: n,
       value: value ? output(value).apply((v) => v || '') : '',
       vaultName: vaultInfo.name,
       contentType: contentType || name,

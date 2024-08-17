@@ -15,7 +15,7 @@ import { createVaultPrivateLink } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
-import { subscriptionId, getKeyVaultInfo, naming } from '../Common';
+import { subscriptionId, naming, cleanName, rsInfo } from '../Common';
 import {
   CertBuilderType,
   IVaultBuilderResults,
@@ -114,7 +114,7 @@ class ResourceBuilder
     return this;
   }
   public withVaultFrom(name: string): types.IResourceBuilder {
-    return this.withVault(getKeyVaultInfo(name));
+    return this.withVault(rsInfo.getKeyVaultInfo(name));
   }
 
   public linkVaultTo(
@@ -221,7 +221,7 @@ class ResourceBuilder
     //Create Vault
     if (this._createVault) {
       this._vaultInfo = VaultBuilder({
-        name: this._createVaultName ?? naming.cleanName(this.name),
+        name: this._createVaultName ?? cleanName(this.name),
         group: this._RGInfo!,
         dependsOn: this._RGInstance,
       }).build();
@@ -331,7 +331,7 @@ class ResourceBuilder
 
   private getResults(): types.ResourceBuilderResults {
     return {
-      name: naming.cleanName(this.name),
+      name: cleanName(this.name),
       group: this._RGInfo!,
       vaultInfo: this._vaultInfo!.info(),
       envRoles: this._envRoles!,

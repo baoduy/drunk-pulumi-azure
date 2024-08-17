@@ -6,7 +6,7 @@ import {
   ResourceInfoWithInstance,
 } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
-import { getSqlDbName, isPrd } from '../Common';
+import { naming, isPrd } from '../Common';
 
 export type SqlDbSku =
   | 'Basic'
@@ -43,7 +43,7 @@ export default ({
   ignoreChanges,
   lock,
 }: SqlDbProps): ResourceInfoWithInstance<sql.Database> => {
-  name = getSqlDbName(name);
+  name = naming.getSqlDbName(name);
 
   const dbProps: sql.DatabaseArgs = {
     databaseName: name,

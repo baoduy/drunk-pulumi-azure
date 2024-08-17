@@ -1,7 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import { PublicIPAddress } from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
-import { getIpAddressPrefixName } from '../Common';
+import { naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import { BasicResourceArgs, WithNamedType } from '../types';
 import * as IpAddress from './IpAddress';
@@ -40,7 +40,7 @@ export default ({
   dependsOn,
   lock = true,
 }: PublicIpAddressPrefixProps): PublicIpAddressPrefixResult => {
-  const n = getIpAddressPrefixName(name);
+  const n = naming.getIpAddressPrefixName(name);
   const sku = { name: 'Standard', tier: 'Regional' };
 
   const addressPrefix = createPrefix

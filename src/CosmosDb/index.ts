@@ -1,5 +1,5 @@
 import * as documentdb from '@pulumi/azure-native/documentdb';
-import { getCosmosDbName } from '../Common';
+import { naming } from '../Common';
 import { WithNamedType, OptsArgs, ResourceWithVaultArgs } from '../types';
 import ResourceCreator from '../Core/ResourceCreator';
 import { isPrd } from '../Common';
@@ -47,7 +47,7 @@ export default ({
   sqlDbs,
   kind = documentdb.DatabaseAccountKind.GlobalDocumentDB,
 }: CosmosDbProps) => {
-  name = getCosmosDbName(name);
+  name = naming.getCosmosDbName(name);
 
   const { resource } = ResourceCreator(documentdb.DatabaseAccount, {
     accountName: name,

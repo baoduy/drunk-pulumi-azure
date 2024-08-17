@@ -1,12 +1,11 @@
 import * as registry from '@pulumi/azure-native/containerregistry';
 import {
-  KeyVaultInfo,
   NetworkPropsType,
   ResourceInfoWithInstance,
   BasicResourceArgs,
 } from '../types';
 import * as global from '../Common/GlobalEnv';
-import { getAcrName } from '../Common';
+import { naming } from '../Common';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 
 interface Props extends BasicResourceArgs {
@@ -30,7 +29,7 @@ export default ({
   dependsOn,
   ignoreChanges,
 }: Props): ResourceInfoWithInstance<registry.Registry> => {
-  name = getAcrName(name);
+  name = naming.getAcrName(name);
 
   const resource = new registry.Registry(
     name,

@@ -1,5 +1,5 @@
-import { defaultSubScope, naming } from '../Common';
-import { getSecrets } from '../KeyVault/Helper';
+import { cleanName, defaultSubScope, naming } from '../Common';
+import { getSecrets, getVaultItemName } from '../KeyVault/Helper';
 import {
   KeyVaultInfo,
   ResourceWithVaultArgs,
@@ -15,13 +15,10 @@ const getStorageSecrets = ({
   storageName: string;
   vaultInfo: KeyVaultInfo;
 }): StorageConnectionInfo => {
-  const primaryKey = naming.getKeyName(storageName, 'primary');
-  const secondaryKey = naming.getKeyName(storageName, 'secondary');
-  const primaryConnection = naming.getConnectionName(storageName, 'primary');
-  const secondaryConnection = naming.getConnectionName(
-    storageName,
-    'secondary',
-  );
+  const primaryKey = `${getVaultItemName(storageName)}-primary`;
+  const secondaryKey = `${getVaultItemName(storageName)}-secondary`;
+  const primaryConnection = `${getVaultItemName(storageName)}-primary-conn`;
+  const secondaryConnection = `${getVaultItemName(storageName)}-secondary-conn`;
 
   return getSecrets({
     nameFormatted: true,
@@ -35,7 +32,7 @@ export const getStorageInfo = ({
   group,
   vaultInfo,
 }: ResourceWithVaultArgs): StorageInfo => {
-  name = naming.getStorageName(naming.cleanName(name));
+  name = naming.getStorageName(cleanName(name));
   const secrets = vaultInfo
     ? getStorageSecrets({ storageName: name, vaultInfo })
     : {};

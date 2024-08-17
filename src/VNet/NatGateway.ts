@@ -1,8 +1,7 @@
-import * as network from "@pulumi/azure-native/network";
-import { BasicResourceArgs } from "../types";
-import { Input } from "@pulumi/pulumi";
-import { getNatGatewayName } from "../Common/Naming";
-import { isPrd } from "../Common/AzureEnv";
+import * as network from '@pulumi/azure-native/network';
+import { BasicResourceArgs } from '../types';
+import { Input } from '@pulumi/pulumi';
+import { naming } from '../Common';
 
 interface NatGatewayProps extends BasicResourceArgs {
   /** the list of public ip address IDs */
@@ -23,7 +22,7 @@ export default ({
       "Either 'publicIpAddresses' or 'publicIpPrefixes' must be provided.",
     );
 
-  name = getNatGatewayName(name);
+  name = naming.getNatGatewayName(name);
   return new network.NatGateway(
     name,
     {

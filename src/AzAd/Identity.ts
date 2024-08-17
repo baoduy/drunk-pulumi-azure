@@ -2,7 +2,7 @@ import * as azureAD from '@pulumi/azuread';
 import { ServicePrincipal } from '@pulumi/azuread';
 import * as pulumi from '@pulumi/pulumi';
 import { Output } from '@pulumi/pulumi';
-import { getIdentityName } from '../Common';
+import { naming } from '../Common';
 import {
   ApplicationApiOauth2PermissionScope,
   ApplicationAppRole,
@@ -67,7 +67,7 @@ export default ({
   dependsOn,
 }: IdentityProps): IdentityResult => {
   // Azure AD Application no need suffix
-  name = getIdentityName(name);
+  name = naming.getIdentityName(name);
   const secretNames = getIdentitySecretNames(name);
 
   const identifierUris = publicClient

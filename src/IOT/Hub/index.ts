@@ -1,5 +1,5 @@
 import { BasicResourceWithVaultArgs } from '../../types';
-import { getIotHubName, subscriptionId } from '../../Common';
+import { naming, subscriptionId } from '../../Common';
 import * as devices from '@pulumi/azure-native/devices';
 import { Input } from '@pulumi/pulumi';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
@@ -47,7 +47,7 @@ export default ({
   dependsOn,
   vaultInfo,
 }: Props) => {
-  const hubName = getIotHubName(name);
+  const hubName = naming.getIotHubName(name);
   const busQueueEndpointName = 'busQueue';
   const busTopicEndpointName = 'busTopic';
   const storageMessageEndpointName = 'hubStorage';
@@ -224,7 +224,7 @@ export default ({
           value: conn,
           vaultInfo,
           contentType: 'IOT Hub',
-          dependsOn: hub
+          dependsOn: hub,
         });
       });
     });

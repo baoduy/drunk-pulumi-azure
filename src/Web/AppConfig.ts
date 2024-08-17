@@ -1,5 +1,5 @@
 import * as appConfig from '@pulumi/azure-native/appconfiguration';
-import { getAppConfigName, isPrd } from '../Common';
+import { naming, isPrd } from '../Common';
 import {
   PrivateLinkPropsType,
   ResourceInfo,
@@ -22,7 +22,7 @@ export default ({
 }: AppConfigProps): ResourceInfo & {
   instance: appConfig.ConfigurationStore;
 } => {
-  name = getAppConfigName(name);
+  name = naming.getAppConfigName(name);
   const readPrimaryConnectionStringKey = `${name}-read-primary-connection-string`;
   const readSecondaryConnectionStringKey = `${name}-read-secondary-connection-string`;
 

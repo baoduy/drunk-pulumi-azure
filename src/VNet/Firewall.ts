@@ -1,7 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Output } from '@pulumi/pulumi';
-import { getFirewallName, rsInfo, isPrd } from '../Common';
+import { naming, rsInfo, isPrd } from '../Common';
 import {
   BasicResourceArgs,
   ConventionProps,
@@ -61,7 +61,7 @@ export const create = ({
   dependsOn,
   ignoreChanges,
 }: FirewallProps): FirewallResult => {
-  name = getFirewallName(name);
+  name = naming.getFirewallName(name);
 
   //Create Public IpAddress for Management
   const manageIpAddress = management

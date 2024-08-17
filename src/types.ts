@@ -149,6 +149,11 @@ export type IdentityRoleAssignment = WithVaultInfo & {
 //   subscriptionId?: Input<string>;
 // };
 
+export interface ReplacePattern {
+  from: string | RegExp;
+  to: string;
+}
+
 export type ConventionProps = {
   prefix?: string;
   suffix?: string;
@@ -156,6 +161,13 @@ export type ConventionProps = {
   region?: string;
   /**Whether include the organization name at the end of the name or not*/
   includeOrgName?: boolean;
+  /**Remove number from the name*/
+  cleanName?: boolean;
+  /** the max length of the name*/
+  maxLength?: number;
+  /**The regex to replace specials characters from the name*/
+  //replaceRegex?: string;
+  replaces?: ReplacePattern[];
 };
 
 export type DiagnosticProps = WithNamedType &
