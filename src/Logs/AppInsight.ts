@@ -5,7 +5,7 @@ import {
   ResourceInfo,
 } from '../types';
 import { getSecret } from '../KeyVault/Helper';
-import { getAppInsightName } from '../Common';
+import { naming } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { Input } from '@pulumi/pulumi';
 
@@ -25,7 +25,7 @@ export default ({
   workspaceResourceId,
   vaultInfo,
 }: Props) => {
-  name = getAppInsightName(name);
+  name = naming.getAppInsightName(name);
 
   const appInsight = new native.insights.Component(name, {
     resourceName: name,

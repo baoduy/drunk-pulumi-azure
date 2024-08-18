@@ -1,7 +1,7 @@
 import * as network from '@pulumi/azure-native/network';
 import { output } from '@pulumi/pulumi';
 import { OptsArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
-import { getPrivateEndpointName, rsInfo } from '../Common';
+import { naming, rsInfo } from '../Common';
 import { PrivateDnsZoneBuilder } from '../Builder';
 
 export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
@@ -21,7 +21,7 @@ export default ({
   privateIpAddress,
   dependsOn,
 }: PrivateEndpointProps) => {
-  const name = getPrivateEndpointName(resourceInfo.name);
+  const name = naming.getPrivateEndpointName(resourceInfo.name);
 
   const endpoints = output(subnetIds).apply((ss) =>
     ss.map((s) => {

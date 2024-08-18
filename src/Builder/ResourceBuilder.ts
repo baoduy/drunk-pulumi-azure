@@ -1,4 +1,5 @@
-import { RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
+import * as resources from '@pulumi/azure-native/resources';
+import { grantEnvRolesAccess, RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
 import { EnvRoleBuilder } from './EnvRoleBuilder';
 import * as types from './types';
 import { EnvRolesInfo } from '../AzAd/EnvRoles';
@@ -9,13 +10,12 @@ import {
   ResourceGroupInfo,
   ResourceInfo,
 } from '../types';
-import RG from '../Core/ResourceGroup';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { createVaultPrivateLink } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
-import { subscriptionId, getKeyVaultInfo, cleanName } from '../Common';
+import { subscriptionId, naming, cleanName, rsInfo } from '../Common';
 import {
   CertBuilderType,
   IVaultBuilderResults,
@@ -25,6 +25,7 @@ import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
 import * as UIDCreator from '../AzAd/Identities/EnvUID';
 import { getLogInfo } from '../Logs/Helpers';
 import { requireSecret } from '../Common/ConfigHelper';
+import { Locker } from '../Core/Locker';
 
 class ResourceBuilder
   implements
@@ -113,7 +114,7 @@ class ResourceBuilder
     return this;
   }
   public withVaultFrom(name: string): types.IResourceBuilder {
-    return this.withVault(getKeyVaultInfo(name));
+    return this.withVault(rsInfo.getKeyVaultInfo(name));
   }
 
   public linkVaultTo(
@@ -170,7 +171,7 @@ class ResourceBuilder
     this._lock = lock;
     return this;
   }
-  private buildRoles() {
+  private buildEnvRoles() {
     //If the EnvRoles is already provided then no need to re-build it
     if (this._envRoles) return;
 
@@ -187,23 +188,33 @@ class ResourceBuilder
 
   private buildRG() {
     if (!this._createRG) return;
-    if (!this._createRGProps)
-      this._createRGProps = {
-        enableRGRoles: { readOnly: Boolean(this._envRoles) },
-        enableVaultRoles: this._createVault,
-      };
 
-    const rs = RG({
-      name: this.name,
-      permissions: {
-        envRoles: this._envRoles!,
-        ...this._createRGProps,
-      },
-      lock: this._lock,
+    const rgName = naming.getResourceGroupName(this.name);
+    this._RGInstance = new resources.ResourceGroup(rgName, {
+      resourceGroupName: rgName,
     });
     //Collect Info
-    this._RGInfo = rs.info();
-    this._RGInstance = rs.instance;
+    this._RGInfo = {
+      resourceGroupName: rgName,
+      location: this._RGInstance.location,
+    };
+  }
+
+  private buildPermissions() {
+    if (!this._createRG || !this._envRoles) return;
+    //Ensure props is configured
+    this._createRGProps = this._createRGProps ?? {
+      enableRGRoles: { readOnly: Boolean(this._envRoles) },
+      enableVaultRoles: this._createVault,
+    };
+    //grant permission
+    grantEnvRolesAccess({
+      ...this._createRGProps,
+      name: this._RGInfo!.resourceGroupName,
+      envRoles: this._envRoles.info(),
+      scope: this._RGInstance!.id,
+      dependsOn: this._RGInstance,
+    });
   }
 
   private buildVault() {
@@ -224,7 +235,7 @@ class ResourceBuilder
         'VaultInfo needs to be provided to be continuing to create other resources.',
       );
 
-    //Add Secrets to Vaults
+    //Add Secrets to Vault
     if (this._secrets) this._vaultInfo!.addSecrets(this._secrets);
     if (this._certs) this._vaultInfo!.addCerts(this._certs);
   }
@@ -310,6 +321,14 @@ class ResourceBuilder
     );
   }
 
+  private buildLock() {
+    if (!this._lock || !this._RGInstance) return;
+    Locker({
+      name: this._RGInfo!.resourceGroupName,
+      resource: this._RGInstance,
+    });
+  }
+
   private getResults(): types.ResourceBuilderResults {
     return {
       name: cleanName(this.name),
@@ -326,14 +345,16 @@ class ResourceBuilder
   }
 
   public async build(): Promise<types.ResourceBuilderResults> {
-    this.buildRoles();
+    this.buildEnvRoles();
     this.buildRG();
+    this.buildPermissions();
     this.buildVault();
     this.buildLogInfo();
     this.buildEnvUID();
     this.buildVnet();
     this.buildVaultLinking();
     this.buildOthers();
+    this.buildLock();
     await this.buildOthersAsync();
     return this.getResults();
   }

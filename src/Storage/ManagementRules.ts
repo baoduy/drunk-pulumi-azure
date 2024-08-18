@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as storage from '@pulumi/azure-native/storage';
-import { ResourceArgs } from '../types';
+import { ResourceArgs, WithDependsOn } from '../types';
 
 interface DateAfterModificationArgs {
   daysAfterLastAccessTimeGreaterThan?: pulumi.Input<number>;
@@ -55,18 +55,20 @@ export const createManagementRules = ({
   group,
   rules,
   containerNames,
-}: ResourceArgs & {
-  storageAccount: storage.StorageAccount;
-  containerNames?: pulumi.Input<string>[];
-  rules: Array<ManagementRules | DefaultManagementRules>;
-}) => {
+  dependsOn,
+}: ResourceArgs &
+  WithDependsOn & {
+    storageAccount: storage.StorageAccount;
+    containerNames?: pulumi.Input<string>[];
+    rules: Array<ManagementRules | DefaultManagementRules>;
+  }) => {
   name = `${name}-mnp`;
   return new storage.ManagementPolicy(
     name,
     {
+      ...group,
       managementPolicyName: 'default',
       accountName: storageAccount.name,
-      ...group,
 
       policy: {
         rules: rules.map((m, i) => ({
@@ -89,6 +91,6 @@ export const createManagementRules = ({
         })),
       },
     },
-    { dependsOn: storageAccount },
+    { dependsOn: dependsOn ?? storageAccount },
   );
 };

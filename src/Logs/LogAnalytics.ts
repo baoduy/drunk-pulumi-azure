@@ -1,7 +1,7 @@
 import * as insights from '@pulumi/azure-native/operationalinsights';
 import { BasicResourceWithVaultArgs } from '../types';
-import { getKeyName, getLogWpName } from '../Common';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { naming } from '../Common';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 
 interface Props extends BasicResourceWithVaultArgs {
   sku?: insights.WorkspaceSkuNameEnum;
@@ -18,7 +18,7 @@ export default ({
   ignoreChanges,
   importUri,
 }: Props) => {
-  name = getLogWpName(name);
+  name = naming.getLogWpName(name);
   const workspaceIdKeyName = `${name}-Id`;
   const primaryKeyName = `${name}-primary`;
   const secondaryKeyName = `${name}-secondary`;

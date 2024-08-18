@@ -1,4 +1,4 @@
-import { getResourceGroupName, getSqlServerName } from '../Common';
+import { naming } from '../Common';
 
 export const getSqlServerInfo = ({
   name,
@@ -7,8 +7,8 @@ export const getSqlServerInfo = ({
   name: string;
   groupName: string;
 }) => {
-  const group = getResourceGroupName(groupName);
-  const sqlServerName = getSqlServerName(name);
+  const group = naming.getResourceGroupName(groupName);
+  const sqlServerName = naming.getSqlServerName(name);
 
   return { name: sqlServerName, group: { resourceGroupName: group } };
 };

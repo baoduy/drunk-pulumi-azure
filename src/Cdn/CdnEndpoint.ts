@@ -1,7 +1,7 @@
 import { Input } from '@pulumi/pulumi';
 import * as native from '@pulumi/azure-native';
 import CdnHttpsEnable from '@drunk-pulumi/azure-providers/CdnHttpsEnable';
-import { subscriptionId, replaceAll, getCdnEndpointName } from '../Common';
+import { subscriptionId, replaceAll, naming } from '../Common';
 import {
   allowsCorsRules,
   enforceHttpsRule,
@@ -29,7 +29,7 @@ export default ({
   cdnProfileInfo,
   dependsOn,
 }: CdnEndpointProps) => {
-  name = getCdnEndpointName(name);
+  name = naming.getCdnEndpointName(name);
 
   const rules = [enforceHttpsRule, indexFileCacheRule];
   if (securityResponseHeaders) {

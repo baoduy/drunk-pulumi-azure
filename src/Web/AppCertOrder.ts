@@ -1,6 +1,6 @@
 import * as cert from '@pulumi/azure-native/certificateregistration';
 import { BasicResourceWithVaultArgs } from '../types';
-import { getCertOrderName, global } from '../Common';
+import { naming, global } from '../Common';
 
 interface Props extends BasicResourceWithVaultArgs {
   domain: string;
@@ -13,7 +13,7 @@ export default ({
   vaultInfo,
   ...others
 }: Props) => {
-  const n = getCertOrderName(domain);
+  const n = naming.getCertOrderName(domain);
 
   const order = new cert.AppServiceCertificateOrder(n, {
     certificateOrderName: n,

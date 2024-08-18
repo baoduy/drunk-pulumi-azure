@@ -1,5 +1,5 @@
-import { getIdentityName, getUIDName, getSecretName } from '../Common';
-import { getSecret } from '../KeyVault/Helper';
+import { naming } from '../Common';
+import { getSecret, getVaultItemName } from '../KeyVault/Helper';
 import { IdentityInfo, KeyVaultInfo, WithNamedType } from '../types';
 import { output } from '@pulumi/pulumi';
 
@@ -18,11 +18,11 @@ export type IdentityInfoResults = {
 };
 
 export const getIdentitySecretNames = (name: string) => ({
-  objectIdName: getSecretName(`${name}-object-id`),
-  clientIdKeyName: getSecretName(`${name}-client-id`),
-  clientSecretKeyName: getSecretName(`${name}-client-secret`),
-  principalIdKeyName: getSecretName(`${name}-principal-id`),
-  principalSecretKeyName: getSecretName(`${name}-principal-secret`),
+  objectIdName: getVaultItemName(`${name}-object-id`),
+  clientIdKeyName: getVaultItemName(`${name}-client-id`),
+  clientSecretKeyName: getVaultItemName(`${name}-client-secret`),
+  principalIdKeyName: getVaultItemName(`${name}-principal-id`),
+  principalSecretKeyName: getVaultItemName(`${name}-principal-secret`),
 });
 
 export const getIdentityInfo = async ({
@@ -30,7 +30,7 @@ export const getIdentityInfo = async ({
   vaultInfo,
   includePrincipal,
 }: Props): Promise<IdentityInfoResults> => {
-  name = getIdentityName(name);
+  name = naming.getIdentityName(name);
   const secretNames = getIdentitySecretNames(name);
 
   const [objectId, clientId, clientSecret] = await Promise.all([
@@ -122,7 +122,7 @@ export const getUserAssignedIdentityInfo = (
   name: string,
   vaultInfo: KeyVaultInfo,
 ): IdentityInfo => {
-  name = getUIDName(name);
+  name = naming.getUIDName(name);
 
   const id = output(
     getSecret({

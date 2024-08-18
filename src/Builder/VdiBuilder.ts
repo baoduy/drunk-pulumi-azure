@@ -1,4 +1,4 @@
-import { getVdiName } from '../Common';
+import { naming } from '../Common';
 import { ResourceInfo } from '../types';
 import * as vdi from '@pulumi/azure-native/desktopvirtualization';
 import {
@@ -25,7 +25,7 @@ class VdiBuilder
 
   public constructor(props: BuilderProps) {
     super(props);
-    this._hostPoolName = getVdiName(this.commonProps.name);
+    this._hostPoolName = naming.getVdiName(this.commonProps.name);
   }
 
   withAppGroup(props: VdiBuilderAppGroupType): IVdiBuilder {

@@ -1,39 +1,35 @@
-import * as naming from '../Naming';
-import { ConventionProps, ResourceInfo } from '../../types';
+import naming from '../Naming';
+import { ResourceInfo, NamingType } from '../../types';
 import { currentRegionCode } from '../AzureEnv';
 
-type NamingType = typeof naming;
+type RulerTypes = typeof naming;
 type ResourceNamingType = Omit<
-  NamingType,
+  RulerTypes,
   'cleanName' | 'getResourceGroupName'
 >;
 
 type ResourceNamingFunc = (
-  groupName: string,
-  resourceNameOrConvention?: string | ConventionProps,
+  groupName: NamingType,
+  resourceName?: NamingType,
 ) => Omit<ResourceInfo, 'id'>;
 
 const resourceNamingCreator = () => {
   const rs: Record<string, ResourceNamingFunc> = {};
 
-  Object.keys(naming).forEach((k: any) => {
+  Object.keys(naming).forEach((k) => {
     const formater = (naming as any)[k];
-    rs[k] = (
-      groupName: string,
-      resourceNameOrConvention?: string | ConventionProps,
-    ): Omit<ResourceInfo, 'id'> => {
-      const rgName =
-        typeof resourceNameOrConvention === 'object'
-          ? naming.getResourceGroupName(groupName, resourceNameOrConvention)
-          : naming.getResourceGroupName(groupName);
 
-      const resourceName =
-        typeof resourceNameOrConvention === 'string'
-          ? formater(naming.cleanName(resourceNameOrConvention))
-          : formater(naming.cleanName(groupName), resourceNameOrConvention);
+    rs[k] = (
+      groupName: NamingType,
+      resourceName: NamingType | undefined = undefined,
+    ): Omit<ResourceInfo, 'id'> => {
+      const rgName = naming.getResourceGroupName(groupName);
+      const rsName = resourceName
+        ? formater(resourceName)
+        : formater(groupName);
 
       return {
-        name: resourceName,
+        name: rsName,
         group: { resourceGroupName: rgName, location: currentRegionCode },
       };
     };

@@ -1,6 +1,6 @@
 import { BasicEncryptResourceArgs, ResourceInfoWithInstance } from '../types';
 import * as automation from '@pulumi/azure-native/automation';
-import { getAutomationAccountName } from '../Common';
+import { naming } from '../Common';
 import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 
@@ -15,7 +15,7 @@ export default ({
   dependsOn,
   ignoreChanges,
 }: Props): ResourceInfoWithInstance<automation.AutomationAccount> => {
-  name = getAutomationAccountName(name);
+  name = naming.getAutomationAccountName(name);
 
   const identity = UserAssignedIdentity({
     name,

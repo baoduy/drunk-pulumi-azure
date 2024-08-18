@@ -1,10 +1,8 @@
-import * as native from "@pulumi/azure-native";
+import * as native from '@pulumi/azure-native';
+import { naming } from '../Common';
+import { BasicResourceArgs } from '../types';
 
-import { getB2cName } from "../Common/Naming";
-import { BasicResourceArgs } from "../types";
-import {Locker} from "../Core/Locker";
-
-type Locations = "United States" | "Europe" | "Asia Pacific" | "Australia";
+type Locations = 'United States' | 'Europe' | 'Asia Pacific' | 'Australia';
 
 interface Props extends BasicResourceArgs {
   displayName: string;
@@ -13,23 +11,23 @@ interface Props extends BasicResourceArgs {
 
 const getCountryCode = (location: Locations) => {
   switch (location) {
-    case "Asia Pacific":
-      return "SG";
-    case "Australia":
-      return "AU";
-    case "United States":
-      return "US";
-    case "Europe":
-      return "EU";
+    case 'Asia Pacific':
+      return 'SG';
+    case 'Australia':
+      return 'AU';
+    case 'United States':
+      return 'US';
+    case 'Europe':
+      return 'EU';
     default:
-      return "SG";
+      return 'SG';
   }
 };
 
 export default ({ name, group, location, displayName }: Props) => {
-  const n = getB2cName(name);
+  const n = naming.getB2cName(name);
 
-  const b2cTenant = new native.azureactivedirectory.B2CTenant(n, {
+  return new native.azureactivedirectory.B2CTenant(n, {
     resourceName: n,
     ...group,
     location,
@@ -42,6 +40,4 @@ export default ({ name, group, location, displayName }: Props) => {
       tier: native.azureactivedirectory.B2CResourceSKUTier.A0,
     },
   });
-
-  return b2cTenant;
 };

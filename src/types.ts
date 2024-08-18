@@ -62,9 +62,10 @@ export type ResourceArgs = WithNamedType & WithResourceGroupInfo;
 export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
 export type EncryptResourceArgs = ResourceWithVaultArgs & WithEncryptionInfo;
 
-export type BasicResourceArgs = ResourceArgs & OptsArgs;
+export type BasicResourceArgs = WithFormattableName & ResourceArgs & OptsArgs;
 export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
 export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
+
 /** Basic vs Info is Basic doesn't require of group info*/
 export type BasicResourceInfo = WithNamedType & WithOutputId;
 
@@ -149,6 +150,11 @@ export type IdentityRoleAssignment = WithVaultInfo & {
 //   subscriptionId?: Input<string>;
 // };
 
+export interface ReplacePattern {
+  from: string | RegExp;
+  to: string;
+}
+
 export type ConventionProps = {
   prefix?: string;
   suffix?: string;
@@ -156,7 +162,17 @@ export type ConventionProps = {
   region?: string;
   /**Whether include the organization name at the end of the name or not*/
   includeOrgName?: boolean;
+  /**Remove number from the name*/
+  cleanName?: boolean;
+  /** the max length of the name*/
+  maxLength?: number;
+  /**The regex to replace specials characters from the name*/
+  //replaceRegex?: string;
+  replaces?: ReplacePattern[];
 };
+
+export type NamingType = string | { val: string; rule: ConventionProps };
+export type WithFormattableName = { name: NamingType };
 
 export type DiagnosticProps = WithNamedType &
   WithDependsOn & {

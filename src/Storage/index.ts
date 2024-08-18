@@ -1,14 +1,12 @@
-import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import * as storage from '@pulumi/azure-native/storage';
 import {
   BasicEncryptResourceArgs,
   PrivateLinkPropsType,
-  ResourceInfo,
+  ResourceInfoWithInstance,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
-import { addEncryptKey, getSecret } from '../KeyVault/Helper';
-import { isPrd } from '../Common';
-import { getConnectionName, getKeyName, getStorageName } from '../Common';
+import { addEncryptKey, getVaultItemName } from '../KeyVault/Helper';
+import { isPrd, naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
 import privateEndpoint from '../VNet/PrivateEndpoint';
@@ -26,15 +24,20 @@ export type ContainerProps = {
 };
 export type StorageFeatureType = {
   allowSharedKeyAccess?: boolean;
+  allowBlobPublicAccess?: boolean;
   /** Enable this storage as static website. */
   enableStaticWebsite?: boolean;
   allowCrossTenantReplication?: boolean;
+
   isSftpEnabled?: boolean;
 };
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
   isBlobVersioningEnabled?: boolean;
-  allowBlobPublicAccess?: boolean;
+  blobProperties?: Omit<
+    storage.BlobServicePropertiesArgs,
+    'blobServicesName' | 'resourceGroupName' | 'accountName'
+  >;
   /** The management rule applied to Storage level (all containers)*/
   defaultManagementRules?: Array<DefaultManagementRules>;
 };
@@ -65,11 +68,6 @@ interface StorageProps extends BasicEncryptResourceArgs {
   lock?: boolean;
 }
 
-export type StorageResults = ResourceInfo & {
-  instance: storage.StorageAccount;
-  getConnectionString?: (name?: string) => Promise<KeyVaultSecret | undefined>;
-};
-
 /** Storage Creator */
 function Storage({
   name,
@@ -86,19 +84,16 @@ function Storage({
   policies = { keyExpirationPeriodInDays: 365 },
   lock = true,
   dependsOn,
-  ignoreChanges,
-}: StorageProps): StorageResults {
-  name = getStorageName(name);
+  ignoreChanges = [],
+}: StorageProps): ResourceInfoWithInstance<storage.StorageAccount> {
+  name = naming.getStorageName(name);
 
-  const primaryKeyName = getKeyName(name, 'primary');
-  const secondaryKeyName = getKeyName(name, 'secondary');
-  const primaryConnectionKeyName = getConnectionName(name, 'primary');
-  const secondConnectionKeyName = getConnectionName(name, 'secondary');
   const encryptionKey = enableEncryption
     ? addEncryptKey(name, vaultInfo!)
     : undefined;
   const allowSharedKeyAccess =
     features.allowSharedKeyAccess || features.enableStaticWebsite;
+
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
   const stg = new storage.StorageAccount(
     name,
@@ -116,7 +111,7 @@ function Storage({
 
       isHnsEnabled: true,
       enableHttpsTrafficOnly: true,
-      allowBlobPublicAccess: Boolean(policies?.allowBlobPublicAccess),
+      allowBlobPublicAccess: Boolean(features?.allowBlobPublicAccess),
       allowSharedKeyAccess,
       allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
       defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
@@ -130,38 +125,57 @@ function Storage({
         type: envUIDInfo
           ? storage.IdentityType.SystemAssigned_UserAssigned
           : storage.IdentityType.SystemAssigned,
+        //all uuid must assign here before use
         userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
       },
 
       minimumTlsVersion: 'TLS1_2',
-
       //1 Year Months
       keyPolicy: {
         keyExpirationPeriodInDays: policies.keyExpirationPeriodInDays || 365,
       },
-
       encryption: encryptionKey
         ? {
+            keySource: storage.KeySource.Microsoft_Keyvault,
+            keyVaultProperties: encryptionKey,
+            requireInfrastructureEncryption: true,
+            encryptionIdentity: envUIDInfo
+              ? {
+                  //encryptionFederatedIdentityClientId?: pulumi.Input<string>;
+                  encryptionUserAssignedIdentity: envUIDInfo!.id,
+                }
+              : undefined,
+
             services: {
               blob: {
                 enabled: true,
-                keyType: storage.KeyType.Account,
+                //keyType: storage.KeyType.Account,
               },
               file: {
                 enabled: true,
-                keyType: storage.KeyType.Account,
+                //keyType: storage.KeyType.Account,
+              },
+              queue: {
+                enabled: true,
+                //keyType: storage.KeyType.Account,
+              },
+              table: {
+                enabled: true,
+                //keyType: storage.KeyType.Account,
               },
             },
-            keySource: 'Microsoft.KeyVault',
-            keyVaultProperties: encryptionKey,
           }
-        : undefined,
+        : //Default infra encryption
+          {
+            keySource: storage.KeySource.Microsoft_Storage,
+            requireInfrastructureEncryption: true,
+          },
 
       sasPolicy: {
         expirationAction: storage.ExpirationAction.Log,
         sasExpirationPeriod: '00.00:30:00',
       },
-
+      //isLocalUserEnabled: false,
       publicNetworkAccess: network?.privateEndpoint ? 'Disabled' : 'Enabled',
       networkRuleSet: {
         bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
@@ -186,7 +200,13 @@ function Storage({
           : undefined,
       },
     },
-    { dependsOn, ignoreChanges },
+    {
+      dependsOn,
+      ignoreChanges: [
+        ...ignoreChanges,
+        'encryption.requireInfrastructureEncryption',
+      ],
+    },
   );
 
   if (network?.privateEndpoint) {
@@ -206,12 +226,26 @@ function Storage({
   }
 
   //Life Cycle Management
+  const props = policies?.blobProperties
+    ? new storage.BlobServiceProperties(
+        name,
+        {
+          ...group,
+          accountName: stg.name,
+          blobServicesName: 'default',
+          ...policies.blobProperties,
+        },
+        { dependsOn: stg },
+      )
+    : undefined;
+
   if (policies?.defaultManagementRules) {
     createManagementRules({
       name,
       group,
       storageAccount: stg,
       rules: policies.defaultManagementRules,
+      dependsOn: props,
     });
   }
 
@@ -283,6 +317,11 @@ function Storage({
 
     //Add connection into Key vault
     if (vaultInfo && allowSharedKeyAccess) {
+      const primaryKeyName = `${getVaultItemName(name)}-key-primary`;
+      const secondaryKeyName = `${getVaultItemName(name)}-key-secondary`;
+      const primaryConnectionKeyName = `${getVaultItemName(name)}-conn-primary`;
+      const secondConnectionKeyName = `${getVaultItemName(name)}-conn-secondary`;
+
       const keys = (
         await storage.listStorageAccountKeys({
           accountName: name,
@@ -326,10 +365,6 @@ function Storage({
     group,
     id: stg.id,
     instance: stg,
-    getConnectionString: vaultInfo
-      ? (name: string = primaryConnectionKeyName) =>
-          getSecret({ name, nameFormatted: true, vaultInfo })
-      : undefined,
   };
 }
 

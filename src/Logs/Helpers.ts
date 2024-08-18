@@ -3,8 +3,8 @@ import { Input, interpolate } from '@pulumi/pulumi';
 import {
   currentRegionName,
   naming,
-  getResourceName,
   defaultSubScope,
+  getResourceName,
 } from '../Common';
 import { getSecrets } from '../KeyVault/Helper';
 import { getStorageInfo } from '../Storage/Helper';
@@ -112,7 +112,7 @@ const getLogWpInfo = ({
   group,
   vaultInfo,
 }: ResourceWithVaultArgs): LogWorkspaceInfo => {
-  const n = naming.getLogWpName(naming.cleanName(name));
+  const n = naming.getLogWpName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${n}`;
 
   const secrets = vaultInfo
@@ -139,7 +139,7 @@ const getAppInsightInfo = ({
   group,
   vaultInfo,
 }: ResourceWithVaultArgs): AppInsightInfo => {
-  const n = naming.getAppInsightName(naming.cleanName(name));
+  const n = naming.getAppInsightName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
 
   const secrets = vaultInfo
@@ -153,7 +153,10 @@ export const getLogInfo = (
   vaultInfo: KeyVaultInfo | undefined = undefined,
 ): LogInfo => {
   const rgName = naming.getResourceGroupName(groupName);
-  const name = getResourceName(naming.cleanName(groupName), { suffix: 'logs' });
+  const name = getResourceName(groupName, {
+    cleanName: true,
+    suffix: 'logs',
+  });
   const group = { resourceGroupName: rgName, location: currentRegionName };
 
   const logWp = getLogWpInfo({

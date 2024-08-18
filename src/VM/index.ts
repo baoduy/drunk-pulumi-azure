@@ -1,7 +1,7 @@
 import { Input } from '@pulumi/pulumi';
 import * as compute from '@pulumi/azure-native/compute';
 import * as network from '@pulumi/azure-native/network';
-import { getNICName, getVMName } from '../Common';
+import { naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import { randomPassword } from '../Core/Random';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -73,8 +73,8 @@ export default ({
   dependsOn,
   ...others
 }: Props) => {
-  const vmName = getVMName(name);
-  const nicName = getNICName(name);
+  const vmName = naming.getVMName(name);
+  const nicName = naming.getNICName(name);
 
   const nic = new network.NetworkInterface(nicName, {
     networkInterfaceName: nicName,

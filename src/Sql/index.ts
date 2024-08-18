@@ -3,8 +3,7 @@ import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 import { FullSqlDbPropsType } from '../Builder';
 import { Locker } from '../Core/Locker';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { isPrd, subscriptionId, tenantId } from '../Common';
-import { getElasticPoolName, getSqlServerName } from '../Common';
+import { naming, isPrd, subscriptionId, tenantId } from '../Common';
 import {
   BasicEncryptResourceArgs,
   BasicResourceArgs,
@@ -43,7 +42,7 @@ const createElasticPool = ({
   dependsOn,
 }: ElasticPoolProps): ResourceInfoWithInstance<sql.ElasticPool> => {
   //Create Sql Elastic
-  const elasticName = getElasticPoolName(name);
+  const elasticName = naming.getElasticPoolName(name);
 
   const ep = new sql.v20230501preview.ElasticPool(
     elasticName,
@@ -129,7 +128,7 @@ export default ({
   lock,
   dependsOn,
 }: Props): SqlResults => {
-  const sqlName = getSqlServerName(name);
+  const sqlName = naming.getSqlServerName(name);
   const encryptKey = enableEncryption
     ? addEncryptKey(sqlName, vaultInfo!, 3072)
     : undefined;

@@ -1,13 +1,13 @@
 import * as ss from '@pulumi/azure-native/signalrservice';
 import * as pulumi from '@pulumi/pulumi';
-import { getPrivateEndpointName, getSignalRName, isPrd } from '../Common';
+import { naming, isPrd } from '../Common';
 import {
   BasicResourceWithVaultArgs,
   PrivateLinkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 
 interface ResourceSkuArgs {
   capacity?: 1 | 2 | 5 | 10 | 20 | 50 | 100;
@@ -43,7 +43,7 @@ export default ({
       },
   allowedOrigins,
 }: Props): ResourceInfoWithInstance<ss.SignalR> => {
-  name = getSignalRName(name);
+  name = naming.getSignalRName(name);
 
   const signalR = new ss.SignalR(name, {
     resourceName: name,
@@ -67,7 +67,7 @@ export default ({
           },
           privateEndpoints: [
             {
-              name: getPrivateEndpointName(name),
+              name: naming.getPrivateEndpointName(name),
               allow: [
                 ss.SignalRRequestType.ClientConnection,
                 ss.SignalRRequestType.ServerConnection,

@@ -7,7 +7,7 @@ import {
   StoragePolicyType,
 } from '../../Storage';
 import { ResourceInfo, WithEncryptionInfo } from '../../types';
-import { BuilderProps, IBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
 
 export type StorageBuilderArgs = BuilderProps & WithEncryptionInfo;
 
@@ -16,17 +16,18 @@ export type StorageCdnType = Pick<
   'cdnProfileInfo' | 'cors' | 'domainNames'
 > & { securityResponse?: CdnSecurityHeaderTypes };
 
-export type StorageFeatureBuilderType = Pick<
+export type StorageFeatureBuilderType = Omit<
   StorageFeatureType,
-  'allowSharedKeyAccess'
+  'enableStaticWebsite'
 >;
 export interface IStorageStarterBuilder {
   asStorage(props?: StorageFeatureBuilderType): IStorageBuilder;
   asStaticWebStorage(): IStaticWebStorageBuilder;
 }
-export interface IStorageSharedBuilder extends IBuilder<ResourceInfo> {
+export interface IStorageSharedBuilder
+  extends IBuilder<ResourceInfo>,
+    ILockable<IStorageSharedBuilder> {
   withNetwork(props: StorageNetworkType): IStorageSharedBuilder;
-  lock(): IStorageSharedBuilder;
 }
 export interface IStorageBuilder
   extends IBuilder<ResourceInfo>,

@@ -1,10 +1,10 @@
 import { ResourceGroupInfo } from '../types';
-import { getResourceName } from './ResourceEnv';
+import naming from './Naming';
 
 export const globalKeyName = 'global';
 
 export const groupInfo: ResourceGroupInfo = {
-  resourceGroupName: getResourceName(globalKeyName),
+  resourceGroupName: naming.getResourceGroupName(globalKeyName),
 };
 
 // const cdnProfileName = getCdnProfileName(globalKeyName);

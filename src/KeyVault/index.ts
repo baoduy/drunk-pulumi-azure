@@ -1,8 +1,7 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
 import { enums } from '@pulumi/azure-native/types';
 import { Input } from '@pulumi/pulumi';
-import { getKeyVaultName, tenantId } from '../Common';
-import { createDiagnostic } from '../Logs/Helpers';
+import { naming, tenantId } from '../Common';
 import {
   BasicResourceArgs,
   KeyVaultInfo,
@@ -53,7 +52,7 @@ export default ({
   importUri,
   ...others
 }: KeyVaultProps) => {
-  const vaultName = getKeyVaultName(name);
+  const vaultName = naming.getKeyVaultName(name);
 
   const vault = new keyvault.Vault(
     vaultName,

@@ -1,11 +1,12 @@
 import * as network from '@pulumi/azure-native/network';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Output } from '@pulumi/pulumi';
-import { getFirewallName, rsInfo, isPrd } from '../Common';
+import { naming, rsInfo, isPrd } from '../Common';
 import {
   BasicResourceArgs,
   ConventionProps,
   LogInfo,
+  NamingType,
   ResourceInfo,
   ResourceInfoWithInstance,
 } from '../types';
@@ -61,7 +62,7 @@ export const create = ({
   dependsOn,
   ignoreChanges,
 }: FirewallProps): FirewallResult => {
-  name = getFirewallName(name);
+  name = naming.getFirewallName(name);
 
   //Create Public IpAddress for Management
   const manageIpAddress = management
@@ -199,12 +200,11 @@ export const getFirewallIPAddresses = (
 };
 
 export const getFirewallInfoWithIPAddresses = (
-  groupName: string,
-  ops: ConventionProps | undefined = undefined,
+  groupName: NamingType,
 ): ResourceInfo & {
   ipAddresses: Output<FirewallIPOutputType>;
 } => {
-  const info = rsInfo.getFirewallInfo(groupName, ops);
+  const info = rsInfo.getFirewallInfo(groupName);
   const ipAddresses = getFirewallIPAddresses(info);
   return { ...info, ipAddresses };
 };

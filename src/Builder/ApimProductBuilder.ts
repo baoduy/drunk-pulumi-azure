@@ -1,8 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { interpolate } from '@pulumi/pulumi';
-import { getPasswordName } from '../Common';
-import { randomPassword } from '../Core/Random';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { getPasswordName, randomPassword } from '../Core/Random';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ResourceInfo } from '../types';
 import ApimApiBuilder from './ApimApiBuilder';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
@@ -90,12 +89,12 @@ export class ApimProductBuilder
       });
     }
   }
+
   private buildSubscription() {
     if (!this._productInstance) return;
     const subName = `${this.props.name}-sub`;
     const primaryKey = getPasswordName(subName, 'primary');
     const secondaryKey = getPasswordName(subName, 'secondary');
-
     const primaryPass = randomPassword({ name: primaryKey }).result;
     const secondaryPass = randomPassword({ name: secondaryKey }).result;
 

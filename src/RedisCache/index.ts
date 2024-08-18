@@ -6,12 +6,10 @@ import {
   NetworkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
-
 import { ToWords } from 'to-words';
 import { convertToIpRange } from '../VNet/Helper';
-import { getRedisCacheName } from '../Common';
-import { isPrd } from '../Common';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { isPrd, naming } from '../Common';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import privateEndpointCreator from '../VNet/PrivateEndpoint';
 
 const toWord = new ToWords();
@@ -37,7 +35,7 @@ export default ({
   ignoreChanges,
   importUri,
 }: Props): ResourceInfoWithInstance<cache.Redis> => {
-  name = getRedisCacheName(name);
+  name = naming.getRedisCacheName(name);
   const redis = new cache.Redis(
     name,
     {

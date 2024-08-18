@@ -1,18 +1,32 @@
-import { Input, Output, output, Resource } from '@pulumi/pulumi';
+import { Output, output } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
-import { getSecretName } from '../Common';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
+import { stack, removeLeadingAndTrailingDash } from '../Common';
+
+/** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
+export const getVaultItemName = (
+  name: string,
+  currentStack: string = stack,
+) => {
+  name = name
+    .replace(new RegExp(currentStack, 'g'), '') // Replace occurrences of "stack" variable with "-"
+    .replace(/\.|_|\s/g, '-') // Replace ".", "_", and spaces with "-"
+    .replace(/-+/g, '-') // Replace multiple dashes with a single dash
+    .toLowerCase(); // Convert the result to lowercase
+
+  return removeLeadingAndTrailingDash(name);
+};
 
 //known issue: https://github.com/pulumi/pulumi-azure-native/issues/1013
-type SecretProps = Required<NamedWithVaultType> & {
-  value: Input<string>;
-  contentType?: Input<string>;
-  tags?: Input<{
-    [key: string]: Input<string>;
-  }>;
-  dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
-};
+// type SecretProps = Required<NamedWithVaultType> & {
+//   value: Input<string>;
+//   contentType?: Input<string>;
+//   tags?: Input<{
+//     [key: string]: Input<string>;
+//   }>;
+//   dependsOn?: Input<Resource> | Input<Input<Resource>[]>;
+// };
 
 type GetVaultItemProps = Required<NamedWithVaultType> & {
   version?: string;
@@ -61,10 +75,10 @@ export const addEncryptKey = (
 //   return client.getKey(n, version);
 // };
 
-interface EncryptionPropertiesArgs {
-  keySource: 'Microsoft.KeyVault';
-  keyVaultProperties: Input<KeyVaultPropertiesResults>;
-}
+// interface EncryptionPropertiesArgs {
+//   keySource: 'Microsoft.KeyVault';
+//   keyVaultProperties: Input<KeyVaultPropertiesResults>;
+// }
 
 /** Get or create encryption Key */
 // const getEncryptionKey = async ({
@@ -96,7 +110,7 @@ export const getSecret = async ({
   vaultInfo,
   nameFormatted,
 }: GetVaultItemProps) => {
-  const n = nameFormatted ? name : getSecretName(name);
+  const n = nameFormatted ? name : getVaultItemName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getSecret(n, version);
 };

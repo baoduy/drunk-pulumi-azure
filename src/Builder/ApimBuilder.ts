@@ -1,7 +1,7 @@
 import * as types from './types';
 import { ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
-import { getApimName, organization, subscriptionId, tenantId } from '../Common';
+import { naming, organization, subscriptionId, tenantId } from '../Common';
 import {
   ApimSignInSettingsResource,
   ApimSignUpSettingsResource,
@@ -123,7 +123,7 @@ class ApimBuilder
     }
   }
   private buildAPIM() {
-    this._instanceName = getApimName(this.commonProps.name);
+    this._instanceName = naming.getApimName(this.commonProps.name);
     const sku = {
       name: this._sku!.sku,
       capacity:

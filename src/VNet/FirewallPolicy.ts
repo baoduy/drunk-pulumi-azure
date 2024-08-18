@@ -2,7 +2,7 @@ import * as network from '@pulumi/azure-native/network';
 import { enums, input as inputs } from '@pulumi/azure-native/types';
 import { Input, Resource } from '@pulumi/pulumi';
 import { BasicResourceArgs, ResourceGroupInfo } from '../types';
-import { getFirewallPolicyName } from '../Common';
+import { naming } from '../Common';
 import {
   FirewallPolicyResults,
   FirewallPolicyRuleCollectionResults,
@@ -128,7 +128,7 @@ export default ({
   sku = enums.network.FirewallPolicySkuTier.Basic,
   dependsOn,
 }: Props) => {
-  name = getFirewallPolicyName(name);
+  name = naming.getFirewallPolicyName(name);
   return new network.FirewallPolicy(
     name,
     {

@@ -2,7 +2,7 @@ import { BasicResourceArgs } from '../types';
 import * as IpAddress from './IpAddress';
 import * as network from '@pulumi/azure-native/network';
 import { Input } from '@pulumi/pulumi';
-import { getBastionName } from '../Common';
+import { naming } from '../Common';
 
 export interface BastionProps extends BasicResourceArgs {
   subnetId: Input<string>;
@@ -18,7 +18,7 @@ export default ({
   ignoreChanges,
   sku = 'Basic',
 }: BastionProps) => {
-  name = getBastionName(name);
+  name = naming.getBastionName(name);
 
   const ipAddressId = IpAddress.create({
     name,

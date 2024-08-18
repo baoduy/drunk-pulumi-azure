@@ -1,8 +1,17 @@
 import { Output } from '@pulumi/pulumi';
 import * as random from '@pulumi/random';
-import { getPasswordName } from '../Common';
+import { getResourceName } from '../Common';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { KeyVaultInfo, WithNamedType, NamedWithVaultType } from '../types';
+import { getVaultItemName } from '../KeyVault/Helper';
+
+export const getPasswordName = (
+  name: string,
+  type: 'primary' | 'secondary' | null,
+) =>
+  type === null
+    ? getResourceName(name, { suffix: 'pwd' })
+    : `${getVaultItemName(name)}-pwd-${type}`;
 
 interface RandomPassProps extends NamedWithVaultType {
   policy?: 'monthly' | 'yearly' | boolean;

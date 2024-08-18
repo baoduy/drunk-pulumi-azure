@@ -10,7 +10,7 @@ import {
   azFirewallSubnet,
   gatewaySubnetName,
 } from './Helper';
-import { getVnetName } from '../Common';
+import { naming } from '../Common';
 import CreateSubnet, { SubnetProps } from './Subnet';
 import SecurityGroup from './SecurityGroup';
 import RouteTable from './RouteTable';
@@ -97,7 +97,7 @@ export default ({
   features = {},
   dependsOn,
 }: VnetProps): VnetResult => {
-  const vName = getVnetName(name);
+  const vName = naming.getVnetName(name);
   const securityRules = features.securityGroup?.rules || [];
 
   //AppGateway

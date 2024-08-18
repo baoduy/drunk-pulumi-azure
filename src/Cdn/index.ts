@@ -1,9 +1,7 @@
-import { EnvRolesInfo } from '../AzAd/EnvRoles';
-import { addMemberToGroup } from '../AzAd/Group';
 import { IEnvRoleBuilder } from '../Builder';
 import { ResourceGroupInfo, ResourceInfoWithInstance } from '../types';
 import * as cdn from '@pulumi/azure-native/cdn';
-import { getCdnProfileName, global } from '../Common';
+import { naming, global } from '../Common';
 
 interface Props {
   name: string;
@@ -16,7 +14,7 @@ export default ({
   group = global.groupInfo,
   envRoles,
 }: Props): ResourceInfoWithInstance<cdn.Profile> => {
-  name = getCdnProfileName(name);
+  name = naming.getCdnProfileName(name);
   const internalGroup = { ...group, location: 'global' };
 
   const profile = new cdn.Profile(name, {

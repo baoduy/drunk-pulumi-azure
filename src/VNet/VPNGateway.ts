@@ -1,5 +1,5 @@
 import { BasicResourceArgs } from '../types';
-import { tenantId, getVpnName } from '../Common';
+import { tenantId, naming } from '../Common';
 import { Input, interpolate } from '@pulumi/pulumi';
 import * as network from '@pulumi/azure-native/network';
 import * as IpAddress from './IpAddress';
@@ -25,7 +25,7 @@ export default ({
   },
   dependsOn,
 }: VpnGatewayProps) => {
-  name = getVpnName(name);
+  name = naming.getVpnName(name);
   const ipAddress = IpAddress.create({
     name,
     group,

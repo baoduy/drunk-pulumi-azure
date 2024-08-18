@@ -105,6 +105,12 @@ const AppConfigRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   admin: [],
 };
 
+const ServiceBusRoles: Record<EnvRoleKeyTypes, string[]> = {
+  readOnly: ['Azure Service Bus Data Receiver'],
+  contributor: ['Azure Service Bus Data Sender'],
+  admin: ['Azure Service Bus Data Owner'],
+};
+
 export type RoleEnableItem = boolean | { [k in EnvRoleKeyTypes]?: boolean };
 
 export type RoleEnableTypes = {
@@ -116,6 +122,7 @@ export type RoleEnableTypes = {
   /** Container Registry Roles */
   enableACRRoles?: RoleEnableItem;
   enableAppConfig?: RoleEnableItem;
+  enableServiceBus?: RoleEnableItem;
 };
 
 export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
@@ -155,6 +162,7 @@ export const getRoleNames = ({
   enableStorageRoles,
   enableACRRoles,
   enableAppConfig,
+  enableServiceBus,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
   const rs: ListRoleType = {
     readOnly: new Set<string>(),
@@ -169,6 +177,7 @@ export const getRoleNames = ({
   getRoleFor(enableStorageRoles, StorageRoleNames, rs);
   getRoleFor(enableACRRoles, ContainerRegistry, rs);
   getRoleFor(enableAppConfig, AppConfigRoleNames, rs);
+  getRoleFor(enableServiceBus, ServiceBusRoles, rs);
 
   return {
     readOnly: Array.from(rs.readOnly).sort(),
