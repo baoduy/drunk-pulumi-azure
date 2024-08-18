@@ -107,6 +107,7 @@ export default ({
         resourceName: name,
         resourceGroupName: group.resourceGroupName,
       });
+
       addCustomSecrets({
         vaultInfo,
         contentType: 'SignalR',

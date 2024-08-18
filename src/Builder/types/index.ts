@@ -1,3 +1,4 @@
+export * from './acrBuilder';
 export * from './apimBuilder';
 export * from './apimPolicyBuilder';
 export * from './apimProductBuilder';
@@ -9,6 +10,8 @@ export * from './dnsZoneBuilder';
 export * from './envRoleBuilder';
 export * from './genericBuilder';
 export * from './logicAppBuilder';
+export * from './privateDnsZoneBuilder';
+export * from './redisCacheBuilder';
 export * from './resourceBuilder';
 export * from './serviceBusBuilder';
 export * from './sqlBuilder';
