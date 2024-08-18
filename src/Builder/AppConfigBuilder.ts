@@ -52,7 +52,7 @@ class AppConfigBuilder
         configStoreName: this._instanceName,
         sku: { name: 'Standard' },
         enablePurgeProtection: isPrd,
-        softDeleteRetentionInDays: isPrd ? 180 : 7,
+        softDeleteRetentionInDays: isPrd ? 90 : 1,
         disableLocalAuth: this._privateLink?.disableLocalAuth,
         publicNetworkAccess: this._privateLink
           ? appConfig.PublicNetworkAccess.Disabled
