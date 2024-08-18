@@ -5,7 +5,7 @@ import { ResourceInfo } from '../../types';
 export type AppCertBuilderArgs = BuilderProps;
 export type AppCertDomainBuilderType = {
   domain: string;
-  type: cert.CertificateProductType | string;
+  type: cert.CertificateProductType;
   keySize: 2048 | 3072 | 4096;
 };
 
