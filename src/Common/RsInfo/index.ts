@@ -2,14 +2,13 @@ import rsHelper from './Helper';
 import naming, { cleanName } from '../Naming';
 import { interpolate, output, Output } from '@pulumi/pulumi';
 import {
-  currentCountryCode,
   currentRegionCode,
   currentRegionName,
   defaultSubScope,
   subscriptionId,
 } from '../AzureEnv';
 import {
-  ConventionProps,
+  NamingType,
   ResourceGroupInfo,
   ResourceGroupWithIdInfo,
   ResourceInfo,
@@ -58,13 +57,13 @@ export const getNameFromId = (id: string) => {
 export const getRGId = (group: ResourceGroupInfo) =>
   interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}`;
 
-export const getRGInfo = (name: string): ResourceGroupWithIdInfo => {
+export const getRGInfo = (name: NamingType): ResourceGroupWithIdInfo => {
   const rgName = naming.getResourceGroupName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${rgName}`;
   return { resourceGroupName: rgName, id, location: currentRegionCode };
 };
 
-export const getStorageInfo = (name: string): ResourceInfo => {
+export const getStorageInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getStorageName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${info.name}`;
   return { ...info, id };
@@ -76,7 +75,7 @@ export const getStorageInfo = (name: string): ResourceInfo => {
 //   return { ...info, id };
 // };
 
-export const getAutomationAccountInfo = (name: string): ResourceInfo => {
+export const getAutomationAccountInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getAutomationAccountName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Automation/automationAccounts/${info.name}`;
   return { ...info, id };
@@ -88,31 +87,31 @@ export const getAutomationAccountInfo = (name: string): ResourceInfo => {
 // export const getCosmosDbName = (name: string) =>
 //   getResourceName(name, { suffix: 'cdb' });
 
-export const getAppConfigInfo = (name: string): ResourceInfo => {
+export const getAppConfigInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getAppConfigName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.AppConfiguration/configurationStores/${info.name}`;
   return { ...info, id };
 };
 
-export const getApimInfo = (name: string): ResourceInfo => {
+export const getApimInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getApimName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.ApiManagement/service/${info.name}`;
   return { ...info, id };
 };
 
-export const getAksInfo = (name: string): ResourceInfo => {
+export const getAksInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getAksName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.ContainerService/managedClusters/${info.name}`;
   return { ...info, id };
 };
 
-export const getAppInsightInfo = (name: string): ResourceInfo => {
+export const getAppInsightInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getAppInsightName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Insights/components/${info.name}`;
   return { ...info, id };
 };
 
-export const getLogWpInfo = (name: string): ResourceInfo => {
+export const getLogWpInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getLogWpName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/microsoft.operationalinsights/workspaces/${info.name}`;
   return { ...info, id };
@@ -124,52 +123,49 @@ export const getLogWpInfo = (name: string): ResourceInfo => {
 // export const getFuncAppName = (name: string) =>
 //   getResourceName(name, { suffix: 'func' });
 
-export const getRedisCacheInfo = (name: string): ResourceInfo => {
+export const getRedisCacheInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getRedisCacheName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Cache/Redis/${info.name}`;
   return { ...info, id };
 };
 
-export const getServiceBusInfo = (name: string): ResourceInfo => {
+export const getServiceBusInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getServiceBusName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.ServiceBus/namespaces/${info.name}`;
   return { ...info, id };
 };
 
-export const getSignalRInfo = (name: string): ResourceInfo => {
+export const getSignalRInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getSignalRName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.SignalRService/SignalR/${info.name}`;
   return { ...info, id };
 };
 
-export const getSqlServerInfo = (name: string): ResourceInfo => {
+export const getSqlServerInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getSqlServerName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Sql/servers/${info.name}`;
   return { ...info, id };
 };
 
-export const getPostgresqlInfo = (name: string): ResourceInfo => {
+export const getPostgresqlInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getPostgresqlName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.DBforPostgreSQL/flexibleServers/${info.name}`;
   return { ...info, id };
 };
 
-export const getMySqlInfo = (name: string): ResourceInfo => {
+export const getMySqlInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getMySqlName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.DBforMySQL/flexibleServers/${info.name}`;
   return { ...info, id };
 };
 
-export const getFirewallInfo = (
-  name: string,
-  ops: ConventionProps | undefined = undefined,
-): ResourceInfo => {
-  const info = rsHelper.getFirewallName(name, ops);
+export const getFirewallInfo = (name: NamingType): ResourceInfo => {
+  const info = rsHelper.getFirewallName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/azureFirewalls/${info.name}`;
   return { ...info, id };
 };
 
-export const getVMInfo = (name: string): ResourceInfo => {
+export const getVMInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getVMName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Compute/virtualMachines/${info.name}`;
   return { ...info, id };
@@ -178,11 +174,8 @@ export const getVMInfo = (name: string): ResourceInfo => {
 // export const getVpnName = (name: string) =>
 //   getResourceName(name, { suffix: 'vpn' });
 
-export const getVnetInfo = (
-  name: string,
-  ops: ConventionProps | undefined = undefined,
-): ResourceInfo => {
-  const info = rsHelper.getVnetName(name, ops);
+export const getVnetInfo = (name: NamingType): ResourceInfo => {
+  const info = rsHelper.getVnetName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${info.name}`;
   return { ...info, id };
 };
@@ -194,7 +187,7 @@ export const getVnetIdFromSubnetId = (subnetId: string) => {
 
 export const getSubnetIdByName = (
   subnetName: string,
-  vnetAndGroupName: string,
+  vnetAndGroupName: NamingType,
 ): Output<string> => {
   const vnetName = naming.getVnetName(vnetAndGroupName);
   const group = naming.getResourceGroupName(vnetAndGroupName);
@@ -206,7 +199,7 @@ export const getIpAddressInfo = ({
   groupName,
 }: {
   name: string;
-  groupName: string;
+  groupName: NamingType;
 }): ResourceInfo => {
   name = naming.getIpAddressName(name);
   const rgName = naming.getResourceGroupName(groupName);
@@ -246,28 +239,25 @@ export const getIpAddressInfo = ({
 // export const getBastionName = (name: string) =>
 //   getResourceName(name, { suffix: 'bst' });
 
-export const getKeyVaultInfo = (
-  name: string,
-  region: string = currentCountryCode,
-): ResourceInfo => {
-  const info = rsHelper.getKeyVaultName(name, { region });
+export const getKeyVaultInfo = (name: NamingType): ResourceInfo => {
+  const info = rsHelper.getKeyVaultName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.KeyVault/vaults/${info.name}`;
   return { ...info, id };
 };
 
-export const getCdnProfileInfo = (name: string): ResourceInfo => {
+export const getCdnProfileInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getCdnProfileName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.Cdn/profiles/${info.name}`;
   return { ...info, id };
 };
 
-export const getAcrInfo = (name: string): ResourceInfo => {
+export const getAcrInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getAcrName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/${info.name}`;
   return { ...info, id };
 };
 
-export const getCertOrderInfo = (name: string): ResourceInfo => {
+export const getCertOrderInfo = (name: NamingType): ResourceInfo => {
   const info = rsHelper.getCertOrderName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${info.group.resourceGroupName}/providers/Microsoft.CertificateRegistration/certificateOrders/${info.name}`;
   return { ...info, id };

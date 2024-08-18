@@ -6,6 +6,7 @@ import {
   BasicResourceArgs,
   ConventionProps,
   LogInfo,
+  NamingType,
   ResourceInfo,
   ResourceInfoWithInstance,
 } from '../types';
@@ -199,12 +200,11 @@ export const getFirewallIPAddresses = (
 };
 
 export const getFirewallInfoWithIPAddresses = (
-  groupName: string,
-  ops: ConventionProps | undefined = undefined,
+  groupName: NamingType,
 ): ResourceInfo & {
   ipAddresses: Output<FirewallIPOutputType>;
 } => {
-  const info = rsInfo.getFirewallInfo(groupName, ops);
+  const info = rsInfo.getFirewallInfo(groupName);
   const ipAddresses = getFirewallIPAddresses(info);
   return { ...info, ipAddresses };
 };

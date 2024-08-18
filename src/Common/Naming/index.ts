@@ -1,12 +1,11 @@
 import { rules } from './Rulers';
-import { ConventionProps, ReplacePattern } from '../../types';
+import { ConventionProps, ReplacePattern, NamingType } from '../../types';
 import * as process from 'node:process';
 import { currentCountryCode } from '../AzureEnv';
 import { organization, stack } from '../StackEnv';
 
 type RulerTypes = typeof rules;
 
-export type NamingType = string | { val: string; rule: ConventionProps };
 export type NamingFunc = (name: NamingType) => string;
 
 export const replaceInString = (

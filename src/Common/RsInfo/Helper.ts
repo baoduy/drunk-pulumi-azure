@@ -1,5 +1,5 @@
 import naming from '../Naming';
-import { ConventionProps, ResourceInfo } from '../../types';
+import { ResourceInfo, NamingType } from '../../types';
 import { currentRegionCode } from '../AzureEnv';
 
 type RulerTypes = typeof naming;
@@ -9,8 +9,8 @@ type ResourceNamingType = Omit<
 >;
 
 type ResourceNamingFunc = (
-  groupName: string,
-  resourceNameOrConvention?: string | ConventionProps,
+  groupName: NamingType,
+  resourceName?: NamingType,
 ) => Omit<ResourceInfo, 'id'>;
 
 const resourceNamingCreator = () => {
@@ -20,25 +20,16 @@ const resourceNamingCreator = () => {
     const formater = (naming as any)[k];
 
     rs[k] = (
-      groupName: string,
-      resourceNameOrConvention?: string | ConventionProps,
+      groupName: NamingType,
+      resourceName: NamingType | undefined = undefined,
     ): Omit<ResourceInfo, 'id'> => {
-      const rgName =
-        typeof resourceNameOrConvention === 'string' ||
-        resourceNameOrConvention === undefined
-          ? naming.getResourceGroupName(groupName)
-          : naming.getResourceGroupName({
-              val: groupName,
-              rule: resourceNameOrConvention,
-            });
-
-      const resourceName =
-        typeof resourceNameOrConvention === 'string'
-          ? formater(resourceNameOrConvention)
-          : formater({ val: groupName, rule: resourceNameOrConvention });
+      const rgName = naming.getResourceGroupName(groupName);
+      const rsName = resourceName
+        ? formater(resourceName)
+        : formater(groupName);
 
       return {
-        name: resourceName,
+        name: rsName,
         group: { resourceGroupName: rgName, location: currentRegionCode },
       };
     };

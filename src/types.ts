@@ -62,9 +62,10 @@ export type ResourceArgs = WithNamedType & WithResourceGroupInfo;
 export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
 export type EncryptResourceArgs = ResourceWithVaultArgs & WithEncryptionInfo;
 
-export type BasicResourceArgs = ResourceArgs & OptsArgs;
+export type BasicResourceArgs = WithFormattableName & ResourceArgs & OptsArgs;
 export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
 export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
+
 /** Basic vs Info is Basic doesn't require of group info*/
 export type BasicResourceInfo = WithNamedType & WithOutputId;
 
@@ -169,6 +170,9 @@ export type ConventionProps = {
   //replaceRegex?: string;
   replaces?: ReplacePattern[];
 };
+
+export type NamingType = string | { val: string; rule: ConventionProps };
+export type WithFormattableName = { name: NamingType };
 
 export type DiagnosticProps = WithNamedType &
   WithDependsOn & {
