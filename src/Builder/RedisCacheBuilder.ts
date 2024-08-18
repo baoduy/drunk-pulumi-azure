@@ -49,7 +49,6 @@ class RedisCacheBuilder
       {
         ...group,
         name: this._instanceName,
-
         minimumTlsVersion: '1.2',
         enableNonSslPort: false,
         identity: { type: cache.ManagedServiceIdentityType.SystemAssigned },
@@ -119,6 +118,7 @@ class RedisCacheBuilder
         contentType: 'Redis Cache',
         dependsOn: this._redisInstance,
         items: [
+          { name: `${this._instanceName}-host`, value: h },
           {
             name: `${this._instanceName}-primary-conn`,
             value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,

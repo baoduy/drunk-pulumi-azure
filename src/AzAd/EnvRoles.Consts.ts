@@ -1,6 +1,70 @@
 import { EnvRoleKeyTypes, EnvRolesInfo } from './EnvRoles';
 import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
 
+export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
+
+const getRoleFor = (
+  roleType: RoleEnableItem | undefined,
+  roleCollection: Record<EnvRoleKeyTypes, string[]>,
+  results: ListRoleType,
+) => {
+  if (!roleType) return results;
+
+  const allows = {
+    readOnly: typeof roleType === 'boolean' ? roleType : roleType.readOnly,
+    contributor:
+      typeof roleType === 'boolean' ? roleType : roleType.contributor,
+    admin: typeof roleType === 'boolean' ? roleType : roleType.admin,
+  };
+
+  if (allows.readOnly) {
+    roleCollection.readOnly.forEach((r) => results.readOnly.add(r));
+  }
+  if (allows.contributor) {
+    roleCollection.contributor.forEach((r) => results.contributor.add(r));
+  }
+  if (allows.admin) {
+    roleCollection.admin.forEach((r) => results.admin.add(r));
+  }
+
+  return results;
+};
+
+export const grantEnvRolesAccess = ({
+  name,
+  envRoles,
+  scope,
+  dependsOn,
+  ...others
+}: RoleEnableTypes &
+  Omit<RoleAssignmentProps, 'roleName' | 'principalType' | 'principalId'> & {
+    envRoles: EnvRolesInfo;
+  }) => {
+  const roles = getRoleNames(others);
+  Object.keys(envRoles).forEach((k) => {
+    const type = k as EnvRoleKeyTypes;
+    const objectId = envRoles[type].objectId;
+    if (!objectId) {
+      console.warn(
+        `The Env role '${type}' was ignored as the objectId was NULL.`,
+      );
+      return;
+    }
+
+    const n = `${name}-${type}`;
+    roles[type].forEach((r) =>
+      roleAssignment({
+        name: n,
+        roleName: r,
+        principalId: objectId,
+        principalType: 'Group',
+        scope,
+        dependsOn,
+      }),
+    );
+  });
+};
+
 //Resource Group Role
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: ['Reader'],
@@ -111,6 +175,18 @@ const ServiceBusRoles: Record<EnvRoleKeyTypes, string[]> = {
   admin: ['Azure Service Bus Data Owner'],
 };
 
+const SignalRRoles: Record<EnvRoleKeyTypes, string[]> = {
+  readOnly: ['SignalR REST API Reader'],
+  contributor: ['SignalR App Server'],
+  admin: ['SignalR REST API Owner'],
+};
+
+// const RedisCacheRoles: Record<EnvRoleKeyTypes, string[]> = {
+//   readOnly: ['Azure Service Bus Data Receiver'],
+//   contributor: ['Azure Service Bus Data Sender'],
+//   admin: ['Azure Service Bus Data Owner'],
+// };
+
 export type RoleEnableItem = boolean | { [k in EnvRoleKeyTypes]?: boolean };
 
 export type RoleEnableTypes = {
@@ -123,35 +199,8 @@ export type RoleEnableTypes = {
   enableACRRoles?: RoleEnableItem;
   enableAppConfig?: RoleEnableItem;
   enableServiceBus?: RoleEnableItem;
-};
-
-export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
-
-const getRoleFor = (
-  roleType: RoleEnableItem | undefined,
-  roleCollection: Record<EnvRoleKeyTypes, string[]>,
-  results: ListRoleType,
-) => {
-  if (!roleType) return results;
-
-  const allows = {
-    readOnly: typeof roleType === 'boolean' ? roleType : roleType.readOnly,
-    contributor:
-      typeof roleType === 'boolean' ? roleType : roleType.contributor,
-    admin: typeof roleType === 'boolean' ? roleType : roleType.admin,
-  };
-
-  if (allows.readOnly) {
-    roleCollection.readOnly.forEach((r) => results.readOnly.add(r));
-  }
-  if (allows.contributor) {
-    roleCollection.contributor.forEach((r) => results.contributor.add(r));
-  }
-  if (allows.admin) {
-    roleCollection.admin.forEach((r) => results.admin.add(r));
-  }
-
-  return results;
+  enableSignalR?: RoleEnableItem;
+  //enableRedisCache?: RoleEnableItem;
 };
 
 export const getRoleNames = ({
@@ -163,6 +212,7 @@ export const getRoleNames = ({
   enableACRRoles,
   enableAppConfig,
   enableServiceBus,
+  enableSignalR,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
   const rs: ListRoleType = {
     readOnly: new Set<string>(),
@@ -178,45 +228,11 @@ export const getRoleNames = ({
   getRoleFor(enableACRRoles, ContainerRegistry, rs);
   getRoleFor(enableAppConfig, AppConfigRoleNames, rs);
   getRoleFor(enableServiceBus, ServiceBusRoles, rs);
+  getRoleFor(enableSignalR, SignalRRoles, rs);
 
   return {
     readOnly: Array.from(rs.readOnly).sort(),
     admin: Array.from(rs.admin).sort(),
     contributor: Array.from(rs.contributor).sort(),
   };
-};
-
-export const grantEnvRolesAccess = ({
-  name,
-  envRoles,
-  scope,
-  dependsOn,
-  ...others
-}: RoleEnableTypes &
-  Omit<RoleAssignmentProps, 'roleName' | 'principalType' | 'principalId'> & {
-    envRoles: EnvRolesInfo;
-  }) => {
-  const roles = getRoleNames(others);
-  Object.keys(envRoles).forEach((k) => {
-    const type = k as EnvRoleKeyTypes;
-    const objectId = envRoles[type].objectId;
-    if (!objectId) {
-      console.warn(
-        `The Env role '${type}' was ignored as the objectId was NULL.`,
-      );
-      return;
-    }
-
-    const n = `${name}-${type}`;
-    roles[type].forEach((r) =>
-      roleAssignment({
-        name: n,
-        roleName: r,
-        principalId: objectId,
-        principalType: 'Group',
-        scope,
-        dependsOn,
-      }),
-    );
-  });
 };
