@@ -32,7 +32,14 @@ class AppConfigBuilder
   }
 
   private buildAppConfig() {
-    const { group, envUIDInfo, vaultInfo, enableEncryption } = this.args;
+    const {
+      group,
+      envUIDInfo,
+      vaultInfo,
+      enableEncryption,
+      dependsOn,
+      ignoreChanges = [],
+    } = this.args;
 
     const encryptionKey = enableEncryption
       ? addEncryptKey(this._instanceName, vaultInfo!)
@@ -57,6 +64,7 @@ class AppConfigBuilder
             : appConfig.IdentityType.SystemAssigned,
           userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
         },
+
         encryption:
           encryptionKey && envUIDInfo
             ? {
@@ -66,6 +74,10 @@ class AppConfigBuilder
                 },
               }
             : undefined,
+      },
+      {
+        dependsOn,
+        ignoreChanges: [...ignoreChanges, 'SoftDeleteRetentionInDays'],
       },
     );
   }

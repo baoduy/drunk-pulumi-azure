@@ -76,7 +76,7 @@ class AcrBuilder
         },
 
         encryption:
-          encryption && envUIDInfo
+          this._sku === 'Premium' && encryption && envUIDInfo
             ? {
                 keyVaultProperties: {
                   identity: envUIDInfo.id,
