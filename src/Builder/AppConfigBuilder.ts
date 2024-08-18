@@ -77,7 +77,7 @@ class AppConfigBuilder
       },
       {
         dependsOn,
-        ignoreChanges: [...ignoreChanges, 'SoftDeleteRetentionInDays'],
+        ignoreChanges: [...ignoreChanges, 'softDeleteRetentionInDays'],
       },
     );
   }
@@ -92,7 +92,7 @@ class AppConfigBuilder
         id: this._appConfigInstance!.id,
       },
       privateDnsZoneName: 'privatelink.azconfig.io',
-      linkServiceGroupIds: ['appConfig'],
+      linkServiceGroupIds: ['configurationStores'],
     });
   }
 

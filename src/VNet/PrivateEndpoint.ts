@@ -9,6 +9,7 @@ export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
     resourceInfo: ResourceInfo;
     /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
     privateDnsZoneName: string;
+    /** check here for details group https://blog.blksthl.com/2023/03/22/the-complete-list-of-groupids-for-private-endpoint-privatelink-service-connection/*/
     linkServiceGroupIds: string[];
   };
 
