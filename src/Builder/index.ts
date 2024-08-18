@@ -1,9 +1,11 @@
 export { default as AksBuilder } from './AksBuilder';
 export { default as ApimBuilder } from './ApimBuilder';
 export { default as ApimRootBuilder } from './ApimRootBuilder';
+export { default as AutomationBuilder } from './AutomationBuilder';
 export { default as CdnBuilder } from './CdnBuilder';
 export { default as DnsZoneBuilder } from './DnsZoneBuilder';
 export { EnvRoleBuilder } from './EnvRoleBuilder';
+export { default as LogicAppBuilder } from './LogicAppBuilder';
 export { default as PrivateDnsZoneBuilder } from './PrivateDnsZoneBuilder';
 export { default as ResourceBuilder } from './ResourceBuilder';
 export { default as ServiceBusBuilder } from './ServiceBusBuilder';

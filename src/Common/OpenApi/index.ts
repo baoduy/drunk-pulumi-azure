@@ -1,5 +1,5 @@
-import { replaceAll } from '../../Common';
-import { OpenAPI3 } from './OpenApi';
+import { replaceAll } from '../Helpers';
+import { OpenAPI3 } from './types';
 
 const removeVersion = (data: OpenAPI3, version: string): OpenAPI3 => {
   if (!data?.paths) {

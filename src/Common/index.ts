@@ -4,6 +4,7 @@ export * as stackEnv from './StackEnv';
 export * as global from './GlobalEnv';
 export { default as naming } from './Naming';
 export * as rsInfo from './RsInfo';
+export * as openApi from './OpenApi';
 
 export * from './Helpers';
 export * from './AzureEnv';

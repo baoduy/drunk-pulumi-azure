@@ -63,8 +63,10 @@ export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
 export type EncryptResourceArgs = ResourceWithVaultArgs & WithEncryptionInfo;
 
 export type BasicResourceArgs = WithFormattableName & ResourceArgs & OptsArgs;
-export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
-export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
+export type BasicResourceWithVaultArgs = WithVaultInfo & BasicResourceArgs;
+export type BasicEncryptResourceArgs = BasicResourceWithVaultArgs &
+  WithEncryptionInfo &
+  OptsArgs;
 
 /** Basic vs Info is Basic doesn't require of group info*/
 export type BasicResourceInfo = WithNamedType & WithOutputId;
