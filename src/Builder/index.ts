@@ -2,6 +2,8 @@ export { default as AcrBuilder } from './AcrBuilder';
 export { default as AksBuilder } from './AksBuilder';
 export { default as ApimBuilder } from './ApimBuilder';
 export { default as ApimRootBuilder } from './ApimRootBuilder';
+export { default as AppCertBuilder } from './AppCertBuilder';
+export { default as AppConfigBuilder } from './AppConfigBuilder';
 export { default as AutomationBuilder } from './AutomationBuilder';
 export { default as CdnBuilder } from './CdnBuilder';
 export { default as DnsZoneBuilder } from './DnsZoneBuilder';

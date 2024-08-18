@@ -116,7 +116,7 @@ class SignalRBuilder
   }
 
   private buildPrivateLink() {
-    if (!this._privateLink) return;
+    if (!this._privateLink || this._sku.name === 'Free_F1') return;
     //The Private Zone will create in Dev and reuse for sandbox and prd.
     PrivateEndpoint({
       ...this._privateLink,
