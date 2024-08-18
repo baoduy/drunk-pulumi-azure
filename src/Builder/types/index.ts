@@ -14,6 +14,7 @@ export * from './privateDnsZoneBuilder';
 export * from './redisCacheBuilder';
 export * from './resourceBuilder';
 export * from './serviceBusBuilder';
+export * from './signalRBuilder';
 export * from './sqlBuilder';
 export * from './storageBuilder';
 export * from './vdiBuilder';

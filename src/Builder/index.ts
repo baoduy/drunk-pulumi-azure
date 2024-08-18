@@ -11,6 +11,7 @@ export { default as PrivateDnsZoneBuilder } from './PrivateDnsZoneBuilder';
 export { default as RedisCacheBuilder } from './RedisCacheBuilder';
 export { default as ResourceBuilder } from './ResourceBuilder';
 export { default as ServiceBusBuilder } from './ServiceBusBuilder';
+export { default as SignalRBuilder } from './SignalRBuilder';
 export { default as SqlBuilder } from './SqlBuilder';
 export { default as StorageBuilder } from './StorageBuilder';
 export { default as VaultBuilder } from './VaultBuilder';

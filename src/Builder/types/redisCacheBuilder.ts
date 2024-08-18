@@ -1,6 +1,6 @@
-import { BuilderProps } from './genericBuilder';
+import { BuilderProps, IBuilder } from './genericBuilder';
 import * as cache from '@pulumi/azure-native/cache';
-import { NetworkPropsType } from '../../types';
+import { NetworkPropsType, ResourceInfo } from '../../types';
 
 export type RedisCacheBuilderArgs = BuilderProps;
 export type RedisCacheSkuBuilder = {
@@ -13,6 +13,6 @@ export interface IRedisCacheSkuBuilder {
   withSku(props: RedisCacheSkuBuilder): IRedisCacheBuilder;
 }
 
-export interface IRedisCacheBuilder {
+export interface IRedisCacheBuilder extends IBuilder<ResourceInfo> {
   withNetwork(props: NetworkPropsType): IRedisCacheBuilder;
 }
