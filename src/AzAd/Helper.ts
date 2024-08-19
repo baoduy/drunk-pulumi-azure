@@ -131,6 +131,13 @@ export const getUserAssignedIdentityInfo = (
       nameFormatted: true,
     }),
   );
+  const clientId = output(
+    getSecret({
+      name: `${name}-clientId`,
+      vaultInfo,
+      nameFormatted: true,
+    }),
+  );
   const principalId = output(
     getSecret({
       name: `${name}-principalId`,
@@ -141,6 +148,7 @@ export const getUserAssignedIdentityInfo = (
 
   return {
     id: id?.apply((i) => i?.value!),
+    clientId: clientId?.apply((i) => i?.value!),
     principalId: principalId?.apply((i) => i?.value!),
   };
 };

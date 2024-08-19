@@ -35,7 +35,10 @@ export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
 export type WithNamedType = { name: string };
 export type WithOutputId = { id: Output<string> };
 export type WithSubId = { subscriptionId?: string };
-export type WithPrincipalId = { principalId: Input<string> };
+export type WithPrincipalId = {
+  clientId: Input<string>;
+  principalId: Input<string>;
+};
 export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
@@ -77,6 +80,15 @@ export type ResourceInfo = BasicResourceInfo & ResourceArgs;
 export type ResourceInfoWithSub = ResourceInfo & WithSubId;
 export type KeyVaultInfo = ResourceInfo;
 export type IdentityInfo = WithOutputId & WithPrincipalId;
+export type AdIdentityInfo = WithNamedType & {
+  objectId: Output<string>;
+  clientId: Output<string>;
+  clientSecret: Output<string> | undefined;
+  principalId: Output<string> | undefined;
+  principalSecret: Output<string> | undefined;
+};
+export type AdIdentityInfoWithInstance<TInstance> = AdIdentityInfo &
+  WithInstance<TInstance>;
 //Log info
 export type StorageConnectionInfo = {
   primaryConnection?: Output<string>;

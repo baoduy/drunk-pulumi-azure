@@ -9,6 +9,8 @@ export { default as CdnBuilder } from './CdnBuilder';
 export { default as DnsZoneBuilder } from './DnsZoneBuilder';
 export { EnvRoleBuilder } from './EnvRoleBuilder';
 export { default as LogicAppBuilder } from './LogicAppBuilder';
+export { default as MySqlBuilder } from './MySqlBuilder';
+export { default as PostgreSqlBuilder } from './PostgreSqlBuilder';
 export { default as PrivateDnsZoneBuilder } from './PrivateDnsZoneBuilder';
 export { default as RedisCacheBuilder } from './RedisCacheBuilder';
 export { default as ResourceBuilder } from './ResourceBuilder';

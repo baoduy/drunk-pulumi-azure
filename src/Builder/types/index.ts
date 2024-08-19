@@ -12,6 +12,8 @@ export * from './dnsZoneBuilder';
 export * from './envRoleBuilder';
 export * from './genericBuilder';
 export * from './logicAppBuilder';
+export * from './mySqlBuilder';
+export * from './posgreSqlBuilder';
 export * from './privateDnsZoneBuilder';
 export * from './redisCacheBuilder';
 export * from './resourceBuilder';

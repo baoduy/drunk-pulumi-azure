@@ -1,12 +1,13 @@
 import {
   AppConfigBuilderArgs,
   AppConfigNetworkType,
+  AppConfigOptionsBuilder,
   Builder,
   IAppConfigBuilder,
 } from './types';
 import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
-import * as appConfig from '@pulumi/azure-native/appconfiguration';
+import * as appConfig from '@pulumi/azure-native/appconfiguration/v20230901preview';
 import { addEncryptKey } from '../KeyVault/Helper';
 import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
@@ -20,10 +21,19 @@ class AppConfigBuilder
     undefined;
 
   private _privateLink: AppConfigNetworkType | undefined = undefined;
+  private _options: AppConfigOptionsBuilder = {
+    enablePurgeProtection: isPrd,
+    softDeleteRetentionInDays: isPrd ? 90 : 1,
+  };
 
   constructor(private args: AppConfigBuilderArgs) {
     super(args);
     this._instanceName = naming.getAppConfigName(args.name);
+  }
+
+  public withOptions(props: AppConfigOptionsBuilder): IAppConfigBuilder {
+    this._options = { ...this._options, ...props };
+    return this;
   }
 
   public withPrivateLink(props: AppConfigNetworkType): IAppConfigBuilder {
@@ -49,10 +59,10 @@ class AppConfigBuilder
       this._instanceName,
       {
         ...group,
+        ...this._options,
         configStoreName: this._instanceName,
         sku: { name: 'Standard' },
-        enablePurgeProtection: isPrd,
-        softDeleteRetentionInDays: isPrd ? 90 : 1,
+
         disableLocalAuth: this._privateLink?.disableLocalAuth,
         publicNetworkAccess: this._privateLink
           ? appConfig.PublicNetworkAccess.Disabled
@@ -69,15 +79,19 @@ class AppConfigBuilder
           encryptionKey && envUIDInfo
             ? {
                 keyVaultProperties: {
-                  identityClientId: envUIDInfo.id,
-                  keyIdentifier: encryptionKey.url,
+                  identityClientId: envUIDInfo.clientId,
+                  keyIdentifier: encryptionKey.urlWithoutVersion,
                 },
               }
             : undefined,
       },
       {
         dependsOn,
-        ignoreChanges: [...ignoreChanges, 'softDeleteRetentionInDays'],
+        ignoreChanges: [
+          ...ignoreChanges,
+          'softDeleteRetentionInDays',
+          'enablePurgeProtection',
+        ],
       },
     );
   }
