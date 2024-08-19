@@ -9,30 +9,32 @@ import {
   APimApiBuilderFunction,
   ApimApiPolicyType,
   ApimChildBuilderProps,
+  ApimHookProxyBuilderType,
   ApimProductSubscriptionBuilderType,
   BuilderAsync,
   IApimProductBuilder,
   IBuilderAsync,
+  SetHeaderTypes,
 } from './types';
 
 export class ApimProductBuilder
   extends BuilderAsync<ResourceInfo>
   implements IApimProductBuilder
 {
-  private _apis: APimApiBuilderFunction[] = [];
+  private _apis: Record<string, APimApiBuilderFunction> = {};
   private _requiredSubscription:
     | ApimProductSubscriptionBuilderType
     | undefined = undefined;
 
   private _productInstance: apim.Product | undefined = undefined;
   private _subInstance: apim.Subscription | undefined = undefined;
-  private _productInstanceName: string;
+  private readonly _productInstanceName: string;
   private _policyString: string;
   private _state: apim.ProductState = 'notPublished';
 
-  public constructor(private props: ApimChildBuilderProps) {
-    super(props);
-    this._productInstanceName = `${props.name}-product`;
+  public constructor(private args: ApimChildBuilderProps) {
+    super(args);
+    this._productInstanceName = `${args.name}-product`;
     //Empty Policy
     this._policyString = new ApimPolicyBuilder({
       ...props,
@@ -42,20 +44,55 @@ export class ApimProductBuilder
 
   public withPolicies(props: ApimApiPolicyType): IApimProductBuilder {
     this._policyString = props(
-      new ApimPolicyBuilder({ ...this.props, name: this._productInstanceName }),
+      new ApimPolicyBuilder({ ...this.args, name: this._productInstanceName }),
     ).build();
     return this;
   }
+
   public requiredSubscription(
     props: ApimProductSubscriptionBuilderType,
   ): IApimProductBuilder {
     this._requiredSubscription = props;
     return this;
   }
-  public withApi(props: APimApiBuilderFunction): IApimProductBuilder {
-    this._apis.push(props);
+
+  public withApi(
+    name: string,
+    props: APimApiBuilderFunction,
+  ): IApimProductBuilder {
+    this._apis[name] = props;
     return this;
   }
+
+  public withHookProxy(
+    name: string,
+    props: ApimHookProxyBuilderType,
+  ): IApimProductBuilder {
+    this.withApi(name, (apiBuilder) =>
+      apiBuilder
+        .withServiceUrl('https://hook.proxy.local')
+        .withKeys({ header: props.authHeaderKey })
+        .withPolicies((p) =>
+          p
+            .setHeader({
+              name: props.authHeaderKey,
+              type: SetHeaderTypes.delete,
+            })
+            .checkHeader({ name: props.hookHeaderKey })
+            .setBaseUrl({
+              url: `@(context.Request.Headers.GetValueOrDefault("${hookHeaderKey}",""))`,
+            }),
+        )
+        .withVersion('v1', (v) =>
+          v.withRevision({
+            revision: 'v1',
+            operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
+          }),
+        ),
+    );
+    return this;
+  }
+
   public published(): IBuilderAsync<ResourceInfo> {
     this._state = 'published';
     return this;
@@ -67,8 +104,8 @@ export class ApimProductBuilder
       displayName: this._productInstanceName,
       description: this._productInstanceName,
 
-      serviceName: this.props.apimServiceName,
-      resourceGroupName: this.props.group.resourceGroupName,
+      serviceName: this.args.apimServiceName,
+      resourceGroupName: this.args.group.resourceGroupName,
 
       state: this._state,
       subscriptionRequired: Boolean(this._requiredSubscription),
@@ -80,8 +117,8 @@ export class ApimProductBuilder
 
     if (this._policyString) {
       new apim.ProductPolicy(`${this._productInstanceName}-policy`, {
-        serviceName: this.props.apimServiceName,
-        resourceGroupName: this.props.group.resourceGroupName,
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
         productId: this._productInstanceName,
         format: 'xml',
         policyId: 'policy',
@@ -92,7 +129,7 @@ export class ApimProductBuilder
 
   private buildSubscription() {
     if (!this._productInstance) return;
-    const subName = `${this.props.name}-sub`;
+    const subName = `${this._productInstanceName}-sub`;
     const primaryKey = getPasswordName(subName, 'primary');
     const secondaryKey = getPasswordName(subName, 'secondary');
     const primaryPass = randomPassword({ name: primaryKey }).result;
@@ -103,8 +140,8 @@ export class ApimProductBuilder
       {
         sid: subName,
         displayName: subName,
-        serviceName: this.props.apimServiceName,
-        resourceGroupName: this.props.group.resourceGroupName,
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
         scope: interpolate`/products/${this._productInstance!.id}`,
         primaryKey: primaryPass,
         secondaryKey: secondaryPass,
@@ -112,10 +149,10 @@ export class ApimProductBuilder
       { dependsOn: this._productInstance },
     );
 
-    if (this.props.vaultInfo) {
+    if (this.args.vaultInfo) {
       addCustomSecrets({
         contentType: subName,
-        vaultInfo: this.props.vaultInfo,
+        vaultInfo: this.args.vaultInfo,
         formattedName: true,
         dependsOn: this._subInstance,
         items: [
@@ -127,16 +164,19 @@ export class ApimProductBuilder
   }
 
   private async buildApis() {
-    const tasks = this._apis.map((api) =>
+    const tasks = Object.keys(this._apis).map((k) => {
+      const api = this._apis[k];
       api(
         new ApimApiBuilder({
-          ...this.props,
+          ...this.args,
+          name: k,
           productId: this._productInstanceName,
           requiredSubscription: Boolean(this._requiredSubscription),
           dependsOn: this._productInstance,
         }),
-      ).build(),
-    );
+      ).build();
+    });
+
     await Promise.all(tasks);
   }
 
@@ -147,7 +187,7 @@ export class ApimProductBuilder
 
     return {
       name: this._productInstanceName,
-      group: this.props.group,
+      group: this.args.group,
       id: this._productInstance!.id,
     };
   }

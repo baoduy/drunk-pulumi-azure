@@ -66,10 +66,12 @@ export default class ApimApiBuilder
     ).build();
     return this;
   }
+
   public withServiceUrl(props: ApimApiServiceUrlType): IApimApiBuilder {
     this._serviceUrl = props;
     return this;
   }
+
   public withVersion(
     version: string,
     builder: VersionBuilderFunction,
