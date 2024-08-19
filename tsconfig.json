@@ -137,7 +137,6 @@
     "src/Core/Locker.ts",
     "src/Core/Random.ts",
     "src/Core/ResourceCreator.ts",
-    "src/CosmosDb/index.ts",
     "src/CustomRoles/index.ts",
     "src/KeyVault/CustomHelper.ts",
     "src/KeyVault/Helper.ts",
@@ -189,8 +188,6 @@
     "src/VNet/Vnet.ts",
     "src/VNet/index.ts",
     "src/VNet/types.ts",
-    "src/Web/AppGateway.ts",
-    "src/Web/types.ts",
     "src/index.ts",
     "src/types.ts"
   ]
