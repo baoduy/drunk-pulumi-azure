@@ -36,6 +36,7 @@ type GetVaultItemProps = Required<NamedWithVaultType> & {
 interface KeyVaultPropertiesResults {
   keyName: Output<string>;
   url: Output<string>;
+  urlWithoutVersion: Output<string>;
   keyVaultUri: Output<string>;
   keyVersion: Output<string>;
 }
@@ -60,6 +61,9 @@ export const addEncryptKey = (
     keyVaultUri: key.vaultUrl,
     keyVersion: key.version,
     url: key.id,
+    urlWithoutVersion: output([key.version, key.id]).apply(([v, id]) =>
+      id.replace(`/${v}`, ''),
+    ),
   };
 };
 

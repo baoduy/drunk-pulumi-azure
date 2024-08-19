@@ -86,7 +86,15 @@ export interface IResourceBuilder
     IEncryptable<IResourceBuilder> {
   withLogFrom(name: string): IResourceBuilder;
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
+  withBuilderIf(
+    condition: boolean,
+    props: BuilderFunctionType,
+  ): IResourceBuilder;
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
+  withBuilderAsyncIf(
+    condition: boolean,
+    props: BuilderAsyncFunctionType,
+  ): IResourceBuilder;
   withResource(builder: ResourceFunction): IResourceBuilder;
   build(): Promise<ResourceBuilderResults>;
 }

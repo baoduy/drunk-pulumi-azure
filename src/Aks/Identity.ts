@@ -19,7 +19,7 @@ export default ({ name, group, vaultInfo, dependsOn }: Props) => {
 
   roleAssignment({
     name: `${name}-svId-rg`,
-    dependsOn: serverIdentity.resource,
+    dependsOn: serverIdentity.instance,
     principalId: serverIdentity.principalId!,
     principalType: 'ServicePrincipal',
     scope: rsInfo.getRGId(group),

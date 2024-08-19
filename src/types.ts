@@ -35,7 +35,10 @@ export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
 export type WithNamedType = { name: string };
 export type WithOutputId = { id: Output<string> };
 export type WithSubId = { subscriptionId?: string };
-export type WithPrincipalId = { principalId: Input<string> };
+export type WithPrincipalId = {
+  clientId: Input<string>;
+  principalId: Input<string>;
+};
 export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
@@ -63,8 +66,10 @@ export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
 export type EncryptResourceArgs = ResourceWithVaultArgs & WithEncryptionInfo;
 
 export type BasicResourceArgs = WithFormattableName & ResourceArgs & OptsArgs;
-export type BasicResourceWithVaultArgs = NamedWithVaultType & BasicResourceArgs;
-export type BasicEncryptResourceArgs = EncryptResourceArgs & OptsArgs;
+export type BasicResourceWithVaultArgs = WithVaultInfo & BasicResourceArgs;
+export type BasicEncryptResourceArgs = BasicResourceWithVaultArgs &
+  WithEncryptionInfo &
+  OptsArgs;
 
 /** Basic vs Info is Basic doesn't require of group info*/
 export type BasicResourceInfo = WithNamedType & WithOutputId;
@@ -75,6 +80,15 @@ export type ResourceInfo = BasicResourceInfo & ResourceArgs;
 export type ResourceInfoWithSub = ResourceInfo & WithSubId;
 export type KeyVaultInfo = ResourceInfo;
 export type IdentityInfo = WithOutputId & WithPrincipalId;
+export type AdIdentityInfo = WithNamedType & {
+  objectId: Output<string>;
+  clientId: Output<string>;
+  clientSecret: Output<string> | undefined;
+  principalId: Output<string> | undefined;
+  principalSecret: Output<string> | undefined;
+};
+export type AdIdentityInfoWithInstance<TInstance> = AdIdentityInfo &
+  WithInstance<TInstance>;
 //Log info
 export type StorageConnectionInfo = {
   primaryConnection?: Output<string>;

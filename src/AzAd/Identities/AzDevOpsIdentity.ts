@@ -44,7 +44,7 @@ export default ({
   roleAssignment({
     name,
     scope: defaultSubScope,
-    dependsOn: ado.resource,
+    dependsOn: ado.instance,
     principalId: ado.principalId!,
     principalType: 'ServicePrincipal',
     roleName,

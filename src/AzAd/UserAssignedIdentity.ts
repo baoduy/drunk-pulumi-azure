@@ -41,6 +41,10 @@ export default ({
           value: managedIdentity.id,
         },
         {
+          name: `${name}-clientId`,
+          value: managedIdentity.clientId,
+        },
+        {
           name: `${name}-principalId`,
           value: managedIdentity.principalId,
         },
@@ -50,6 +54,7 @@ export default ({
 
   return {
     id: managedIdentity.id,
+    clientId: managedIdentity.clientId,
     principalId: managedIdentity.principalId,
     instance: managedIdentity,
   };

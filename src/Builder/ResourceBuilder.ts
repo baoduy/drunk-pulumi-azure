@@ -157,10 +157,24 @@ class ResourceBuilder
     this._otherBuilders.push(props);
     return this;
   }
+  public withBuilderIf(
+    condition: boolean,
+    props: types.BuilderFunctionType,
+  ): types.IResourceBuilder {
+    if (condition) this.withBuilder(props);
+    return this;
+  }
   public withBuilderAsync(
     props: types.BuilderAsyncFunctionType,
   ): types.IResourceBuilder {
     this._otherBuildersAsync.push(props);
+    return this;
+  }
+  public withBuilderAsyncIf(
+    condition: boolean,
+    props: types.BuilderAsyncFunctionType,
+  ): types.IResourceBuilder {
+    if (condition) this.withBuilder(props);
     return this;
   }
   public withResource(builder: types.ResourceFunction): types.IResourceBuilder {

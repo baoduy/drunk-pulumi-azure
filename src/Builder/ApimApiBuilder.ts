@@ -1,8 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { enums } from '@pulumi/azure-native/types';
 import { Input, interpolate } from '@pulumi/pulumi';
-import { getImportConfig } from '../Apim/ApiProduct/SwaggerHelper';
-import { organization } from '../Common';
+import { organization, openApi } from '../Common';
 import { ResourceInfo } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
 
@@ -139,7 +138,7 @@ export default class ApimApiBuilder
                 : undefined,
             value:
               'swaggerUrl' in rv
-                ? await getImportConfig(rv.swaggerUrl, k)
+                ? await openApi.getImportConfig(rv.swaggerUrl, k)
                 : undefined,
           },
           { dependsOn: apiSet, deleteBeforeReplace: true },

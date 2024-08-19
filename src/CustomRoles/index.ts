@@ -1,4 +1,4 @@
-import { defaultSubScope } from '../Common/AzureEnv';
+import { defaultSubScope } from '../Common';
 import * as authorization from '@pulumi/azure-native/authorization';
 interface Props {
   enableJustInTimeRemoteRole?: boolean;

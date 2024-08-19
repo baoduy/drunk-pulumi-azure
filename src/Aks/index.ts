@@ -8,6 +8,7 @@ import {
   LogInfo,
   ResourceInfoWithInstance,
   WithDiskEncryption,
+  AdIdentityInfo,
 } from '../types';
 import {
   currentEnv,
@@ -23,7 +24,6 @@ import aksIdentityCreator from './Identity';
 import { getAksConfig } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
-import { IdentityResult } from '../AzAd/Identity';
 import { roleAssignment } from '../AzAd/RoleAssignment';
 
 const autoScaleFor = ({
@@ -180,7 +180,7 @@ export interface AksProps
 }
 
 export type AksResults = ResourceInfoWithInstance<ccs.ManagedCluster> & {
-  serviceIdentity: IdentityResult;
+  serviceIdentity: AdIdentityInfo;
   disableLocalAccounts?: boolean;
   getKubeConfig: () => Output<string> | undefined;
 };
@@ -440,7 +440,7 @@ export default async ({
       },
     },
     {
-      dependsOn: serviceIdentity.resource,
+      dependsOn: serviceIdentity.instance,
       import: importUri,
       deleteBeforeReplace: true,
       ignoreChanges,

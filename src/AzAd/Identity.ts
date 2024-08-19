@@ -9,7 +9,11 @@ import {
   ApplicationOptionalClaims,
   ApplicationRequiredResourceAccess,
 } from '@pulumi/azuread/types/input';
-import { WithNamedType, NamedWithVaultBasicArgs } from '../types';
+import {
+  WithNamedType,
+  NamedWithVaultBasicArgs,
+  AdIdentityInfoWithInstance,
+} from '../types';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { getIdentitySecretNames } from './Helper';
 
@@ -40,15 +44,6 @@ interface IdentityProps extends NamedWithVaultBasicArgs {
   optionalClaims?: pulumi.Input<ApplicationOptionalClaims>;
 }
 
-export type IdentityResult = WithNamedType & {
-  objectId: Output<string>;
-  clientId: Output<string>;
-  clientSecret: Output<string> | undefined;
-  principalId: Output<string> | undefined;
-  principalSecret: Output<string> | undefined;
-  resource: azureAD.Application;
-};
-
 export default ({
   name,
   owners,
@@ -65,7 +60,7 @@ export default ({
   optionalClaims,
   vaultInfo,
   dependsOn,
-}: IdentityProps): IdentityResult => {
+}: IdentityProps): AdIdentityInfoWithInstance<azureAD.Application> => {
   // Azure AD Application no need suffix
   name = naming.getIdentityName(name);
   const secretNames = getIdentitySecretNames(name);
@@ -202,6 +197,6 @@ export default ({
     clientSecret,
     principalId: principal?.objectId,
     principalSecret,
-    resource: app,
+    instance: app,
   };
 };
