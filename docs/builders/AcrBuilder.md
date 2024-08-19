@@ -1,120 +1,146 @@
-# AcrBuilder Usage Guide
+# Class: `AcrBuilder`
 
-## Overview
+#### Constructor
+**Purpose**: Initializes the `AcrBuilder` with the provided arguments and sets up the initial state.
 
-The `AcrBuilder` class provides a fluent API for creating and configuring Azure Container Registry (ACR) resources. It implements the Builder pattern, allowing developers to set various properties such as SKU, network settings, and policies in a chainable manner.
-
-## Installation
-
-Ensure you have the necessary dependencies installed:
-
-```bash
-npm install @pulumi/azure-native
-```
-
-## Importing AcrBuilder
-
-First, import the necessary modules and the `AcrBuilder` class:
-
+**Usage**:
 ```typescript
-import AcrBuilder from './Builder/AcrBuilder';
-import { AcrBuilderArgs } from './Builder/types';
-```
-
-## Creating an AcrBuilder Instance
-
-To create an instance of `AcrBuilder`, you need to provide the required arguments (`AcrBuilderArgs`):
-
-```typescript
-const acrArgs: AcrBuilderArgs = {
-  name: 'myAcr',
-  group: { resourceGroupName: 'myResourceGroup' },
+const builder = new AcrBuilder({
+  name: 'example',
+  group: { resourceGroupName: 'resourceGroup' },
   enableEncryption: true,
-  envUIDInfo: { id: 'myEnvUID', clientId: 'myClientId' },
-  vaultInfo: { vaultName: 'myKeyVault', keyName: 'myKey' },
-  dependsOn: [],
-  ignoreChanges: [],
-};
-
-const acrBuilder = new AcrBuilder(acrArgs);
+  envUIDInfo: { id: 'userAssignedIdentityId', clientId: 'clientId' },
+  vaultInfo: { /* vault info */ },
+});
 ```
 
-## Configuring the ACR
 
-### Setting the SKU
+#### Method: `withSku`
+**Purpose**: Sets the SKU for the Azure Container Registry (ACR).
 
-You can set the SKU for the ACR using the `withSku` method:
-
+**Usage**:
 ```typescript
-acrBuilder.withSku('Premium');
+builder.withSku(registry.SkuName.Premium);
 ```
 
-### Setting Network Configuration
 
-To set the network configuration, use the `withNetwork` method. This is only available for the Premium SKU:
+#### Method: `withNetwork`
+**Purpose**: Sets the network configuration for the ACR.
 
+**Usage**:
 ```typescript
-acrBuilder.withNetwork({
-  privateLink: {
-    type: 'Microsoft.ContainerRegistry/registries',
-    subnetId: 'mySubnetId',
-  },
+builder.withNetwork({
+  privateLink: { /* private link configuration */ },
   ipAddresses: ['192.168.1.1', '192.168.1.2'],
 });
 ```
 
-### Setting Policies
 
-To set the policies for the ACR, use the `withPolicy` method. This is also only available for the Premium SKU:
+#### Method: `withPolicy`
+**Purpose**: Sets the policies for the ACR.
 
+**Usage**:
 ```typescript
-acrBuilder.withPolicy({ retentionDay: 30 });
+builder.withPolicy({
+  retentionDay: 30,
+});
 ```
 
-## Building the ACR
 
-Finally, build the ACR resource and get the resource information:
+#### Method: `build`
+**Purpose**: Builds the entire ACR resource with the configured properties.
 
+**Usage**:
 ```typescript
-const acrResourceInfo = acrBuilder.build();
-console.log(acrResourceInfo);
+const resourceInfo = builder.build();
+console.log(resourceInfo);
 ```
 
-## Full Example
 
-Here is a complete example demonstrating the usage of `AcrBuilder`:
+### Example Usage
+Here is a complete example that demonstrates how to use the `AcrBuilder` class, ensuring that the `build()` method is called at the end:
 
 ```typescript
-import AcrBuilder from './Builder/AcrBuilder';
-import { AcrBuilderArgs } from './Builder/types';
-
-const acrArgs: AcrBuilderArgs = {
-  name: 'myAcr',
-  group: { resourceGroupName: 'myResourceGroup' },
+const builder = new AcrBuilder({
+  name: 'example',
+  group: { resourceGroupName: 'resourceGroup' },
   enableEncryption: true,
-  envUIDInfo: { id: 'myEnvUID', clientId: 'myClientId' },
-  vaultInfo: { vaultName: 'myKeyVault', keyName: 'myKey' },
-  dependsOn: [],
-  ignoreChanges: [],
-};
+  envUIDInfo: { id: 'userAssignedIdentityId', clientId: 'clientId' },
+  vaultInfo: { /* vault info */ },
+});
 
-const acrBuilder = new AcrBuilder(acrArgs)
-  .withSku('Premium')
+builder
+  .withSku(registry.SkuName.Premium)
   .withNetwork({
-    privateLink: {
-      type: 'Microsoft.ContainerRegistry/registries',
-      subnetId: 'mySubnetId',
-    },
+    privateLink: { /* private link configuration */ },
     ipAddresses: ['192.168.1.1', '192.168.1.2'],
   })
-  .withPolicy({ retentionDay: 30 });
+  .withPolicy({
+    retentionDay: 30,
+  });
 
-const acrResourceInfo = acrBuilder.build();
-console.log(acrResourceInfo);
+const resourceInfo = builder.build();
+console.log(resourceInfo);
 ```
 
-## Conclusion
 
-The `AcrBuilder` class simplifies the process of creating and configuring Azure Container Registry resources by providing a fluent API. By following the steps outlined in this guide, developers can easily set up ACR with the desired configurations.
+### Detailed Guidelines for Each Method
 
-For more details, refer to the source code and documentation of the `AcrBuilder` class and its related types.
+#### Constructor
+**Purpose**: Initializes the `AcrBuilder` with the provided arguments and sets up the initial state.
+
+**Usage**:
+```typescript
+const builder = new AcrBuilder({
+  name: 'example',
+  group: { resourceGroupName: 'resourceGroup' },
+  enableEncryption: true,
+  envUIDInfo: { id: 'userAssignedIdentityId', clientId: 'clientId' },
+  vaultInfo: { /* vault info */ },
+});
+```
+
+
+#### Method: `withSku`
+**Purpose**: Sets the SKU for the Azure Container Registry (ACR).
+
+**Usage**:
+```typescript
+builder.withSku(registry.SkuName.Premium);
+```
+
+
+#### Method: `withNetwork`
+**Purpose**: Sets the network configuration for the ACR.
+
+**Usage**:
+```typescript
+builder.withNetwork({
+  privateLink: { /* private link configuration */ },
+  ipAddresses: ['192.168.1.1', '192.168.1.2'],
+});
+```
+
+
+#### Method: `withPolicy`
+**Purpose**: Sets the policies for the ACR.
+
+**Usage**:
+```typescript
+builder.withPolicy({
+  retentionDay: 30,
+});
+```
+
+
+#### Method: `build`
+**Purpose**: Builds the entire ACR resource with the configured properties.
+
+**Usage**:
+```typescript
+const resourceInfo = builder.build();
+console.log(resourceInfo);
+```
+
+
+This example demonstrates how to create an `AcrBuilder` instance, configure it with SKU, network settings, and policies, and finally build the ACR resource. The `build()` method is called last to ensure the resource is fully constructed.
