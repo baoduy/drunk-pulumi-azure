@@ -11,6 +11,7 @@ export * from './cdnBuilder';
 export * from './dnsZoneBuilder';
 export * from './envRoleBuilder';
 export * from './genericBuilder';
+export * from './iotHubBuilder';
 export * from './logicAppBuilder';
 export * from './mySqlBuilder';
 export * from './posgreSqlBuilder';

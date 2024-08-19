@@ -8,6 +8,7 @@ export { default as AutomationBuilder } from './AutomationBuilder';
 export { default as CdnBuilder } from './CdnBuilder';
 export { default as DnsZoneBuilder } from './DnsZoneBuilder';
 export { EnvRoleBuilder } from './EnvRoleBuilder';
+export { default as IotHubBuilder } from './IotHubBuilder';
 export { default as LogicAppBuilder } from './LogicAppBuilder';
 export { default as MySqlBuilder } from './MySqlBuilder';
 export { default as PostgreSqlBuilder } from './PostgreSqlBuilder';
