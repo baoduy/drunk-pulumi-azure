@@ -14,72 +14,196 @@ export declare namespace NodeJS {
 export type TypeOmit<T, OT> = Omit<T, keyof OT>;
 export type OmitOpts<T> = TypeOmit<T, OptsArgs>;
 
+/**
+ * Information about a resource group.
+ */
 export type ResourceGroupInfo = {
   resourceGroupName: string;
   location?: Input<string>;
 };
+
+/**
+ * Information about a resource group with an ID.
+ */
 export type ResourceGroupWithIdInfo = ResourceGroupInfo & {
   id: Input<string>;
 };
 
+/**
+ * Properties for lockable resources.
+ */
 export type WithLockable = { lock?: boolean };
+
+/**
+ * Properties for resources with dependencies.
+ */
 export type WithDependsOn = {
   dependsOn?: Input<Input<Resource>[]> | Input<Resource>;
 };
+
+/**
+ * Options arguments for resources.
+ */
 export type OptsArgs = WithDependsOn & {
   importUri?: string;
   ignoreChanges?: string[];
 };
 
+/**
+ * Arguments for login credentials.
+ */
 export type LoginArgs = { adminLogin: Input<string>; password: Input<string> };
+
+/**
+ * Properties for named types.
+ */
 export type WithNamedType = { name: string };
+
+/**
+ * Properties for resources with an output ID.
+ */
 export type WithOutputId = { id: Output<string> };
+
+/**
+ * Properties for resources with a subscription ID.
+ */
 export type WithSubId = { subscriptionId?: string };
+
+/**
+ * Properties for resources with principal IDs.
+ */
 export type WithPrincipalId = {
   clientId: Input<string>;
   principalId: Input<string>;
 };
+
+/**
+ * Properties for resources with environment roles.
+ */
 export type WithEnvRoles = {
   envRoles?: IEnvRoleBuilder;
   envUIDInfo?: IdentityInfo;
 };
+
+/**
+ * Properties for resources with encryption.
+ */
 export type WithEncryption = {
   enableEncryption?: boolean;
 };
+
+/**
+ * Properties for resources with disk encryption.
+ */
 export type WithDiskEncryption = {
   diskEncryptionSetId?: Input<string>;
 };
 
+/**
+ * Properties for resources with vault information.
+ */
 export type WithVaultInfo = { vaultInfo?: KeyVaultInfo };
+
+/**
+ * Properties for resources with resource group information.
+ */
 export type WithResourceGroupInfo = { group: ResourceGroupInfo };
+
+/**
+ * Properties for resources with log information.
+ */
 export type WithLogInfo = { logInfo?: LogInfo };
+
+/**
+ * Properties for resources with encryption information.
+ */
 export type WithEncryptionInfo = WithEnvRoles & WithVaultInfo & WithEncryption;
+
+/**
+ * Properties for resources with Pulumi options.
+ */
 export type WithPulumiOpts = { opts?: CustomResourceOptions };
 
+/**
+ * Arguments for login credentials with environment roles.
+ */
 export type LoginWithEnvRolesArgs = LoginArgs & WithEnvRoles;
+
+/**
+ * Properties for named types with vault information.
+ */
 export type NamedWithVaultType = WithNamedType & WithVaultInfo;
+
+/**
+ * Basic arguments for named resources.
+ */
 export type NamedBasicArgs = WithNamedType & OptsArgs;
+
+/**
+ * Basic arguments for named resources with vault information.
+ */
 export type NamedWithVaultBasicArgs = NamedWithVaultType & OptsArgs;
 
+/**
+ * Arguments for resources.
+ */
 export type ResourceArgs = WithNamedType & WithResourceGroupInfo;
+
+/**
+ * Arguments for resources with vault information.
+ */
 export type ResourceWithVaultArgs = ResourceArgs & NamedWithVaultType;
+
+/**
+ * Arguments for encrypted resources.
+ */
 export type EncryptResourceArgs = ResourceWithVaultArgs & WithEncryptionInfo;
 
+/**
+ * Basic arguments for resources with formattable names.
+ */
 export type BasicResourceArgs = WithFormattableName & ResourceArgs & OptsArgs;
+
+/**
+ * Basic arguments for resources with vault information.
+ */
 export type BasicResourceWithVaultArgs = WithVaultInfo & BasicResourceArgs;
+
+/**
+ * Basic arguments for encrypted resources.
+ */
 export type BasicEncryptResourceArgs = BasicResourceWithVaultArgs &
   WithEncryptionInfo &
   OptsArgs;
 
-/** Basic vs Info is Basic doesn't require of group info*/
+/**
+ * Basic resource information.
+ */
 export type BasicResourceInfo = WithNamedType & WithOutputId;
 
-//Resource Output Info
+/**
+ * Resource output information.
+ */
 export type ResourceInfo = BasicResourceInfo & ResourceArgs;
-/** Resource Info with Subscription ID */
+
+/**
+ * Resource information with subscription ID.
+ */
 export type ResourceInfoWithSub = ResourceInfo & WithSubId;
+
+/**
+ * Key vault information.
+ */
 export type KeyVaultInfo = ResourceInfo;
+
+/**
+ * Identity information.
+ */
 export type IdentityInfo = WithOutputId & WithPrincipalId;
+
+/**
+ * Active Directory identity information.
+ */
 export type AdIdentityInfo = WithNamedType & {
   objectId: Output<string>;
   clientId: Output<string>;
@@ -87,15 +211,26 @@ export type AdIdentityInfo = WithNamedType & {
   principalId: Output<string> | undefined;
   principalSecret: Output<string> | undefined;
 };
+
+/**
+ * Active Directory identity information with instance.
+ */
 export type AdIdentityInfoWithInstance<TInstance> = AdIdentityInfo &
   WithInstance<TInstance>;
-//Log info
+
+/**
+ * Storage connection information.
+ */
 export type StorageConnectionInfo = {
   primaryConnection?: Output<string>;
   secondaryConnection?: Output<string>;
   primaryKey?: Output<string>;
   secondaryKey?: Output<string>;
 };
+
+/**
+ * Storage information.
+ */
 export type StorageInfo = ResourceInfo &
   StorageConnectionInfo & {
     endpoints: {
@@ -104,39 +239,73 @@ export type StorageInfo = ResourceInfo &
       table: string;
     };
   };
+
+/**
+ * Application Insights secrets information.
+ */
 export type AppInsightSecretsInfo = {
   instrumentationKey?: Output<string>;
 };
+
+/**
+ * Application Insights information.
+ */
 export type AppInsightInfo = ResourceInfo & AppInsightSecretsInfo;
+
+/**
+ * Log workspace secrets information.
+ */
 export type LogWorkspaceSecretsInfo = {
   primarySharedKey?: Output<string>;
   secondarySharedKey?: Output<string>;
   workspaceId?: Output<string>;
 };
+
+/**
+ * Log workspace information.
+ */
 export type LogWorkspaceInfo = ResourceInfo & LogWorkspaceSecretsInfo;
+
+/**
+ * Log information.
+ */
 export type LogInfo = {
   logWp: LogWorkspaceInfo;
   logStorage: StorageInfo;
   appInsight: AppInsightInfo;
 };
 
+/**
+ * Interface for identity information with instance.
+ */
 export interface IdentityInfoWithInstance<InstanceType>
   extends IdentityInfo,
     WithInstance<InstanceType> {}
 
+/**
+ * Interface for resources with instance.
+ */
 export interface WithInstance<InstanceType> {
   instance: InstanceType;
 }
 
-/** Basic vs Info is Basic doesn't required of group info*/
+/**
+ * Interface for basic resource information with instance.
+ */
 export interface BasicResourceInfoWithInstance<InstanceType>
   extends WithInstance<InstanceType>,
     BasicResourceInfo {}
 
+/**
+ * Interface for resource information with instance.
+ */
 export interface ResourceInfoWithInstance<InstanceType>
   extends WithInstance<InstanceType>,
     ResourceInfo {}
 
+/**
+ * Properties for private link.
+ */
 export type PrivateLinkPropsType = {
   privateIpAddress?: Input<string>;
   /** The Subnet that private links will be created.*/
@@ -146,29 +315,33 @@ export type PrivateLinkPropsType = {
   type?: string;
 };
 
+/**
+ * Properties for network.
+ */
 export type NetworkPropsType = {
   subnetId?: Input<string>;
   ipAddresses?: Input<string>[];
   privateLink?: PrivateLinkPropsType;
 };
 
+/**
+ * Properties for identity role assignment.
+ */
 export type IdentityRoleAssignment = WithVaultInfo & {
   role?: EnvRoleKeyTypes;
 };
 
-// export type GlobalResourceInfo = ResourceInfo & {
-//   name?: Input<string>;
-//   /**The provider name of the resource ex: "Microsoft.Network/virtualNetworks" or "Microsoft.Network/networkSecurityGroups"*/
-//   provider?: string;
-//   group: ResourceGroupInfo;
-//   subscriptionId?: Input<string>;
-// };
-
+/**
+ * Interface for replace pattern.
+ */
 export interface ReplacePattern {
   from: string | RegExp;
   to: string;
 }
 
+/**
+ * Properties for naming conventions.
+ */
 export type ConventionProps = {
   prefix?: string;
   suffix?: string;
@@ -185,9 +358,19 @@ export type ConventionProps = {
   replaces?: ReplacePattern[];
 };
 
+/**
+ * Type for naming.
+ */
 export type NamingType = string | { val: string; rule: ConventionProps };
+
+/**
+ * Properties for formattable names.
+ */
 export type WithFormattableName = { name: NamingType };
 
+/**
+ * Properties for diagnostic settings.
+ */
 export type DiagnosticProps = WithNamedType &
   WithDependsOn & {
     logInfo: Partial<Omit<LogInfo, 'appInsight'>>;
