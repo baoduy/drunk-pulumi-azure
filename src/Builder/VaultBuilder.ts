@@ -1,4 +1,3 @@
-import { BuilderProps } from './types';
 import {
   CertBuilderType,
   IVaultBuilder,
@@ -6,8 +5,8 @@ import {
   VaultBuilderArgs,
   VaultBuilderSecretType,
 } from './types/vaultBuilder';
-import Vault, { createVaultPrivateLink } from '../KeyVault';
-import { KeyVaultInfo, ResourceGroupInfo, WithEnvRoles } from '../types';
+import Vault from '../KeyVault';
+import { KeyVaultInfo, ResourceGroupInfo } from '../types';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   VaultCertResource,
@@ -16,6 +15,7 @@ import {
 import { subscriptionId } from '../Common';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { requireSecret } from '../Common/ConfigHelper';
+import { VaultPrivateLink } from '../VNet';
 
 export class VaultBuilderResults implements IVaultBuilderResults {
   private constructor(private readonly vaultInfo: KeyVaultInfo) {}
@@ -53,8 +53,8 @@ export class VaultBuilderResults implements IVaultBuilderResults {
   }
 
   public privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults {
-    createVaultPrivateLink({
-      vaultInfo: this.vaultInfo,
+    VaultPrivateLink({
+      resourceInfo: this.vaultInfo,
       subnetIds,
     });
     return this;

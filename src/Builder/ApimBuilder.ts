@@ -11,7 +11,7 @@ import * as network from '@pulumi/azure-native/network';
 import * as IpAddress from '../VNet/IpAddress';
 import Identity from '../AzAd/Identity';
 import { interpolate } from '@pulumi/pulumi';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { ApimPrivateLink } from '../VNet';
 
 class ApimBuilder
   extends types.Builder<ResourceInfo>
@@ -323,17 +323,13 @@ class ApimBuilder
   }
   private buildPrivateLink() {
     if (!this._privateLink) return;
-    PrivateEndpoint({
+    ApimPrivateLink({
       resourceInfo: {
         name: this._instanceName!,
         group: this.commonProps.group,
         id: this._apimInstance!.id,
       },
       ...this._privateLink,
-      privateDnsZoneName: 'privatelink.azure-api.net',
-      linkServiceGroupIds: this._privateLink.type
-        ? [this._privateLink.type]
-        : ['Gateway'],
       dependsOn: this._apimInstance,
     });
   }

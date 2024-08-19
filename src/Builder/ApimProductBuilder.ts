@@ -37,7 +37,7 @@ export class ApimProductBuilder
     this._productInstanceName = `${args.name}-product`;
     //Empty Policy
     this._policyString = new ApimPolicyBuilder({
-      ...props,
+      ...args,
       name: this._productInstanceName,
     }).build();
   }
@@ -70,7 +70,10 @@ export class ApimProductBuilder
   ): IApimProductBuilder {
     this.withApi(name, (apiBuilder) =>
       apiBuilder
-        .withServiceUrl('https://hook.proxy.local')
+        .withServiceUrl({
+          serviceUrl: 'https://hook.proxy.local',
+          apiPath: '/',
+        })
         .withKeys({ header: props.authHeaderKey })
         .withPolicies((p) =>
           p
@@ -80,12 +83,12 @@ export class ApimProductBuilder
             })
             .checkHeader({ name: props.hookHeaderKey })
             .setBaseUrl({
-              url: `@(context.Request.Headers.GetValueOrDefault("${hookHeaderKey}",""))`,
+              url: `@(context.Request.Headers.GetValueOrDefault("${props.hookHeaderKey}",""))`,
             }),
         )
         .withVersion('v1', (v) =>
           v.withRevision({
-            revision: 'v1',
+            revision: 1,
             operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
           }),
         ),

@@ -10,8 +10,8 @@ import {
 } from './types';
 import { naming } from '../Common';
 import * as registry from '@pulumi/azure-native/containerregistry/v20231101preview';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addEncryptKey } from '../KeyVault/Helper';
+import { AcrPrivateLink } from '../VNet';
 
 /**
  * AcrBuilder class for creating and configuring Azure Container Registry (ACR) resources.
@@ -159,17 +159,14 @@ class AcrBuilder
     );
 
     if (this._sku === 'Premium' && this._network?.privateLink) {
-      PrivateEndpoint({
+      AcrPrivateLink({
         ...this._network.privateLink,
+        dependsOn: this._acrInstance,
         resourceInfo: {
           name: this._instanceName,
           group,
           id: this._acrInstance.id,
         },
-        privateDnsZoneName: 'privatelink.azurecr.io',
-        linkServiceGroupIds: this._network.privateLink.type
-          ? [this._network.privateLink.type]
-          : ['azurecr'],
       });
     }
   }

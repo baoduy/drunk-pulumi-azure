@@ -312,7 +312,6 @@ export type PrivateLinkPropsType = {
   subnetIds: Input<string>[];
   /** The extra Vnet that Private DNS Zone will be linked.*/
   extraVnetIds?: Input<string>[];
-  type?: string;
 };
 
 /**

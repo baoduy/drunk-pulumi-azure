@@ -1,11 +1,9 @@
 import {
   Builder,
-  ILogicAppBuilder,
   ISignalRBuilder,
   ISignalRKindBuilder,
   ISignalRSkuBuilder,
   SignalRBuilderArgs,
-  //SignalRFeatureArgs,
   SignalRKindBuilderType,
   SignalROptionsBuilder,
   SignalRSkuBuilderType,
@@ -14,8 +12,8 @@ import { PrivateLinkPropsType, ResourceInfo } from '../types';
 import { naming } from '../Common';
 import { Input } from '@pulumi/pulumi';
 import * as ss from '@pulumi/azure-native/signalrservice';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import { SignalRPrivateLink } from '../VNet';
 
 class SignalRBuilder
   extends Builder<ResourceInfo>
@@ -118,18 +116,14 @@ class SignalRBuilder
   private buildPrivateLink() {
     if (!this._privateLink || this._sku.name === 'Free_F1') return;
     //The Private Zone will create in Dev and reuse for sandbox and prd.
-    PrivateEndpoint({
+    SignalRPrivateLink({
       ...this._privateLink,
+      dependsOn: this._signalRInstance,
       resourceInfo: {
         name: this._instanceName,
         group: this.args.group,
         id: this._signalRInstance!.id,
       },
-      privateDnsZoneName: 'privatelink.service.signalr.net',
-      linkServiceGroupIds: this._privateLink.type
-        ? [this._privateLink.type]
-        : ['signalr'],
-      dependsOn: this._signalRInstance,
     });
   }
 

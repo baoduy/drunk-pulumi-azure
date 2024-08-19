@@ -1,10 +1,16 @@
 import * as network from '@pulumi/azure-native/network';
-import { output } from '@pulumi/pulumi';
-import { OptsArgs, PrivateLinkPropsType, ResourceInfo } from '../types';
+import { CustomResource, output } from '@pulumi/pulumi';
+import {
+  OptsArgs,
+  PrivateLinkPropsType,
+  ResourceInfo,
+  WithDependsOn,
+} from '../types';
 import { naming, rsInfo } from '../Common';
 import { PrivateDnsZoneBuilder } from '../Builder';
+import { StorageEndpointTypes } from '../Storage';
 
-export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
+export type PrivateEndpointProps = PrivateLinkPropsType &
   Pick<OptsArgs, 'dependsOn'> & {
     resourceInfo: ResourceInfo;
     /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
@@ -13,7 +19,7 @@ export type PrivateEndpointProps = Omit<PrivateLinkPropsType, 'type'> &
     linkServiceGroupIds: string[];
   };
 
-export default ({
+const create = ({
   resourceInfo,
   subnetIds,
   extraVnetIds,
@@ -88,3 +94,78 @@ export default ({
 
   return endpoints;
 };
+
+export type ResourceLinkType = PrivateLinkPropsType &
+  WithDependsOn & {
+    resourceInfo: ResourceInfo;
+  };
+
+export const StoragePrivateLink = (
+  type: StorageEndpointTypes | string,
+  props: ResourceLinkType,
+) =>
+  create({
+    ...props,
+    privateDnsZoneName: `privatelink.${type}.core.windows.net`,
+    linkServiceGroupIds: [type],
+  });
+
+const linkConfig = {
+  VaultPrivateLink: {
+    privateDnsZoneName: 'privatelink.vaultcore.azure.net',
+    linkServiceGroupIds: ['keyVault'],
+  },
+  SqlPrivateLink: {
+    privateDnsZoneName: 'privatelink.database.windows.net',
+    linkServiceGroupIds: ['sqlServer'],
+  },
+  SignalRPrivateLink: {
+    privateDnsZoneName: 'privatelink.service.signalr.net',
+    linkServiceGroupIds: ['signalr'],
+  },
+  ServiceBusPrivateLink: {
+    privateDnsZoneName: 'privatelink.servicebus.windows.net',
+    linkServiceGroupIds: ['namespace'],
+  },
+  RedisCachePrivateLink: {
+    privateDnsZoneName: 'privatelink.redis.cache.windows.net',
+    linkServiceGroupIds: ['redisCache'],
+  },
+  PostgreSqlPrivateLink: {
+    privateDnsZoneName: 'PostgreSql.database.azure.com',
+    linkServiceGroupIds: ['PostgreSql'],
+  },
+  MySqlPrivateLink: {
+    privateDnsZoneName: 'mysql.database.azure.com',
+    linkServiceGroupIds: ['mysql'],
+  },
+  AppConfigPrivateLink: {
+    privateDnsZoneName: 'privatelink.azconfig.io',
+    linkServiceGroupIds: ['configurationStores'],
+  },
+  ApimPrivateLink: {
+    privateDnsZoneName: 'privatelink.azure-api.net',
+    linkServiceGroupIds: ['Gateway'],
+  },
+  AcrPrivateLink: {
+    privateDnsZoneName: 'privatelink.azurecr.io',
+    linkServiceGroupIds: ['azurecr'],
+  },
+};
+
+type PrivateLinkFunc = (props: ResourceLinkType) => void;
+
+export default ((): Record<keyof typeof linkConfig, PrivateLinkFunc> => {
+  const rs: Record<string, PrivateLinkFunc> = {};
+
+  Object.keys(linkConfig).forEach((key) => {
+    const config = (linkConfig as any)[key];
+    rs[key] = (props: ResourceLinkType) =>
+      create({
+        ...props,
+        ...config,
+      });
+  });
+
+  return rs;
+})();

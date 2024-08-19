@@ -19,8 +19,8 @@ import {
 import { naming, isPrd } from '../Common';
 import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
 import { addEncryptKey } from '../KeyVault/Helper';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import { ServiceBusPrivateLink } from '../VNet';
 
 const defaultQueueOptions: ServiceBusQueueArgs = {
   //duplicateDetectionHistoryTimeWindow: 'P10M',
@@ -205,18 +205,14 @@ class ServiceBusBuilder
     );
 
     if (privateLink) {
-      PrivateEndpoint({
+      ServiceBusPrivateLink({
         ...privateLink,
-        privateDnsZoneName: 'privatelink.servicebus.windows.net',
+        dependsOn: this._sbInstance,
         resourceInfo: {
           name: this._instanceName,
           group: this.args.group,
           id: this._sbInstance!.id,
         },
-        linkServiceGroupIds: privateLink.type
-          ? [privateLink.type]
-          : ['namespace'],
-        dependsOn: this._sbInstance,
       });
     }
   }
