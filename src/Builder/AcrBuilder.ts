@@ -10,9 +10,16 @@ import {
 } from './types';
 import { naming } from '../Common';
 import * as registry from '@pulumi/azure-native/containerregistry/v20231101preview';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addEncryptKey } from '../KeyVault/Helper';
+import { AcrPrivateLink } from '../VNet';
 
+/**
+ * AcrBuilder class for creating and configuring Azure Container Registry (ACR) resources.
+ * This class implements the Builder pattern for ACR configuration.
+ * @extends Builder<ResourceInfo>
+ * @implements IAcrBuilder
+ * @implements IAcrSkuBuilder
+ */
 class AcrBuilder
   extends Builder<ResourceInfo>
   implements IAcrBuilder, IAcrSkuBuilder
@@ -24,24 +31,49 @@ class AcrBuilder
   private _network: AcrBuilderNetworkType | undefined = undefined;
   private _policy: AcrBuilderPolicies | undefined = undefined;
 
+  /**
+   * Creates an instance of AcrBuilder.
+   * @param {AcrBuilderArgs} args - The arguments for building the ACR.
+   */
   constructor(private args: AcrBuilderArgs) {
     super(args);
     this._instanceName = naming.getAcrName(args.name);
   }
 
+  /**
+   * Sets the SKU for the ACR.
+   * @param {AcrSkuBuilderType} props - The SKU to set for the ACR.
+   * @returns {IAcrBuilder} The current AcrBuilder instance.
+   */
   public withSku(props: AcrSkuBuilderType): IAcrBuilder {
     this._sku = props;
     return this;
   }
+
+  /**
+   * Sets the network configuration for the ACR.
+   * @param {AcrBuilderNetworkType} props - The network properties to set.
+   * @returns {IAcrBuilder} The current AcrBuilder instance.
+   */
   public withNetwork(props: AcrBuilderNetworkType): IAcrBuilder {
     this._network = props;
     return this;
   }
+
+  /**
+   * Sets the policies for the ACR.
+   * @param {AcrBuilderPolicies} props - The policies to set.
+   * @returns {IAcrBuilder} The current AcrBuilder instance.
+   */
   public withPolicy(props: AcrBuilderPolicies): IAcrBuilder {
     this._policy = props;
     return this;
   }
 
+  /**
+   * Builds the ACR resource with the configured properties.
+   * @private
+   */
   private buildAcr() {
     const {
       group,
@@ -127,21 +159,22 @@ class AcrBuilder
     );
 
     if (this._sku === 'Premium' && this._network?.privateLink) {
-      PrivateEndpoint({
+      AcrPrivateLink({
         ...this._network.privateLink,
+        dependsOn: this._acrInstance,
         resourceInfo: {
           name: this._instanceName,
           group,
           id: this._acrInstance.id,
         },
-        privateDnsZoneName: 'privatelink.azurecr.io',
-        linkServiceGroupIds: this._network.privateLink.type
-          ? [this._network.privateLink.type]
-          : ['azurecr'],
       });
     }
   }
 
+  /**
+   * Builds and returns the ResourceInfo for the configured ACR.
+   * @returns {ResourceInfo} The resource information for the built ACR.
+   */
   public build(): ResourceInfo {
     this.buildAcr();
     return {
@@ -152,5 +185,10 @@ class AcrBuilder
   }
 }
 
+/**
+ * Factory function to create a new AcrBuilder instance.
+ * @param {AcrBuilderArgs} props - The arguments for building the ACR.
+ * @returns {IAcrSkuBuilder} A new AcrBuilder instance cast as IAcrSkuBuilder.
+ */
 export default (props: AcrBuilderArgs) =>
   new AcrBuilder(props) as IAcrSkuBuilder;

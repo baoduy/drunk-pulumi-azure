@@ -93,6 +93,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     });
     return this;
   }
+
   /** Filter IP from Bearer Token */
   public validateJwtWhitelistIp(
     props: ApimValidateJwtWhitelistIpType,
@@ -100,11 +101,13 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     this._validateJwtWhitelistIp = props;
     return this;
   }
+
   /** IP Address Whitelisting */
   public setWhitelistIPs(props: ApimWhitelistIpType): IApimPolicyBuilder {
     this._whitelistIps.push(props);
     return this;
   }
+
   /**Replace outbound results */
   public setFindAndReplaces(props: ApimFindAndReplaceType): IApimPolicyBuilder {
     this._findAndReplaces.push(props);
@@ -127,6 +130,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       `<set-backend-service base-url="${this._baseUrl.url}" />`,
     );
   }
+
   private buildHeaders() {
     this._inboundPolicies.push(
       ...this._headers.map((h) => {
@@ -139,6 +143,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       }),
     );
   }
+
   private buildCheckHeaders() {
     this._inboundPolicies.push(
       ...this._checkHeaders.map(
@@ -152,6 +157,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       ),
     );
   }
+
   private buildMockResponse() {
     this._inboundPolicies.push(
       ...this._mockResponses.map(
@@ -160,12 +166,15 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       ),
     );
   }
+
   private buildRewriteUri() {
     if (!this._rewriteUri) return;
+
     this._inboundPolicies.push(
       `<rewrite-uri template="${this._rewriteUri.template ?? '/'}" />`,
     );
   }
+
   private buildRateLimit() {
     if (!this._rateLimit) return;
     this._inboundPolicies.push(
@@ -174,6 +183,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
         : `<rate-limit-by-key calls="${this._rateLimit.calls ?? 10}" renewal-period="${this._rateLimit.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" />`,
     );
   }
+
   private buildCacheOptions() {
     if (!this._cacheOptions) return;
     this._inboundPolicies.push(`<cache-lookup vary-by-developer="false" 
@@ -185,12 +195,14 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       `<cache-store duration="${this._cacheOptions.duration ?? 60}" />`,
     );
   }
+
   private buildBackendCert() {
     if (!this._backendCert) return;
     this._inboundPolicies.push(
       `<authentication-certificate thumbprint="${this._backendCert.thumbprint}" />`,
     );
   }
+
   private buildVerifyClientCert() {
     if (!this._verifyClientCert) return;
     this._inboundPolicies.push(`<choose>
@@ -217,6 +229,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       </when>
     </choose>`);
   }
+
   private buildCors() {
     if (!this._cors) return;
     const orgs = this._cors.origins
@@ -236,6 +249,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
 </cors>`;
     this._inboundPolicies.push(cors);
   }
+
   private buildValidateJwtWhitelistIp() {
     if (!this._validateJwtWhitelistIp) return;
     const claimKey =
@@ -301,6 +315,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     });
     this._inboundPolicies.push(`<include-fragment fragment-id="${pfName}" />`);
   }
+
   private buildWhiteListIps() {
     if (this._whitelistIps.length <= 0) return;
 
@@ -318,6 +333,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
 
     this._inboundPolicies.push(policy);
   }
+
   private buildFindAndReplace() {
     if (!this._findAndReplaces) return;
     this._outboundPolicies.push(
@@ -326,6 +342,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
         .join('\n'),
     );
   }
+
   // private buildCustomRules() {
   //   if (this._inboundCustomPolicies) {
   //     this._inboundPolicies.push(

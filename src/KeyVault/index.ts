@@ -2,31 +2,13 @@ import * as keyvault from '@pulumi/azure-native/keyvault';
 import { enums } from '@pulumi/azure-native/types';
 import { Input } from '@pulumi/pulumi';
 import { naming, tenantId } from '../Common';
-import {
-  BasicResourceArgs,
-  KeyVaultInfo,
-  NetworkPropsType,
-  PrivateLinkPropsType,
-} from '../types';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { BasicResourceArgs, NetworkPropsType } from '../types';
+import { VaultPrivateLink } from '../VNet';
 
 export interface KeyVaultProps extends BasicResourceArgs {
   softDeleteRetentionInDays?: Input<number>;
   network?: NetworkPropsType;
 }
-
-export const createVaultPrivateLink = ({
-  vaultInfo,
-  ...props
-}: PrivateLinkPropsType & {
-  vaultInfo: KeyVaultInfo;
-}) =>
-  PrivateEndpoint({
-    resourceInfo: vaultInfo,
-    ...props,
-    privateDnsZoneName: 'privatelink.vaultcore.azure.net',
-    linkServiceGroupIds: props.type ? [props.type] : ['keyVault'],
-  });
 
 // export const createVaultDiagnostic = ({
 //   vaultInfo,
@@ -110,24 +92,14 @@ export default ({
     id: vault.id,
   });
 
-  // Create Private Link
-  const createPrivateLink = (props: PrivateLinkPropsType) =>
-    createVaultPrivateLink({ vaultInfo: info(), ...props });
-
   //Create Private Link
   if (network?.privateLink) {
-    createPrivateLink(network!.privateLink);
+    VaultPrivateLink({ ...network.privateLink, resourceInfo: info() });
   }
-
-  //Add Diagnostic
-  // const addDiagnostic = (logInfo: BasicMonitorArgs) =>
-  //   createVaultDiagnostic({ vaultInfo: info(), logInfo });
 
   return {
     name: vaultName,
     vault,
     info,
-    //addDiagnostic,
-    createPrivateLink,
   };
 };

@@ -9,7 +9,7 @@ import { addEncryptKey, getVaultItemName } from '../KeyVault/Helper';
 import { isPrd, naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
-import privateEndpoint from '../VNet/PrivateEndpoint';
+import { StoragePrivateLink } from '../VNet/PrivateEndpoint';
 import {
   createManagementRules,
   DefaultManagementRules,
@@ -216,11 +216,10 @@ function Storage({
 
     //Create Private Endpoints
     linkTypes.map((type) =>
-      privateEndpoint({
+      StoragePrivateLink(type, {
         ...network.privateEndpoint!,
         resourceInfo: { name, group, id: stg.id },
-        privateDnsZoneName: `privatelink.${type}.core.windows.net`,
-        linkServiceGroupIds: [type],
+        dependsOn: stg,
       }),
     );
   }

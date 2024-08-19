@@ -9,8 +9,8 @@ import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 import * as appConfig from '@pulumi/azure-native/appconfiguration/v20230901preview';
 import { addEncryptKey } from '../KeyVault/Helper';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { AppConfigPrivateLink } from '../VNet';
 
 class AppConfigBuilder
   extends Builder<ResourceInfo>
@@ -98,15 +98,14 @@ class AppConfigBuilder
 
   private buildPrivateLink() {
     if (!this._privateLink) return;
-    PrivateEndpoint({
+    AppConfigPrivateLink({
       ...this._privateLink,
+      dependsOn: this._appConfigInstance,
       resourceInfo: {
         name: this._instanceName,
         group: this.args.group,
         id: this._appConfigInstance!.id,
       },
-      privateDnsZoneName: 'privatelink.azconfig.io',
-      linkServiceGroupIds: ['configurationStores'],
     });
   }
 

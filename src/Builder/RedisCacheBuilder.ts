@@ -10,9 +10,9 @@ import { isPrd, naming } from '../Common';
 import * as cache from '@pulumi/azure-native/cache';
 import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
-import privateEndpointCreator from '../VNet/PrivateEndpoint';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ToWords } from 'to-words';
+import { RedisCachePrivateLink } from '../VNet';
 const toWord = new ToWords();
 
 class RedisCacheBuilder
@@ -86,18 +86,14 @@ class RedisCacheBuilder
 
     //Private Link
     if (this._network?.privateLink) {
-      privateEndpointCreator({
+      RedisCachePrivateLink({
         ...this._network.privateLink,
+        dependsOn: this._redisInstance,
         resourceInfo: {
           name: this._instanceName,
           group: this.args.group,
           id: this._redisInstance!.id,
         },
-        privateDnsZoneName: 'privatelink.redis.cache.windows.net',
-        linkServiceGroupIds: this._network.privateLink.type
-          ? [this._network.privateLink.type]
-          : ['redisCache'],
-        dependsOn: this._redisInstance,
       });
     }
   }

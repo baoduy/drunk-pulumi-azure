@@ -11,7 +11,6 @@ import {
   ResourceInfo,
 } from '../types';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
-import { createVaultPrivateLink } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
 import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
@@ -26,6 +25,7 @@ import * as UIDCreator from '../AzAd/Identities/EnvUID';
 import { getLogInfo } from '../Logs/Helpers';
 import { requireSecret } from '../Common/ConfigHelper';
 import { Locker } from '../Core/Locker';
+import { VaultPrivateLink } from '../VNet';
 
 class ResourceBuilder
   implements
@@ -280,8 +280,8 @@ class ResourceBuilder
       ) ?? [];
 
     if (asPrivateLink && subIds.length > 0) {
-      createVaultPrivateLink({
-        vaultInfo: this._vaultInfo!,
+      VaultPrivateLink({
+        resourceInfo: this._vaultInfo!,
         subnetIds: subIds,
       });
     } else {

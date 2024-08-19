@@ -7,59 +7,106 @@ import {
 } from '../../types';
 import * as pulumi from '@pulumi/pulumi';
 
+/**
+ * Arguments required for building a SignalR resource.
+ */
 export type SignalRBuilderArgs = BuilderProps & WithEncryptionInfo;
+
+/**
+ * Arguments for defining the SKU of a SignalR service.
+ */
 export type SignalRSkuBuilderType = {
+  /**
+   * The capacity of the SKU.
+   */
   capacity?: 1 | 2 | 5 | 10 | 20 | 50 | 100;
+  /**
+   * The name of the SKU.
+   */
   name: 'Standard_S1' | 'Free_F1';
+  /**
+   * The tier of the SKU.
+   */
   tier?: 'Standard' | 'Free';
 };
+
+/**
+ * Arguments for defining the kind of a SignalR service.
+ */
 export type SignalRKindBuilderType = ss.ServiceKind | string;
+
+/**
+ * Options for configuring a SignalR service.
+ */
 export type SignalROptionsBuilder = {
+  /**
+   * Whether client certificate authentication is enabled.
+   */
   clientCertEnabled?: pulumi.Input<boolean>;
   /**
-   * DisableLocalAuth
-   * Enable or disable aad auth
-   * When set as true, connection with AuthType=aad won't work.
+   * Enable or disable AAD authentication.
+   * When set to true, connection with AuthType=aad won't work.
    */
   disableAadAuth?: pulumi.Input<boolean>;
   /**
-   * DisableLocalAuth
-   * Enable or disable local auth with AccessKey
-   * When set as true, connection with AccessKey=xxx won't work.
+   * Enable or disable local authentication with AccessKey.
+   * When set to true, connection with AccessKey=xxx won't work.
    */
   disableLocalAuth?: pulumi.Input<boolean>;
+  /**
+   * Whether public network access is enabled.
+   */
   publicNetworkAccess?: pulumi.Input<boolean>;
 };
-// export type SignalRFeatureArgs = {
-//   /**
-//    * FeatureFlags is the supported features of Azure SignalR service.
-//    * - ServiceMode: Flag for backend server for SignalR service. Values allowed: "Default": have your own backend server; "Serverless": your application doesn't have a backend server; "Classic": for backward compatibility. Support both Default and Serverless mode but not recommended; "PredefinedOnly": for future use.
-//    * - EnableConnectivityLogs: "true"/"false", to enable/disable the connectivity log category respectively.
-//    * - EnableMessagingLogs: "true"/"false", to enable/disable the connectivity log category respectively.
-//    * - EnableLiveTrace: Live Trace allows you to know what's happening inside Azure SignalR service, it will give you live traces in real time, it will be helpful when you developing your own Azure SignalR based web application or self-troubleshooting some issues. Please note that live traces are counted as outbound messages that will be charged. Values allowed: "true"/"false", to enable/disable live trace feature.
-//    */
-//   flag: pulumi.Input<string | ss.v20230301preview.FeatureFlags>;
-//   /**
-//    * Optional properties related to this feature.
-//    */
-//   properties?: pulumi.Input<{
-//     [key: string]: pulumi.Input<string>;
-//   }>;
-//   /**
-//    * Value of the feature flag. See Azure SignalR service document https://docs.microsoft.com/azure/azure-signalr/ for allowed values.
-//    */
-//   value: pulumi.Input<string>;
-// };
 
+/**
+ * Interface for building the kind of a SignalR service.
+ */
 export interface ISignalRKindBuilder {
+  /**
+   * Sets the kind properties for the SignalR service.
+   * @param props - The kind properties.
+   * @returns An instance of ISignalRSkuBuilder.
+   */
   withKind(props: SignalRKindBuilderType): ISignalRSkuBuilder;
 }
+
+/**
+ * Interface for building the SKU of a SignalR service.
+ */
 export interface ISignalRSkuBuilder {
+  /**
+   * Sets the SKU properties for the SignalR service.
+   * @param props - The SKU properties.
+   * @returns An instance of ISignalRBuilder.
+   */
   withSku(props: SignalRSkuBuilderType): ISignalRBuilder;
 }
+
+/**
+ * Interface for building a SignalR service.
+ */
 export interface ISignalRBuilder extends IBuilder<ResourceInfo> {
+  /**
+   * Sets the allowed origins for the SignalR service.
+   * @param props - The allowed origins.
+   * @returns An instance of ISignalRBuilder.
+   */
   allowsOrigins(...props: pulumi.Input<string>[]): ISignalRBuilder;
+  
+  /**
+   * Sets the private link properties for the SignalR service.
+   * @param props - The private link properties.
+   * @returns An instance of ISignalRBuilder.
+   */
   withPrivateLink(props: PrivateLinkPropsType): ISignalRBuilder;
+  
+  /**
+   * Sets additional options for the SignalR service.
+   * @param props - The options properties.
+   * @returns An instance of ISignalRBuilder.
+   */
   withOptions(props: SignalROptionsBuilder): ISignalRBuilder;
+  
   //withFeature(props: SignalRFeatureArgs): ISignalRBuilder;
 }

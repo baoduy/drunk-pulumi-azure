@@ -3,6 +3,9 @@ import { ResourceInfo } from "../../types";
 import { IBuilder } from "./genericBuilder";
 import * as vdi from "@pulumi/azure-native/desktopvirtualization";
 
+/**
+ * Arguments for defining the SKU of a resource.
+ */
 export type ResourceModelWithAllowedPropertySetSkuArgs = {
   /**
    * If the SKU supports scale out/in then the capacity integer should be included. If scale out/in is not possible for the resource this may be omitted.
@@ -13,7 +16,7 @@ export type ResourceModelWithAllowedPropertySetSkuArgs = {
    */
   family?: Input<string>;
   /**
-   * The name of the SKU. Ex - P3. It is typically a letter+number code
+   * The name of the SKU. Ex - P3. It is typically a letter+number code.
    */
   name: Input<string>;
   /**
@@ -26,6 +29,9 @@ export type ResourceModelWithAllowedPropertySetSkuArgs = {
   tier?: vdi.SkuTier;
 };
 
+/**
+ * Arguments for defining the plan of a resource.
+ */
 export type ResourceModelWithAllowedPropertySetPlanArgs = {
   /**
    * A user defined name of the 3rd Party Artifact that is being procured.
@@ -40,7 +46,7 @@ export type ResourceModelWithAllowedPropertySetPlanArgs = {
    */
   promotionCode?: Input<string>;
   /**
-   * The publisher of the 3rd Party Artifact that is being bought. E.g. NewRelic
+   * The publisher of the 3rd Party Artifact that is being bought. E.g. NewRelic.
    */
   publisher: Input<string>;
   /**
@@ -49,10 +55,16 @@ export type ResourceModelWithAllowedPropertySetPlanArgs = {
   version?: Input<string>;
 };
 
+/**
+ * Type for defining network properties for a VDI builder.
+ */
 export type VdiBuilderNetworkType = {
   subnetId: Input<string>;
 };
 
+/**
+ * Type for defining options for a VDI builder.
+ */
 export type VdiBuilderOptionsType = {
   hostPoolType: vdi.HostPoolType;
   loadBalancerType: vdi.LoadBalancerType;
@@ -61,18 +73,46 @@ export type VdiBuilderOptionsType = {
   sku: ResourceModelWithAllowedPropertySetSkuArgs;
   plan?: ResourceModelWithAllowedPropertySetPlanArgs;
 };
+
+/**
+ * Type for defining application group properties for a VDI builder.
+ */
 export type VdiBuilderAppGroupType = {
   applicationGroupType: vdi.ApplicationGroupType;
 };
 
+/**
+ * Interface for building network properties for a VDI builder.
+ */
 export interface IVdiNetworkBuilder {
+  /**
+   * Sets the network properties for the VDI builder.
+   * @param props - The network properties.
+   * @returns An instance of IVdiOptionsBuilder.
+   */
   withNetwork(props: VdiBuilderNetworkType): IVdiOptionsBuilder;
 }
 
+/**
+ * Interface for building options for a VDI builder.
+ */
 export interface IVdiOptionsBuilder {
+  /**
+   * Sets the options for the VDI builder.
+   * @param props - The options properties.
+   * @returns An instance of IVdiBuilder.
+   */
   withOptions(props: VdiBuilderOptionsType): IVdiBuilder;
 }
 
+/**
+ * Interface for building a VDI resource.
+ */
 export interface IVdiBuilder extends IBuilder<ResourceInfo> {
+  /**
+   * Sets the application group properties for the VDI builder.
+   * @param props - The application group properties.
+   * @returns An instance of IVdiBuilder.
+   */
   withAppGroup(props: VdiBuilderAppGroupType): IVdiBuilder;
 }

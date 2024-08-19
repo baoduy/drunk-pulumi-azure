@@ -15,7 +15,7 @@ import {
   ResourceInfoWithInstance,
 } from '../types';
 import { convertToIpRange } from '../VNet/Helper';
-import privateEndpointCreator from '../VNet/PrivateEndpoint';
+import links from '../VNet/PrivateEndpoint';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
@@ -218,13 +218,10 @@ export default ({
   }
   //Private Link
   if (network?.privateLink) {
-    privateEndpointCreator({
+    links.SqlPrivateLink({
       ...network.privateLink,
       resourceInfo: { name: sqlName, group, id: sqlServer.id },
-      privateDnsZoneName: 'privatelink.database.windows.net',
-      linkServiceGroupIds: network.privateLink.type
-        ? [network.privateLink.type]
-        : ['sqlServer'],
+      dependsOn: sqlServer,
     });
   }
 

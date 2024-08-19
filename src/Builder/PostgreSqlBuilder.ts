@@ -17,9 +17,8 @@ import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
 import { output } from '@pulumi/pulumi';
-import { clientId } from '@pulumi/azuread/config';
+import { PostgreSqlPrivateLink } from '../VNet';
 
 class PostgreSqlBuilder
   extends Builder<ResourceInfo>
@@ -232,18 +231,14 @@ class PostgreSqlBuilder
       );
 
     if (this._network?.privateLink) {
-      PrivateEndpoint({
+      PostgreSqlPrivateLink({
         ...this._network?.privateLink,
+        dependsOn: this._sqlInstance,
         resourceInfo: {
           name: this._instanceName,
           group,
           id: this._sqlInstance!.id,
         },
-        privateDnsZoneName: 'PostgreSql.database.azure.com',
-        linkServiceGroupIds: this._network.privateLink.type
-          ? [this._network.privateLink.type]
-          : ['PostgreSql'],
-        dependsOn: this._sqlInstance,
       });
     }
   }

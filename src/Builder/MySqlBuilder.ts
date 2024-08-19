@@ -17,7 +17,7 @@ import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';
 import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
-import PrivateEndpoint from '../VNet/PrivateEndpoint';
+import { MySqlPrivateLink } from '../VNet';
 
 class MySqlBuilder
   extends Builder<ResourceInfo>
@@ -223,18 +223,14 @@ class MySqlBuilder
       );
 
     if (this._network?.privateLink) {
-      PrivateEndpoint({
+      MySqlPrivateLink({
         ...this._network?.privateLink,
+        dependsOn: this._mySqlInstance,
         resourceInfo: {
           name: this._instanceName,
           group,
           id: this._mySqlInstance!.id,
         },
-        privateDnsZoneName: 'mysql.database.azure.com',
-        linkServiceGroupIds: this._network.privateLink.type
-          ? [this._network.privateLink.type]
-          : ['mysql'],
-        dependsOn: this._mySqlInstance,
       });
     }
   }
