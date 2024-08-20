@@ -1,12 +1,15 @@
 import { grantEnvRolesAccess } from './EnvRoles.Consts';
 import { Role, RoleProps } from '../Roles';
-import { KeyVaultInfo } from '../../types';
+import {
+  EnvRoleInfoType,
+  EnvRoleKeyTypes,
+  EnvRolesInfo,
+  KeyVaultInfo,
+} from '../../types';
 import { output, Output } from '@pulumi/pulumi';
 import { defaultSubScope } from '../../Common';
 import { addCustomSecrets } from '../../KeyVault/CustomHelper';
 import { getSecret } from '../../KeyVault/Helper';
-
-export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
 
 const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   readOnly: {
@@ -22,12 +25,6 @@ const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
     appName: 'Azure',
   },
 };
-
-type EnvRoleInfoType = { objectId: string; displayName: string };
-export type EnvRolesInfo = Record<
-  EnvRoleKeyTypes,
-  Output<EnvRoleInfoType> | EnvRoleInfoType
->;
 
 const getRoleSecretName = (name: string) => ({
   objectIdName: `envRoles-${name}-object-id`,

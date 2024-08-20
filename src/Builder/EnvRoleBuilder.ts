@@ -1,15 +1,12 @@
 import { Input, Output } from '@pulumi/pulumi';
 import {
-  EnvRolesInfo,
   createEnvRoles,
   getEnvRolesOutput,
   pushEnvRolesToVault,
-  EnvRoleKeyTypes,
   grantEnvRolesAccess,
 } from '../AzAd';
-
-import { addMemberToGroup } from '../AzAd/Group';
-import { KeyVaultInfo } from '../types';
+import { addMemberToGroup } from '../AzAd';
+import { EnvRoleKeyTypes, EnvRolesInfo, KeyVaultInfo } from '../types';
 import { EnvRoleBuilderGrantType, IEnvRoleBuilder } from './types';
 
 export class EnvRoleBuilder implements IEnvRoleBuilder {

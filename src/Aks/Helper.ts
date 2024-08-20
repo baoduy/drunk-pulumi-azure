@@ -6,45 +6,35 @@ import { interpolate } from '@pulumi/pulumi';
 
 /** Get AKS Config from Managed Cluster*/
 export const getAksConfig = async ({
-  name,
-  groupName,
-  formattedName,
+  resourceInfo,
   disableLocalAccounts,
-}: WithNamedType & {
-  groupName: string;
-  formattedName?: boolean;
+}: {
+  resourceInfo: ResourceInfo;
   disableLocalAccounts?: boolean;
 }): Promise<string> => {
-  const aksName = formattedName ? name : naming.getAksName(name);
-  const group = formattedName
-    ? groupName
-    : naming.getResourceGroupName(groupName);
-
   const aks = disableLocalAccounts
     ? await cs.listManagedClusterUserCredentials({
-        resourceName: aksName,
-        resourceGroupName: group,
+        resourceName: resourceInfo.name,
+        resourceGroupName: resourceInfo.group.resourceGroupName,
       })
     : await cs.listManagedClusterAdminCredentials({
-        resourceName: aksName,
-        resourceGroupName: group,
+        resourceName: resourceInfo.name,
+        resourceGroupName: resourceInfo.group.resourceGroupName,
       });
 
   return Buffer.from(aks.kubeconfigs[0].value, 'base64').toString('utf8');
 };
 
 /** Get AKS Config from Key Vault*/
-export const getAksVaultConfig = async ({
+export const getAksConfigFromVault = async ({
   name,
   version,
   vaultInfo,
-  formattedName,
 }: WithNamedType & {
   version?: string;
   vaultInfo: KeyVaultInfo;
-  formattedName?: boolean;
 }): Promise<string> => {
-  const aksName = formattedName ? name : naming.getAksName(name);
+  const aksName = naming.getAksName(name);
   const rs = await getSecret({
     name: `${aksName}-config`,
     version,
@@ -53,7 +43,7 @@ export const getAksVaultConfig = async ({
   return rs?.value || '';
 };
 
-export const getAksPrivateDnz = async (
+export const getAksPrivateDnsZone = async (
   aksInfo: ResourceInfo,
 ): Promise<ResourceInfo | undefined> => {
   const aks = await cs.getManagedCluster({

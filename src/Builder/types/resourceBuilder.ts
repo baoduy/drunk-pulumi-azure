@@ -1,8 +1,9 @@
-import { EnvRolesInfo, RoleEnableTypes } from '../../AzAd';
 import {
+  EnvRolesInfo,
   KeyVaultInfo,
   ResourceGroupInfo,
   ResourceInfo,
+  RoleEnableTypes,
   WithEncryptionInfo,
   WithLogInfo,
 } from '../../types';
