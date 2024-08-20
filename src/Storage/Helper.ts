@@ -1,5 +1,5 @@
 import { cleanName, defaultSubScope, naming } from '../Common';
-import { getSecrets, getVaultItemName } from '../KeyVault/Helper';
+import { getSecrets } from '../KeyVault/Helper';
 import {
   KeyVaultInfo,
   ResourceWithVaultArgs,

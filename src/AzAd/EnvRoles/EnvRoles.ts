@@ -4,7 +4,7 @@ import { KeyVaultInfo } from '../../types';
 import { output, Output } from '@pulumi/pulumi';
 import { defaultSubScope } from '../../Common';
 import { addCustomSecrets } from '../../KeyVault/CustomHelper';
-import { getSecret, getVaultItemName } from '../../KeyVault/Helper';
+import { getSecret } from '../../KeyVault/Helper';
 
 export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
 
@@ -30,8 +30,8 @@ export type EnvRolesInfo = Record<
 >;
 
 const getRoleSecretName = (name: string) => ({
-  objectIdName: getVaultItemName(`envRoles-${name}-object-id`),
-  displayName: getVaultItemName(`envRoles-${name}-display-name`),
+  objectIdName: `envRoles-${name}-object-id`,
+  displayName: `envRoles-${name}-display-name`,
 });
 
 export type CreateEnvRolesType = EnvRolesInfo & {
