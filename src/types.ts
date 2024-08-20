@@ -1,14 +1,6 @@
 import { CustomResourceOptions, Input, Output, Resource } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
+import { EnvRoleKeyTypes } from './AzAd';
 import { IEnvRoleBuilder } from './Builder';
-
-export declare namespace NodeJS {
-  interface ProcessEnv {
-    DPA_NAMING_DISABLE_PREFIX?: string;
-    DPA_NAMING_DISABLE_REGION?: string;
-    DPA_NAMING_DISABLE_SUFFIX?: string;
-  }
-}
 
 /** Omit all the key of OT from T */
 export type TypeOmit<T, OT> = Omit<T, keyof OT>;

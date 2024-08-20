@@ -1,8 +1,7 @@
 import { ConventionProps, ReplacePattern, NamingType } from '../types';
-import * as process from 'node:process';
+import * as env from '../envHelper';
 import { currentCountryCode } from './AzureEnv';
 import { organization, stack } from './StackEnv';
-import * as console from 'node:console';
 
 export const rules = {
   getResourceGroupName: {
@@ -320,15 +319,12 @@ export const getResourceName = (
   name: string,
   convention: ConventionProps = {},
 ): string => {
-  if (process.env.DPA_NAMING_DISABLE_PREFIX === 'true')
-    convention.prefix = undefined;
+  if (env.DPA_NAMING_DISABLE_PREFIX) convention.prefix = undefined;
   else if (convention.prefix === undefined) convention.prefix = stack;
 
-  if (process.env.DPA_NAMING_DISABLE_SUFFIX === 'true')
-    convention.suffix = undefined;
+  if (env.DPA_NAMING_DISABLE_SUFFIX) convention.suffix = undefined;
 
-  if (process.env.DPA_NAMING_DISABLE_REGION === 'true')
-    convention.region = undefined;
+  if (env.DPA_NAMING_DISABLE_REGION) convention.region = undefined;
   else if (convention.region === undefined)
     convention.region = currentCountryCode;
 
@@ -357,7 +353,7 @@ export const getResourceName = (
   }
 
   //Add the suffix
-  if (convention.suffix && !name.endsWith(convention.suffix.toLowerCase()))
+  if (convention.suffix && !name.includes(convention.suffix.toLowerCase()))
     rs.push(convention.suffix.toLowerCase());
 
   name = rs.join('-');

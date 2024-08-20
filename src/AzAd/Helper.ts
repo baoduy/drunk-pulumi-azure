@@ -128,21 +128,18 @@ export const getUserAssignedIdentityInfo = (
     getSecret({
       name: `${name}-id`,
       vaultInfo,
-      nameFormatted: true,
     }),
   );
   const clientId = output(
     getSecret({
       name: `${name}-clientId`,
       vaultInfo,
-      nameFormatted: true,
     }),
   );
   const principalId = output(
     getSecret({
       name: `${name}-principalId`,
       vaultInfo,
-      nameFormatted: true,
     }),
   );
 

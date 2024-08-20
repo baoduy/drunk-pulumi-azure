@@ -49,7 +49,6 @@ export const getAksVaultConfig = async ({
     name: `${aksName}-config`,
     version,
     vaultInfo,
-    nameFormatted: false,
   });
   return rs?.value || '';
 };

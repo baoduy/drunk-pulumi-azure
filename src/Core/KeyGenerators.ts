@@ -64,15 +64,15 @@ export const generateSsh = ({
     lists: {
       getPublicKey: (): Output<string> =>
         output(
-          getSecret({ name: publicKeyName, nameFormatted: true, vaultInfo })!,
+          getSecret({ name: publicKeyName,  vaultInfo })!,
         ).apply((i) => i?.value!),
       getPrivateKey: (): Output<string> =>
         output(
-          getSecret({ name: privateKeyName, nameFormatted: true, vaultInfo })!,
+          getSecret({ name: privateKeyName,  vaultInfo })!,
         ).apply((i) => i!.value!),
       getPassword: (): Output<string> =>
         output(
-          getSecret({ name: passwordKeyName, nameFormatted: true, vaultInfo })!,
+          getSecret({ name: passwordKeyName, vaultInfo })!,
         ).apply((i) => i!.value!),
     },
   };
