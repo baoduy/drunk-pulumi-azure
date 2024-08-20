@@ -186,6 +186,8 @@
     "src/VNet/Vnet.ts",
     "src/VNet/index.ts",
     "src/VNet/types.ts",
+    "src/env.d.ts",
+    "src/envHelper.ts",
     "src/index.ts",
     "src/types.ts"
   ]
