@@ -15,7 +15,7 @@ import {
   ResourceInfoWithInstance,
 } from '../types';
 import { convertToIpRange } from '../VNet/Helper';
-import links from '../VNet/PrivateEndpoint';
+import { SqlPrivateLink } from '../VNet';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
@@ -218,7 +218,7 @@ export default ({
   }
   //Private Link
   if (network?.privateLink) {
-    links.SqlPrivateLink({
+    SqlPrivateLink({
       ...network.privateLink,
       resourceInfo: { name: sqlName, group, id: sqlServer.id },
       dependsOn: sqlServer,
