@@ -1,367 +1,202 @@
-# Class: `AksBuilder`
+# **AksBuilder Class Documentation**
 
-#### Constructor
-**Purpose**: Initializes the `AksBuilder` with the provided arguments and sets up the initial state.
+#### **1. Overview**
+The `AksBuilder` class is designed to streamline the process of creating and configuring Azure Kubernetes Service (AKS) clusters using Pulumi. This class uses a builder pattern to offer a fluent interface for defining various aspects of an AKS cluster, including network settings, node pools, identity configurations, SSH access, and more.
 
-**Usage**:
-```typescript
-const builder = new AksBuilder({
-  name: 'example',
-  group: { resourceGroupName: 'resourceGroup' },
-  vaultInfo: { /* vault info */ },
-  envRoles: { /* environment roles info */ },
-});
-```
+#### **2. Key Properties and Methods**
 
+##### **2.1. Properties**
+- **resourceName**: The name of the AKS cluster.
+- **resourceGroupName**: The name of the resource group in which the AKS cluster is deployed.
+- **location**: The Azure region where the AKS cluster is deployed.
+- **envRoles**: Environment roles associated with the AKS cluster.
 
-#### Method: `withNewSsh`
-**Purpose**: Sets the SSH properties for the AKS.
+##### **2.2. Methods**
 
-**Usage**:
-```typescript
-builder.withNewSsh({
-  userName: 'adminUser',
-  sshKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAr...'
-});
-```
+###### **2.2.1. withSsh(props: SshBuilderProps)**
+Configures SSH access using an existing SSH key.
 
+- **Parameters:**
+  - `username`: The username for the SSH access.
+  - `sshPublicKey`: The SSH public key used for authentication.
 
-#### Method: `withNodePool`
-**Purpose**: Adds a node pool to the AKS.
+- **Usage:**
+  ```typescript
+  aksBuilder.withSsh({
+    username: 'adminuser',
+    sshPublicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA...',
+  } as SshBuilderProps);
+  ```
 
-**Usage**:
-```typescript
-builder.withNodePool({
-  name: 'nodepool1',
-  count: 3,
-  vmSize: 'Standard_DS2_v2',
-});
-```
+###### **2.2.2. withNewSsh(props: { loginPrefix: string; maxUserNameLength: number; })**
+Generates a new SSH key and configures it for the AKS cluster.
 
+- **Parameters:**
+  - `loginPrefix`: A prefix for the generated SSH login.
+  - `maxUserNameLength`: The maximum length of the SSH username.
 
-#### Method: `withAddon`
-**Purpose**: Sets the addon properties for the AKS.
+- **Usage:**
+  ```typescript
+  aksBuilder.withNewSsh({
+    loginPrefix: 'drunk',
+    maxUserNameLength: 15,
+  });
+  ```
 
-**Usage**:
-```typescript
-builder.withAddon({
-  httpApplicationRouting: true,
-  monitoring: true,
-});
-```
+###### **2.2.3. withNetwork(props: AksNetworkProps)**
+Defines the network configuration for the AKS cluster.
 
+- **Parameters:**
+  - `subnetId`: The ID of the subnet where the AKS cluster is deployed.
+  - `virtualHostSubnetName`: (Optional) The name of the virtual host subnet.
+  - `extraVnetIds`: (Optional) An array of additional Virtual Network IDs for Private DNS Zone linking.
+  - `outboundIpAddress`: (Optional) The outbound IP address configuration, including `ipAddressId` and `ipAddressPrefixId`.
 
-#### Method: `withFeature`
-**Purpose**: Sets the feature properties for the AKS.
+- **Usage:**
+  ```typescript
+  aksBuilder.withNetwork({
+    subnetId: 'subnet-id',
+    virtualHostSubnetName: 'virtual-host-subnet',
+    extraVnetIds: ['vnet-id-1', 'vnet-id-2'],
+    outboundIpAddress: {
+      ipAddressId: 'ip-address-id',
+      ipAddressPrefixId: 'ip-prefix-id',
+    },
+  } as AksNetworkProps);
+  ```
 
-**Usage**:
-```typescript
-builder.withFeature({
-  azurePolicy: true,
-  ingressApplicationGateway: true,
-});
-```
+###### **2.2.4. withDefaultNodePool(props: NodePoolProps)**
+Configures the default node pool for the AKS cluster.
 
+- **Parameters:**
+  - `name`: The name of the node pool.
+  - `nodeCount`: The number of nodes in the pool.
+  - `vmSize`: The VM size for the nodes in the pool.
+  - `enableAutoScaling`: A boolean indicating whether auto-scaling is enabled.
+  - `minCount`: The minimum number of nodes for auto-scaling.
+  - `maxCount`: The maximum number of nodes for auto-scaling.
 
-#### Method: `withAuth`
-**Purpose**: Sets the authentication properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withAuth({
-  clientId: 'clientId',
-  clientSecret: 'clientSecret',
-});
-```
-
-
-#### Method: `withTier`
-**Purpose**: Sets the tier for the AKS.
-
-**Usage**:
-```typescript
-builder.withTier(ManagedClusterSKUTier.Paid);
-```
-
-
-#### Method: `withNetwork`
-**Purpose**: Sets the network properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withNetwork({
-  vnetSubnetId: 'subnetId',
-  dnsServiceIp: '10.0.0.10',
-  dockerBridgeCidr: '172.17.0.1/16',
-});
-```
-
-
-#### Method: `withDefaultNodePool`
-**Purpose**: Sets the default node pool properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withDefaultNodePool({
-  name: 'defaultpool',
-  count: 2,
-  vmSize: 'Standard_DS2_v2',
-});
-```
-
-
-#### Method: `enableEncryption`
-**Purpose**: Enables encryption for the AKS.
-
-**Usage**:
-```typescript
-builder.enableEncryption({
-  diskEncryptionSetId: 'diskEncryptionSetId',
-});
-```
-
-
-#### Method: `lock`
-**Purpose**: Locks the AKS configuration.
-
-**Usage**:
-```typescript
-builder.lock();
-```
-
-
-#### Method: `import`
-**Purpose**: Imports an existing AKS configuration.
-
-**Usage**:
-```typescript
-builder.import({
-  id: 'aksResourceId',
-  ignoreChanges: ['agentPoolProfiles'],
-});
-```
-
-
-#### Method: `build`
-**Purpose**: Builds the entire AKS resource with the configured properties.
-
-**Usage**:
-```typescript
-const aksResults = await builder.build();
-console.log(aksResults);
-```
-
-
-### Example Usage
-Here is a complete example that demonstrates how to use the `AksBuilder` class, ensuring that the `build()` method is called at the end:
-
-```typescript
-const builder = new AksBuilder({
-  name: 'example',
-  group: { resourceGroupName: 'resourceGroup' },
-  vaultInfo: { /* vault info */ },
-  envRoles: { /* environment roles info */ },
-});
-
-builder
-  .withNewSsh({
-    userName: 'adminUser',
-    sshKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAr...'
-  })
-  .withNodePool({
-    name: 'nodepool1',
-    count: 3,
+- **Usage:**
+  ```typescript
+  aksBuilder.withDefaultNodePool({
+    name: 'defaultpool',
+    nodeCount: 3,
     vmSize: 'Standard_DS2_v2',
-  })
-  .withAddon({
+    enableAutoScaling: true,
+    minCount: 1,
+    maxCount: 5,
+  } as NodePoolProps);
+  ```
+
+###### **2.2.5. withFeatures(props: AskFeatureProps)**
+Enables specific features for the AKS cluster, such as monitoring and HTTP application routing.
+
+- **Parameters:**
+  - `httpApplicationRouting`: A boolean indicating whether HTTP application routing is enabled.
+  - `monitoring`: A boolean indicating whether monitoring is enabled.
+
+- **Usage:**
+  ```typescript
+  aksBuilder.withFeatures({
     httpApplicationRouting: true,
     monitoring: true,
-  })
-  .withFeature({
+  } as AskFeatureProps);
+  ```
+
+###### **2.2.6. withAddons(props: AskAddonProps)**
+Adds specific add-ons to the AKS cluster, such as Azure Policy and Ingress Application Gateway.
+
+- **Parameters:**
+  - `azurePolicy`: A boolean indicating whether Azure Policy is enabled.
+  - `ingressApplicationGateway`: Configuration for the Ingress Application Gateway, including `enabled` and `gatewayName`.
+
+- **Usage:**
+  ```typescript
+  aksBuilder.withAddons({
     azurePolicy: true,
-    ingressApplicationGateway: true,
+    ingressApplicationGateway: {
+      enabled: true,
+      gatewayName: 'my-app-gateway',
+    },
+  } as AskAddonProps);
+  ```
+
+###### **2.2.7. withImport(props: AksImportProps)**
+Imports an existing AKS cluster into the configuration.
+
+- **Parameters:**
+  - `id`: The ID of the existing AKS cluster.
+  - `ignoreChanges`: An array of properties to ignore during the import process.
+
+- **Usage:**
+  ```typescript
+  aksBuilder.withImport({
+    id: '/subscriptions/your-subscription-id/resourceGroups/my-resource-group/providers/Microsoft.ContainerService/managedClusters/my-aks-cluster',
+    ignoreChanges: ['agentPoolProfile'],
+  } as AksImportProps);
+  ```
+
+###### **2.2.8. build(): Promise<AksResults>**
+Deploys the AKS cluster based on the current configuration.
+
+- **Returns:** A `Promise` resolving to an `AksResults` object containing details about the deployed cluster.
+
+- **Usage:**
+  ```typescript
+  const aksCluster = await aksBuilder.build();
+  ```
+
+#### **3. Example of Full Usage**
+Here’s a complete example demonstrating how to use the `AksBuilder` with all available properties:
+
+```typescript
+const aksBuilder = new AksBuilder({
+  resourceName: 'my-aks-cluster',
+  resourceGroupName: 'my-resource-group',
+  location: 'East US',
+  envRoles: ['my-role'],
+} as AksBuilderArgs);
+
+aksBuilder
+  .withSsh({
+    username: 'adminuser',
+    sshPublicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA...',
+  } as SshBuilderProps)
+  .withNewSsh({
+    loginPrefix: 'drunk',
+    maxUserNameLength: 15,
   })
-  .withAuth({
-    clientId: 'clientId',
-    clientSecret: 'clientSecret',
-  })
-  .withTier(ManagedClusterSKUTier.Paid)
   .withNetwork({
-    vnetSubnetId: 'subnetId',
-    dnsServiceIp: '10.0.0.10',
-    dockerBridgeCidr: '172.17.0.1/16',
-  })
+    subnetId: 'subnet-id',
+    virtualHostSubnetName: 'virtual-host-subnet',
+    extraVnetIds: ['vnet-id-1', 'vnet-id-2'],
+    outboundIpAddress: {
+      ipAddressId: 'ip-address-id',
+      ipAddressPrefixId: 'ip-prefix-id',
+    },
+  } as AksNetworkProps)
   .withDefaultNodePool({
     name: 'defaultpool',
-    count: 2,
+    nodeCount: 3,
     vmSize: 'Standard_DS2_v2',
-  })
-  .enableEncryption({
-    diskEncryptionSetId: 'diskEncryptionSetId',
-  })
-  .lock()
-  .import({
-    id: 'aksResourceId',
-    ignoreChanges: ['agentPoolProfiles'],
-  });
+    enableAutoScaling: true,
+    minCount: 1,
+    maxCount: 5,
+  } as NodePoolProps)
+  .withFeatures({
+    httpApplicationRouting: true,
+    monitoring: true,
+  } as AskFeatureProps)
+  .withAddons({
+    azurePolicy: true,
+    ingressApplicationGateway: {
+      enabled: true,
+      gatewayName: 'my-app-gateway',
+    },
+  } as AskAddonProps);
 
-const aksResults = await builder.build();
-console.log(aksResults);
+const aksCluster = await aksBuilder.build();
 ```
 
-
-### Detailed Guidelines for Each Method
-
-#### Constructor
-**Purpose**: Initializes the `AksBuilder` with the provided arguments and sets up the initial state.
-
-**Usage**:
-```typescript
-const builder = new AksBuilder({
-  name: 'example',
-  group: { resourceGroupName: 'resourceGroup' },
-  vaultInfo: { /* vault info */ },
-  envRoles: { /* environment roles info */ },
-});
-```
-
-
-#### Method: `withNewSsh`
-**Purpose**: Sets the SSH properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withNewSsh({
-  userName: 'adminUser',
-  sshKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAr...'
-});
-```
-
-
-#### Method: `withNodePool`
-**Purpose**: Adds a node pool to the AKS.
-
-**Usage**:
-```typescript
-builder.withNodePool({
-  name: 'nodepool1',
-  count: 3,
-  vmSize: 'Standard_DS2_v2',
-});
-```
-
-
-#### Method: `withAddon`
-**Purpose**: Sets the addon properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withAddon({
-  httpApplicationRouting: true,
-  monitoring: true,
-});
-```
-
-
-#### Method: `withFeature`
-**Purpose**: Sets the feature properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withFeature({
-  azurePolicy: true,
-  ingressApplicationGateway: true,
-});
-```
-
-
-#### Method: `withAuth`
-**Purpose**: Sets the authentication properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withAuth({
-  clientId: 'clientId',
-  clientSecret: 'clientSecret',
-});
-```
-
-
-#### Method: `withTier`
-**Purpose**: Sets the tier for the AKS.
-
-**Usage**:
-```typescript
-builder.withTier(ManagedClusterSKUTier.Paid);
-```
-
-
-#### Method: `withNetwork`
-**Purpose**: Sets the network properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withNetwork({
-  vnetSubnetId: 'subnetId',
-  dnsServiceIp: '10.0.0.10',
-  dockerBridgeCidr: '172.17.0.1/16',
-});
-```
-
-
-#### Method: `withDefaultNodePool`
-**Purpose**: Sets the default node pool properties for the AKS.
-
-**Usage**:
-```typescript
-builder.withDefaultNodePool({
-  name: 'defaultpool',
-  count: 2,
-  vmSize: 'Standard_DS2_v2',
-});
-```
-
-
-#### Method: `enableEncryption`
-**Purpose**: Enables encryption for the AKS.
-
-**Usage**:
-```typescript
-builder.enableEncryption({
-  diskEncryptionSetId: 'diskEncryptionSetId',
-});
-```
-
-
-#### Method: `lock`
-**Purpose**: Locks the AKS configuration.
-
-**Usage**:
-```typescript
-builder.lock();
-```
-
-
-#### Method: `import`
-**Purpose**: Imports an existing AKS configuration.
-
-**Usage**:
-```typescript
-builder.import({
-  id: 'aksResourceId',
-  ignoreChanges: ['agentPoolProfiles'],
-});
-```
-
-
-#### Method: `build`
-**Purpose**: Builds the entire AKS resource with the configured properties.
-
-**Usage**:
-```typescript
-const aksResults = await builder.build();
-console.log(aksResults);
-```
-
-
-This example demonstrates how to create an `AksBuilder` instance, configure it with various settings, and finally build the AKS resource. The `build()` method is called last to ensure the resource is fully constructed.
+#### **4. Conclusion**
+The `AksBuilder` class offers a robust and flexible approach to configuring and deploying Azure Kubernetes Service clusters. With detailed configuration options for SSH, networking, node pools, and more, developers can tailor their AKS deployments to meet a wide range of requirements.
