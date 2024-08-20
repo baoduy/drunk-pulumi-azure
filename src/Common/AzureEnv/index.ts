@@ -1,8 +1,8 @@
 import * as pulumi from '@pulumi/pulumi';
 import { authorization } from '@pulumi/azure-native';
 import { registerAutoTags } from './AutoTags';
-import { organization, projectName, stack } from './StackEnv';
-import { getCountryCode, getRegionCode } from './Location';
+import { organization, projectName, stack } from '../StackEnv';
+import { getCountryCode, getRegionCode } from '../Location';
 
 const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);

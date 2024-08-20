@@ -1,14 +1,5 @@
 import { CustomResourceOptions, Input, Output, Resource } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes } from './AzAd/EnvRoles';
 import { IEnvRoleBuilder } from './Builder';
-
-export declare namespace NodeJS {
-  interface ProcessEnv {
-    DPA_NAMING_DISABLE_PREFIX?: string;
-    DPA_NAMING_DISABLE_REGION?: string;
-    DPA_NAMING_DISABLE_SUFFIX?: string;
-  }
-}
 
 /** Omit all the key of OT from T */
 export type TypeOmit<T, OT> = Omit<T, keyof OT>;
@@ -356,6 +347,32 @@ export type ConventionProps = {
   //replaceRegex?: string;
   replaces?: ReplacePattern[];
 };
+
+export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
+
+export type RoleEnableItem = boolean | { [k in EnvRoleKeyTypes]?: boolean };
+
+export type EnvRoleInfoType = { objectId: string; displayName: string };
+export type EnvRolesInfo = Record<
+  EnvRoleKeyTypes,
+  Output<EnvRoleInfoType> | EnvRoleInfoType
+>;
+
+export type RoleEnableTypes = {
+  enableRGRoles?: RoleEnableItem;
+  enableAksRoles?: RoleEnableItem;
+  enableStorageRoles?: RoleEnableItem;
+  enableIotRoles?: RoleEnableItem;
+  enableVaultRoles?: RoleEnableItem;
+  /** Container Registry Roles */
+  enableACRRoles?: RoleEnableItem;
+  enableAppConfig?: RoleEnableItem;
+  enableServiceBus?: RoleEnableItem;
+  enableSignalR?: RoleEnableItem;
+  //enableRedisCache?: RoleEnableItem;
+};
+
+export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
 
 /**
  * Type for naming.

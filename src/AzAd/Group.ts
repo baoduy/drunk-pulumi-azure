@@ -1,10 +1,8 @@
 import * as azuread from '@pulumi/azuread';
-import { Input, Output, output } from '@pulumi/pulumi';
+import { Input, output } from '@pulumi/pulumi';
 import { defaultSubScope } from '../Common';
 import { WithNamedType } from '../types';
-import { roleAssignment } from './RoleAssignment';
-import { isDryRun } from '../Common';
-import { GetGroupResult } from '@pulumi/azuread/getGroup';
+import { roleAssignment } from './Roles';
 
 export interface GroupPermissionProps {
   /** The name of the roles would like to assign to this group*/

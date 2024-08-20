@@ -95,7 +95,6 @@ export default ({
       ? addCustomSecret({
           name: `${vmName}-disk-secret`,
           vaultInfo: vaultInfo!,
-          formattedName: true,
           value: randomPassword({ name: vmName, policy: false, length: 50 })
             .result,
         })

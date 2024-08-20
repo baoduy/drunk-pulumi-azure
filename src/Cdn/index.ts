@@ -1,17 +1,17 @@
 import { IEnvRoleBuilder } from '../Builder';
 import { ResourceGroupInfo, ResourceInfoWithInstance } from '../types';
 import * as cdn from '@pulumi/azure-native/cdn';
-import { naming, global } from '../Common';
+import { naming } from '../Common';
 
 interface Props {
   name: string;
-  group?: ResourceGroupInfo;
+  group: ResourceGroupInfo;
   envRoles?: IEnvRoleBuilder;
 }
 
 export default ({
   name,
-  group = global.groupInfo,
+  group,
   envRoles,
 }: Props): ResourceInfoWithInstance<cdn.Profile> => {
   name = naming.getCdnProfileName(name);

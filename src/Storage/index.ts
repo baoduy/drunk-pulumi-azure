@@ -5,11 +5,11 @@ import {
   ResourceInfoWithInstance,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
-import { addEncryptKey, getVaultItemName } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import { isPrd, naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
-import { StoragePrivateLink } from '../VNet/PrivateEndpoint';
+import { StoragePrivateLink } from '../VNet';
 import {
   createManagementRules,
   DefaultManagementRules,
@@ -316,10 +316,10 @@ function Storage({
 
     //Add connection into Key vault
     if (vaultInfo && allowSharedKeyAccess) {
-      const primaryKeyName = `${getVaultItemName(name)}-key-primary`;
-      const secondaryKeyName = `${getVaultItemName(name)}-key-secondary`;
-      const primaryConnectionKeyName = `${getVaultItemName(name)}-conn-primary`;
-      const secondConnectionKeyName = `${getVaultItemName(name)}-conn-secondary`;
+      const primaryKeyName = `${name}-key-primary`;
+      const secondaryKeyName = `${name}-key-secondary`;
+      const primaryConnectionKeyName = `${name}-conn-primary`;
+      const secondConnectionKeyName = `${name}-conn-secondary`;
 
       const keys = (
         await storage.listStorageAccountKeys({
@@ -336,7 +336,6 @@ function Storage({
       addCustomSecrets({
         vaultInfo,
         contentType: 'Storage',
-        formattedName: true,
         items: [
           {
             name: primaryKeyName,

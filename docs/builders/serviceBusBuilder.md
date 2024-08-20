@@ -1,125 +1,213 @@
-Sure! Here is a simplified and more developer-friendly technical documentation for the `serviceBusBuilder.ts` and `ServiceBusBuilder.ts` files.
+# `ServiceBusBuilder` Class Overview
 
-## `serviceBusBuilder.ts`
+The `ServiceBusBuilder` class is designed to build and configure an Azure Service Bus instance with specific configurations such as SKU, network settings, queues, topics, and subscriptions.
 
-### Overview
-This file defines the types and interfaces used to configure and build an Azure Service Bus using Pulumi.
+### Constructor
+#### Purpose:
+Initializes the `ServiceBusBuilder` with the provided arguments and sets the instance name.
 
-### Key Types and Interfaces
+#### Sample Usage:
+```typescript
+const serviceBusBuilder = new ServiceBusBuilder({
+  name: 'myServiceBus',
+  group: { resourceGroupName: 'myResourceGroup' },
+  // other necessary arguments
+});
+```
 
-- **ServiceBusBuilderArgs**: Combines properties from `BuilderProps`, `WithEnvRoles`, and `WithEncryption`.
-- **ServiceBusSkuTypes**: Represents the SKU tier for the Service Bus.
-- **ServiceBusQueueArgs**: Configuration for Service Bus queues, excluding some properties.
-- **ServiceBusSubArgs**: Configuration for Service Bus subscriptions, excluding some properties.
-- **ServiceBusTopicArgs**: Configuration for Service Bus topics, with optional subscriptions.
-- **ServiceBusOptions**: Additional options for the Service Bus, like `disableLocalAuth`.
 
-### Interfaces
+### `withSku`
+#### Purpose:
+Sets the SKU for the Service Bus.
 
-- **IServiceBusSkuBuilder**: Interface for setting the SKU tier.
-  - `withSku(sku: ServiceBusSkuTypes): IServiceBusBuilder`
+#### Sample Usage:
+```typescript
+serviceBusBuilder.withSku('Standard');
+```
 
-- **IServiceBusBuilder**: Interface for configuring the Service Bus.
-  - `withNetwork(props: NetworkPropsType): IServiceBusBuilder`
-  - `withNetworkIf(condition: boolean, props: NetworkPropsType): IServiceBusBuilder`
-  - `withOptions(props: ServiceBusOptions): IServiceBusBuilder`
-  - `withQueues(props: Record<string, ServiceBusQueueArgs>): IServiceBusBuilder`
-  - `withTopics(props: Record<string, ServiceBusTopicArgs>): IServiceBusBuilder`
 
-## `ServiceBusBuilder.ts`
+### `withOptions`
+#### Purpose:
+Sets additional options for the Service Bus.
 
-### Overview
-This file implements the `ServiceBusBuilder` class, which uses the types and interfaces defined in `serviceBusBuilder.ts` to build an Azure Service Bus using Pulumi.
+#### Sample Usage:
+```typescript
+serviceBusBuilder.withOptions({
+  // ServiceBusOptions properties
+});
+```
 
-### Class: `ServiceBusBuilder`
 
-#### What It Does
-The `ServiceBusBuilder` class helps you configure and deploy an Azure Service Bus with queues, topics, and subscriptions using Pulumi.
+### `withNetwork`
+#### Purpose:
+Sets the network properties for the Service Bus. Only supported for 'Premium' tier.
 
-#### How to Use It
+#### Sample Usage:
+```typescript
+serviceBusBuilder.withNetwork({
+  subnetId: 'subnet-id',
+  privateLink: {
+    // private link properties
+  },
+  ipAddresses: ['192.168.1.1', '192.168.1.2'],
+});
+```
 
-1. **Initialize the Builder**:
-   ```typescript
-   import createServiceBusBuilder from './ServiceBusBuilder';
-   import { ServiceBusBuilderArgs } from './types';
 
-   const args: ServiceBusBuilderArgs = {
-     // ... initialization properties
-   };
+### `withNetworkIf`
+#### Purpose:
+Conditionally sets the network properties for the Service Bus.
 
-   const serviceBusBuilder = createServiceBusBuilder(args);
-   ```
+#### Sample Usage:
+```typescript
+serviceBusBuilder.withNetworkIf(true, {
+  subnetId: 'subnet-id',
+  privateLink: {
+    // private link properties
+  },
+  ipAddresses: ['192.168.1.1', '192.168.1.2'],
+});
+```
 
-2. **Configure the Service Bus**:
-   ```typescript
-   serviceBusBuilder
-     .withSku('Standard')
-     .withOptions({ disableLocalAuth: true })
-     .withNetwork({ ipAddresses: ['10.0.0.1'], subnetId: 'subnet-id', privateLink: { type: 'namespace' } })
-     .withQueues({
-       myQueue: { maxDeliveryCount: 5, enablePartitioning: true }
-     })
-     .withTopics({
-       myTopic: {
-         enablePartitioning: true,
-         subscriptions: {
-           mySubscription: { maxDeliveryCount: 5 }
-         }
-       }
-     });
-   ```
 
-3. **Build and Deploy**:
-   ```typescript
-   const resourceInfo = serviceBusBuilder.build();
-   console.log('Service Bus deployed with ID:', resourceInfo.id);
-   ```
+### `withQueues`
+#### Purpose:
+Sets the queues for the Service Bus.
 
-### Methods
+#### Sample Usage:
+```typescript
+serviceBusBuilder.withQueues({
+  myQueue: {
+    // ServiceBusQueueArgs properties
+  },
+});
+```
 
-- **withSku(sku: ServiceBusSkuTypes)**: Sets the SKU tier.
-- **withOptions(props: ServiceBusOptions)**: Sets additional options.
-- **withNetwork(props: NetworkPropsType)**: Configures the network settings.
-- **withNetworkIf(condition: boolean, props: NetworkPropsType)**: Conditionally configures the network settings.
-- **withQueues(props: Record<string, ServiceBusQueueArgs>)**: Configures the queues.
-- **withTopics(props: Record<string, ServiceBusTopicArgs>)**: Configures the topics and their subscriptions.
-- **build()**: Executes the build process and returns the `ResourceInfo`.
 
-### Example
+### `withTopics`
+#### Purpose:
+Sets the topics for the Service Bus.
+
+#### Sample Usage:
+```typescript
+serviceBusBuilder.withTopics({
+  myTopic: {
+    // ServiceBusTopicArgs properties
+  },
+});
+```
+
+
+### `buildNamespace`
+#### Purpose:
+Creates the Service Bus namespace with the specified configurations.
+
+#### Sample Usage:
+This method is called internally by the `build` method and is not typically called directly.
+
+### `buildNetwork`
+#### Purpose:
+Configures network settings for the Service Bus, including IP rules and private link.
+
+#### Sample Usage:
+This method is called internally by the `build` method and is not typically called directly.
+
+### `buildQueues`
+#### Purpose:
+Creates the queues for the Service Bus.
+
+#### Sample Usage:
+This method is called internally by the `build` method and is not typically called directly.
+
+### `buildTopics`
+#### Purpose:
+Creates the topics for the Service Bus and their subscriptions.
+
+#### Sample Usage:
+This method is called internally by the `build` method and is not typically called directly.
+
+### `buildSubscriptions`
+#### Purpose:
+Creates the subscriptions for a given topic.
+
+#### Sample Usage:
+This method is called internally by the `buildTopics` method and is not typically called directly.
+
+### `buildConnectionString`
+#### Purpose:
+Creates the connection strings for the Service Bus entities and stores them in Key Vault.
+
+#### Sample Usage:
+This method is called internally by the `buildQueues` and `buildTopics` methods and is not typically called directly.
+
+### `build`
+#### Purpose:
+Builds the Service Bus namespace, network settings, queues, and topics, and returns the resource information.
+
+#### Sample Usage:
+```typescript
+const resourceInfo = serviceBusBuilder.build();
+console.log(resourceInfo);
+```
+
+
+### Full Example
+Here is a full example demonstrating how to use the `ServiceBusBuilder` class:
 
 ```typescript
-import createServiceBusBuilder from './ServiceBusBuilder';
+import ServiceBusBuilder from './Builder/ServiceBusBuilder';
 import { ServiceBusBuilderArgs } from './types';
 
 const args: ServiceBusBuilderArgs = {
   name: 'myServiceBus',
   group: { resourceGroupName: 'myResourceGroup' },
-  enableEncryption: true,
-  vaultInfo: { name: 'myKeyVault' },
-  envUIDInfo: { id: 'myEnvUID' },
-  dependsOn: [],
+  // other necessary arguments
 };
 
-const serviceBusBuilder = createServiceBusBuilder(args);
+const serviceBusBuilder = new ServiceBusBuilder(args);
 
 serviceBusBuilder
-  .withSku('Premium')
-  .withOptions({ disableLocalAuth: true })
-  .withNetwork({ ipAddresses: ['10.0.0.1'], subnetId: 'subnet-id', privateLink: { type: 'namespace' } })
+  .withSku('Standard')
+  .withOptions({
+    // ServiceBusOptions properties
+  })
+  .withNetwork({
+    subnetId: 'subnet-id',
+    privateLink: {
+      // private link properties
+    },
+    ipAddresses: ['192.168.1.1', '192.168.1.2'],
+  })
   .withQueues({
-    myQueue: { maxDeliveryCount: 5, enablePartitioning: true }
+    myQueue: {
+      // ServiceBusQueueArgs properties
+    },
   })
   .withTopics({
     myTopic: {
-      enablePartitioning: true,
-      subscriptions: {
-        mySubscription: { maxDeliveryCount: 5 }
-      }
-    }
+      // ServiceBusTopicArgs properties
+    },
   });
 
 const resourceInfo = serviceBusBuilder.build();
-console.log('Service Bus deployed with ID:', resourceInfo.id);
+console.log(resourceInfo);
 ```
 
-This documentation provides a clear and concise overview of how to use the `ServiceBusBuilder` class to configure and deploy an Azure Service Bus using Pulumi.
+
+### Summary
+- **Constructor**: Initializes the builder with necessary arguments.
+- **withSku**: Configures the SKU for the Service Bus.
+- **withOptions**: Sets additional options for the Service Bus.
+- **withNetwork**: Configures network settings for the Service Bus.
+- **withNetworkIf**: Conditionally configures network settings for the Service Bus.
+- **withQueues**: Sets the queues for the Service Bus.
+- **withTopics**: Sets the topics for the Service Bus.
+- **buildNamespace**: Internally creates the Service Bus namespace.
+- **buildNetwork**: Internally configures network settings.
+- **buildQueues**: Internally creates the queues for the Service Bus.
+- **buildTopics**: Internally creates the topics for the Service Bus.
+- **buildSubscriptions**: Internally creates the subscriptions for a given topic.
+- **buildConnectionString**: Internally creates the connection strings for the Service Bus entities.
+- **build**: Executes the build process and returns resource information.
+
+This guideline should help developers understand and reuse the methods in the `ServiceBusBuilder` class effectively.

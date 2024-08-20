@@ -1,4 +1,4 @@
-import { replaceAll } from './Helpers';
+import { replaceAll } from '../Helpers';
 import { azRegions } from './LocationBuiltIn';
 
 export const getLocation = (possibleName: string) => {

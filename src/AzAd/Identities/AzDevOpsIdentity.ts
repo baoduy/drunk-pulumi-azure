@@ -1,9 +1,8 @@
 import { defaultSubScope } from '../../Common';
 import { KeyVaultInfo } from '../../types';
 import Identity from '../Identity';
-import { getGraphPermissions } from '../GraphDefinition';
+import { getGraphPermissions, roleAssignment } from '../Roles';
 import { getIdentityInfoOutput } from '../Helper';
-import { roleAssignment } from '../RoleAssignment';
 
 export const defaultAzAdoName = 'azure-devops';
 

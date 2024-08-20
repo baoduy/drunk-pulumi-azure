@@ -1,120 +1,115 @@
-# AcrBuilder Usage Guide
+# **AcrBuilder Class Documentation**
 
-## Overview
+#### **1. Overview**
+The `AcrBuilder` class is designed to simplify the creation and configuration of Azure Container Registry (ACR) resources using Pulumi. This class follows the Builder pattern, providing a fluent interface for defining various aspects of an ACR, including SKU selection, network configurations, policies, and more.
 
-The `AcrBuilder` class provides a fluent API for creating and configuring Azure Container Registry (ACR) resources. It implements the Builder pattern, allowing developers to set various properties such as SKU, network settings, and policies in a chainable manner.
+#### **2. Key Methods and Their Attributes**
 
-## Installation
+##### **2.1. `withSku(sku: AcrSkuBuilderType)`**
+Configures the SKU for the Azure Container Registry.
 
-Ensure you have the necessary dependencies installed:
+- **Parameters:**
+    - `sku`: The SKU for the ACR, which can be:
+        - `Basic`: The basic SKU for small-scale development and testing.
+        - `Standard`: The standard SKU for production workloads.
+        - `Premium`: The premium SKU for high-volume production workloads with enhanced features.
+        - A custom string representing a specific SKU.
 
-```bash
-npm install @pulumi/azure-native
-```
+- **Usage:**
+  ```typescript
+  acrBuilder.withSku('Premium' as AcrSkuBuilderType);
+  ```
 
-## Importing AcrBuilder
+##### **2.2. `withNetwork(props: AcrBuilderNetworkType)`**
+Defines the network settings for the ACR.
 
-First, import the necessary modules and the `AcrBuilder` class:
+- **Parameters:**
+    - `privateEndpoint`: Configuration for the private endpoint:
+        - `subnetIds`: An array of subnet IDs where the private endpoint will be created.
+        - `privateIpAddress`: (Optional) The private IP address assigned to the endpoint.
+        - `extraVnetIds`: (Optional) An array of extra Virtual Network IDs for linking to a Private DNS Zone.
+    - `disableLocalAuth`: (Optional) A boolean indicating whether local authentication is disabled.
 
-```typescript
-import AcrBuilder from './Builder/AcrBuilder';
-import { AcrBuilderArgs } from './Builder/types';
-```
-
-## Creating an AcrBuilder Instance
-
-To create an instance of `AcrBuilder`, you need to provide the required arguments (`AcrBuilderArgs`):
-
-```typescript
-const acrArgs: AcrBuilderArgs = {
-  name: 'myAcr',
-  group: { resourceGroupName: 'myResourceGroup' },
-  enableEncryption: true,
-  envUIDInfo: { id: 'myEnvUID', clientId: 'myClientId' },
-  vaultInfo: { vaultName: 'myKeyVault', keyName: 'myKey' },
-  dependsOn: [],
-  ignoreChanges: [],
-};
-
-const acrBuilder = new AcrBuilder(acrArgs);
-```
-
-## Configuring the ACR
-
-### Setting the SKU
-
-You can set the SKU for the ACR using the `withSku` method:
-
-```typescript
-acrBuilder.withSku('Premium');
-```
-
-### Setting Network Configuration
-
-To set the network configuration, use the `withNetwork` method. This is only available for the Premium SKU:
-
-```typescript
-acrBuilder.withNetwork({
-  privateLink: {
-    type: 'Microsoft.ContainerRegistry/registries',
-    subnetId: 'mySubnetId',
-  },
-  ipAddresses: ['192.168.1.1', '192.168.1.2'],
-});
-```
-
-### Setting Policies
-
-To set the policies for the ACR, use the `withPolicy` method. This is also only available for the Premium SKU:
-
-```typescript
-acrBuilder.withPolicy({ retentionDay: 30 });
-```
-
-## Building the ACR
-
-Finally, build the ACR resource and get the resource information:
-
-```typescript
-const acrResourceInfo = acrBuilder.build();
-console.log(acrResourceInfo);
-```
-
-## Full Example
-
-Here is a complete example demonstrating the usage of `AcrBuilder`:
-
-```typescript
-import AcrBuilder from './Builder/AcrBuilder';
-import { AcrBuilderArgs } from './Builder/types';
-
-const acrArgs: AcrBuilderArgs = {
-  name: 'myAcr',
-  group: { resourceGroupName: 'myResourceGroup' },
-  enableEncryption: true,
-  envUIDInfo: { id: 'myEnvUID', clientId: 'myClientId' },
-  vaultInfo: { vaultName: 'myKeyVault', keyName: 'myKey' },
-  dependsOn: [],
-  ignoreChanges: [],
-};
-
-const acrBuilder = new AcrBuilder(acrArgs)
-  .withSku('Premium')
-  .withNetwork({
-    privateLink: {
-      type: 'Microsoft.ContainerRegistry/registries',
-      subnetId: 'mySubnetId',
+- **Usage:**
+  ```typescript
+  acrBuilder.withNetwork({
+    privateEndpoint: {
+      subnetIds: ['subnet-id-1', 'subnet-id-2'],
+      privateIpAddress: '10.0.0.5',
+      extraVnetIds: ['vnet-id-1', 'vnet-id-2'],
     },
-    ipAddresses: ['192.168.1.1', '192.168.1.2'],
-  })
-  .withPolicy({ retentionDay: 30 });
+    disableLocalAuth: true,
+  } as AcrBuilderNetworkType);
+  ```
 
-const acrResourceInfo = acrBuilder.build();
-console.log(acrResourceInfo);
+##### **2.3. `withPolicies(policies: AcrBuilderPolicies)`**
+Configures retention policies for the ACR.
+
+- **Parameters:**
+    - `retentionDay`: The number of days to retain images in the ACR before automatic deletion.
+
+- **Usage:**
+  ```typescript
+  acrBuilder.withPolicies({
+    retentionDay: 30,
+  } as AcrBuilderPolicies);
+  ```
+
+##### **2.4. `withPrivateLink(privateLink: AcrPrivateLink)`**
+Configures a private link for the ACR.
+
+- **Parameters:**
+    - `privateEndpointSubnetIds`: An array of subnet IDs for the private endpoint.
+    - `privateDnsZoneId`: The ID of the Private DNS Zone associated with the private link.
+
+- **Usage:**
+  ```typescript
+  acrBuilder.withPrivateLink({
+    privateEndpointSubnetIds: ['subnet-id-1', 'subnet-id-2'],
+    privateDnsZoneId: 'dns-zone-id',
+  });
+  ```
+
+##### **2.5. `build(): registry.Registry`**
+Builds and deploys the ACR instance based on the current configuration.
+
+- **Returns:** A `Pulumi registry.Registry` object representing the deployed ACR instance.
+
+- **Usage:**
+  ```typescript
+  const acrInstance = acrBuilder.build();
+  ```
+
+#### **3. Example of Full Usage**
+Here’s a complete example demonstrating how to use the `AcrBuilder` with all available properties:
+
+```typescript
+const acrBuilder = new AcrBuilder({
+  resourceName: 'my-acr',
+  resourceGroupName: 'my-resource-group',
+  location: 'East US',
+} as AcrBuilderArgs);
+
+acrBuilder
+  .withSku('Premium' as AcrSkuBuilderType)
+  .withNetwork({
+    privateEndpoint: {
+      subnetIds: ['subnet-id-1', 'subnet-id-2'],
+      privateIpAddress: '10.0.0.5',
+      extraVnetIds: ['vnet-id-1', 'vnet-id-2'],
+    },
+    disableLocalAuth: true,
+  } as AcrBuilderNetworkType)
+  .withPolicies({
+    retentionDay: 30,
+  } as AcrBuilderPolicies)
+  .withPrivateLink({
+    privateEndpointSubnetIds: ['subnet-id-1', 'subnet-id-2'],
+    privateDnsZoneId: 'dns-zone-id',
+  });
+
+const acrInstance = acrBuilder.build();
 ```
 
-## Conclusion
-
-The `AcrBuilder` class simplifies the process of creating and configuring Azure Container Registry resources by providing a fluent API. By following the steps outlined in this guide, developers can easily set up ACR with the desired configurations.
-
-For more details, refer to the source code and documentation of the `AcrBuilder` class and its related types.
+#### **4. Conclusion**
+The `AcrBuilder` class provides a robust and flexible way to configure and deploy Azure Container Registry instances. By offering detailed configuration options for SKU, network settings, and policies, it allows developers to customize ACR deployments to meet specific needs.

@@ -1,5 +1,5 @@
 import { interpolate } from '@pulumi/pulumi';
-import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
+import { grantEnvRolesAccess } from '../AzAd';
 import { defaultSubScope } from '../Common';
 import {
   AksBuilderArgs,

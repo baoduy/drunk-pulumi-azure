@@ -1,14 +1,11 @@
 import { DnsZoneARecordType } from './types';
 import { BasicResourceArgs, ResourceInfo } from '../types';
 import * as network from '@pulumi/azure-native/network';
-import {
-  IPrivateDnsZoneBuilder,
-  PrivateDnsZoneVnetLinkingType,
-} from './types/privateDnsZoneBuilder';
+import { IPrivateDnsZoneBuilder, PrivateDnsZoneVnetLinkingType } from './types';
 import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
-import { rsInfo, globalKeyName } from '../Common';
-import { getAksPrivateDnz } from '../Aks/Helper';
+import { rsInfo } from '../Common';
+import { getAksPrivateDnsZone } from '../Aks/Helper';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -24,7 +21,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       ...props,
       group: {
         resourceGroupName: props.group.resourceGroupName,
-        location: globalKeyName,
+        location: 'global',
       },
     };
   }
@@ -131,7 +128,7 @@ export const from = (dnsZoneInfo: ResourceInfo) =>
 export const fromPrivateAks = async (
   aks: ResourceInfo,
 ): Promise<IPrivateDnsZoneBuilder | undefined> => {
-  const dns = await getAksPrivateDnz(aks);
+  const dns = await getAksPrivateDnsZone(aks);
   return dns ? from(dns) : undefined;
 };
 

@@ -1,48 +1,56 @@
-# HBD.Pulumi.Share
+# [Drunk Pulumi Azure](https://baoduy.github.io/drunk-pulumi-azure/)
 
-The common share component for Pulumi projects
+Welcome to the Drunk Pulumi Azure project! This project provides a set of tools and utilities to help you manage your Azure resources using Pulumi.
 
-## How to use me?
+## Overview
 
-1. Clone me from https://github.com/baoduy/HBD.Pulumi.Share into a folder named "".
-2. Create a pulumi account and link to the environment.
-3. Create a "\_Config" folder to store your custom configuration.
+This project includes various modules and components to simplify the management of Azure resources. It leverages Pulumi to provide infrastructure as code, making it easier to define, deploy, and manage your cloud infrastructure.
 
-## How to config Organization Name
+## Usage
 
-You should add the Organization code to the name of some resources and resource groups to ensure that their name is identical and dedicated to your projects.
-There are two ways to config your organization code.
+You can use the modules and components provided in this project to manage your Azure resources. Here are some examples of what you can do:
 
-1. Name your project with the following convention: "ProjectName-OrgCode".
-2. The organization will be retrieved directly from the Pulumi portal.
+- Create and manage Azure Virtual Machines
+- Set up and configure Azure Key Vaults
+- Manage Azure Storage Accounts
+- Configure Azure Application Insights
+- Set up Azure Active Directory identities and roles
 
-## Private Link Dns Name
+For detailed documentation and examples, please visit the [Drunk Pulumi Azure Documentation](https://baoduy.github.io/drunk-pulumi-azure/).
 
-https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-dns
+## Modules
 
-## Azure Resources Support Zone Redundant
+This project includes the following modules:
 
-https://learn.microsoft.com/en-us/azure/reliability/availability-zones-service-support
+- **Common**: Common utilities and helpers for managing Azure resources.
+- **VM**: Tools for managing Azure Virtual Machines.
+- **KeyVault**: Utilities for managing Azure Key Vaults.
+- **Storage**: Tools for managing Azure Storage Accounts.
+- **Logs**: Utilities for managing Azure Application Insights and Log Analytics.
+- **AzAd**: Tools for managing Azure Active Directory identities and roles.
+- **Builder**: Builders for creating and managing various Azure resources.
 
-## Upgrading Issues
 
-Azure AD Application: https://github.com/pulumi/pulumi-azuread/issues/185#issuecomment-982414862
+## Environment Configuration
 
-## Config Azure Resources
+The project uses environment variables to configure various settings. Here are some of the key environment variables:
 
-- Set Organization
-  pulumi org set-default
+- `PULUMI_NODEJS_DRY_RUN`: Indicates if the Pulumi run is a dry run.
+- `PULUMI_NODEJS_ORGANIZATION`: The Pulumi organization name.
+- `PULUMI_NODEJS_PROJECT`: The Pulumi project name.
+- `PULUMI_NODEJS_STACK`: The Pulumi stack name.
 
-$ pulumi config set azure-native:clientId <clientID>
-$ pulumi config set azure-native:clientSecret <clientSecret> --secret
-$ pulumi config set azure-native:tenantId <tenantID>
-$ pulumi config set azure-native:subscriptionId <subscriptionId>
+## Contributing
 
-## optional default location, otherwise set in code
+We welcome contributions to this project! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
 
-$ pulumi config set azure-native:location SoutheastAsia
+## License
 
-# Azure Resources
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
--List All Azure Firewall FQDN Tags
-https://learn.microsoft.com/en-us/rest/api/firewall/azure-firewall-fqdn-tags/list-all?view=rest-firewall-2023-09-01&tabs=HTTP#code-try-0
+## Acknowledgements
+
+This project is maintained by the Drunk Pulumi Azure team. We would like to thank all the contributors and users who have helped make this project better.
+
+For more information, please visit the [Drunk Pulumi Azure Documentation](https://baoduy.github.io/drunk-pulumi-azure/).
+```

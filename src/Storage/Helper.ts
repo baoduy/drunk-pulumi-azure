@@ -1,5 +1,5 @@
 import { cleanName, defaultSubScope, naming } from '../Common';
-import { getSecrets, getVaultItemName } from '../KeyVault/Helper';
+import { getSecrets } from '../KeyVault/Helper';
 import {
   KeyVaultInfo,
   ResourceWithVaultArgs,
@@ -15,13 +15,12 @@ const getStorageSecrets = ({
   storageName: string;
   vaultInfo: KeyVaultInfo;
 }): StorageConnectionInfo => {
-  const primaryKey = `${getVaultItemName(storageName)}-key-primary`;
-  const secondaryKey = `${getVaultItemName(storageName)}-key-secondary`;
-  const primaryConnection = `${getVaultItemName(storageName)}-conn-primary`;
-  const secondaryConnection = `${getVaultItemName(storageName)}-conn-secondary`;
+  const primaryKey = `${storageName}-key-primary`;
+  const secondaryKey = `${storageName}-key-secondary`;
+  const primaryConnection = `${storageName}-conn-primary`;
+  const secondaryConnection = `${storageName}-conn-secondary`;
 
   return getSecrets({
-    nameFormatted: true,
     vaultInfo,
     names: { primaryKey, secondaryKey, primaryConnection, secondaryConnection },
   });

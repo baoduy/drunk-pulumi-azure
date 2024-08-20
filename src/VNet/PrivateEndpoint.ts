@@ -110,62 +110,65 @@ export const StoragePrivateLink = (
     linkServiceGroupIds: [type],
   });
 
-const linkConfig = {
-  VaultPrivateLink: {
+export const VaultPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
     privateDnsZoneName: 'privatelink.vaultcore.azure.net',
     linkServiceGroupIds: ['keyVault'],
-  },
-  SqlPrivateLink: {
-    privateDnsZoneName: 'privatelink.database.windows.net',
-    linkServiceGroupIds: ['sqlServer'],
-  },
-  SignalRPrivateLink: {
-    privateDnsZoneName: 'privatelink.service.signalr.net',
-    linkServiceGroupIds: ['signalr'],
-  },
-  ServiceBusPrivateLink: {
-    privateDnsZoneName: 'privatelink.servicebus.windows.net',
-    linkServiceGroupIds: ['namespace'],
-  },
-  RedisCachePrivateLink: {
-    privateDnsZoneName: 'privatelink.redis.cache.windows.net',
-    linkServiceGroupIds: ['redisCache'],
-  },
-  PostgreSqlPrivateLink: {
-    privateDnsZoneName: 'PostgreSql.database.azure.com',
-    linkServiceGroupIds: ['PostgreSql'],
-  },
-  MySqlPrivateLink: {
-    privateDnsZoneName: 'mysql.database.azure.com',
-    linkServiceGroupIds: ['mysql'],
-  },
-  AppConfigPrivateLink: {
-    privateDnsZoneName: 'privatelink.azconfig.io',
-    linkServiceGroupIds: ['configurationStores'],
-  },
-  ApimPrivateLink: {
-    privateDnsZoneName: 'privatelink.azure-api.net',
-    linkServiceGroupIds: ['Gateway'],
-  },
-  AcrPrivateLink: {
-    privateDnsZoneName: 'privatelink.azurecr.io',
-    linkServiceGroupIds: ['azurecr'],
-  },
-};
-
-type PrivateLinkFunc = (props: ResourceLinkType) => void;
-
-export default ((): Record<keyof typeof linkConfig, PrivateLinkFunc> => {
-  const rs: Record<string, PrivateLinkFunc> = {};
-
-  Object.keys(linkConfig).forEach((key) => {
-    const config = (linkConfig as any)[key];
-    rs[key] = (props: ResourceLinkType) =>
-      create({
-        ...props,
-        ...config,
-      });
   });
 
-  return rs;
-})();
+export const SqlPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.database.windows.net',
+    linkServiceGroupIds: ['sqlServer'],
+  });
+
+export const SignalRPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.service.signalr.net',
+    linkServiceGroupIds: ['signalr'],
+  });
+export const ServiceBusPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.servicebus.windows.net',
+    linkServiceGroupIds: ['namespace'],
+  });
+export const RedisCachePrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.redis.cache.windows.net',
+    linkServiceGroupIds: ['redisCache'],
+  });
+export const PostgreSqlPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'PostgreSql.database.azure.com',
+    linkServiceGroupIds: ['PostgreSql'],
+  });
+export const MySqlPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'mysql.database.azure.com',
+    linkServiceGroupIds: ['mysql'],
+  });
+export const AppConfigPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.azconfig.io',
+    linkServiceGroupIds: ['configurationStores'],
+  });
+export const ApimPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.azure-api.net',
+    linkServiceGroupIds: ['Gateway'],
+  });
+export const AcrPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.azurecr.io',
+    linkServiceGroupIds: ['azurecr'],
+  });

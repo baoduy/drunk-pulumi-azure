@@ -1,7 +1,11 @@
-import { EnvRoleKeyTypes, EnvRolesInfo } from './EnvRoles';
-import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
-
-export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
+import { roleAssignment, RoleAssignmentProps } from '../Roles';
+import {
+  EnvRoleKeyTypes,
+  EnvRolesInfo,
+  ListRoleType,
+  RoleEnableItem,
+  RoleEnableTypes,
+} from '../../types';
 
 const getRoleFor = (
   roleType: RoleEnableItem | undefined,
@@ -186,22 +190,6 @@ const SignalRRoles: Record<EnvRoleKeyTypes, string[]> = {
 //   contributor: ['Azure Service Bus Data Sender'],
 //   admin: ['Azure Service Bus Data Owner'],
 // };
-
-export type RoleEnableItem = boolean | { [k in EnvRoleKeyTypes]?: boolean };
-
-export type RoleEnableTypes = {
-  enableRGRoles?: RoleEnableItem;
-  enableAksRoles?: RoleEnableItem;
-  enableStorageRoles?: RoleEnableItem;
-  enableIotRoles?: RoleEnableItem;
-  enableVaultRoles?: RoleEnableItem;
-  /** Container Registry Roles */
-  enableACRRoles?: RoleEnableItem;
-  enableAppConfig?: RoleEnableItem;
-  enableServiceBus?: RoleEnableItem;
-  enableSignalR?: RoleEnableItem;
-  //enableRedisCache?: RoleEnableItem;
-};
 
 export const getRoleNames = ({
   enableRGRoles,

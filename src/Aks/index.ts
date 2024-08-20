@@ -24,7 +24,8 @@ import aksIdentityCreator from './Identity';
 import { getAksConfig } from './Helper';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
-import { roleAssignment } from '../AzAd/RoleAssignment';
+import { roleAssignment } from '../AzAd';
+import { groupName } from '@azure/arm-sql/src/models/parameters';
 
 const autoScaleFor = ({
   enableAutoScaling,
@@ -542,9 +543,7 @@ export default async ({
 
     //Update Vault
     const config = await getAksConfig({
-      name: aksName,
-      groupName: group.resourceGroupName,
-      formattedName: true,
+      resourceInfo: { name: aksName, group, id: aks.id },
       disableLocalAccounts: aksAccess.disableLocalAccounts,
     });
 
@@ -552,7 +551,6 @@ export default async ({
       addCustomSecret({
         name: secretName,
         value: config,
-        formattedName: true,
         dependsOn: aks,
         contentType: aksAccess.disableLocalAccounts
           ? `${name}-UserCredentials`

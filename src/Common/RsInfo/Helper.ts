@@ -1,8 +1,7 @@
-import naming from '../Naming';
+import naming, { RulerTypes } from '../Naming';
 import { ResourceInfo, NamingType } from '../../types';
 import { currentRegionCode } from '../AzureEnv';
 
-type RulerTypes = typeof naming;
 type ResourceNamingType = Omit<
   RulerTypes,
   'cleanName' | 'getResourceGroupName'
@@ -13,13 +12,19 @@ type ResourceNamingFunc = (
   resourceName?: NamingType,
 ) => Omit<ResourceInfo, 'id'>;
 
-const resourceNamingCreator = () => {
-  const rs: Record<string, ResourceNamingFunc> = {};
+const rsNamingResult: Record<string, ResourceNamingFunc> = {};
+
+const rsNamingCreator = () => {
+  if (Object.keys(rsNamingResult).length > 0)
+    return rsNamingResult as Record<
+      keyof ResourceNamingType,
+      ResourceNamingFunc
+    >;
 
   Object.keys(naming).forEach((k) => {
     const formater = (naming as any)[k];
 
-    rs[k] = (
+    rsNamingResult[k] = (
       groupName: NamingType,
       resourceName: NamingType | undefined = undefined,
     ): Omit<ResourceInfo, 'id'> => {
@@ -35,7 +40,7 @@ const resourceNamingCreator = () => {
     };
   });
 
-  return rs as Record<keyof ResourceNamingType, ResourceNamingFunc>;
+  return rsNamingResult as Record<keyof ResourceNamingType, ResourceNamingFunc>;
 };
 
-export default resourceNamingCreator();
+export default rsNamingCreator();

@@ -1,12 +1,15 @@
 import { grantEnvRolesAccess } from './EnvRoles.Consts';
-import Role, { RoleProps } from './Role';
-import { KeyVaultInfo } from '../types';
+import { Role, RoleProps } from '../Roles';
+import {
+  EnvRoleInfoType,
+  EnvRoleKeyTypes,
+  EnvRolesInfo,
+  KeyVaultInfo,
+} from '../../types';
 import { output, Output } from '@pulumi/pulumi';
-import { defaultSubScope } from '../Common';
-import { addCustomSecrets } from '../KeyVault/CustomHelper';
-import { getSecret, getVaultItemName } from '../KeyVault/Helper';
-
-export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
+import { defaultSubScope } from '../../Common';
+import { addCustomSecrets } from '../../KeyVault/CustomHelper';
+import { getSecret } from '../../KeyVault/Helper';
 
 const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   readOnly: {
@@ -23,15 +26,9 @@ const envRoleConfig: Record<EnvRoleKeyTypes, RoleProps> = {
   },
 };
 
-type EnvRoleInfoType = { objectId: string; displayName: string };
-export type EnvRolesInfo = Record<
-  EnvRoleKeyTypes,
-  Output<EnvRoleInfoType> | EnvRoleInfoType
->;
-
 const getRoleSecretName = (name: string) => ({
-  objectIdName: getVaultItemName(`envRoles-${name}-object-id`),
-  displayName: getVaultItemName(`envRoles-${name}-display-name`),
+  objectIdName: `envRoles-${name}-object-id`,
+  displayName: `envRoles-${name}-display-name`,
 });
 
 export type CreateEnvRolesType = EnvRolesInfo & {

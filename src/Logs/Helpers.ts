@@ -101,7 +101,6 @@ const getLogWpSecrets = ({
   const secondarySharedKey = `${workspaceName}-secondary`;
 
   return getSecrets({
-    nameFormatted: true,
     vaultInfo,
     names: { workspaceId, primarySharedKey, secondarySharedKey },
   });
@@ -129,7 +128,6 @@ const getAppInsightSecrets = ({
   vaultInfo: KeyVaultInfo;
 }): AppInsightSecretsInfo =>
   getSecrets({
-    nameFormatted: true,
     vaultInfo,
     names: { instrumentationKey: insightName },
   });

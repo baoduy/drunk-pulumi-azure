@@ -4,6 +4,7 @@ import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
 import { KeyVaultInfo, NamedBasicArgs, NamedWithVaultType } from '../types';
 import { getSecret } from '../Common/ConfigHelper';
 import { getVaultItemName } from './Helper';
+import * as env from '../envHelper';
 
 interface Props extends Required<NamedWithVaultType> {
   /** The value of the secret. If Value is not provided the secret will be got from config*/
@@ -31,8 +32,6 @@ export const addVaultSecretFrom = ({
 };
 
 interface SecretProps extends NamedBasicArgs {
-  /**Use the name directly without applying naming format*/
-  formattedName?: boolean;
   value: Input<string>;
   vaultInfo: KeyVaultInfo;
   contentType?: Input<string>;
@@ -44,14 +43,13 @@ interface SecretProps extends NamedBasicArgs {
 /** Add a secret to Key Vault. This will auto recover the deleted item and update with a new value if existed. */
 export const addCustomSecret = ({
   name,
-  formattedName,
   vaultInfo,
   value,
   contentType,
   dependsOn,
   ...others
 }: SecretProps) => {
-  const n = formattedName ? name : getVaultItemName(name);
+  const n = env.DPA_VAULT_DISABLE_FORMAT_NAME ? name : getVaultItemName(name);
   //This KeyVault Secret is not auto recovery the deleted one.
   return new VaultSecretResource(
     replaceAll(name, '.', '-'),
