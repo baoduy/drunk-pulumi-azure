@@ -154,18 +154,25 @@ const linkConfig = {
 };
 
 type PrivateLinkFunc = (props: ResourceLinkType) => void;
+const privateLinkResults: Record<string, PrivateLinkFunc> = {};
 
-export default ((): Record<keyof typeof linkConfig, PrivateLinkFunc> => {
-  const rs: Record<string, PrivateLinkFunc> = {};
+const privateLinkCreator = (): Record<
+  keyof typeof linkConfig,
+  PrivateLinkFunc
+> => {
+  if (Object.keys(privateLinkResults).length > 0) return privateLinkResults;
 
   Object.keys(linkConfig).forEach((key) => {
     const config = (linkConfig as any)[key];
-    rs[key] = (props: ResourceLinkType) =>
+    privateLinkResults[key] = (props: ResourceLinkType) =>
       create({
         ...props,
         ...config,
       });
   });
 
-  return rs;
-})();
+  return privateLinkResults;
+};
+
+privateLinkCreator();
+export default privateLinkCreator();

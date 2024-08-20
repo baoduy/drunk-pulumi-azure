@@ -1,5 +1,4 @@
-import { EnvRolesInfo } from '../../AzAd/EnvRoles';
-import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
+import { EnvRolesInfo, RoleEnableTypes } from '../../AzAd';
 import {
   KeyVaultInfo,
   ResourceGroupInfo,
@@ -99,14 +98,14 @@ export interface IResourceRoleBuilder {
    * @returns An instance of IResourceGroupBuilder.
    */
   createRoles(): IResourceGroupBuilder;
-  
+
   /**
    * Sets the roles properties for the resource.
    * @param props - The roles properties.
    * @returns An instance of IResourceGroupBuilder.
    */
   withRoles(props: EnvRolesInfo): IResourceGroupBuilder;
-  
+
   /**
    * Sets the roles properties from the vault.
    * @returns An instance of IResourceGroupBuilder.
@@ -124,7 +123,7 @@ export interface IResourceGroupBuilder {
    * @returns An instance of IResourceVaultBuilder.
    */
   createRG(props?: RoleEnableTypes): IResourceVaultBuilder;
-  
+
   /**
    * Sets the resource group properties.
    * @param props - The resource group properties.
@@ -144,14 +143,14 @@ export interface IResourceVaultBuilder {
    * @returns An instance of IResourceBuilder.
    */
   createVault(name?: string): IResourceBuilder;
-  
+
   /**
    * Sets the vault properties.
    * @param props - The vault properties.
    * @returns An instance of IResourceBuilder.
    */
   withVault(props: KeyVaultInfo): IResourceBuilder;
-  
+
   /**
    * Sets the vault properties from the given name.
    * @param name - The name of the vault.
@@ -170,9 +169,9 @@ export interface IResourceVaultItemsBuilder {
    * @returns An instance of IResourceBuilder.
    */
   addSecrets(items: VaultBuilderSecretType): IResourceBuilder;
-  
+
   //addKeys () : IResourceBuilder;
-  
+
   /**
    * Adds certificates to the resource vault.
    * @param props - The certificate properties.
@@ -190,7 +189,7 @@ export interface IEnvUserAssignedIdentityBuilder {
    * @returns An instance of IResourceBuilder.
    */
   createEnvUID(): IResourceBuilder;
-  
+
   /**
    * Sets the User Assigned Identity properties from the vault.
    * @returns An instance of IResourceBuilder.
@@ -208,7 +207,7 @@ export interface IResourceVnetBuilder {
    * @returns An instance of IResourceBuilder.
    */
   withVnet(props: ResourceVnetBuilderType): IResourceBuilder;
-  
+
   /**
    * Links the resource vault to the specified properties.
    * @param props - The vault linking properties.
@@ -232,14 +231,14 @@ export interface IResourceBuilder
    * @returns An instance of IResourceBuilder.
    */
   withLogFrom(name: string): IResourceBuilder;
-  
+
   /**
    * Sets the builder properties.
    * @param props - The builder function properties.
    * @returns An instance of IResourceBuilder.
    */
   withBuilder(props: BuilderFunctionType): IResourceBuilder;
-  
+
   /**
    * Conditionally sets the builder properties.
    * @param condition - The condition to check.
@@ -250,14 +249,14 @@ export interface IResourceBuilder
     condition: boolean,
     props: BuilderFunctionType,
   ): IResourceBuilder;
-  
+
   /**
    * Sets the asynchronous builder properties.
    * @param props - The asynchronous builder function properties.
    * @returns An instance of IResourceBuilder.
    */
   withBuilderAsync(props: BuilderAsyncFunctionType): IResourceBuilder;
-  
+
   /**
    * Conditionally sets the asynchronous builder properties.
    * @param condition - The condition to check.
@@ -268,14 +267,14 @@ export interface IResourceBuilder
     condition: boolean,
     props: BuilderAsyncFunctionType,
   ): IResourceBuilder;
-  
+
   /**
    * Sets the resource properties.
    * @param builder - The resource function.
    * @returns An instance of IResourceBuilder.
    */
   withResource(builder: ResourceFunction): IResourceBuilder;
-  
+
   /**
    * Builds the resource and returns the resource builder results.
    * @returns A promise that resolves to the resource builder results.

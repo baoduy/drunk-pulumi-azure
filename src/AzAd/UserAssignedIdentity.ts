@@ -34,7 +34,6 @@ export default ({
       vaultInfo,
       dependsOn: managedIdentity,
       contentType: 'UserAssignedIdentity',
-      formattedName: true,
       items: [
         {
           name: `${name}-id`,

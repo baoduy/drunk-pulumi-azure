@@ -5,8 +5,9 @@ import {
   getEnvRolesOutput,
   pushEnvRolesToVault,
   EnvRoleKeyTypes,
-} from '../AzAd/EnvRoles';
-import { grantEnvRolesAccess } from '../AzAd/EnvRoles.Consts';
+  grantEnvRolesAccess,
+} from '../AzAd';
+
 import { addMemberToGroup } from '../AzAd/Group';
 import { KeyVaultInfo } from '../types';
 import { EnvRoleBuilderGrantType, IEnvRoleBuilder } from './types';

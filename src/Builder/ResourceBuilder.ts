@@ -1,8 +1,7 @@
 import * as resources from '@pulumi/azure-native/resources';
-import { grantEnvRolesAccess, RoleEnableTypes } from '../AzAd/EnvRoles.Consts';
+import { grantEnvRolesAccess, RoleEnableTypes, EnvRolesInfo } from '../AzAd';
 import { EnvRoleBuilder } from './EnvRoleBuilder';
 import * as types from './types';
-import { EnvRolesInfo } from '../AzAd/EnvRoles';
 import {
   IdentityInfo,
   KeyVaultInfo,

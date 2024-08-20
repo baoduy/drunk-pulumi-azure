@@ -156,7 +156,6 @@ export class ApimProductBuilder
       addCustomSecrets({
         contentType: subName,
         vaultInfo: this.args.vaultInfo,
-        formattedName: true,
         dependsOn: this._subInstance,
         items: [
           { name: primaryKey, value: primaryPass },

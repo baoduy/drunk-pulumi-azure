@@ -336,7 +336,6 @@ function Storage({
       addCustomSecrets({
         vaultInfo,
         contentType: 'Storage',
-        formattedName: true,
         items: [
           {
             name: primaryKeyName,

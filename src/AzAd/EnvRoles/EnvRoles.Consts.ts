@@ -1,5 +1,5 @@
 import { EnvRoleKeyTypes, EnvRolesInfo } from './EnvRoles';
-import { roleAssignment, RoleAssignmentProps } from './RoleAssignment';
+import { roleAssignment, RoleAssignmentProps } from '../Roles';
 
 export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;
 

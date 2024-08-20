@@ -1,6 +1,5 @@
 import * as cs from '@pulumi/azure-native/containerservice';
-import { defaultSubScope, naming, globalKeyName } from '../Common';
-
+import { defaultSubScope, naming } from '../Common';
 import { KeyVaultInfo, ResourceInfo, WithNamedType } from '../types';
 import { getSecret } from '../KeyVault/Helper';
 import { interpolate } from '@pulumi/pulumi';
@@ -69,7 +68,7 @@ export const getAksPrivateDnz = async (
 
   return {
     name: dnsName,
-    group: { resourceGroupName: rsGroup, location: globalKeyName },
+    group: { resourceGroupName: rsGroup, location: 'global' },
     id: interpolate`${defaultSubScope}/resourceGroups/${rsGroup}/providers/Microsoft.Network/privateDnsZones/${dnsName}`,
   } as ResourceInfo;
 };

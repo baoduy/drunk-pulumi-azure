@@ -1,9 +1,4 @@
-import {
-  BasicResourceArgs,
-  WithEncryptionInfo,
-  WithEnvRoles,
-  WithVaultInfo,
-} from '../../types';
+import { BasicResourceArgs, WithEnvRoles, WithVaultInfo } from '../../types';
 import UserAssignedIdentity from '../UserAssignedIdentity';
 import { defaultAzAdoName } from './AzDevOpsIdentity';
 

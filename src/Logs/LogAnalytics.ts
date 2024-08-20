@@ -57,9 +57,9 @@ export default ({
         workspaceName: name,
         resourceGroupName: group.resourceGroupName,
       });
+
       addCustomSecrets({
         contentType: 'Log Analytics',
-        formattedName: true,
         vaultInfo,
         items: [
           { name: workspaceIdKeyName, value: id },

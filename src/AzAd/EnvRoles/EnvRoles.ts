@@ -1,10 +1,10 @@
 import { grantEnvRolesAccess } from './EnvRoles.Consts';
-import Role, { RoleProps } from './Role';
-import { KeyVaultInfo } from '../types';
+import { Role, RoleProps } from '../Roles';
+import { KeyVaultInfo } from '../../types';
 import { output, Output } from '@pulumi/pulumi';
-import { defaultSubScope } from '../Common';
-import { addCustomSecrets } from '../KeyVault/CustomHelper';
-import { getSecret, getVaultItemName } from '../KeyVault/Helper';
+import { defaultSubScope } from '../../Common';
+import { addCustomSecrets } from '../../KeyVault/CustomHelper';
+import { getSecret, getVaultItemName } from '../../KeyVault/Helper';
 
 export type EnvRoleKeyTypes = 'readOnly' | 'contributor' | 'admin';
 

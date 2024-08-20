@@ -1,6 +1,5 @@
 import { Input, Output } from '@pulumi/pulumi';
-import { EnvRoleKeyTypes, EnvRolesInfo } from '../../AzAd/EnvRoles';
-import { RoleEnableTypes } from '../../AzAd/EnvRoles.Consts';
+import { EnvRoleKeyTypes, EnvRolesInfo, RoleEnableTypes } from '../../AzAd';
 import { KeyVaultInfo, WithNamedType } from '../../types';
 import { IInfo } from './genericBuilder';
 

@@ -1,8 +1,8 @@
 import * as native from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
 import { Input, Resource } from '@pulumi/pulumi';
-import { defaultSubScope } from '../Common';
-import { WithNamedType } from '../types';
+import { defaultSubScope } from '../../Common';
+import { WithNamedType } from '../../types';
 import RolesBuiltIn from './RolesBuiltIn';
 
 type GetRoleProps = {

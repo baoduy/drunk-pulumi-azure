@@ -125,7 +125,6 @@ export default ({
     addCustomSecrets({
       vaultInfo,
       contentType: 'Identity',
-      formattedName: true,
       items: [
         { name: secretNames.objectIdName, value: app.objectId },
         { name: secretNames.clientIdKeyName, value: app.clientId },

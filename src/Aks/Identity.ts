@@ -1,7 +1,7 @@
 import identityCreator from '../AzAd/Identity';
 import { BasicResourceWithVaultArgs } from '../types';
 import { rsInfo } from '../Common';
-import { roleAssignment } from '../AzAd/RoleAssignment';
+import { roleAssignment } from '../AzAd';
 
 type Props = BasicResourceWithVaultArgs;
 

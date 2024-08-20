@@ -50,7 +50,6 @@ export const generateSsh = ({
 
   //Add secrets to vault
   addCustomSecrets({
-    formattedName: true,
     vaultInfo,
     contentType: 'Random Ssh',
     dependsOn: rs,

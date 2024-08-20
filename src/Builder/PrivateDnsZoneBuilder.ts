@@ -1,13 +1,10 @@
 import { DnsZoneARecordType } from './types';
 import { BasicResourceArgs, ResourceInfo } from '../types';
 import * as network from '@pulumi/azure-native/network';
-import {
-  IPrivateDnsZoneBuilder,
-  PrivateDnsZoneVnetLinkingType,
-} from './types/privateDnsZoneBuilder';
+import { IPrivateDnsZoneBuilder, PrivateDnsZoneVnetLinkingType } from './types';
 import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
-import { rsInfo, globalKeyName } from '../Common';
+import { rsInfo } from '../Common';
 import { getAksPrivateDnz } from '../Aks/Helper';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
@@ -24,7 +21,7 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
       ...props,
       group: {
         resourceGroupName: props.group.resourceGroupName,
-        location: globalKeyName,
+        location: 'global',
       },
     };
   }
