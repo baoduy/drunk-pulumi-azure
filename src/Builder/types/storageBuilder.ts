@@ -20,11 +20,11 @@ export type StorageBuilderArgs = BuilderProps & WithEncryptionInfo;
 export type StorageCdnType = Pick<
   CdnEndpointProps,
   'cdnProfileInfo' | 'cors' | 'domainNames'
-> & { 
+> & {
   /**
    * Security response headers for the CDN.
    */
-  securityResponse?: CdnSecurityHeaderTypes 
+  securityResponse?: CdnSecurityHeaderTypes;
 };
 
 /**
@@ -45,7 +45,7 @@ export interface IStorageStarterBuilder {
    * @returns An instance of IStorageBuilder.
    */
   asStorage(props?: StorageFeatureBuilderType): IStorageBuilder;
-  
+
   /**
    * Initializes the builder as a static web storage resource.
    * @returns An instance of IStaticWebStorageBuilder.
@@ -79,21 +79,21 @@ export interface IStorageBuilder
    * @returns An instance of IStorageBuilder.
    */
   withContainer(props: ContainerProps): IStorageBuilder;
-  
+
   /**
    * Adds a queue to the storage resource.
    * @param name - The name of the queue.
    * @returns An instance of IStorageBuilder.
    */
   withQueue(name: string): IStorageBuilder;
-  
+
   /**
    * Adds a file share to the storage resource.
    * @param name - The name of the file share.
    * @returns An instance of IStorageBuilder.
    */
   withFileShare(name: string): IStorageBuilder;
-  
+
   /**
    * Sets the policies for the storage resource.
    * @param props - The policy properties.
@@ -114,4 +114,9 @@ export interface IStaticWebStorageBuilder
    * @returns An instance of IStaticWebStorageBuilder.
    */
   withCdn(props: StorageCdnType): IStaticWebStorageBuilder;
+
+  withCdnIf(
+    condition: boolean,
+    props: StorageCdnType,
+  ): IStaticWebStorageBuilder;
 }
