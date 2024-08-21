@@ -114,7 +114,7 @@ function Storage({
       allowBlobPublicAccess: Boolean(features?.allowBlobPublicAccess),
       allowSharedKeyAccess,
       allowedCopyScope: network?.privateEndpoint ? 'PrivateLink' : 'AAD',
-      defaultToOAuthAuthentication: !Boolean(features.allowSharedKeyAccess),
+      defaultToOAuthAuthentication: !allowSharedKeyAccess,
       isSftpEnabled: Boolean(features.isSftpEnabled),
 
       allowCrossTenantReplication: Boolean(
@@ -208,6 +208,8 @@ function Storage({
       ],
     },
   );
+  //Allows to Read Key Vault
+  envRoles?.addIdentity('readOnly', stg.identity);
 
   if (network?.privateEndpoint) {
     const linkTypes = Array.isArray(network.privateEndpoint.type)
@@ -311,11 +313,8 @@ function Storage({
   stg.id.apply(async (id) => {
     if (!id) return;
 
-    //Allows to Read Key Vault
-    if (envRoles) envRoles.addIdentity('readOnly', stg.identity);
-
     //Add connection into Key vault
-    if (vaultInfo && allowSharedKeyAccess) {
+    if (vaultInfo) {
       const primaryKeyName = `${name}-key-primary`;
       const secondaryKeyName = `${name}-key-secondary`;
       const primaryConnectionKeyName = `${name}-conn-primary`;
