@@ -282,10 +282,9 @@ export const rules = {
 };
 
 export type RulerTypes = typeof rules;
-
 export type NamingFunc = (name: NamingType) => string;
 
-export const replaceInString = (
+const replaceSingleInString = (
   val: string,
   pattern: ReplacePattern,
 ): string => {
@@ -296,18 +295,32 @@ export const replaceInString = (
     regex = pattern.from;
   } else {
     // If 'from' is a string, convert it to a RegExp
-    regex = new RegExp(pattern.from, 'g');
+    regex = new RegExp(
+      pattern.from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+      'g',
+    );
   }
   // Replace occurrences of 'from' with 'to'
   return val.replace(regex, pattern.to);
 };
 
+export const replaceInString = (
+  val: string,
+  ...patterns: ReplacePattern[]
+): string => {
+  patterns.forEach((p) => (val = replaceSingleInString(val, p)));
+  return val;
+};
+
 //======================================================================
+export const replaceSpaceWithDash = (s: string) =>
+  replaceInString(s, { from: ' ', to: '-' });
+export const replaceDotWithDash = (s: string) =>
+  replaceInString(s, { from: '.', to: '-' });
 
 export const removeNumberAndDash = (s: string) => s.replace(/^\d+-/, '');
 export const removeLeadingAndTrailingDash = (s: string) =>
   s.replace(/^-|-$/g, '');
-export const replaceSpaceWithDash = (s: string) => s.replace(/\s+/g, '-');
 
 export const cleanName = (name: string): string => {
   name = removeNumberAndDash(name);

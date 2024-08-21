@@ -12,6 +12,7 @@ import { StorageEndpointTypes } from '../Storage';
 
 export type PrivateEndpointProps = PrivateLinkPropsType &
   Pick<OptsArgs, 'dependsOn'> & {
+    nameIncludeDns?: boolean;
     resourceInfo: ResourceInfo;
     /** check the private link DNS Zone here https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns */
     privateDnsZoneName: string;
@@ -20,6 +21,7 @@ export type PrivateEndpointProps = PrivateLinkPropsType &
   };
 
 const create = ({
+  nameIncludeDns,
   resourceInfo,
   subnetIds,
   extraVnetIds,
@@ -32,7 +34,9 @@ const create = ({
 
   const endpoints = output(subnetIds).apply((ss) =>
     ss.map((s) => {
-      const n = rsInfo.getNameFromId(s);
+      const sub = rsInfo.getNameFromId(s);
+      const n = nameIncludeDns ? `${sub}-${privateDnsZoneName}` : sub;
+
       const ep = new network.PrivateEndpoint(
         `${name}-${n}`,
         {
@@ -106,6 +110,7 @@ export const StoragePrivateLink = (
 ) =>
   create({
     ...props,
+    nameIncludeDns: true,
     privateDnsZoneName: `privatelink.${type}.core.windows.net`,
     linkServiceGroupIds: [type],
   });
@@ -145,8 +150,8 @@ export const RedisCachePrivateLink = (props: ResourceLinkType) =>
 export const PostgreSqlPrivateLink = (props: ResourceLinkType) =>
   create({
     ...props,
-    privateDnsZoneName: 'PostgreSql.database.azure.com',
-    linkServiceGroupIds: ['PostgreSql'],
+    privateDnsZoneName: 'privatelink.database.azure.com',
+    linkServiceGroupIds: ['postgreSql'],
   });
 export const MySqlPrivateLink = (props: ResourceLinkType) =>
   create({

@@ -6,6 +6,7 @@ import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
 import { rsInfo } from '../Common';
 import { getAksPrivateDnsZone } from '../Aks/Helper';
+import { replaceInString } from '../Common/Naming';
 
 class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
@@ -86,7 +87,12 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
   private buildVnetLinks() {
     if (this._vnetLinks.length <= 0 || !this._dnsInfo) return;
 
-    const linkName = rsInfo.getNameFromId(this._dnsInfo.name);
+    //Remove "privatelink" and "." from the name
+    const linkName = replaceInString(this._dnsInfo.name, {
+      from: /privatelink|\./g,
+      to: '',
+    });
+
     const vnetIds = this._vnetLinks.flatMap((lik) => [
       //Link all subnets first
       ...(lik.subnetIds ?? []).map((s) =>
@@ -98,9 +104,9 @@ class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
 
     output(vnetIds).apply((vids) =>
       vids.map((v) => {
-        const n = rsInfo.getNameFromId(v);
+        const vnetName = rsInfo.getNameFromId(v);
         return new native.network.VirtualNetworkLink(
-          `${linkName}-${n}-link`,
+          `${linkName}-${vnetName}`,
           {
             ...this._dnsInfo!.group,
             privateZoneName: this._dnsInfo!.name,
