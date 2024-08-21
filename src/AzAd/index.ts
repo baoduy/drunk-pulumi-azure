@@ -1,6 +1,10 @@
-export * from './EnvRoles';
-export * from './Identities';
-export * from './RoleDefinitions';
+export * from './EnvRoles/EnvRoles.Consts';
+export * from './EnvRoles/EnvRoles';
+export { default as AzDevOpsIdentity } from './Identities/AzDevOpsIdentity';
+export { default as AzDevOpsManagedIdentity } from './Identities/AzDevOpsManagedIdentity';
+export { default as AzUserAdRevertSync } from './Identities/AzUserAdRevertSync';
+export * as EnvUID from './Identities/EnvUID';
+export * from './RoleDefinitions/JustInTimeRequestRole';
 export * from './Group';
 export * from './Helper';
 export * from './Roles';

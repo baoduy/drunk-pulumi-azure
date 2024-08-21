@@ -387,9 +387,9 @@ class ServiceBusBuilder
         contentType: `ServiceBus ${n}`,
         dependsOn: rule,
         items: [
-          { name: `${n}-${type}-primary`, value: keys.primaryConnectionString },
+          { name: `${n}-primary`, value: keys.primaryConnectionString },
           {
-            name: `${n}-${type}-secondary`,
+            name: `${n}-secondary`,
             value: keys.secondaryConnectionString,
           },
         ],

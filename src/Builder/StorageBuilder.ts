@@ -54,6 +54,13 @@ class StorageBuilder
     this._cdnProps = props;
     return this;
   }
+  public withCdnIf(
+    condition: boolean,
+    props: StorageCdnType,
+  ): IStaticWebStorageBuilder {
+    if (condition) this.withCdn(props);
+    return this;
+  }
   public withContainer(props: ContainerProps): IStorageBuilder {
     this._containers.push(props);
     return this;
