@@ -220,6 +220,10 @@ function Storage({
     linkTypes.map((type) =>
       StoragePrivateLink(type, {
         ...network.privateEndpoint!,
+        privateIpAddress:
+          type === 'web'
+            ? network.privateEndpoint?.privateIpAddress
+            : undefined,
         resourceInfo: { name, group, id: stg.id },
         dependsOn: stg,
       }),
