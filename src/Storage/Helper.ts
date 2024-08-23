@@ -1,4 +1,5 @@
 import { cleanName, defaultSubScope, naming } from '../Common';
+import env from '../env';
 import { getSecrets } from '../KeyVault/Helper';
 import {
   KeyVaultInfo,
@@ -15,14 +16,20 @@ const getStorageSecrets = ({
   storageName: string;
   vaultInfo: KeyVaultInfo;
 }): StorageConnectionInfo => {
-  const primaryKey = `${storageName}-key-primary`;
+  const primaryKey = env.DPA_CONN_ENABLE_SECONDARY
+    ? `${storageName}-key-primary`
+    : `${storageName}-key`;
   const secondaryKey = `${storageName}-key-secondary`;
-  const primaryConnection = `${storageName}-conn-primary`;
+  const primaryConnection = env.DPA_CONN_ENABLE_SECONDARY
+    ? `${storageName}-conn-primary`
+    : `${storageName}-conn`;
   const secondaryConnection = `${storageName}-conn-secondary`;
 
   return getSecrets({
     vaultInfo,
-    names: { primaryKey, secondaryKey, primaryConnection, secondaryConnection },
+    names: env.DPA_CONN_ENABLE_SECONDARY
+      ? { primaryKey, secondaryKey, primaryConnection, secondaryConnection }
+      : { primaryKey, primaryConnection },
   });
 };
 
@@ -48,39 +55,3 @@ export const getStorageInfo = ({
     id: interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`,
   };
 };
-
-// export const getStorageSecretsById = async ({
-//   storageId,
-//   vaultInfo,
-// }: {
-//   storageId: string;
-//   vaultInfo: KeyVaultInfo;
-// }) => {
-//   const info = rsInfo.getResourceInfoFromId(storageId);
-//   const secrets = info
-//     ? await getStorageSecrets({
-//         name: info.name,
-//         nameFormatted: true,
-//         vaultInfo,
-//       })
-//     : undefined;
-//
-//   return secrets ? { info, secrets } : undefined;
-// };
-
-// export const getAccountSAS = ({ group, name }: BasicResourceArgs) => {
-//   const now = new Date();
-//   const expireDate = new Date();
-//   expireDate.setMonth(expireDate.getMonth() + 3);
-//
-//   return storage.listStorageAccountSAS({
-//     accountName: name,
-//     ...group,
-//     resourceTypes: storage.SignedResourceTypes.C,
-//     services: storage.Services.B,
-//     permissions: storage.Permissions.W,
-//     protocols: storage.HttpProtocol.Https,
-//     sharedAccessStartTime: now.toISOString(),
-//     sharedAccessExpiryTime: expireDate.toISOString(),
-//   });
-// };

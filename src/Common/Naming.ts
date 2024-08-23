@@ -1,5 +1,5 @@
 import { ConventionProps, ReplacePattern, NamingType } from '../types';
-import * as env from '../envHelper';
+import env from '../env';
 import { currentCountryCode } from './AzureEnv';
 import { organization, stack } from './StackEnv';
 

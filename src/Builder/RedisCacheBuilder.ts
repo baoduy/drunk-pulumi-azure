@@ -5,6 +5,7 @@ import {
   RedisCacheBuilderArgs,
   RedisCacheSkuBuilder,
 } from './types';
+import env from '../env';
 import { NetworkPropsType, ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 import * as cache from '@pulumi/azure-native/cache';
@@ -113,17 +114,25 @@ class RedisCacheBuilder
         vaultInfo,
         contentType: 'Redis Cache',
         dependsOn: this._redisInstance,
-        items: [
-          { name: `${this._instanceName}-host`, value: h },
-          {
-            name: `${this._instanceName}-primary-conn`,
-            value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
-          },
-          {
-            name: `${this._instanceName}-secondary-conn`,
-            value: `${h}:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
-          },
-        ],
+        items: env.DPA_CONN_ENABLE_SECONDARY
+          ? [
+              { name: `${this._instanceName}-host`, value: h },
+              {
+                name: `${this._instanceName}-conn-primary`,
+                value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
+              },
+              {
+                name: `${this._instanceName}-conn-secondary`,
+                value: `${h}:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
+              },
+            ]
+          : [
+              { name: `${this._instanceName}-host`, value: h },
+              {
+                name: `${this._instanceName}-conn`,
+                value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
+              },
+            ],
       });
     });
   }

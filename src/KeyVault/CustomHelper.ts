@@ -4,7 +4,7 @@ import { VaultSecretResource } from '@drunk-pulumi/azure-providers/VaultSecret';
 import { KeyVaultInfo, NamedBasicArgs, NamedWithVaultType } from '../types';
 import { getSecret } from '../Common/ConfigHelper';
 import { getVaultItemName } from './Helper';
-import * as env from '../envHelper';
+import env from '../env';
 
 interface Props extends Required<NamedWithVaultType> {
   /** The value of the secret. If Value is not provided the secret will be got from config*/

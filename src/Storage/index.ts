@@ -1,4 +1,5 @@
 import * as storage from '@pulumi/azure-native/storage';
+import env from '../env';
 import {
   BasicEncryptResourceArgs,
   PrivateLinkPropsType,
@@ -319,11 +320,6 @@ function Storage({
 
     //Add connection into Key vault
     if (vaultInfo) {
-      const primaryKeyName = `${name}-key-primary`;
-      const secondaryKeyName = `${name}-key-secondary`;
-      const primaryConnectionKeyName = `${name}-conn-primary`;
-      const secondConnectionKeyName = `${name}-conn-secondary`;
-
       const keys = (
         await storage.listStorageAccountKeys({
           accountName: name,
@@ -339,24 +335,36 @@ function Storage({
       addCustomSecrets({
         vaultInfo,
         contentType: `Storage: ${name}`,
-        items: [
-          {
-            name: primaryKeyName,
-            value: keys[0].key,
-          },
-          {
-            name: secondaryKeyName,
-            value: keys[1].key,
-          },
-          {
-            name: primaryConnectionKeyName,
-            value: keys[0].connectionString,
-          },
-          {
-            name: secondConnectionKeyName,
-            value: keys[1].connectionString,
-          },
-        ],
+        items: env.DPA_CONN_ENABLE_SECONDARY
+          ? [
+              {
+                name: `${name}-key-primary`,
+                value: keys[0].key,
+              },
+              {
+                name: `${name}-key-secondary`,
+                value: keys[1].key,
+              },
+              {
+                name: `${name}-conn-primary`,
+                value: keys[0].connectionString,
+              },
+              {
+                name: `${name}-conn-secondary`,
+                value: keys[1].connectionString,
+              },
+            ]
+          : [
+              {
+                name: `${name}-key`,
+                value: keys[0].key,
+              },
+
+              {
+                name: `${name}-conn`,
+                value: keys[0].connectionString,
+              },
+            ],
       });
     }
   });

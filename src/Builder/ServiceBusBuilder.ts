@@ -1,15 +1,5 @@
-import {
-  IServiceBusBuilder,
-  IServiceBusSkuBuilder,
-  ServiceBusBuilderArgs,
-  ServiceBusOptions,
-  ServiceBusQueueArgs,
-  ServiceBusSkuTypes,
-  ServiceBusSubArgs,
-  ServiceBusTopicArgs,
-  Builder,
-} from './types';
-
+import * as types from './types';
+import env from '../env';
 import {
   NetworkPropsType,
   ResourceInfo,
@@ -22,7 +12,7 @@ import { addEncryptKey } from '../KeyVault/Helper';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ServiceBusPrivateLink } from '../VNet';
 
-const defaultQueueOptions: ServiceBusQueueArgs = {
+const defaultQueueOptions: types.ServiceBusQueueArgs = {
   //duplicateDetectionHistoryTimeWindow: 'P10M',
   //maxMessageSizeInKilobytes: 1024,
   //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
@@ -36,7 +26,7 @@ const defaultQueueOptions: ServiceBusQueueArgs = {
   deadLetteringOnMessageExpiration: true,
 };
 
-const defaultTopicOptions: ServiceBusTopicArgs = {
+const defaultTopicOptions: types.ServiceBusTopicArgs = {
   //duplicateDetectionHistoryTimeWindow: 'P10M',
   //maxMessageSizeInKilobytes: 1024,
   //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
@@ -46,7 +36,7 @@ const defaultTopicOptions: ServiceBusTopicArgs = {
   enableBatchedOperations: true,
 };
 
-const defaultSubOptions: ServiceBusSubArgs = {
+const defaultSubOptions: types.ServiceBusSubArgs = {
   duplicateDetectionHistoryTimeWindow: 'P10M',
   autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
   defaultMessageTimeToLive: isPrd ? 'P30D' : 'P5D',
@@ -57,33 +47,33 @@ const defaultSubOptions: ServiceBusSubArgs = {
 };
 
 class ServiceBusBuilder
-  extends Builder<ResourceInfo>
-  implements IServiceBusBuilder, IServiceBusSkuBuilder
+  extends types.Builder<ResourceInfo>
+  implements types.IServiceBusBuilder, types.IServiceBusSkuBuilder
 {
   private readonly _instanceName: string;
   private _sbInstance: bus.Namespace | undefined = undefined;
   private _networkInstance: bus.NamespaceNetworkRuleSet | undefined = undefined;
 
-  private _sku: ServiceBusSkuTypes = 'Basic';
+  private _sku: types.ServiceBusSkuTypes = 'Basic';
   private _network: NetworkPropsType | undefined = undefined;
-  private _queues: Record<string, ServiceBusQueueArgs> = {};
-  private _topics: Record<string, ServiceBusTopicArgs> = {};
-  private _options: ServiceBusOptions = {};
+  private _queues: Record<string, types.ServiceBusQueueArgs> = {};
+  private _topics: Record<string, types.ServiceBusTopicArgs> = {};
+  private _options: types.ServiceBusOptions = {};
 
-  constructor(private args: ServiceBusBuilderArgs) {
+  constructor(private args: types.ServiceBusBuilderArgs) {
     super(args);
     this._instanceName = naming.getServiceBusName(args.name);
   }
 
-  public withSku(sku: ServiceBusSkuTypes): IServiceBusBuilder {
+  public withSku(sku: types.ServiceBusSkuTypes): types.IServiceBusBuilder {
     this._sku = sku;
     return this;
   }
-  public withOptions(props: ServiceBusOptions): IServiceBusBuilder {
+  public withOptions(props: types.ServiceBusOptions): types.IServiceBusBuilder {
     this._options = props;
     return this;
   }
-  public withNetwork(props: NetworkPropsType): IServiceBusBuilder {
+  public withNetwork(props: NetworkPropsType): types.IServiceBusBuilder {
     if (this._sku !== 'Premium')
       throw new Error(
         "The network only support for Service Bus with 'Premium' tier.",
@@ -95,19 +85,19 @@ class ServiceBusBuilder
   public withNetworkIf(
     condition: boolean,
     props: NetworkPropsType,
-  ): IServiceBusBuilder {
+  ): types.IServiceBusBuilder {
     if (condition) return this.withNetwork(props);
     return this;
   }
   public withQueues(
-    props: Record<string, ServiceBusQueueArgs>,
-  ): IServiceBusBuilder {
+    props: Record<string, types.ServiceBusQueueArgs>,
+  ): types.IServiceBusBuilder {
     this._queues = { ...this._queues, ...props };
     return this;
   }
   public withTopics(
-    props: Record<string, ServiceBusTopicArgs>,
-  ): IServiceBusBuilder {
+    props: Record<string, types.ServiceBusTopicArgs>,
+  ): types.IServiceBusBuilder {
     this._topics = { ...this._topics, ...props };
     return this;
   }
@@ -139,7 +129,7 @@ class ServiceBusBuilder
           type: this.args.envUIDInfo
             ? bus.ManagedServiceIdentityType.SystemAssigned_UserAssigned
             : bus.ManagedServiceIdentityType.SystemAssigned,
-          //all uuid must assigned here before use
+          //all uuid must assign here before use
           userAssignedIdentities: this.args.envUIDInfo
             ? [this.args.envUIDInfo.id]
             : undefined,
@@ -235,7 +225,7 @@ class ServiceBusBuilder
       ['both', 'send', 'listen'].map((type) =>
         this.buildConnectionString({
           type,
-          level: 'topic',
+          level: 'queue',
           name: queueName,
           dependsOn: queue,
         }),
@@ -258,7 +248,7 @@ class ServiceBusBuilder
         { dependsOn: this._sbInstance },
       );
 
-      ['both', 'send', 'listen'].map((type) =>
+      ['manage', 'both', 'send', 'listen'].map((type) =>
         this.buildConnectionString({
           type,
           level: 'topic',
@@ -284,7 +274,7 @@ class ServiceBusBuilder
     subs,
   }: {
     topic: bus.Topic;
-    subs?: Record<string, ServiceBusSubArgs>;
+    subs?: Record<string, types.ServiceBusSubArgs>;
   } & WithNamedType) {
     if (!subs) return;
 
@@ -326,7 +316,7 @@ class ServiceBusBuilder
     name,
     dependsOn,
   }: {
-    type: 'send' | 'listen' | 'both' | string;
+    type: 'send' | 'listen' | 'both' | 'manage' | string;
     level: 'queue' | 'topic' | string;
   } & WithDependsOn &
     WithNamedType) {
@@ -334,12 +324,18 @@ class ServiceBusBuilder
     const authorizationRuleName = `${level}-${name}-${type}`;
     const n = `${this._instanceName}-${authorizationRuleName}`;
 
-    const permissions =
-      type == 'both'
-        ? [bus.AccessRights.Send, bus.AccessRights.Listen]
-        : type === 'send'
-          ? [bus.AccessRights.Send]
-          : [bus.AccessRights.Listen];
+    const rights =
+      type === 'manage'
+        ? [
+            bus.AccessRights.Manage,
+            bus.AccessRights.Send,
+            bus.AccessRights.Listen,
+          ]
+        : type == 'both'
+          ? [bus.AccessRights.Send, bus.AccessRights.Listen]
+          : type === 'send'
+            ? [bus.AccessRights.Send]
+            : [bus.AccessRights.Listen];
 
     const rule =
       level === 'topic'
@@ -350,7 +346,7 @@ class ServiceBusBuilder
               authorizationRuleName,
               topicName: name,
               namespaceName: this._instanceName,
-              rights: permissions,
+              rights,
             },
             { dependsOn },
           )
@@ -361,7 +357,7 @@ class ServiceBusBuilder
               authorizationRuleName,
               queueName: name,
               namespaceName: this._instanceName,
-              rights: permissions,
+              rights,
             },
             { dependsOn },
           );
@@ -386,13 +382,15 @@ class ServiceBusBuilder
         vaultInfo: this.args.vaultInfo!,
         contentType: `ServiceBus ${n}`,
         dependsOn: rule,
-        items: [
-          { name: `${n}-primary`, value: keys.primaryConnectionString },
-          {
-            name: `${n}-secondary`,
-            value: keys.secondaryConnectionString,
-          },
-        ],
+        items: env.DPA_CONN_ENABLE_SECONDARY
+          ? [
+              { name: `${n}-primary`, value: keys.primaryConnectionString },
+              {
+                name: `${n}-secondary`,
+                value: keys.secondaryConnectionString,
+              },
+            ]
+          : [{ name: n, value: keys.primaryConnectionString }],
       });
     });
   }
@@ -411,5 +409,5 @@ class ServiceBusBuilder
   }
 }
 
-export default (props: ServiceBusBuilderArgs) =>
-  new ServiceBusBuilder(props) as IServiceBusSkuBuilder;
+export default (props: types.ServiceBusBuilderArgs) =>
+  new ServiceBusBuilder(props) as types.IServiceBusSkuBuilder;
