@@ -5,11 +5,12 @@ import {
   Builder,
   IAppConfigBuilder,
 } from './types';
+import env from '../env';
 import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 import * as appConfig from '@pulumi/azure-native/appconfiguration/v20230901preview';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { AppConfigPrivateLink } from '../VNet';
 
 class AppConfigBuilder
@@ -122,10 +123,14 @@ class AppConfigBuilder
       });
 
       if (keys.value) {
-        const readPrimaryConnectionStringKey = `${this._instanceName}-read-primary-connection-string`;
-        const readSecondaryConnectionStringKey = `${this._instanceName}-read-secondary-connection-string`;
+        const readPrimaryConnectionStringKey = env.DPA_CONN_ENABLE_SECONDARY
+          ? `${this._instanceName}-read-conn-primary`
+          : `${this._instanceName}-read-conn`;
+        const readSecondaryConnectionStringKey = `${this._instanceName}-read-conn-secondary`;
 
-        keys.value.map((key) => {
+        keys.value.forEach((key) => {
+          if (!env.DPA_CONN_ENABLE_SECONDARY && !key.name.includes('Primary'))
+            return;
           //Only Read Connection String here
           if (key.readOnly) {
             addCustomSecret({

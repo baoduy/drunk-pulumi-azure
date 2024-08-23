@@ -8,6 +8,7 @@ import {
   SignalROptionsBuilder,
   SignalRSkuBuilderType,
 } from './types';
+import env from '../env';
 import { PrivateLinkPropsType, ResourceInfo } from '../types';
 import { naming } from '../Common';
 import { Input } from '@pulumi/pulumi';
@@ -143,17 +144,25 @@ class SignalRBuilder
         vaultInfo,
         contentType: 'SignalR',
         dependsOn: this._signalRInstance,
-        items: [
-          { name: `${this._instanceName}-host`, value: h },
-          {
-            name: `${this._instanceName}-primaryConnection`,
-            value: keys.primaryConnectionString!,
-          },
-          {
-            name: `${this._instanceName}-secondaryConnection`,
-            value: keys.secondaryConnectionString!,
-          },
-        ],
+        items: env.DPA_CONN_ENABLE_SECONDARY
+          ? [
+              { name: `${this._instanceName}-host`, value: h },
+              {
+                name: `${this._instanceName}-conn-primary`,
+                value: keys.primaryConnectionString!,
+              },
+              {
+                name: `${this._instanceName}-conn-secondary`,
+                value: keys.secondaryConnectionString!,
+              },
+            ]
+          : [
+              { name: `${this._instanceName}-host`, value: h },
+              {
+                name: `${this._instanceName}-conn`,
+                value: keys.primaryConnectionString!,
+              },
+            ],
       });
     });
   }
