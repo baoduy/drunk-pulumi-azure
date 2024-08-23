@@ -3,10 +3,13 @@ import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
 import { stack, removeLeadingAndTrailingDash } from '../Common';
-import * as env from '../envHelper';
+import env from '../env';
 
 /** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
-export const getVaultItemName = (name: string, currentStack: string = stack) => {
+export const getVaultItemName = (
+  name: string,
+  currentStack: string = stack,
+) => {
   name = name
     .replace(new RegExp(currentStack, 'g'), '') // Replace occurrences of "stack" variable with "-"
     .replace(/\.|_|\s/g, '-') // Replace ".", "_", and spaces with "-"
