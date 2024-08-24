@@ -10,7 +10,7 @@ import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 import * as appConfig from '@pulumi/azure-native/appconfiguration/v20230901preview';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { AppConfigPrivateLink } from '../VNet';
 
 class AppConfigBuilder
@@ -65,9 +65,10 @@ class AppConfigBuilder
         sku: { name: 'Standard' },
 
         disableLocalAuth: this._privateLink?.disableLocalAuth,
-        publicNetworkAccess: this._privateLink
-          ? appConfig.PublicNetworkAccess.Disabled
-          : appConfig.PublicNetworkAccess.Enabled,
+        publicNetworkAccess:
+          !this._privateLink || this._privateLink.allowsPublicAccess
+            ? appConfig.PublicNetworkAccess.Enabled
+            : appConfig.PublicNetworkAccess.Disabled,
 
         identity: {
           type: envUIDInfo

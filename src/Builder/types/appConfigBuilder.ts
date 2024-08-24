@@ -17,6 +17,7 @@ export type AppConfigBuilderArgs = BuilderProps & WithEncryptionInfo;
  */
 export type AppConfigNetworkType = PrivateLinkPropsType & {
   disableLocalAuth?: Input<boolean>;
+  allowsPublicAccess?: boolean;
 };
 
 /**
