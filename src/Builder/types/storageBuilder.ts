@@ -65,6 +65,10 @@ export interface IStorageSharedBuilder
    * @returns An instance of IStorageSharedBuilder.
    */
   withNetwork(props: StorageNetworkType): IStorageSharedBuilder;
+  withNetworkIf(
+    condition: boolean,
+    props: StorageNetworkType,
+  ): IStorageSharedBuilder;
 }
 
 /**

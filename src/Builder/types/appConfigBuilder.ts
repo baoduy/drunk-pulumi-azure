@@ -45,4 +45,8 @@ export interface IAppConfigBuilder extends IBuilder<ResourceInfo> {
    * @returns An instance of IAppConfigBuilder.
    */
   withPrivateLink(props: AppConfigNetworkType): IAppConfigBuilder;
+  withPrivateLinkIf(
+    condition: boolean,
+    props: AppConfigNetworkType,
+  ): IAppConfigBuilder;
 }

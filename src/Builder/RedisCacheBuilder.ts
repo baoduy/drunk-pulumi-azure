@@ -42,7 +42,13 @@ class RedisCacheBuilder
     this._network = props;
     return this;
   }
-
+  public withNetworkIf(
+    condition: boolean,
+    props: NetworkPropsType,
+  ): IRedisCacheBuilder {
+    if (condition) this.withNetwork(props);
+    return this;
+  }
   private buildRedis() {
     const { group, dependsOn, ignoreChanges, importUri } = this.args;
     this._redisInstance = new cache.Redis(

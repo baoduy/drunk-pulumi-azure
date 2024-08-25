@@ -1,6 +1,13 @@
 import { CustomResourceOptions, Input, Output, Resource } from '@pulumi/pulumi';
 import { IEnvRoleBuilder } from './Builder';
 
+export enum Environments {
+  Global = 'global',
+  Dev = 'dev',
+  Sandbox = 'sandbox',
+  Prd = 'prd',
+}
+
 /** Omit all the key of OT from T */
 export type TypeOmit<T, OT> = Omit<T, keyof OT>;
 export type OmitOpts<T> = TypeOmit<T, OptsArgs>;

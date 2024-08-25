@@ -47,6 +47,13 @@ class SignalRBuilder
     this._privateLink = props;
     return this;
   }
+  public withPrivateLinkIf(
+    condition: boolean,
+    props: PrivateLinkPropsType,
+  ): ISignalRBuilder {
+    if (condition) this.withPrivateLink(props);
+    return this;
+  }
   public allowsOrigins(...props: Input<string>[]): ISignalRBuilder {
     this._origins = props;
     return this;

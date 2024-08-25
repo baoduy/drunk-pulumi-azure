@@ -7,6 +7,7 @@ import {
   IdentityInfo,
   KeyVaultInfo,
   LogInfo,
+  PrivateLinkPropsType,
   ResourceGroupInfo,
   ResourceInfo,
   RoleEnableTypes,
@@ -59,9 +60,7 @@ class ResourceBuilder
   private _vnetBuilder: types.ResourceVnetBuilderType | undefined = undefined;
   private _secrets: Record<string, Input<string>> = {};
   private _certs: Record<string, CertBuilderType> = {};
-  private _vaultLinkingProps:
-    | types.ResourceVaultLinkingBuilderType
-    | undefined = undefined;
+  private _vaultLinkingProps: PrivateLinkPropsType | undefined = undefined;
   private _enableEncryption: boolean = false;
   private _pushEnvToVault: boolean = false;
   private _createEnvUID: boolean = false;
@@ -118,9 +117,7 @@ class ResourceBuilder
     return this.withVault(rsInfo.getKeyVaultInfo(name));
   }
 
-  public linkVaultTo(
-    props: types.ResourceVaultLinkingBuilderType,
-  ): types.IResourceBuilder {
+  public linkVaultTo(props: PrivateLinkPropsType): types.IResourceBuilder {
     this._vaultLinkingProps = props;
     return this;
   }
@@ -134,11 +131,24 @@ class ResourceBuilder
     this._secrets = { ...this._secrets, ...items };
     return this;
   }
+  public addSecretsIf(
+    condition: boolean,
+    items: VaultBuilderSecretType,
+  ): types.IResourceBuilder {
+    if (condition) this.addSecrets(items);
+    return this;
+  }
   public addCerts(props: CertBuilderType): types.IResourceBuilder {
     this._certs[props.name] = props;
     return this;
   }
-
+  public addCertsIf(
+    condition: boolean,
+    props: CertBuilderType,
+  ): types.IResourceBuilder {
+    if (condition) this.addCerts(props);
+    return this;
+  }
   public withVnet(
     props: types.ResourceVnetBuilderType,
   ): types.IResourceBuilder {
@@ -153,7 +163,13 @@ class ResourceBuilder
     this._loadLogInfoFrom = name;
     return this;
   }
-
+  public withLogFromIf(
+    condition: boolean,
+    name: string,
+  ): types.IResourceBuilder {
+    if (condition) this.withLogFrom(name);
+    return this;
+  }
   public withBuilder(props: types.BuilderFunctionType): types.IResourceBuilder {
     this._otherBuilders.push(props);
     return this;
@@ -272,32 +288,11 @@ class ResourceBuilder
   //This linking need to be called after Vnet created
   private buildVaultLinking() {
     if (!this._vaultLinkingProps || !this._vnetInstance) return;
-    const { asPrivateLink, subnetNames, ipAddresses } = this._vaultLinkingProps;
 
-    const subIds =
-      subnetNames?.map(
-        (name: string) =>
-          this._vnetInstance?.findSubnet(name)!.apply((s) => s!.id!)!,
-      ) ?? [];
-
-    if (asPrivateLink && subIds.length > 0) {
-      VaultPrivateLink({
-        resourceInfo: this._vaultInfo!,
-        subnetIds: subIds,
-      });
-    } else {
-      new VaultNetworkResource(
-        `${this.name}-vault`,
-        {
-          vaultName: this._vaultInfo!.name,
-          resourceGroupName: this._vaultInfo!.group.resourceGroupName,
-          subscriptionId,
-          subnetIds: subIds,
-          ipAddresses: ipAddresses,
-        },
-        { dependsOn: this._RGInstance ?? this._vnetInstance?.vnet },
-      );
-    }
+    VaultPrivateLink({
+      ...this._vaultLinkingProps,
+      resourceInfo: this._vaultInfo!,
+    });
   }
 
   private buildVnet() {

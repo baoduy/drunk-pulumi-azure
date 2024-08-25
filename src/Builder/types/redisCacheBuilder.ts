@@ -47,4 +47,8 @@ export interface IRedisCacheBuilder extends IBuilder<ResourceInfo> {
    * @returns An instance of IRedisCacheBuilder.
    */
   withNetwork(props: NetworkPropsType): IRedisCacheBuilder;
+  withNetworkIf(
+    condition: boolean,
+    props: NetworkPropsType,
+  ): IRedisCacheBuilder;
 }

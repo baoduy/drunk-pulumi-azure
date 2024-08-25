@@ -41,6 +41,13 @@ class AppConfigBuilder
     this._privateLink = props;
     return this;
   }
+  public withPrivateLinkIf(
+    condition: boolean,
+    props: AppConfigNetworkType,
+  ): IAppConfigBuilder {
+    if (condition) this.withPrivateLink(props);
+    return this;
+  }
 
   private buildAppConfig() {
     const {

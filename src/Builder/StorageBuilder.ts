@@ -103,6 +103,13 @@ class StorageBuilder
     this._network = props;
     return this;
   }
+  public withNetworkIf(
+    condition: boolean,
+    props: StorageNetworkType,
+  ): IStorageSharedBuilder {
+    if (condition) this.withNetwork(props);
+    return this;
+  }
   public lock(lock: boolean = true): IStorageSharedBuilder {
     this._lock = lock;
     return this;
