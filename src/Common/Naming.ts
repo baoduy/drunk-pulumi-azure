@@ -18,12 +18,13 @@ export const rules = {
   },
   getSearchServiceName: {
     cleanName: true,
+    includeOrgName: true,
     suffix: 'search',
     maxLength: 80,
   },
   getAppPlanName: {
     cleanName: true,
-    includeOrgName: true,
+    //includeOrgName: false,
     suffix: 'app-plan',
     maxLength: 80,
   },
