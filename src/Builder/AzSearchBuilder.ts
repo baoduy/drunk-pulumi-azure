@@ -9,6 +9,7 @@ import {
 } from './types';
 import { naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import { AzSearchPrivateLink } from '../VNet';
 
 class AzSearchBuilder
   extends Builder<ResourceInfo>
@@ -76,6 +77,19 @@ class AzSearchBuilder
     );
   }
 
+  private buildNetwork() {
+    if (!this._network?.privateLink) return;
+
+    AzSearchPrivateLink({
+      ...this._network.privateLink,
+      dependsOn: this._azSearch,
+      resourceInfo: {
+        name: this._instanceName,
+        group: this.args.group,
+        id: this._azSearch!.id,
+      },
+    });
+  }
   private buildSecrets() {
     const { vaultInfo } = this.args;
     if (this._network?.disableLocalAuth || !vaultInfo) return;
@@ -101,6 +115,7 @@ class AzSearchBuilder
 
   public build(): ResourceInfo {
     this.buildAzSearch();
+    this.buildNetwork();
     this.buildSecrets();
 
     return {
