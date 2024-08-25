@@ -5,6 +5,7 @@ export { default as ApimRootBuilder } from './ApimRootBuilder';
 export { default as AppCertBuilder } from './AppCertBuilder';
 export { default as AppConfigBuilder } from './AppConfigBuilder';
 export { default as AutomationBuilder } from './AutomationBuilder';
+export { default as AzSearchBuilder } from './AzSearchBuilder';
 export { default as CdnBuilder } from './CdnBuilder';
 export { default as DnsZoneBuilder } from './DnsZoneBuilder';
 export { EnvRoleBuilder } from './EnvRoleBuilder';

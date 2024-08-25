@@ -79,6 +79,7 @@ export interface IStorageBuilder
    * @returns An instance of IStorageBuilder.
    */
   withContainer(props: ContainerProps): IStorageBuilder;
+  withContainerIf(condition: boolean, props: ContainerProps): IStorageBuilder;
 
   /**
    * Adds a queue to the storage resource.
@@ -86,6 +87,7 @@ export interface IStorageBuilder
    * @returns An instance of IStorageBuilder.
    */
   withQueue(name: string): IStorageBuilder;
+  withQueueIf(condition: boolean, name: string): IStorageBuilder;
 
   /**
    * Adds a file share to the storage resource.
@@ -93,6 +95,7 @@ export interface IStorageBuilder
    * @returns An instance of IStorageBuilder.
    */
   withFileShare(name: string): IStorageBuilder;
+  withFileShareIf(condition: boolean, name: string): IStorageBuilder;
 
   /**
    * Sets the policies for the storage resource.
@@ -100,6 +103,7 @@ export interface IStorageBuilder
    * @returns An instance of IStorageBuilder.
    */
   withPolicies(props: StoragePolicyType): IStorageBuilder;
+  withPoliciesIf(condition: boolean, props: StoragePolicyType): IStorageBuilder;
 }
 
 /**
