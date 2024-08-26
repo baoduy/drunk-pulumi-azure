@@ -16,19 +16,31 @@ const defaultLogWorkspace: WorkspaceType = {
   dailyQuotaGb: 0.1,
 };
 
-const defaultStorageRules: Array<DefaultManagementRules> = [
+const getStorageAutoDeleteRules = (
+  days: number = 90,
+): Array<DefaultManagementRules> => [
   {
-    actions: { baseBlob: { delete: { daysAfterModificationGreaterThan: 30 } } },
+    actions: {
+      baseBlob: { delete: { daysAfterModificationGreaterThan: days } },
+    },
     filters: { blobTypes: ['blockBlob'] },
   },
 ];
 
 interface Props extends BasicEncryptResourceArgs {
   workspace?: WorkspaceType;
+  deleteAfterDays: number;
   vaultInfo?: KeyVaultInfo;
 }
 
-export default ({ group, name, workspace, vaultInfo, ...others }: Props) => {
+export default ({
+  group,
+  name,
+  deleteAfterDays,
+  workspace,
+  vaultInfo,
+  ...others
+}: Props) => {
   name = getResourceName(name, { suffix: 'logs' });
   const dailyQuotaGb =
     workspace?.dailyQuotaGb ?? defaultLogWorkspace.dailyQuotaGb;
@@ -59,7 +71,7 @@ export default ({ group, name, workspace, vaultInfo, ...others }: Props) => {
     name,
     vaultInfo,
     policies: {
-      defaultManagementRules: defaultStorageRules,
+      defaultManagementRules: getStorageAutoDeleteRules(deleteAfterDays),
     },
     features: { allowSharedKeyAccess: true },
   });
