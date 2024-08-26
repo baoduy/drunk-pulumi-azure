@@ -316,8 +316,8 @@ class ServiceBusBuilder
     name,
     dependsOn,
   }: {
-    type: 'send' | 'listen' | 'both' | 'manage' | string;
-    level: 'queue' | 'topic' | string;
+    type: 'send' | 'listen' | 'both' | 'manage';
+    level: 'queue' | 'topic' | 'namespace';
   } & WithDependsOn &
     WithNamedType) {
     if (this._options?.disableLocalAuth || !this.args.vaultInfo) return;
@@ -338,29 +338,36 @@ class ServiceBusBuilder
             : [bus.AccessRights.Listen];
 
     const rule =
-      level === 'topic'
-        ? new bus.TopicAuthorizationRule(
-            n,
-            {
-              ...this.args.group,
-              authorizationRuleName,
-              topicName: name,
-              namespaceName: this._instanceName,
-              rights,
-            },
-            { dependsOn },
-          )
-        : new bus.QueueAuthorizationRule(
-            n,
-            {
-              ...this.args.group,
-              authorizationRuleName,
-              queueName: name,
-              namespaceName: this._instanceName,
-              rights,
-            },
-            { dependsOn },
-          );
+      level === 'namespace'
+        ? new bus.NamespaceAuthorizationRule(n, {
+            ...this.args.group,
+            authorizationRuleName,
+            namespaceName: this._instanceName,
+            rights,
+          })
+        : level === 'topic'
+          ? new bus.TopicAuthorizationRule(
+              n,
+              {
+                ...this.args.group,
+                authorizationRuleName,
+                namespaceName: this._instanceName,
+                rights,
+                topicName: name,
+              },
+              { dependsOn },
+            )
+          : new bus.QueueAuthorizationRule(
+              n,
+              {
+                ...this.args.group,
+                authorizationRuleName,
+                namespaceName: this._instanceName,
+                rights,
+                queueName: name,
+              },
+              { dependsOn },
+            );
 
     rule.id.apply(async (id) => {
       if (!id) return;
