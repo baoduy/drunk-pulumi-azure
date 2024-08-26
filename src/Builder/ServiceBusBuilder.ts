@@ -168,9 +168,9 @@ class ServiceBusBuilder
     ['manage', 'listen'].map((type) =>
       this.buildConnectionString({
         type,
-        level: 'topic',
-        name: topicName,
-        dependsOn: topic,
+        level: 'namespace',
+        name: this._instanceName,
+        dependsOn: this._sbInstance,
       }),
     );
   }
