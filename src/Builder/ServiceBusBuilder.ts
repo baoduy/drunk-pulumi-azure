@@ -380,19 +380,25 @@ class ServiceBusBuilder
 
     rule.id.apply(async (id) => {
       if (!id) return;
-      const keys = await (level === 'topic'
-        ? bus.listTopicKeys({
+      const keys = await (level === 'namespace'
+        ? bus.listNamespaceKeys({
             ...this.args.group,
             authorizationRuleName,
             namespaceName: this._instanceName,
-            topicName: name,
           })
-        : bus.listQueueKeys({
-            ...this.args.group,
-            authorizationRuleName,
-            namespaceName: this._instanceName,
-            queueName: name,
-          }));
+        : level === 'topic'
+          ? bus.listTopicKeys({
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              topicName: name,
+            })
+          : bus.listQueueKeys({
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              queueName: name,
+            }));
 
       return addCustomSecrets({
         vaultInfo: this.args.vaultInfo!,
