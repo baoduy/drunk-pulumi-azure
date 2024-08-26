@@ -164,6 +164,15 @@ class ServiceBusBuilder
         ],
       },
     );
+
+    ['manage', 'listen'].map((type) =>
+      this.buildConnectionString({
+        type,
+        level: 'topic',
+        name: topicName,
+        dependsOn: topic,
+      }),
+    );
   }
 
   private buildNetwork() {
@@ -222,7 +231,7 @@ class ServiceBusBuilder
         { dependsOn: this._sbInstance },
       );
 
-      ['both', 'send', 'listen'].map((type) =>
+      ['send', 'listen'].map((type) =>
         this.buildConnectionString({
           type,
           level: 'queue',
@@ -248,7 +257,7 @@ class ServiceBusBuilder
         { dependsOn: this._sbInstance },
       );
 
-      ['manage', 'both', 'send', 'listen'].map((type) =>
+      ['manage', 'send', 'listen'].map((type) =>
         this.buildConnectionString({
           type,
           level: 'topic',
@@ -316,8 +325,8 @@ class ServiceBusBuilder
     name,
     dependsOn,
   }: {
-    type: 'send' | 'listen' | 'both' | 'manage';
-    level: 'queue' | 'topic' | 'namespace';
+    type: 'send' | 'listen' | 'both' | 'manage' | string;
+    level: 'queue' | 'topic' | 'namespace' | string;
   } & WithDependsOn &
     WithNamedType) {
     if (this._options?.disableLocalAuth || !this.args.vaultInfo) return;
