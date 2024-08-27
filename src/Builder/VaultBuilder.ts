@@ -3,6 +3,7 @@ import {
   IVaultBuilder,
   IVaultBuilderResults,
   VaultBuilderArgs,
+  VaultBuilderSecretFunc,
   VaultBuilderSecretType,
 } from './types/vaultBuilder';
 import Vault from '../KeyVault';
@@ -79,9 +80,13 @@ export class VaultBuilderResults implements IVaultBuilderResults {
       const val = requireSecret(key);
       items = { [key]: val };
     }
+
     //Add Secrets to Vaults
     Object.keys(items).map((key) => {
-      const val = items[key];
+      let val = items[key];
+      if (typeof val === 'function') {
+        val = val(this.vaultInfo);
+      }
       return addCustomSecret({
         name: key,
         value: val,

@@ -1,6 +1,6 @@
 import { CertArgs } from '@drunk-pulumi/azure-providers';
 import { KeyVaultInfo, PrivateLinkPropsType, WithNamedType } from '../../types';
-import { Input } from '@pulumi/pulumi';
+import { Input, Output } from '@pulumi/pulumi';
 import { BuilderProps } from './genericBuilder';
 
 /**
@@ -11,7 +11,10 @@ export type VaultBuilderArgs = Omit<BuilderProps, 'vaultInfo'>;
 /**
  * Type for defining secrets to be added to the vault. If only name provided the secret will be retrieved from project secret
  */
-export type VaultBuilderSecretType = Record<string, Input<string>> | string;
+export type VaultBuilderSecretFunc = (info: KeyVaultInfo) => Output<string>;
+export type VaultBuilderSecretType =
+  | Record<string, Input<string> | VaultBuilderSecretFunc>
+  | string;
 
 /**
  * Type for defining certificates to be added to the vault.

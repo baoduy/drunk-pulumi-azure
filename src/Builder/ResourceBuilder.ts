@@ -20,6 +20,7 @@ import { subscriptionId, naming, cleanName, rsInfo } from '../Common';
 import {
   CertBuilderType,
   IVaultBuilderResults,
+  VaultBuilderSecretFunc,
   VaultBuilderSecretType,
 } from './types/vaultBuilder';
 import VaultBuilder, { VaultBuilderResults } from './VaultBuilder';
@@ -58,7 +59,7 @@ class ResourceBuilder
   private _otherBuildersAsync = new Array<types.BuilderAsyncFunctionType>();
   private _vaultInfo: IVaultBuilderResults | undefined = undefined;
   private _vnetBuilder: types.ResourceVnetBuilderType | undefined = undefined;
-  private _secrets: Record<string, Input<string>> = {};
+  private _secrets: Record<string, Input<string> | VaultBuilderSecretFunc> = {};
   private _certs: Record<string, CertBuilderType> = {};
   private _vaultLinkingProps: PrivateLinkPropsType | undefined = undefined;
   private _enableEncryption: boolean = false;
