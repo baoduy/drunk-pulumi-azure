@@ -39,11 +39,13 @@ interface DefaultManagementRuleFilters extends ManagementRuleFilters {
   containerNames?: pulumi.Input<string>[];
 }
 
+/**This rule will be applied to all containers*/
 export type DefaultManagementRules = {
   actions: ManagementRuleActions;
-  filters?: DefaultManagementRuleFilters;
+  filters?: Omit<DefaultManagementRuleFilters, 'containerNames'>;
 };
 
+/**This rule will be applied to an specific container*/
 export type ManagementRules = {
   actions: ManagementRuleActions;
   filters?: ManagementRuleFilters;
