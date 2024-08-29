@@ -3,7 +3,7 @@ import * as insights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';
 import { getResourceName } from '../Common';
-import { DefaultManagementRules } from '../Storage/ManagementRules';
+import { ManagementRules } from '../Storage/ManagementRules';
 import AppInsight from './AppInsight';
 
 type WorkspaceType = {
@@ -18,7 +18,7 @@ const defaultLogWorkspace: WorkspaceType = {
 
 const getStorageAutoDeleteRules = (
   days: number = 90,
-): Array<DefaultManagementRules> => [
+): Array<ManagementRules> => [
   {
     actions: {
       baseBlob: { delete: { daysAfterModificationGreaterThan: days } },
