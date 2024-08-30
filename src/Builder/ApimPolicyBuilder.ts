@@ -21,6 +21,7 @@ import {
   IApimPolicyBuilder,
   SetHeaderTypes,
 } from './types';
+import * as console from 'node:console';
 
 export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   private _baseUrl: ApimBaseUrlType | undefined = undefined;
@@ -127,7 +128,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   private buildBaseUrl() {
     if (!this._baseUrl) return;
     this._inboundPolicies.push(
-      `<set-backend-service base-url="${this._baseUrl.url}" />`,
+      `<set-backend-service base-url="${this._baseUrl.url}"></set-backend-service>`,
     );
   }
 
@@ -390,13 +391,13 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   <outbound>
       <base />
       <set-header name="Strict-Transport-Security" exists-action="override">    
-          <value>max-age=15724800; includeSubDomains</value>    
+          <value>max-age=3600; includeSubDomains</value>    
       </set-header>    
       <set-header name="X-XSS-Protection" exists-action="override">    
           <value>1; mode=block</value>    
       </set-header>    
       <set-header name="Content-Security-Policy" exists-action="override">    
-          <value>default-src 'self' data: 'unsafe-inline' 'unsafe-eval'</value>    
+          <value>default-src 'self' data:</value>    
       </set-header>    
       <set-header name="X-Frame-Options" exists-action="override">    
           <value>Deny</value>    
@@ -405,7 +406,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
           <value>nosniff</value>    
       </set-header>    
       <set-header name="Expect-Ct" exists-action="override">    
-          <value>max-age=604800,enforce</value>    
+          <value>max-age=3600,enforce</value>    
       </set-header>    
       <set-header name="Cache-Control" exists-action="override">    
           <value>none</value>    
@@ -421,9 +422,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
 </policies>`;
 
     return xmlFormat(xmlPolicy, {
-      strictMode: true,
-      throwOnFailure: true,
-      forceSelfClosingEmptyTag: true,
+      strictMode: false,
     });
   }
 }

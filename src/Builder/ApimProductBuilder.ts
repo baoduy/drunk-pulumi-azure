@@ -72,19 +72,21 @@ export class ApimProductBuilder
       apiBuilder
         .withServiceUrl({
           serviceUrl: 'https://hook.proxy.local',
-          apiPath: '/',
+          apiPath: `/${name}`,
         })
         .withKeys({ header: props.authHeaderKey })
-        .withPolicies((p) =>
-          p
-            .setHeader({
-              name: props.authHeaderKey,
-              type: SetHeaderTypes.delete,
-            })
-            .checkHeader({ name: props.hookHeaderKey })
-            .setBaseUrl({
-              url: `@(context.Request.Headers.GetValueOrDefault("${props.hookHeaderKey}",""))`,
-            }),
+        .withPolicies(
+          (p) =>
+            p
+              .checkHeader({ name: props.hookHeaderKey })
+              //Delete the authentication header so that it is not sending to the external api
+              .setHeader({
+                name: props.authHeaderKey,
+                type: SetHeaderTypes.delete,
+              }),
+          // .setBaseUrl({
+          //   url: `@(context.Request.Headers.GetValueOrDefault("${props.hookHeaderKey}",""))`,
+          // }),
         )
         .withVersion('v1', (v) =>
           v.withRevision({

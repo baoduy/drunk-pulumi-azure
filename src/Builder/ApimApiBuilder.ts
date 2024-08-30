@@ -31,6 +31,8 @@ export default class ApimApiBuilder
   extends BuilderAsync<ResourceInfo>
   implements IApimApiServiceBuilder, IApimApiBuilder
 {
+  private _apiSetInstance: apim.ApiVersionSet | undefined = undefined;
+
   private _serviceUrl: ApimApiServiceUrlType | undefined = undefined;
   private _keyParameters: ApimApiKeysType | undefined = {
     header: 'x-api-key',
@@ -39,7 +41,6 @@ export default class ApimApiBuilder
   private _apis: Record<string, ApimApiRevisionProps[]> = {};
 
   private _apiInstanceName: string;
-  private _apiSets: Record<string, apim.ApiVersionSet> = {};
   private _policyString: string | undefined = undefined;
 
   public constructor(
@@ -87,24 +88,27 @@ export default class ApimApiBuilder
     return this;
   }
 
+  private buildApiSet() {
+    //Create ApiSet
+    this._apiSetInstance = new apim.ApiVersionSet(
+      this._apiInstanceName,
+      {
+        versionSetId: this._apiInstanceName,
+        displayName: this._apiInstanceName,
+        description: this._apiInstanceName,
+        serviceName: this.props.apimServiceName,
+        resourceGroupName: this.props.group.resourceGroupName,
+        versioningScheme: enums.apimanagement.VersioningScheme.Segment,
+      },
+      { dependsOn: this.props.dependsOn, deleteBeforeReplace: true },
+    );
+  }
+
   private async buildApis() {
     const date = new Date();
+
     const tasks = Object.keys(this._apis).map((k) => {
-      const setName = `${this._apiInstanceName}-v${k}`;
-      //Create ApiSet
-      const apiSet = new apim.ApiVersionSet(
-        setName,
-        {
-          versionSetId: setName,
-          displayName: setName,
-          description: setName,
-          serviceName: this.props.apimServiceName,
-          resourceGroupName: this.props.group.resourceGroupName,
-          versioningScheme: enums.apimanagement.VersioningScheme.Segment,
-        },
-        { dependsOn: this.props.dependsOn, deleteBeforeReplace: true },
-      );
-      this._apiSets[k] = apiSet;
+      const setName = `${this._apiInstanceName}-${k}`;
 
       //Create Api
       const revisions = this._apis[k];
@@ -114,6 +118,7 @@ export default class ApimApiBuilder
           apiName,
           {
             apiId: apiName,
+            apiVersionSetId: this._apiSetInstance!.id,
             displayName: apiName,
             description: apiName,
             serviceName: this.props.apimServiceName,
@@ -129,7 +134,6 @@ export default class ApimApiBuilder
             apiRevision: rv.revision.toString(),
             apiRevisionDescription: `${apiName} ${date.toLocaleDateString()}`,
 
-            apiVersionSetId: apiSet.id,
             subscriptionKeyParameterNames: this._keyParameters,
             path: this._serviceUrl!.apiPath,
             serviceUrl: `${this._serviceUrl!.serviceUrl}/${k}`,
@@ -143,7 +147,11 @@ export default class ApimApiBuilder
                 ? await openApi.getImportConfig(rv.swaggerUrl, k)
                 : undefined,
           },
-          { dependsOn: apiSet, deleteBeforeReplace: true },
+          {
+            dependsOn: this._apiSetInstance,
+            deleteBeforeReplace: true,
+            customTimeouts: { create: '20m', update: '20m' },
+          },
         );
 
         //Link API to Product
@@ -177,12 +185,12 @@ export default class ApimApiBuilder
         //Create Aoi Operations
         if ('operations' in rv) {
           rv.operations.forEach((op) => {
-            const opsName = `${apiName}-${op.name}`;
+            const opsName = `${setName}-ops-${op.name}`;
             const ops = new apim.ApiOperation(
               opsName,
               {
-                operationId: opsName,
-                apiId: api.id,
+                operationId: op.name,
+                apiId: apiName,
                 displayName: opsName,
                 description: opsName,
                 serviceName: this.props.apimServiceName,
@@ -198,8 +206,8 @@ export default class ApimApiBuilder
               opName,
               {
                 policyId: 'policy',
-                operationId: ops.id,
-                apiId: api.id,
+                operationId: op.name,
+                apiId: apiName,
                 serviceName: this.props.apimServiceName,
                 resourceGroupName: this.props.group.resourceGroupName,
                 format: 'xml',
@@ -224,6 +232,7 @@ export default class ApimApiBuilder
   }
 
   public async build(): Promise<ResourceInfo> {
+    this.buildApiSet();
     await this.buildApis();
 
     return {
