@@ -50,6 +50,7 @@ export const rules = {
   },
   getApimName: {
     cleanName: true,
+    includeOrgName: true,
     maxLength: 80,
     suffix: 'apim',
   },
