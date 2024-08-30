@@ -34,7 +34,7 @@ export default class ApimApiBuilder
   private _apiSetInstance: apim.ApiVersionSet | undefined = undefined;
 
   private _serviceUrl: ApimApiServiceUrlType | undefined = undefined;
-  private _keyParameters: ApimApiKeysType | undefined = {
+  private _keyParameters: ApimApiKeysType = {
     header: 'x-api-key',
     query: 'api-key',
   };
@@ -84,7 +84,7 @@ export default class ApimApiBuilder
   }
 
   public withKeys(props: ApimApiKeysType): IApimApiBuilder {
-    this._keyParameters = props;
+    this._keyParameters = { ...this._keyParameters, ...props };
     return this;
   }
 
