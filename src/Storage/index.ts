@@ -12,12 +12,13 @@ import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
 import { StoragePrivateLink } from '../VNet';
 import { createManagementRules, ManagementRules } from './ManagementRules';
+import * as pulumi from '@pulumi/pulumi';
 
 export type ContainerProps = {
   name: string;
   public?: boolean;
   /** The management rule applied to Container level*/
-  managementRules?: Array<ManagementRules>;
+  //managementRules?: Array<ManagementRules>;
 };
 export type StorageFeatureType = {
   allowSharedKeyAccess?: boolean;
@@ -25,9 +26,9 @@ export type StorageFeatureType = {
   /** Enable this storage as static website. */
   enableStaticWebsite?: boolean;
   allowCrossTenantReplication?: boolean;
-
   isSftpEnabled?: boolean;
 };
+
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
   isBlobVersioningEnabled?: boolean;
@@ -246,7 +247,6 @@ function Storage({
       name,
       group,
       storageAccount: stg,
-      //containerNames: containers?.map((c) => c.name),
       rules: policies.defaultManagementRules,
       dependsOn: props,
     });
@@ -281,15 +281,15 @@ function Storage({
       publicAccess: c.public ? 'Blob' : 'None',
     });
 
-    if (c.managementRules) {
-      createManagementRules({
-        name: `${name}-${c.name.toLowerCase()}`,
-        storageAccount: stg,
-        group,
-        containerNames: [container.name],
-        rules: c.managementRules,
-      });
-    }
+    // if (c.managementRules) {
+    //   createManagementRules({
+    //     name: `${name}-${c.name.toLowerCase()}`,
+    //     storageAccount: stg,
+    //     group,
+    //     containerNames: [container.name],
+    //     rules: c.managementRules,
+    //   });
+    // }
     return container;
   });
 

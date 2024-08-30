@@ -37,6 +37,8 @@ type ManagementRuleFilters = {
 
 /**This rule will be applied to an specific container*/
 export type ManagementRules = {
+  name: string;
+  containerNames?: pulumi.Input<string>[];
   actions: ManagementRuleActions;
   filters?: ManagementRuleFilters;
 };
@@ -46,12 +48,10 @@ export const createManagementRules = ({
   storageAccount,
   group,
   rules,
-  containerNames,
   dependsOn,
 }: ResourceArgs &
   WithDependsOn & {
     storageAccount: storage.StorageAccount;
-    containerNames?: pulumi.Input<string>[];
     rules: Array<ManagementRules>;
   }) => {
   name = `${name}-mnp`;
@@ -63,9 +63,9 @@ export const createManagementRules = ({
       accountName: storageAccount.name,
 
       policy: {
-        rules: rules.map((m, i) => ({
+        rules: rules.map((m) => ({
           enabled: true,
-          name: `${name}-${i}`,
+          name: `${name}-${m.name}`,
           type: 'Lifecycle',
 
           definition: {
@@ -73,7 +73,7 @@ export const createManagementRules = ({
             filters: m.filters
               ? {
                   blobTypes: m.filters.blobTypes,
-                  prefixMatch: containerNames,
+                  prefixMatch: m.containerNames,
                   blobIndexMatch: m.filters.tagFilters,
                 }
               : undefined,
