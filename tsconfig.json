@@ -28,7 +28,7 @@
     "z_tests",
     ".out-bin",
     ".tools",
-    "**/*.test.ts",
+    "z_tests",
     "pulumi-test"
   ],
   "files": [
