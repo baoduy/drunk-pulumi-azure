@@ -201,28 +201,28 @@ export default class ApimApiBuilder
             );
 
             //Mock Operations
-            const opName = `${opsName}-policy`;
-            new apim.ApiOperationPolicy(
-              opName,
-              {
-                policyId: 'policy',
-                operationId: op.name,
-                apiId: apiName,
-                serviceName: this.props.apimServiceName,
-                resourceGroupName: this.props.group.resourceGroupName,
-                format: 'xml',
-                value: new ApimPolicyBuilder({
-                  ...this.props,
-                  name: opName,
-                })
-                  .mockResponse({
-                    code: 200,
-                    contentType: `Welcome to ${organization}`,
-                  })
-                  .build(),
-              },
-              { dependsOn: ops, deleteBeforeReplace: true },
-            );
+            // const opName = `${opsName}-policy`;
+            // new apim.ApiOperationPolicy(
+            //   opName,
+            //   {
+            //     policyId: 'policy',
+            //     operationId: op.name,
+            //     apiId: apiName,
+            //     serviceName: this.props.apimServiceName,
+            //     resourceGroupName: this.props.group.resourceGroupName,
+            //     format: 'xml',
+            //     value: new ApimPolicyBuilder({
+            //       ...this.props,
+            //       name: opName,
+            //     })
+            //       .mockResponse({
+            //         code: 200,
+            //         contentType: `Welcome to ${organization}`,
+            //       })
+            //       .build(),
+            //   },
+            //   { dependsOn: ops, deleteBeforeReplace: true },
+            // );
           });
         }
       });
