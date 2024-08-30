@@ -20,6 +20,7 @@ const getStorageAutoDeleteRules = (
   days: number = 90,
 ): Array<ManagementRules> => [
   {
+    name: 'auto-delete-all-containers',
     actions: {
       baseBlob: { delete: { daysAfterModificationGreaterThan: days } },
     },
