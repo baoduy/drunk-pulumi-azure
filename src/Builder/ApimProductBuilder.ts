@@ -75,18 +75,17 @@ export class ApimProductBuilder
           apiPath: `/${name}`,
         })
         .withKeys({ header: props.authHeaderKey })
-        .withPolicies(
-          (p) =>
-            p
-              .checkHeader({ name: props.hookHeaderKey })
-              //Delete the authentication header so that it is not sending to the external api
-              .setHeader({
-                name: props.authHeaderKey,
-                type: SetHeaderTypes.delete,
-              }),
-          // .setBaseUrl({
-          //   url: `@(context.Request.Headers.GetValueOrDefault("${props.hookHeaderKey}",""))`,
-          // }),
+        .withPolicies((p) =>
+          p
+            .checkHeader({ name: props.hookHeaderKey })
+            //Delete the authentication header so that it is not sending to the external api
+            .setHeader({
+              name: props.authHeaderKey,
+              type: SetHeaderTypes.delete,
+            })
+            .setBaseUrl({
+              url: `@(context.Request.Headers.GetValueOrDefault(&quot;${props.hookHeaderKey}&quot;,&quot;&quot;))`,
+            }),
         )
         .withVersion('v1', (v) =>
           v.withRevision({
@@ -121,14 +120,18 @@ export class ApimProductBuilder
     });
 
     if (this._policyString) {
-      new apim.ProductPolicy(`${this._productInstanceName}-policy`, {
-        serviceName: this.args.apimServiceName,
-        resourceGroupName: this.args.group.resourceGroupName,
-        productId: this._productInstanceName,
-        format: 'xml',
-        policyId: 'policy',
-        value: this._policyString,
-      });
+      new apim.ProductPolicy(
+        `${this._productInstanceName}-policy`,
+        {
+          serviceName: this.args.apimServiceName,
+          resourceGroupName: this.args.group.resourceGroupName,
+          productId: this._productInstanceName,
+          format: 'xml',
+          policyId: 'policy',
+          value: this._policyString,
+        },
+        { dependsOn: this._productInstance },
+      );
     }
   }
 
