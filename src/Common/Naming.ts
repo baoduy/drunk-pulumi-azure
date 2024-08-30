@@ -16,9 +16,15 @@ export const rules = {
     suffix: 'stg',
     replaces: [{ from: /[-.]/g, to: '' }],
   },
+  getSearchServiceName: {
+    cleanName: true,
+    includeOrgName: true,
+    suffix: 'search',
+    maxLength: 80,
+  },
   getAppPlanName: {
     cleanName: true,
-    includeOrgName: false,
+    //includeOrgName: false,
     suffix: 'app-plan',
     maxLength: 80,
   },

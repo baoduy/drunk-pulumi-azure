@@ -121,14 +121,12 @@ export const VaultPrivateLink = (props: ResourceLinkType) =>
     privateDnsZoneName: 'privatelink.vaultcore.azure.net',
     linkServiceGroupIds: ['keyVault'],
   });
-
 export const SqlPrivateLink = (props: ResourceLinkType) =>
   create({
     ...props,
     privateDnsZoneName: 'privatelink.database.windows.net',
     linkServiceGroupIds: ['sqlServer'],
   });
-
 export const SignalRPrivateLink = (props: ResourceLinkType) =>
   create({
     ...props,
@@ -140,6 +138,12 @@ export const ServiceBusPrivateLink = (props: ResourceLinkType) =>
     ...props,
     privateDnsZoneName: 'privatelink.servicebus.windows.net',
     linkServiceGroupIds: ['namespace'],
+  });
+export const AzSearchPrivateLink = (props: ResourceLinkType) =>
+  create({
+    ...props,
+    privateDnsZoneName: 'privatelink.search.windows.net',
+    linkServiceGroupIds: ['searchService'],
   });
 export const RedisCachePrivateLink = (props: ResourceLinkType) =>
   create({

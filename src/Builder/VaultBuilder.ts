@@ -3,10 +3,15 @@ import {
   IVaultBuilder,
   IVaultBuilderResults,
   VaultBuilderArgs,
+  VaultBuilderSecretFunc,
   VaultBuilderSecretType,
 } from './types/vaultBuilder';
 import Vault from '../KeyVault';
-import { KeyVaultInfo, ResourceGroupInfo } from '../types';
+import {
+  KeyVaultInfo,
+  PrivateLinkPropsType,
+  ResourceGroupInfo,
+} from '../types';
 import { Input, Output } from '@pulumi/pulumi';
 import {
   VaultCertResource,
@@ -39,24 +44,32 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this.vaultInfo;
   }
 
-  public linkTo(props: {
-    subnetIds: Input<string>[];
-    ipAddresses: Input<string>[];
-  }): IVaultBuilderResults {
-    new VaultNetworkResource(`${this.vaultInfo.name}-vault-link`, {
-      vaultName: this.vaultInfo.name,
-      resourceGroupName: this.vaultInfo.group.resourceGroupName,
-      subscriptionId,
+  // public linkTo(props: {
+  //   subnetIds: Input<string>[];
+  //   ipAddresses: Input<string>[];
+  // }): IVaultBuilderResults {
+  //   new VaultNetworkResource(`${this.vaultInfo.name}-vault-link`, {
+  //     vaultName: this.vaultInfo.name,
+  //     resourceGroupName: this.vaultInfo.group.resourceGroupName,
+  //     subscriptionId,
+  //     ...props,
+  //   });
+  //   return this;
+  // }
+
+  public privateLinkTo(props: PrivateLinkPropsType): IVaultBuilderResults {
+    VaultPrivateLink({
       ...props,
+      resourceInfo: this.vaultInfo,
     });
     return this;
   }
 
-  public privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults {
-    VaultPrivateLink({
-      resourceInfo: this.vaultInfo,
-      subnetIds,
-    });
+  public privateLinkToIf(
+    condition: boolean,
+    props: PrivateLinkPropsType,
+  ): IVaultBuilderResults {
+    if (condition) this.privateLinkTo(props);
     return this;
   }
 
@@ -67,9 +80,13 @@ export class VaultBuilderResults implements IVaultBuilderResults {
       const val = requireSecret(key);
       items = { [key]: val };
     }
+
     //Add Secrets to Vaults
     Object.keys(items).map((key) => {
-      const val = items[key];
+      let val = items[key];
+      if (typeof val === 'function') {
+        val = val(this.vaultInfo);
+      }
       return addCustomSecret({
         name: key,
         value: val,
@@ -78,6 +95,14 @@ export class VaultBuilderResults implements IVaultBuilderResults {
       });
     });
 
+    return this;
+  }
+
+  public addSecretsIf(
+    condition: boolean,
+    items: VaultBuilderSecretType,
+  ): IVaultBuilderResults {
+    if (condition) this.addSecrets(items);
     return this;
   }
 
@@ -92,6 +117,14 @@ export class VaultBuilderResults implements IVaultBuilderResults {
       });
     });
 
+    return this;
+  }
+
+  public addCertsIf(
+    condition: boolean,
+    items: Record<string, CertBuilderType>,
+  ): IVaultBuilderResults {
+    if (condition) this.addCerts(items);
     return this;
   }
 }

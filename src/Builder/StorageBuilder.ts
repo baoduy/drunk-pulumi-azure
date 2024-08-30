@@ -65,20 +65,49 @@ class StorageBuilder
     this._containers.push(props);
     return this;
   }
+  public withContainerIf(
+    condition: boolean,
+    props: ContainerProps,
+  ): IStorageBuilder {
+    if (condition) this.withContainer(props);
+    return this;
+  }
   public withQueue(name: string): IStorageBuilder {
     this._queues.push(name);
+    return this;
+  }
+  public withQueueIf(condition: boolean, name: string): IStorageBuilder {
+    if (condition) this.withQueue(name);
     return this;
   }
   public withFileShare(name: string): IStorageBuilder {
     this._fileShares.push(name);
     return this;
   }
+  public withFileShareIf(condition: boolean, name: string): IStorageBuilder {
+    if (condition) this.withFileShare(name);
+    return this;
+  }
   public withPolicies(props: StoragePolicyType): IStorageBuilder {
     this._policies = props;
     return this;
   }
+  public withPoliciesIf(
+    condition: boolean,
+    props: StoragePolicyType,
+  ): IStorageBuilder {
+    if (condition) this.withPolicies(props);
+    return this;
+  }
   public withNetwork(props: StorageNetworkType): IStorageSharedBuilder {
     this._network = props;
+    return this;
+  }
+  public withNetworkIf(
+    condition: boolean,
+    props: StorageNetworkType,
+  ): IStorageSharedBuilder {
+    if (condition) this.withNetwork(props);
     return this;
   }
   public lock(lock: boolean = true): IStorageSharedBuilder {

@@ -3,6 +3,7 @@ import { authorization } from '@pulumi/azure-native';
 import { registerAutoTags } from './AutoTags';
 import { organization, projectName, stack } from '../StackEnv';
 import { getCountryCode, getRegionCode } from '../Location';
+import { Environments } from '../../types';
 
 const config = pulumi.output(authorization.getClientConfig());
 export const tenantId = config.apply((c) => c.tenantId);
@@ -15,13 +16,6 @@ export const currentRegionName = (env['azure-native:config:location'] ??
 export const currentRegionCode = getRegionCode(currentRegionName);
 export const currentCountryCode = getCountryCode(currentRegionName);
 export const defaultSubScope = pulumi.interpolate`/subscriptions/${subscriptionId}`;
-
-export enum Environments {
-  Global = 'global',
-  Dev = 'dev',
-  Sandbox = 'sandbox',
-  Prd = 'prd',
-}
 
 export const isEnv = (env: Environments) => stack.includes(env);
 export const isDev = isEnv(Environments.Dev);

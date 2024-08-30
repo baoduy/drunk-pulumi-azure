@@ -64,6 +64,14 @@ class SqlBuilder
     this._elasticPoolProps = props;
     return this;
   }
+  public withElasticPoolIf(
+    condition: boolean,
+    props: SqlElasticPoolType,
+  ): ISqlBuilder {
+    if (condition) this.withElasticPool(props);
+    return this;
+  }
+
   public withTier(sku: SqlDbSku): ISqlBuilder {
     this._defaultSku = sku;
     return this;
@@ -95,6 +103,13 @@ class SqlBuilder
   }
   public withNetwork(props: SqlNetworkType): ISqlTierBuilder {
     this._networkProps = props;
+    return this;
+  }
+  public withNetworkIf(
+    condition: boolean,
+    props: SqlNetworkType,
+  ): ISqlTierBuilder {
+    if (condition) this.withNetwork(props);
     return this;
   }
   public withAuthOptions(props: SqlBuilderAuthOptionsType): ISqlNetworkBuilder {

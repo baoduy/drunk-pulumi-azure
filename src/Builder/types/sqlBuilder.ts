@@ -35,25 +35,25 @@ export type SqlBuilderAuthOptionsType = Omit<
 /**
  * Arguments for defining a SQL database.
  */
-export type SqlDbBuilderType = { 
+export type SqlDbBuilderType = {
   /**
    * The name of the database.
    */
-  name: string; 
+  name: string;
   /**
    * The SKU of the database.
    */
-  sku?: SqlDbSku 
+  sku?: SqlDbSku;
 };
 
 /**
  * Arguments for defining a SQL database from an existing database ID.
  */
-export type SqlFromDbType = SqlDbBuilderType & { 
+export type SqlFromDbType = SqlDbBuilderType & {
   /**
    * The ID of the existing database.
    */
-  fromDbId: Input<string> 
+  fromDbId: Input<string>;
 };
 
 /**
@@ -104,6 +104,7 @@ export interface ISqlNetworkBuilder {
    * @returns An instance of ISqlTierBuilder.
    */
   withNetwork(props: SqlNetworkType): ISqlTierBuilder;
+  withNetworkIf(condition: boolean, props: SqlNetworkType): ISqlTierBuilder;
 }
 
 /**
@@ -116,7 +117,8 @@ export interface ISqlTierBuilder {
    * @returns An instance of ISqlBuilder.
    */
   withElasticPool(props: SqlElasticPoolType): ISqlBuilder;
-  
+  withElasticPoolIf(condition: boolean, props: SqlElasticPoolType): ISqlBuilder;
+
   /**
    * Sets the tier properties for the SQL server.
    * @param sku - The SKU of the database.
@@ -138,21 +140,21 @@ export interface ISqlBuilder
    * @returns An instance of ISqlBuilder.
    */
   withDatabases(props: SqlDbBuilderType): ISqlBuilder;
-  
+
   /**
    * Copies an existing database to the SQL server.
    * @param props - The properties of the database to copy.
    * @returns An instance of ISqlBuilder.
    */
   copyDb(props: SqlFromDbType): ISqlBuilder;
-  
+
   /**
    * Creates a replica of an existing database on the SQL server.
    * @param props - The properties of the database to replicate.
    * @returns An instance of ISqlBuilder.
    */
   replicaDb(props: SqlFromDbType): ISqlBuilder;
-  
+
   /**
    * Sets the vulnerability assessment properties for the SQL server.
    * @param props - The vulnerability assessment properties.
@@ -161,7 +163,7 @@ export interface ISqlBuilder
   withVulnerabilityAssessment(
     props: SqlBuilderVulnerabilityAssessmentType,
   ): ISqlBuilder;
-  
+
   /**
    * Conditionally sets the vulnerability assessment properties for the SQL server.
    * @param condition - The condition to check.

@@ -93,20 +93,24 @@ export interface ISignalRBuilder extends IBuilder<ResourceInfo> {
    * @returns An instance of ISignalRBuilder.
    */
   allowsOrigins(...props: pulumi.Input<string>[]): ISignalRBuilder;
-  
+
   /**
    * Sets the private link properties for the SignalR service.
    * @param props - The private link properties.
    * @returns An instance of ISignalRBuilder.
    */
   withPrivateLink(props: PrivateLinkPropsType): ISignalRBuilder;
-  
+  withPrivateLinkIf(
+    condition: boolean,
+    props: PrivateLinkPropsType,
+  ): ISignalRBuilder;
+
   /**
    * Sets additional options for the SignalR service.
    * @param props - The options properties.
    * @returns An instance of ISignalRBuilder.
    */
   withOptions(props: SignalROptionsBuilder): ISignalRBuilder;
-  
+
   //withFeature(props: SignalRFeatureArgs): ISignalRBuilder;
 }

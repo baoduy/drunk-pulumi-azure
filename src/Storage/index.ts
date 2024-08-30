@@ -11,11 +11,7 @@ import { isPrd, naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
 import { StoragePrivateLink } from '../VNet';
-import {
-  createManagementRules,
-  DefaultManagementRules,
-  ManagementRules,
-} from './ManagementRules';
+import { createManagementRules, ManagementRules } from './ManagementRules';
 
 export type ContainerProps = {
   name: string;
@@ -40,7 +36,7 @@ export type StoragePolicyType = {
     'blobServicesName' | 'resourceGroupName' | 'accountName'
   >;
   /** The management rule applied to Storage level (all containers)*/
-  defaultManagementRules?: Array<DefaultManagementRules>;
+  defaultManagementRules?: Array<ManagementRules>;
 };
 
 export type StorageEndpointTypes =
@@ -250,6 +246,7 @@ function Storage({
       name,
       group,
       storageAccount: stg,
+      //containerNames: containers?.map((c) => c.name),
       rules: policies.defaultManagementRules,
       dependsOn: props,
     });

@@ -7,6 +7,7 @@ export * from './appCertBuilder';
 export * from './appConfigBuilder';
 export * from './askBuilder';
 export * from './automationBuilder';
+export * from './azSearchBuilder';
 export * from './cdnBuilder';
 export * from './dnsZoneBuilder';
 export * from './envRoleBuilder';

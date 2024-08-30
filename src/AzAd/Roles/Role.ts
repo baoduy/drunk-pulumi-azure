@@ -1,6 +1,7 @@
 import adGroupCreator, { GroupPermissionProps } from '../Group';
-import { Environments, currentEnv, organization } from '../../Common';
+import { currentEnv, organization } from '../../Common';
 import { Input, output } from '@pulumi/pulumi';
+import { Environments } from '../../types';
 
 export interface RoleProps {
   env?: Environments;

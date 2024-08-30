@@ -1,5 +1,5 @@
 import { Input } from '@pulumi/pulumi';
-import { allAzurePorts, currentRegionCode } from '../../Common/AzureEnv';
+import { allAzurePorts, currentRegionCode } from '../../Common';
 import {
   ApplicationRuleArgs,
   FirewallPolicyRuleCollectionResults,
@@ -112,6 +112,7 @@ export default ({
         '*.msftauth.net',
         '*.msftauthimages.net',
         'www.microsoft.com',
+        'learn.microsoft.com',
       ],
       protocols: [{ protocolType: 'Https', port: 443 }],
     });

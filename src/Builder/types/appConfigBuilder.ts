@@ -17,6 +17,7 @@ export type AppConfigBuilderArgs = BuilderProps & WithEncryptionInfo;
  */
 export type AppConfigNetworkType = PrivateLinkPropsType & {
   disableLocalAuth?: Input<boolean>;
+  allowsPublicAccess?: boolean;
 };
 
 /**
@@ -44,4 +45,8 @@ export interface IAppConfigBuilder extends IBuilder<ResourceInfo> {
    * @returns An instance of IAppConfigBuilder.
    */
   withPrivateLink(props: AppConfigNetworkType): IAppConfigBuilder;
+  withPrivateLinkIf(
+    condition: boolean,
+    props: AppConfigNetworkType,
+  ): IAppConfigBuilder;
 }

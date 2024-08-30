@@ -1,6 +1,6 @@
 import { CertArgs } from '@drunk-pulumi/azure-providers';
-import { KeyVaultInfo, WithNamedType } from '../../types';
-import { Input } from '@pulumi/pulumi';
+import { KeyVaultInfo, PrivateLinkPropsType, WithNamedType } from '../../types';
+import { Input, Output } from '@pulumi/pulumi';
 import { BuilderProps } from './genericBuilder';
 
 /**
@@ -9,9 +9,12 @@ import { BuilderProps } from './genericBuilder';
 export type VaultBuilderArgs = Omit<BuilderProps, 'vaultInfo'>;
 
 /**
- * Type for defining secrets to be added to the vault.
+ * Type for defining secrets to be added to the vault. If only name provided the secret will be retrieved from project secret
  */
-export type VaultBuilderSecretType = Record<string, Input<string>> | string;
+export type VaultBuilderSecretFunc = (info: KeyVaultInfo) => Output<string>;
+export type VaultBuilderSecretType =
+  | Record<string, Input<string> | VaultBuilderSecretFunc>
+  | string;
 
 /**
  * Type for defining certificates to be added to the vault.
@@ -29,39 +32,52 @@ export interface IVaultBuilderResults extends KeyVaultInfo {
    * @returns The KeyVault information.
    */
   info(): KeyVaultInfo;
-  
+
   /**
    * Adds secrets to the vault. If the parameter is a string, the secret will be loaded from the project secret.
    * @param items - The secrets to add.
    * @returns An instance of IVaultBuilderResults.
    */
   addSecrets(items: VaultBuilderSecretType): IVaultBuilderResults;
-  
+  addSecretsIf(
+    condition: boolean,
+    items: VaultBuilderSecretType,
+  ): IVaultBuilderResults;
+
   //addKeys () : IVaultBuilderResults;
-  
+
   /**
    * Adds certificates to the vault.
    * @param items - The certificates to add.
    * @returns An instance of IVaultBuilderResults.
    */
   addCerts(items: Record<string, CertBuilderType>): IVaultBuilderResults;
-  
+  addCertsIf(
+    condition: boolean,
+    items: Record<string, CertBuilderType>,
+  ): IVaultBuilderResults;
+
   /**
    * Links the vault to the specified subnets via a private link.
-   * @param subnetIds - The IDs of the subnets to link to.
    * @returns An instance of IVaultBuilderResults.
+   * @param props
    */
-  privateLinkTo(subnetIds: Input<string>[]): IVaultBuilderResults;
-  
+  privateLinkTo(props: PrivateLinkPropsType): IVaultBuilderResults;
+
+  privateLinkToIf(
+    condition: boolean,
+    props: PrivateLinkPropsType,
+  ): IVaultBuilderResults;
+
   /**
    * Links the vault to the specified subnets and IP addresses.
    * @param props - The linking properties.
    * @returns An instance of IVaultBuilderResults.
    */
-  linkTo(props: {
-    subnetIds: Input<string>[];
-    ipAddresses: Input<string>[];
-  }): IVaultBuilderResults;
+  // linkTo(props: {
+  //   subnetIds: Input<string>[];
+  //   ipAddresses: Input<string>[];
+  // }): IVaultBuilderResults;
 }
 
 /**
@@ -69,7 +85,7 @@ export interface IVaultBuilderResults extends KeyVaultInfo {
  */
 export interface IVaultBuilder {
   //withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder;
-  
+
   /**
    * Builds the vault and returns the vault builder results.
    * @returns The vault builder results.

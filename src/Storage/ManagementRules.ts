@@ -35,15 +35,7 @@ type ManagementRuleFilters = {
   }>[];
 };
 
-interface DefaultManagementRuleFilters extends ManagementRuleFilters {
-  containerNames?: pulumi.Input<string>[];
-}
-
-export type DefaultManagementRules = {
-  actions: ManagementRuleActions;
-  filters?: DefaultManagementRuleFilters;
-};
-
+/**This rule will be applied to an specific container*/
 export type ManagementRules = {
   actions: ManagementRuleActions;
   filters?: ManagementRuleFilters;
@@ -60,7 +52,7 @@ export const createManagementRules = ({
   WithDependsOn & {
     storageAccount: storage.StorageAccount;
     containerNames?: pulumi.Input<string>[];
-    rules: Array<ManagementRules | DefaultManagementRules>;
+    rules: Array<ManagementRules>;
   }) => {
   name = `${name}-mnp`;
   return new storage.ManagementPolicy(
@@ -81,9 +73,7 @@ export const createManagementRules = ({
             filters: m.filters
               ? {
                   blobTypes: m.filters.blobTypes,
-                  prefixMatch:
-                    containerNames ??
-                    (m.filters as DefaultManagementRuleFilters).containerNames,
+                  prefixMatch: containerNames,
                   blobIndexMatch: m.filters.tagFilters,
                 }
               : undefined,

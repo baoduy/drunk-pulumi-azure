@@ -1,6 +1,7 @@
 import {
   EnvRolesInfo,
   KeyVaultInfo,
+  PrivateLinkPropsType,
   ResourceGroupInfo,
   ResourceInfo,
   RoleEnableTypes,
@@ -71,24 +72,6 @@ export type ResourceFunction = (
    */
   props: BuilderProps,
 ) => ResourceInfo;
-
-/**
- * Type for linking a resource vault.
- */
-export type ResourceVaultLinkingBuilderType = {
-  /**
-   * List of subnet names to link to the resource vault.
-   */
-  subnetNames?: string[];
-  /**
-   * List of IP addresses to link to the resource vault.
-   */
-  ipAddresses?: Input<string>[];
-  /**
-   * Whether to link the resource vault as a private link.
-   */
-  asPrivateLink?: boolean;
-};
 
 /**
  * Interface for building resource roles.
@@ -170,7 +153,10 @@ export interface IResourceVaultItemsBuilder {
    * @returns An instance of IResourceBuilder.
    */
   addSecrets(items: VaultBuilderSecretType): IResourceBuilder;
-
+  addSecretsIf(
+    condition: boolean,
+    items: VaultBuilderSecretType,
+  ): IResourceBuilder;
   //addKeys () : IResourceBuilder;
 
   /**
@@ -179,6 +165,7 @@ export interface IResourceVaultItemsBuilder {
    * @returns An instance of IResourceBuilder.
    */
   addCerts(props: CertBuilderType): IResourceBuilder;
+  addCertsIf(condition: boolean, props: CertBuilderType): IResourceBuilder;
 }
 
 /**
@@ -214,7 +201,7 @@ export interface IResourceVnetBuilder {
    * @param props - The vault linking properties.
    * @returns An instance of IResourceBuilder.
    */
-  linkVaultTo(props: ResourceVaultLinkingBuilderType): IResourceBuilder;
+  linkVaultTo(props: PrivateLinkPropsType): IResourceBuilder;
 }
 
 /**
@@ -232,6 +219,7 @@ export interface IResourceBuilder
    * @returns An instance of IResourceBuilder.
    */
   withLogFrom(name: string): IResourceBuilder;
+  withLogFromIf(condition: boolean, name: string): IResourceBuilder;
 
   /**
    * Sets the builder properties.

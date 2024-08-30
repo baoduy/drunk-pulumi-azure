@@ -164,6 +164,15 @@ class ServiceBusBuilder
         ],
       },
     );
+
+    ['manage', 'listen'].map((type) =>
+      this.buildConnectionString({
+        type,
+        level: 'namespace',
+        name: this._instanceName,
+        dependsOn: this._sbInstance,
+      }),
+    );
   }
 
   private buildNetwork() {
@@ -222,7 +231,7 @@ class ServiceBusBuilder
         { dependsOn: this._sbInstance },
       );
 
-      ['both', 'send', 'listen'].map((type) =>
+      ['send', 'listen'].map((type) =>
         this.buildConnectionString({
           type,
           level: 'queue',
@@ -248,7 +257,7 @@ class ServiceBusBuilder
         { dependsOn: this._sbInstance },
       );
 
-      ['manage', 'both', 'send', 'listen'].map((type) =>
+      ['manage', 'send', 'listen'].map((type) =>
         this.buildConnectionString({
           type,
           level: 'topic',
@@ -317,7 +326,7 @@ class ServiceBusBuilder
     dependsOn,
   }: {
     type: 'send' | 'listen' | 'both' | 'manage' | string;
-    level: 'queue' | 'topic' | string;
+    level: 'queue' | 'topic' | 'namespace' | string;
   } & WithDependsOn &
     WithNamedType) {
     if (this._options?.disableLocalAuth || !this.args.vaultInfo) return;
@@ -338,45 +347,58 @@ class ServiceBusBuilder
             : [bus.AccessRights.Listen];
 
     const rule =
-      level === 'topic'
-        ? new bus.TopicAuthorizationRule(
-            n,
-            {
-              ...this.args.group,
-              authorizationRuleName,
-              topicName: name,
-              namespaceName: this._instanceName,
-              rights,
-            },
-            { dependsOn },
-          )
-        : new bus.QueueAuthorizationRule(
-            n,
-            {
-              ...this.args.group,
-              authorizationRuleName,
-              queueName: name,
-              namespaceName: this._instanceName,
-              rights,
-            },
-            { dependsOn },
-          );
+      level === 'namespace'
+        ? new bus.NamespaceAuthorizationRule(n, {
+            ...this.args.group,
+            authorizationRuleName,
+            namespaceName: this._instanceName,
+            rights,
+          })
+        : level === 'topic'
+          ? new bus.TopicAuthorizationRule(
+              n,
+              {
+                ...this.args.group,
+                authorizationRuleName,
+                namespaceName: this._instanceName,
+                rights,
+                topicName: name,
+              },
+              { dependsOn },
+            )
+          : new bus.QueueAuthorizationRule(
+              n,
+              {
+                ...this.args.group,
+                authorizationRuleName,
+                namespaceName: this._instanceName,
+                rights,
+                queueName: name,
+              },
+              { dependsOn },
+            );
 
     rule.id.apply(async (id) => {
       if (!id) return;
-      const keys = await (level === 'topic'
-        ? bus.listTopicKeys({
+      const keys = await (level === 'namespace'
+        ? bus.listNamespaceKeys({
             ...this.args.group,
             authorizationRuleName,
             namespaceName: this._instanceName,
-            topicName: name,
           })
-        : bus.listQueueKeys({
-            ...this.args.group,
-            authorizationRuleName,
-            namespaceName: this._instanceName,
-            queueName: name,
-          }));
+        : level === 'topic'
+          ? bus.listTopicKeys({
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              topicName: name,
+            })
+          : bus.listQueueKeys({
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              queueName: name,
+            }));
 
       return addCustomSecrets({
         vaultInfo: this.args.vaultInfo!,

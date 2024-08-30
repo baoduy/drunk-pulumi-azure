@@ -3,6 +3,7 @@ import * as pulumi from '@pulumi/pulumi';
 import { Input, Output, output } from '@pulumi/pulumi';
 import * as dnsBuilder from '../Builder/PrivateDnsZoneBuilder';
 import {
+  Environments,
   BasicEncryptResourceArgs,
   WithLockable,
   LogInfo,
@@ -10,15 +11,7 @@ import {
   WithDiskEncryption,
   AdIdentityInfo,
 } from '../types';
-import {
-  currentEnv,
-  Environments,
-  rsInfo,
-  isPrd,
-  tenantId,
-  stack,
-  naming,
-} from '../Common';
+import { currentEnv, rsInfo, isPrd, tenantId, stack, naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import aksIdentityCreator from './Identity';
 import { getAksConfig } from './Helper';
