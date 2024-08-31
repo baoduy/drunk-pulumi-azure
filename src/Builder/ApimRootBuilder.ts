@@ -1,19 +1,18 @@
 import { ResourceInfo } from '../types';
 import { ApimProductBuilder } from './ApimProductBuilder';
-import { ApimWorkspaceBuilder } from './ApimWorkspaceBuilder';
+import * as apim from '@pulumi/azure-native/apimanagement';
 import {
   ApimChildBuilderProps,
   BuilderProps,
   IApimProductBuilder,
-  IApimWorkspaceBuilder,
 } from './types';
 
 export default class ApimRootBuilder {
-  private constructor(private props: ApimChildBuilderProps) {}
+  private constructor(private args: ApimChildBuilderProps) {}
 
   public static from(
     apimInfo: ResourceInfo,
-    props: Omit<BuilderProps, 'group' | 'name'>,
+    props: Omit<BuilderProps, 'group' | 'name'> = {},
   ): ApimRootBuilder {
     return new ApimRootBuilder({
       ...props,
@@ -24,10 +23,21 @@ export default class ApimRootBuilder {
   }
 
   public newProduct(name: string): IApimProductBuilder {
-    return new ApimProductBuilder({ ...this.props, name });
+    return new ApimProductBuilder({ ...this.args, name });
   }
 
-  public newWorkspace(name: string): IApimWorkspaceBuilder {
-    return new ApimWorkspaceBuilder({ ...this.props, name });
+  public getPublicIPs() {
+    const sv = apim.getApiManagementServiceOutput({
+      serviceName: this.args.apimServiceName,
+      resourceGroupName: this.args.group.resourceGroupName,
+    });
+
+    return {
+      publicIP: sv.publicIPAddresses.apply((ip) => ip[0]),
+      privateIP: sv.privateIPAddresses.apply((ip) => (ip ? ip[0] : undefined)),
+    };
   }
+  // public newWorkspace(name: string): IApimWorkspaceBuilder {
+  //   return new ApimWorkspaceBuilder({ ...this.props, name });
+  // }
 }

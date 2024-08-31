@@ -1,7 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { enums } from '@pulumi/azure-native/types';
 import { Input, interpolate } from '@pulumi/pulumi';
-import { organization, openApi } from '../Common';
+import { openApi } from '../Common';
 import { ResourceInfo } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
 
@@ -199,30 +199,6 @@ export default class ApimApiBuilder
               },
               { dependsOn: api },
             );
-
-            //Mock Operations
-            // const opName = `${opsName}-policy`;
-            // new apim.ApiOperationPolicy(
-            //   opName,
-            //   {
-            //     policyId: 'policy',
-            //     operationId: op.name,
-            //     apiId: apiName,
-            //     serviceName: this.props.apimServiceName,
-            //     resourceGroupName: this.props.group.resourceGroupName,
-            //     format: 'xml',
-            //     value: new ApimPolicyBuilder({
-            //       ...this.props,
-            //       name: opName,
-            //     })
-            //       .mockResponse({
-            //         code: 200,
-            //         contentType: `Welcome to ${organization}`,
-            //       })
-            //       .build(),
-            //   },
-            //   { dependsOn: ops, deleteBeforeReplace: true },
-            // );
           });
         }
       });

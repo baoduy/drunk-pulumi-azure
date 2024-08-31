@@ -2,7 +2,6 @@ export * from './acrBuilder';
 export * from './apimBuilder';
 export * from './apimPolicyBuilder';
 export * from './apimProductBuilder';
-export * from './apimWorkspaceBuilder';
 export * from './appCertBuilder';
 export * from './appConfigBuilder';
 export * from './askBuilder';
