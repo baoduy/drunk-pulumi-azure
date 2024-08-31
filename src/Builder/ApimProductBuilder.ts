@@ -103,21 +103,27 @@ export class ApimProductBuilder
   }
 
   private buildProduct() {
-    this._productInstance = new apim.Product(this._productInstanceName, {
-      productId: this._productInstanceName,
-      displayName: this._productInstanceName,
-      description: this._productInstanceName,
+    this._productInstance = new apim.Product(
+      this._productInstanceName,
+      {
+        productId: this._productInstanceName,
+        displayName: this._productInstanceName,
+        description: this._productInstanceName,
 
-      serviceName: this.args.apimServiceName,
-      resourceGroupName: this.args.group.resourceGroupName,
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
 
-      state: this._state,
-      subscriptionRequired: Boolean(this._requiredSubscription),
-      approvalRequired: this._requiredSubscription
-        ? this._requiredSubscription?.approvalRequired
-        : undefined,
-      subscriptionsLimit: this._requiredSubscription?.subscriptionsLimit ?? 5,
-    });
+        state: this._state,
+        subscriptionRequired: Boolean(this._requiredSubscription),
+        subscriptionsLimit: this._requiredSubscription
+          ? (this._requiredSubscription.subscriptionsLimit ?? 5)
+          : undefined,
+        approvalRequired: this._requiredSubscription
+          ? this._requiredSubscription?.approvalRequired
+          : undefined,
+      },
+      { dependsOn: this.args.dependsOn },
+    );
 
     if (this._policyString) {
       new apim.ProductPolicy(
