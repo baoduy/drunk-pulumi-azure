@@ -374,9 +374,9 @@ export default ({
         //Refer here to build connection correctly: https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/azure-active-directory-authentication?view=sql-server-ver16
         const connectionString = auth?.azureAdOnlyAuthentication
           ? auth?.defaultLoginManagedId
-            ? interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication="Active Directory Managed Identity"; User Id=${auth.defaultLoginManagedId}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
-            : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; Authentication="Active Directory Default"; MultipleActiveResultSets=False;Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
-          : interpolate`Data Source=${sqlName}.database.windows.net; Initial Catalog=${d.name}; User Id=${auth.adminLogin}; Password=${auth.password}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`;
+            ? interpolate`Server=tcp:${sqlName}.database.windows.net,1433; Initial Catalog=${d.name}; Authentication="Active Directory Managed Identity"; User Id=${auth.defaultLoginManagedId}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
+            : interpolate`Server=tcp:${sqlName}.database.windows.net,1433; Initial Catalog=${d.name}; Authentication="Active Directory Default"; MultipleActiveResultSets=False;Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`
+          : interpolate`Server=tcp:${sqlName}.database.windows.net,1433; Initial Catalog=${d.name}; User Id=${auth.adminLogin}; Password=${auth.password}; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=True; Connection Timeout=120;`;
 
         addCustomSecret({
           name: d.name,
