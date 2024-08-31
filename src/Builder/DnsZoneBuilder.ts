@@ -7,7 +7,7 @@ import {
 } from './types';
 import * as network from '@pulumi/azure-native/network';
 
-class DnsZoneBuilder extends Builder<string> implements IDnsZoneBuilder {
+class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
   private _children: string[] = [];
 
