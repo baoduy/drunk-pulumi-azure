@@ -1,8 +1,11 @@
-import { Input } from '@pulumi/pulumi';
+import { Input, Output } from '@pulumi/pulumi';
 import { ResourceArgs, ResourceInfo, WithDependsOn } from '../../types';
 import { DnsZoneARecordType } from './dnsZoneBuilder';
+import { IBuilder } from './genericBuilder';
 
-export type PrivateDnsZoneBuilderArgs = ResourceArgs & WithDependsOn;
+export type PrivateDnsZoneBuilderArgs = ResourceArgs &
+  WithDependsOn & { id?: Output<string> };
+
 /**
  * Type for defining the virtual network linking properties for a private DNS zone.
  */
@@ -21,7 +24,7 @@ export type PrivateDnsZoneVnetLinkingType = {
 /**
  * Interface for building a private DNS zone.
  */
-export interface IPrivateDnsZoneBuilder {
+export interface IPrivateDnsZoneBuilder extends IBuilder<ResourceInfo> {
   /**
    * Adds an A record to the private DNS zone.
    * @param props - The properties of the A record.
@@ -35,10 +38,4 @@ export interface IPrivateDnsZoneBuilder {
    * @returns An instance of IPrivateDnsZoneBuilder.
    */
   linkTo(props: PrivateDnsZoneVnetLinkingType): IPrivateDnsZoneBuilder;
-
-  /**
-   * Builds the private DNS zone and returns the resource information.
-   * @returns The resource information of the built private DNS zone.
-   */
-  build(): ResourceInfo;
 }

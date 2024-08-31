@@ -1,5 +1,9 @@
-import { DnsZoneARecordType, PrivateDnsZoneBuilderArgs } from './types';
-import { BasicResourceArgs, ResourceArgs, ResourceInfo } from '../types';
+import {
+  Builder,
+  DnsZoneARecordType,
+  PrivateDnsZoneBuilderArgs,
+} from './types';
+import { ResourceInfo } from '../types';
 import * as network from '@pulumi/azure-native/network';
 import { IPrivateDnsZoneBuilder, PrivateDnsZoneVnetLinkingType } from './types';
 import * as native from '@pulumi/azure-native';
@@ -8,23 +12,25 @@ import { rsInfo } from '../Common';
 import { getAksPrivateDnsZone } from '../Aks/Helper';
 import { replaceInString } from '../Common/Naming';
 
-class PrivateDnsZoneBuilder implements IPrivateDnsZoneBuilder {
+class PrivateDnsZoneBuilder
+  extends Builder<ResourceInfo>
+  implements IPrivateDnsZoneBuilder
+{
   private _aRecords: DnsZoneARecordType[] = [];
   private _vnetLinks: PrivateDnsZoneVnetLinkingType[] = [];
-  private readonly commonProps: PrivateDnsZoneBuilderArgs;
 
   private _dnsInfo: ResourceInfo | undefined = undefined;
   private _zoneInstance: network.PrivateZone | undefined = undefined;
 
   public constructor(props: PrivateDnsZoneBuilderArgs) {
-    if ('id' in props) this._dnsInfo = props as ResourceInfo;
-    this.commonProps = {
+    super({
       ...props,
       group: {
         resourceGroupName: props.group.resourceGroupName,
         location: 'global',
       },
-    };
+    });
+    if ('id' in props) this._dnsInfo = props as ResourceInfo;
   }
 
   public static from(info: ResourceInfo): PrivateDnsZoneBuilder {

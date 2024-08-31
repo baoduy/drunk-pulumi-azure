@@ -1,23 +1,27 @@
 import { BasicResourceArgs, ResourceInfo } from '../types';
-import { DnsZoneARecordType, IDnsZoneBuilder } from './types';
+import {
+  Builder,
+  DnsZoneARecordType,
+  DnsZoneBuilderArgs,
+  IDnsZoneBuilder,
+} from './types';
 import * as network from '@pulumi/azure-native/network';
 
-class DnsZoneBuilder implements IDnsZoneBuilder {
+class DnsZoneBuilder extends Builder<string> implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
   private _children: string[] = [];
-  private readonly commonProps: BasicResourceArgs;
 
   private _zoneInstance: network.Zone | undefined = undefined;
   private _childrenInstances: ResourceInfo[] | undefined = undefined;
 
-  public constructor({ group, ...others }: BasicResourceArgs) {
-    this.commonProps = {
+  public constructor({ group, ...others }: DnsZoneBuilderArgs) {
+    super({
       ...others,
       group: {
         resourceGroupName: group.resourceGroupName,
         location: 'global',
       },
-    };
+    });
   }
 
   withSubZone(name: string): IDnsZoneBuilder {
