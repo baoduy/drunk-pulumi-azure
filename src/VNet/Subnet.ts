@@ -1,18 +1,18 @@
-import * as pulumi from "@pulumi/pulumi";
-import { ResourceGroupInfo } from "../types";
-import * as network from "@pulumi/azure-native/network";
-import { DelegateServices } from "./Vnet";
+import * as pulumi from '@pulumi/pulumi';
+import { ResourceGroupInfo } from '../types';
+import * as network from '@pulumi/azure-native/network';
+import { DelegateServices } from './Vnet';
 
 const defaultServicesEndpoints = [
-  "Microsoft.AzureActiveDirectory",
-  "Microsoft.AzureCosmosDB",
-  "Microsoft.ContainerRegistry",
-  "Microsoft.EventHub",
-  "Microsoft.KeyVault",
-  "Microsoft.ServiceBus",
-  "Microsoft.Sql",
-  "Microsoft.Storage",
-  "Microsoft.Web",
+  'Microsoft.AzureActiveDirectory',
+  'Microsoft.AzureCosmosDB',
+  'Microsoft.ContainerRegistry',
+  'Microsoft.EventHub',
+  'Microsoft.KeyVault',
+  'Microsoft.ServiceBus',
+  'Microsoft.Sql',
+  'Microsoft.Storage',
+  'Microsoft.Web',
 ];
 
 export interface SubnetProps {
@@ -82,7 +82,7 @@ export default ({
 
     delegations: subnet.delegateServices
       ? subnet.delegateServices.map((d) => ({
-          name: `${subnet.name}-${d.split("/").pop()}-delegate`,
+          name: `${subnet.name}-${d.split('/').pop()}-delegate`,
           serviceName: d,
         }))
       : undefined,
