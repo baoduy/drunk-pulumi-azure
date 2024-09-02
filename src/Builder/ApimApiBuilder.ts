@@ -185,16 +185,16 @@ export default class ApimApiBuilder
         if ('operations' in rv) {
           rv.operations.forEach((op) => {
             const opsName = `${setName}-ops-${op.name}`;
-            const ops = new apim.ApiOperation(
+            new apim.ApiOperation(
               opsName,
               {
+                ...op,
                 operationId: op.name,
-                apiId: apiName,
-                displayName: opsName,
-                description: opsName,
+                apiId: api.id,
+                displayName: op.name,
+                description: op.name,
                 serviceName: this.props.apimServiceName,
                 resourceGroupName: this.props.group.resourceGroupName,
-                ...op,
               },
               { dependsOn: api },
             );
