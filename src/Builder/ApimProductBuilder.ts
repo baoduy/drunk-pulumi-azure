@@ -1,6 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
+import env from '../env';
 import { interpolate } from '@pulumi/pulumi';
-import { getPasswordName, randomPassword } from '../Core/Random';
+import { randomPassword } from '../Core/Random';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ResourceInfo } from '../types';
 import ApimApiBuilder from './ApimApiBuilder';
@@ -147,8 +148,8 @@ export class ApimProductBuilder
     const { vaultInfo } = this.args;
 
     const subName = `${this._productInstanceName}-sub`;
-    const primaryKey = getPasswordName(subName, 'primary');
-    const secondaryKey = getPasswordName(subName, 'secondary');
+    const primaryKey = `apim-${subName}-primary`;
+    const secondaryKey = `apim-${subName}-secondary`;
     const primaryPass = randomPassword({ name: primaryKey }).result;
     const secondaryPass = randomPassword({ name: secondaryKey }).result;
 
@@ -171,10 +172,12 @@ export class ApimProductBuilder
         contentType: subName,
         vaultInfo,
         dependsOn: this._subInstance,
-        items: [
-          { name: `apim-${primaryKey}`, value: primaryPass },
-          { name: `apim-${secondaryKey}`, value: secondaryPass },
-        ],
+        items: env.DPA_CONN_ENABLE_SECONDARY
+          ? [
+              { name: primaryKey, value: primaryPass },
+              { name: secondaryKey, value: secondaryPass },
+            ]
+          : [{ name: primaryKey, value: primaryPass }],
       });
     }
   }
