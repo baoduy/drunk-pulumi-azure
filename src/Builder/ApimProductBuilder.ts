@@ -34,6 +34,7 @@ export class ApimProductBuilder
 
   public constructor(private args: ApimChildBuilderProps) {
     super(args);
+
     this._productInstanceName = `${args.name}-product`;
     //Empty Policy
     this._policyString = new ApimPolicyBuilder({
@@ -143,6 +144,8 @@ export class ApimProductBuilder
 
   private buildSubscription() {
     if (!this._productInstance) return;
+    const { vaultInfo } = this.args;
+
     const subName = `${this._productInstanceName}-sub`;
     const primaryKey = getPasswordName(subName, 'primary');
     const secondaryKey = getPasswordName(subName, 'secondary');
@@ -163,14 +166,14 @@ export class ApimProductBuilder
       { dependsOn: this._productInstance },
     );
 
-    if (this.args.vaultInfo) {
+    if (vaultInfo) {
       addCustomSecrets({
         contentType: subName,
-        vaultInfo: this.args.vaultInfo,
+        vaultInfo,
         dependsOn: this._subInstance,
         items: [
-          { name: primaryKey, value: primaryPass },
-          { name: secondaryKey, value: secondaryPass },
+          { name: `apim-${primaryKey}`, value: primaryPass },
+          { name: `apim-${secondaryKey}`, value: secondaryPass },
         ],
       });
     }

@@ -106,7 +106,6 @@ export default class ApimApiBuilder
 
   private async buildApis() {
     const date = new Date();
-
     const tasks = Object.keys(this._apis).map((k) => {
       const setName = `${this._apiInstanceName}-${k}`;
 
