@@ -4,28 +4,16 @@ import { Input, interpolate } from '@pulumi/pulumi';
 import { openApi } from '../Common';
 import { ResourceInfo } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
-
 import {
   ApimApiKeysType,
   ApimApiPolicyType,
-  ApimApiRevisionProps,
+  ApimApiProps,
   ApimApiServiceUrlType,
   ApimChildBuilderProps,
   BuilderAsync,
   IApimApiBuilder,
-  IApimApiRevisionBuilder,
   IApimApiServiceBuilder,
-  VersionBuilderFunction,
 } from './types';
-
-class ApimApiRevisionBuilder implements IApimApiRevisionBuilder {
-  public revisions: ApimApiRevisionProps[] = [];
-  public constructor(public version: string) {}
-  withRevision(props: ApimApiRevisionProps): IApimApiRevisionBuilder {
-    this.revisions.push(props);
-    return this;
-  }
-}
 
 export default class ApimApiBuilder
   extends BuilderAsync<ResourceInfo>
@@ -38,22 +26,22 @@ export default class ApimApiBuilder
     header: 'x-api-key',
     query: 'api-key',
   };
-  private _apis: Record<string, ApimApiRevisionProps[]> = {};
+  private _apis: Record<string, ApimApiProps> = {};
 
   private _apiInstanceName: string;
   private _policyString: string | undefined = undefined;
 
   public constructor(
-    private props: ApimChildBuilderProps & {
+    private args: ApimChildBuilderProps & {
       requiredSubscription: boolean;
       productId: Input<string>;
     },
   ) {
-    super(props);
-    this._apiInstanceName = `${props.name}-api`;
+    super(args);
+    this._apiInstanceName = `${args.name}-set`;
     //Empty Policy
     this._policyString = new ApimPolicyBuilder({
-      ...props,
+      ...args,
       name: this._apiInstanceName,
     }).build();
   }
@@ -61,7 +49,7 @@ export default class ApimApiBuilder
   public withPolicies(props: ApimApiPolicyType): IApimApiBuilder {
     this._policyString = props(
       new ApimPolicyBuilder({
-        ...this.props,
+        ...this.args,
         name: this._apiInstanceName,
       }),
     ).build();
@@ -73,13 +61,8 @@ export default class ApimApiBuilder
     return this;
   }
 
-  public withVersion(
-    version: string,
-    builder: VersionBuilderFunction,
-  ): IApimApiBuilder {
-    const b = new ApimApiRevisionBuilder(version);
-    builder(b);
-    this._apis[version] = b.revisions;
+  public withVersion(version: string, props: ApimApiProps): IApimApiBuilder {
+    this._apis[version] = props;
     return this;
   }
 
@@ -96,111 +79,108 @@ export default class ApimApiBuilder
         versionSetId: this._apiInstanceName,
         displayName: this._apiInstanceName,
         description: this._apiInstanceName,
-        serviceName: this.props.apimServiceName,
-        resourceGroupName: this.props.group.resourceGroupName,
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
         versioningScheme: enums.apimanagement.VersioningScheme.Segment,
       },
-      { dependsOn: this.props.dependsOn, deleteBeforeReplace: true },
+      { dependsOn: this.args.dependsOn, deleteBeforeReplace: true },
     );
   }
 
   private async buildApis() {
     const date = new Date();
-    const tasks = Object.keys(this._apis).map((k) => {
-      const setName = `${this._apiInstanceName}-${k}`;
+    const tasks = Object.keys(this._apis).map(async (k) => {
+      const apiName = `${this.args.name}-${k}-api`;
 
       //Create Api
-      const revisions = this._apis[k];
-      return revisions.map(async (rv, index) => {
-        const apiRevName = `${setName};rev=${rv.revision}`;
-        const api = new apim.Api(
-          apiRevName,
+      const apiProps = this._apis[k];
+
+      const api = new apim.Api(
+        apiName,
+        {
+          apiId: apiName,
+          apiVersionSetId: this._apiSetInstance!.id,
+          displayName: apiName,
+          description: apiName,
+          serviceName: this.args.apimServiceName,
+          resourceGroupName: this.args.group.resourceGroupName,
+          apiType: enums.apimanagement.ApiType.Http,
+          isCurrent: true,
+          protocols: [enums.apimanagement.Protocol.Https],
+          subscriptionRequired: this.args.requiredSubscription,
+
+          apiVersion: k,
+          apiVersionDescription: k,
+
+          //apiRevision: apiRevName,
+          apiRevisionDescription: `${apiName} ${date.toLocaleDateString()}`,
+
+          subscriptionKeyParameterNames: this._keyParameters,
+          path: this._serviceUrl!.apiPath,
+          serviceUrl: `${this._serviceUrl!.serviceUrl}/${k}`,
+
+          format:
+            'swaggerUrl' in apiProps
+              ? enums.apimanagement.ContentFormat.Openapi_json
+              : undefined,
+          value:
+            'swaggerUrl' in apiProps
+              ? await openApi.getImportConfig(apiProps.swaggerUrl, k)
+              : undefined,
+        },
+        {
+          dependsOn: this._apiSetInstance,
+          deleteBeforeReplace: true,
+          customTimeouts: { create: '20m', update: '20m' },
+        },
+      );
+
+      //Link API to Product
+      new apim.ProductApi(
+        apiName,
+        {
+          serviceName: this.args.apimServiceName,
+          resourceGroupName: this.args.group.resourceGroupName,
+          productId: this.args.productId,
+          apiId: apiName,
+        },
+        { dependsOn: api },
+      );
+      //Apply Policy for the API
+      if (this._policyString) {
+        new apim.ApiPolicy(
+          `${apiName}-policy`,
           {
-            apiId: apiRevName,
-            apiVersionSetId: this._apiSetInstance!.id,
-            displayName: apiRevName,
-            description: apiRevName,
-            serviceName: this.props.apimServiceName,
-            resourceGroupName: this.props.group.resourceGroupName,
-            apiType: enums.apimanagement.ApiType.Http,
-            isCurrent: index === revisions.length - 1,
-            protocols: [enums.apimanagement.Protocol.Https],
-            subscriptionRequired: this.props.requiredSubscription,
-
-            apiVersion: k,
-            apiVersionDescription: k,
-
-            apiRevision: rv.revision.toString(),
-            apiRevisionDescription: `${apiRevName} ${date.toLocaleDateString()}`,
-
-            subscriptionKeyParameterNames: this._keyParameters,
-            path: this._serviceUrl!.apiPath,
-            serviceUrl: `${this._serviceUrl!.serviceUrl}/${k}`,
-
-            format:
-              'swaggerUrl' in rv
-                ? enums.apimanagement.ContentFormat.Openapi_json
-                : undefined,
-            value:
-              'swaggerUrl' in rv
-                ? await openApi.getImportConfig(rv.swaggerUrl, k)
-                : undefined,
-          },
-          {
-            dependsOn: this._apiSetInstance,
-            deleteBeforeReplace: true,
-            customTimeouts: { create: '20m', update: '20m' },
-          },
-        );
-
-        //Link API to Product
-        new apim.ProductApi(
-          apiRevName,
-          {
-            serviceName: this.props.apimServiceName,
-            resourceGroupName: this.props.group.resourceGroupName,
-            productId: this.props.productId,
-            apiId: apiRevName,
+            serviceName: this.args.apimServiceName,
+            resourceGroupName: this.args.group.resourceGroupName,
+            apiId: apiName,
+            policyId: 'policy',
+            format: 'xml',
+            value: this._policyString,
           },
           { dependsOn: api },
         );
+      }
 
-        //Apply Policy for the API
-        if (this._policyString) {
-          new apim.ApiPolicy(
-            `${apiRevName}-policy`,
+      //Create Aoi Operations
+      if ('operations' in apiProps) {
+        apiProps.operations.map((op) => {
+          const opsName = `${apiName}-ops-${op.name}`;
+          return new apim.ApiOperation(
+            opsName,
             {
-              serviceName: this.props.apimServiceName,
-              resourceGroupName: this.props.group.resourceGroupName,
-              apiId: apiRevName,
-              policyId: 'policy',
-              format: 'xml',
-              value: this._policyString,
+              ...op,
+              operationId: op.name,
+              apiId: apiName,
+              displayName: op.name,
+              description: op.name,
+              serviceName: this.args.apimServiceName,
+              resourceGroupName: this.args.group.resourceGroupName,
             },
             { dependsOn: api },
           );
-        }
-
-        //Create Aoi Operations
-        if ('operations' in rv) {
-          rv.operations.forEach((op) => {
-            const opsName = `${setName}-ops-${op.name}`;
-            new apim.ApiOperation(
-              opsName,
-              {
-                ...op,
-                operationId: op.name,
-                apiId: setName,
-                displayName: op.name,
-                description: op.name,
-                serviceName: this.props.apimServiceName,
-                resourceGroupName: this.props.group.resourceGroupName,
-              },
-              { dependsOn: api },
-            );
-          });
-        }
-      });
+        });
+      }
     });
 
     await Promise.all(tasks);
@@ -212,8 +192,8 @@ export default class ApimApiBuilder
 
     return {
       name: this._apiInstanceName,
-      group: this.props.group,
-      id: interpolate`${this.props.productId}`,
+      group: this.args.group,
+      id: interpolate`${this.args.productId}`,
     };
   }
 }

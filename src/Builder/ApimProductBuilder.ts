@@ -89,12 +89,9 @@ export class ApimProductBuilder
               url: `@(context.Request.Headers.GetValueOrDefault(&quot;${props.hookHeaderKey}&quot;,&quot;&quot;))`,
             }),
         )
-        .withVersion('v1', (v) =>
-          v.withRevision({
-            revision: 1,
-            operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
-          }),
-        ),
+        .withVersion('v1', {
+          operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
+        }),
     );
     return this;
   }
