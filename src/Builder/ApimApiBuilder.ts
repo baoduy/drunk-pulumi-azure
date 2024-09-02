@@ -112,14 +112,14 @@ export default class ApimApiBuilder
       //Create Api
       const revisions = this._apis[k];
       return revisions.map(async (rv, index) => {
-        const apiName = `${setName};rev=${rv.revision}`;
+        const apiRevName = `${setName};rev=${rv.revision}`;
         const api = new apim.Api(
-          apiName,
+          apiRevName,
           {
-            apiId: apiName,
+            apiId: apiRevName,
             apiVersionSetId: this._apiSetInstance!.id,
-            displayName: apiName,
-            description: apiName,
+            displayName: apiRevName,
+            description: apiRevName,
             serviceName: this.props.apimServiceName,
             resourceGroupName: this.props.group.resourceGroupName,
             apiType: enums.apimanagement.ApiType.Http,
@@ -131,7 +131,7 @@ export default class ApimApiBuilder
             apiVersionDescription: k,
 
             apiRevision: rv.revision.toString(),
-            apiRevisionDescription: `${apiName} ${date.toLocaleDateString()}`,
+            apiRevisionDescription: `${apiRevName} ${date.toLocaleDateString()}`,
 
             subscriptionKeyParameterNames: this._keyParameters,
             path: this._serviceUrl!.apiPath,
@@ -155,12 +155,12 @@ export default class ApimApiBuilder
 
         //Link API to Product
         new apim.ProductApi(
-          apiName,
+          apiRevName,
           {
             serviceName: this.props.apimServiceName,
             resourceGroupName: this.props.group.resourceGroupName,
             productId: this.props.productId,
-            apiId: apiName,
+            apiId: apiRevName,
           },
           { dependsOn: api },
         );
@@ -168,11 +168,11 @@ export default class ApimApiBuilder
         //Apply Policy for the API
         if (this._policyString) {
           new apim.ApiPolicy(
-            `${apiName}-policy`,
+            `${apiRevName}-policy`,
             {
               serviceName: this.props.apimServiceName,
               resourceGroupName: this.props.group.resourceGroupName,
-              apiId: apiName,
+              apiId: apiRevName,
               policyId: 'policy',
               format: 'xml',
               value: this._policyString,
@@ -190,7 +190,7 @@ export default class ApimApiBuilder
               {
                 ...op,
                 operationId: op.name,
-                apiId: api.id,
+                apiId: setName,
                 displayName: op.name,
                 description: op.name,
                 serviceName: this.props.apimServiceName,
