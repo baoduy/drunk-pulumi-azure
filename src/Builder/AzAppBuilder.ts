@@ -15,7 +15,7 @@ class AzAppBuilder
   implements IAzAppBuilder, IAzAppPlanBuilder
 {
   private readonly _instanceName: string;
-  private _appPlanInstance: AppServicePlan | undefined = undefined;
+  private _appPlanInstance: azure.web.AppServicePlan | undefined = undefined;
 
   private _planSku: AzAppBuilderKinds | undefined = undefined;
   private _funcs: AzFuncAppBuilderType[] = [];
@@ -48,7 +48,11 @@ class AzAppBuilder
     this._funcs.map((f) => {
       const n = `${this._instanceName}-${f.name}`;
       return new azure.web.WebApp(n, {
-        resourceGroupName: resourceGroup.name,
+        ...this.args.group,
+        name: f.name,
+        enabled: true,
+        httpsOnly: true,
+        storageAccountRequired: true,
         serverFarmId: this._appPlanInstance!.id,
         kind: 'FunctionApp',
         siteConfig: {
@@ -64,7 +68,6 @@ class AzAppBuilder
             allowedOrigins: ['*'],
           },
         },
-        httpsOnly: true,
       });
     });
   }
@@ -81,4 +84,5 @@ class AzAppBuilder
   }
 }
 
-export default {};
+export default (props: AzAppBuilderArgs) =>
+  new AzAppBuilder(props) as IAzAppPlanBuilder;
