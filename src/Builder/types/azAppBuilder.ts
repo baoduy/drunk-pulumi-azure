@@ -12,7 +12,6 @@ export type AzAppBuilderKinds = {
 
 export type AzFuncAppBuilderType = {
   name: string;
-  storageConnectionString: Input<string>;
   appSettings?: Array<{ name: Input<string>; value: Input<string> }>;
   connectionStrings?: Array<{
     connectionString: Input<string>;

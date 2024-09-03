@@ -53,7 +53,7 @@ class AzAppBuilder
         name: f.name,
         enabled: true,
         httpsOnly: true,
-        storageAccountRequired: true,
+        //storageAccountRequired: true,
         serverFarmId: this._appPlanInstance!.id,
         kind: 'FunctionApp',
         identity: {
@@ -64,17 +64,11 @@ class AzAppBuilder
         },
         siteConfig: {
           connectionStrings: f.connectionStrings,
-          appSettings: [
-            {
-              name: 'AzureWebJobsStorage',
-              value: f.storageConnectionString,
-            },
-            { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' },
-            ...(f.appSettings ?? []),
-          ],
+          appSettings: f.appSettings ?? [],
           cors: {
             allowedOrigins: ['*'],
           },
+          http20Enabled: true,
           scmIpSecurityRestrictionsDefaultAction: 'Deny',
           ipSecurityRestrictions: f.network?.ipAddresses
             ? f.network?.ipAddresses.map((ip) => ({
