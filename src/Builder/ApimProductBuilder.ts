@@ -1,6 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
+import env from '../env';
 import { interpolate } from '@pulumi/pulumi';
-import { getPasswordName, randomPassword } from '../Core/Random';
+import { randomPassword } from '../Core/Random';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ResourceInfo } from '../types';
 import ApimApiBuilder from './ApimApiBuilder';
@@ -34,6 +35,7 @@ export class ApimProductBuilder
 
   public constructor(private args: ApimChildBuilderProps) {
     super(args);
+
     this._productInstanceName = `${args.name}-product`;
     //Empty Policy
     this._policyString = new ApimPolicyBuilder({
@@ -72,26 +74,24 @@ export class ApimProductBuilder
       apiBuilder
         .withServiceUrl({
           serviceUrl: 'https://hook.proxy.local',
-          apiPath: '/',
+          apiPath: `/${name}`,
         })
         .withKeys({ header: props.authHeaderKey })
         .withPolicies((p) =>
           p
+            .checkHeader({ name: props.hookHeaderKey })
+            //Delete the authentication header so that it is not sending to the external api
             .setHeader({
               name: props.authHeaderKey,
               type: SetHeaderTypes.delete,
             })
-            .checkHeader({ name: props.hookHeaderKey })
             .setBaseUrl({
-              url: `@(context.Request.Headers.GetValueOrDefault("${props.hookHeaderKey}",""))`,
+              url: `@(context.Request.Headers.GetValueOrDefault(&quot;${props.hookHeaderKey}&quot;,&quot;&quot;))`,
             }),
         )
-        .withVersion('v1', (v) =>
-          v.withRevision({
-            revision: 1,
-            operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
-          }),
-        ),
+        .withVersion('v1', {
+          operations: [{ name: 'Post', method: 'POST', urlTemplate: '/' }],
+        }),
     );
     return this;
   }
@@ -102,39 +102,51 @@ export class ApimProductBuilder
   }
 
   private buildProduct() {
-    this._productInstance = new apim.Product(this._productInstanceName, {
-      productId: this._productInstanceName,
-      displayName: this._productInstanceName,
-      description: this._productInstanceName,
+    this._productInstance = new apim.Product(
+      this._productInstanceName,
+      {
+        productId: this._productInstanceName,
+        displayName: this._productInstanceName,
+        description: this._productInstanceName,
 
-      serviceName: this.args.apimServiceName,
-      resourceGroupName: this.args.group.resourceGroupName,
-
-      state: this._state,
-      subscriptionRequired: Boolean(this._requiredSubscription),
-      approvalRequired: this._requiredSubscription
-        ? this._requiredSubscription?.approvalRequired
-        : undefined,
-      subscriptionsLimit: this._requiredSubscription?.subscriptionsLimit ?? 5,
-    });
-
-    if (this._policyString) {
-      new apim.ProductPolicy(`${this._productInstanceName}-policy`, {
         serviceName: this.args.apimServiceName,
         resourceGroupName: this.args.group.resourceGroupName,
-        productId: this._productInstanceName,
-        format: 'xml',
-        policyId: 'policy',
-        value: this._policyString,
-      });
+
+        state: this._state,
+        subscriptionRequired: Boolean(this._requiredSubscription),
+        subscriptionsLimit: this._requiredSubscription
+          ? (this._requiredSubscription.subscriptionsLimit ?? 5)
+          : undefined,
+        approvalRequired: this._requiredSubscription
+          ? this._requiredSubscription?.approvalRequired
+          : undefined,
+      },
+      { dependsOn: this.args.dependsOn },
+    );
+
+    if (this._policyString) {
+      new apim.ProductPolicy(
+        `${this._productInstanceName}-policy`,
+        {
+          serviceName: this.args.apimServiceName,
+          resourceGroupName: this.args.group.resourceGroupName,
+          productId: this._productInstanceName,
+          format: 'xml',
+          policyId: 'policy',
+          value: this._policyString,
+        },
+        { dependsOn: this._productInstance },
+      );
     }
   }
 
   private buildSubscription() {
     if (!this._productInstance) return;
+    const { vaultInfo } = this.args;
+
     const subName = `${this._productInstanceName}-sub`;
-    const primaryKey = getPasswordName(subName, 'primary');
-    const secondaryKey = getPasswordName(subName, 'secondary');
+    const primaryKey = `apim-${subName}-primary`;
+    const secondaryKey = `apim-${subName}-secondary`;
     const primaryPass = randomPassword({ name: primaryKey }).result;
     const secondaryPass = randomPassword({ name: secondaryKey }).result;
 
@@ -152,15 +164,17 @@ export class ApimProductBuilder
       { dependsOn: this._productInstance },
     );
 
-    if (this.args.vaultInfo) {
+    if (vaultInfo) {
       addCustomSecrets({
         contentType: subName,
-        vaultInfo: this.args.vaultInfo,
+        vaultInfo,
         dependsOn: this._subInstance,
-        items: [
-          { name: primaryKey, value: primaryPass },
-          { name: secondaryKey, value: secondaryPass },
-        ],
+        items: env.DPA_CONN_ENABLE_SECONDARY
+          ? [
+              { name: primaryKey, value: primaryPass },
+              { name: secondaryKey, value: secondaryPass },
+            ]
+          : [{ name: primaryKey, value: primaryPass }],
       });
     }
   }

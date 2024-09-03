@@ -79,12 +79,12 @@ export type ApimApiPolicyType = (
 /**
  * Function type for building an APIM API version.
  */
-export type VersionBuilderFunction = (
-  /**
-   * The API revision builder.
-   */
-  builder: IApimApiRevisionBuilder,
-) => IApimApiRevisionBuilder;
+// export type VersionBuilderFunction = (
+//   /**
+//    * The API revision builder.
+//    */
+//   builder: IApimApiRevisionBuilder,
+// ) => IApimApiRevisionBuilder;
 
 /**
  * Types of APIM API versions.
@@ -102,7 +102,7 @@ export type ApimApiOperationType = WithNamedType & {
   /**
    * The URL template of the operation.
    */
-  urlTemplate: Input<string>;
+  urlTemplate?: Input<string>;
   /**
    * The responses of the operation.
    */
@@ -112,12 +112,12 @@ export type ApimApiOperationType = WithNamedType & {
 /**
  * Properties for defining an APIM API revision.
  */
-export type ApimApiRevisionProps =
+export type ApimApiProps =
   | {
       /**
        * The revision number.
        */
-      revision: number;
+      //revision: number;
       /**
        * The URL of the Swagger definition.
        */
@@ -127,7 +127,7 @@ export type ApimApiRevisionProps =
       /**
        * The revision number.
        */
-      revision: number;
+      //revision: number;
       /**
        * The operations of the API.
        */
@@ -143,14 +143,14 @@ export type ApimHookProxyBuilderType = {
 /**
  * Interface for building an APIM API revision.
  */
-export interface IApimApiRevisionBuilder {
-  /**
-   * Sets the revision properties for the API.
-   * @param props - The revision properties.
-   * @returns An instance of IApimApiRevisionBuilder.
-   */
-  withRevision(props: ApimApiRevisionProps): IApimApiRevisionBuilder;
-}
+// export interface IApimApiRevisionBuilder {
+//   /**
+//    * Sets the revision properties for the API.
+//    * @param props - The revision properties.
+//    * @returns An instance of IApimApiRevisionBuilder.
+//    */
+//   withRevision(props: ApimApiRevisionProps): IApimApiRevisionBuilder;
+// }
 
 /**
  * Interface for building an APIM API service.
@@ -185,12 +185,12 @@ export interface IApimApiBuilder extends IBuilderAsync<ResourceInfo> {
   /**
    * Sets the version properties for the API.
    * @param version - The API version.
-   * @param builder - The version builder function.
+   * @param props - The props of API.
    * @returns An instance of IApimApiBuilder.
    */
   withVersion(
     version: ApimApiVersionType,
-    builder: VersionBuilderFunction,
+    props: ApimApiProps,
   ): IApimApiBuilder;
 }
 

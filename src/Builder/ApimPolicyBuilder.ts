@@ -1,7 +1,6 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { organization } from '../Common';
 import { getIpsRange } from '../VNet/Helper';
-import xmlFormat from 'xml-formatter';
 import {
   ApimAuthCertType,
   ApimBaseUrlType,
@@ -134,7 +133,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   private buildHeaders() {
     this._inboundPolicies.push(
       ...this._headers.map((h) => {
-        let rs = `<set-header name="${h.name}" exists-action="${h.type}">`;
+        let rs = `\t<set-header name="${h.name}" exists-action="${h.type}">`;
         if (h.value) {
           rs += ` <value>${h.value}</value>`;
         }
@@ -147,13 +146,13 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   private buildCheckHeaders() {
     this._inboundPolicies.push(
       ...this._checkHeaders.map(
-        (ch) => `<check-header name="${
+        (ch) => `\t<check-header name="${
           ch.name
         }" failed-check-httpcode="401" failed-check-error-message="The header ${
           ch.name
         } is not found" ignore-case="true">
     ${ch.value ? ch.value.map((v) => `<value>${v}</value>`).join('\n') : ''}
-</check-header>`,
+\t</check-header>`,
       ),
     );
   }
@@ -286,7 +285,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       }</value>
   </set-header>`;
     const checkHeader = `<choose>
-		<when condition="@(context.Request.Headers.GetValueOrDefault("IpAddressValidation", "").Equals(Boolean.FalseString))">
+		<when condition="@(context.Request.Headers.GetValueOrDefault(&quot;IpAddressValidation&quot;, &quot;&quot;).Equals(Boolean.FalseString))">
         <return-response>
             <set-status code="403" reason="Forbidden"/>
               <set-body>@{
@@ -306,12 +305,12 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
       serviceName: this.props.apimServiceName,
       resourceGroupName: this.props.group.resourceGroupName,
       format: 'xml',
-      value: xmlFormat(`
+      value: `
         <fragment>
             ${setHeader}
             ${checkHeader}
         </fragment>
-      `),
+      `,
     });
     this._inboundPolicies.push(`<include-fragment fragment-id="${pfName}" />`);
   }
@@ -358,8 +357,6 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
 
   public build(): string {
     this.buildHeaders();
-    this.buildBaseUrl();
-    this.buildRewriteUri();
     this.buildCacheOptions();
     this.buildMockResponse();
     this.buildRateLimit();
@@ -367,8 +364,10 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
     this.buildCors();
     this.buildValidateJwtWhitelistIp();
     this.buildWhiteListIps();
-    this.buildCheckHeaders();
     this.buildFindAndReplace();
+    this.buildRewriteUri();
+    this.buildCheckHeaders();
+    this.buildBaseUrl();
     //this.buildCustomRules();
     //This must be a last rule
     this.buildVerifyClientCert();
@@ -390,13 +389,13 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   <outbound>
       <base />
       <set-header name="Strict-Transport-Security" exists-action="override">    
-          <value>max-age=15724800; includeSubDomains</value>    
+          <value>max-age=3600; includeSubDomains</value>    
       </set-header>    
       <set-header name="X-XSS-Protection" exists-action="override">    
           <value>1; mode=block</value>    
       </set-header>    
       <set-header name="Content-Security-Policy" exists-action="override">    
-          <value>default-src 'self' data: 'unsafe-inline' 'unsafe-eval'</value>    
+          <value>default-src 'self' data:</value>    
       </set-header>    
       <set-header name="X-Frame-Options" exists-action="override">    
           <value>Deny</value>    
@@ -405,7 +404,7 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
           <value>nosniff</value>    
       </set-header>    
       <set-header name="Expect-Ct" exists-action="override">    
-          <value>max-age=604800,enforce</value>    
+          <value>max-age=3600,enforce</value>    
       </set-header>    
       <set-header name="Cache-Control" exists-action="override">    
           <value>none</value>    
@@ -420,10 +419,6 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
   </on-error>
 </policies>`;
 
-    return xmlFormat(xmlPolicy, {
-      strictMode: true,
-      throwOnFailure: true,
-      forceSelfClosingEmptyTag: true,
-    });
+    return xmlPolicy;
   }
 }
