@@ -45,9 +45,10 @@ class AzAppBuilder
     });
   }
   private buildFuncApps() {
+    const { envUIDInfo } = this.args;
     this._funcs.map((f) => {
       const n = `${this._instanceName}-${f.name}`;
-      return new azure.web.WebApp(n, {
+      const func = new azure.web.WebApp(n, {
         ...this.args.group,
         name: f.name,
         enabled: true,
@@ -55,7 +56,14 @@ class AzAppBuilder
         storageAccountRequired: true,
         serverFarmId: this._appPlanInstance!.id,
         kind: 'FunctionApp',
+        identity: {
+          type: envUIDInfo
+            ? azure.web.ManagedServiceIdentityType.SystemAssigned_UserAssigned
+            : azure.web.ManagedServiceIdentityType.SystemAssigned,
+          userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+        },
         siteConfig: {
+          connectionStrings: f.connectionStrings,
           appSettings: [
             {
               name: 'AzureWebJobsStorage',
@@ -67,7 +75,16 @@ class AzAppBuilder
           cors: {
             allowedOrigins: ['*'],
           },
+          scmIpSecurityRestrictionsDefaultAction: 'Deny',
+          ipSecurityRestrictions: f.network?.ipAddresses
+            ? f.network?.ipAddresses.map((ip) => ({
+                action: 'Allow',
+                ipAddress: ip,
+              }))
+            : undefined,
         },
+        publicNetworkAccess: f.network?.privateLink ? 'Disabled' : 'Enabled',
+        virtualNetworkSubnetId: f.network?.subnetId,
       });
     });
   }

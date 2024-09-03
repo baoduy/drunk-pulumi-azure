@@ -1,8 +1,9 @@
 import { BuilderProps, IBuilder } from './genericBuilder';
-import { ResourceInfo } from '../../types';
+import { NetworkPropsType, ResourceInfo, WithEnvRoles } from '../../types';
 import { Input } from '@pulumi/pulumi';
+import { enums } from '@pulumi/azure-native/types';
 
-export type AzAppBuilderArgs = BuilderProps;
+export type AzAppBuilderArgs = BuilderProps & WithEnvRoles;
 
 export type AzAppBuilderKinds = {
   kind: 'app' | 'FunctionApp';
@@ -13,6 +14,12 @@ export type AzFuncAppBuilderType = {
   name: string;
   storageConnectionString: Input<string>;
   appSettings?: Array<{ name: Input<string>; value: Input<string> }>;
+  connectionStrings?: Array<{
+    connectionString: Input<string>;
+    name: Input<string>;
+    type?: Input<enums.web.ConnectionStringType>;
+  }>;
+  network?: NetworkPropsType;
 };
 
 export interface IAzAppPlanBuilder {
