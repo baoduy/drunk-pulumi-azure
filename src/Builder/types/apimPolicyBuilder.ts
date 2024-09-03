@@ -44,7 +44,7 @@ export type ApimMockPropsType = {
  * Type for rewriting URIs.
  */
 export type ApimRewriteUriType = {
-  template?: string;
+  template: string;
 };
 
 /**
