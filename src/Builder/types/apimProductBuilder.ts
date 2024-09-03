@@ -102,7 +102,7 @@ export type ApimApiOperationType = WithNamedType & {
   /**
    * The URL template of the operation.
    */
-  urlTemplate: Input<string>;
+  urlTemplate?: Input<string>;
   /**
    * The responses of the operation.
    */

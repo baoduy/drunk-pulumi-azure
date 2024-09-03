@@ -28,7 +28,7 @@ export default class ApimApiBuilder
   };
   private _apis: Record<string, ApimApiProps> = {};
 
-  private _apiInstanceName: string;
+  private readonly _apiInstanceName: string;
   private _policyString: string | undefined = undefined;
 
   public constructor(
@@ -38,7 +38,7 @@ export default class ApimApiBuilder
     },
   ) {
     super(args);
-    this._apiInstanceName = `${args.name}-set`;
+    this._apiInstanceName = `${args.name}-set`.toLowerCase();
     //Empty Policy
     this._policyString = new ApimPolicyBuilder({
       ...args,
@@ -89,12 +89,12 @@ export default class ApimApiBuilder
 
   private async buildApis() {
     const date = new Date();
-    const tasks = Object.keys(this._apis).map(async (k) => {
-      const apiName = `${this.args.name}-${k}-api`;
+    const tasks = Object.keys(this._apis).map(async (v) => {
+      const apiName = `${this.args.name}-${v}-api`.toLowerCase();
       const revision = 1;
       const apiRevName = `${apiName};rev=${revision}`;
       //Create Api
-      const apiProps = this._apis[k];
+      const apiProps = this._apis[v];
 
       const api = new apim.Api(
         apiName,
@@ -110,15 +110,15 @@ export default class ApimApiBuilder
           protocols: [enums.apimanagement.Protocol.Https],
           subscriptionRequired: this.args.requiredSubscription,
 
-          apiVersion: k,
-          apiVersionDescription: k,
+          apiVersion: v,
+          apiVersionDescription: `The version ${v} of ${this.args.name}`,
 
           apiRevision: revision.toString(),
           apiRevisionDescription: `${apiRevName} ${date.toLocaleDateString()}`,
 
           subscriptionKeyParameterNames: this._keyParameters,
           path: this._serviceUrl!.apiPath,
-          serviceUrl: `${this._serviceUrl!.serviceUrl}/${k}`,
+          serviceUrl: `${this._serviceUrl!.serviceUrl}/${v}`,
 
           format:
             'swaggerUrl' in apiProps
@@ -126,7 +126,7 @@ export default class ApimApiBuilder
               : undefined,
           value:
             'swaggerUrl' in apiProps
-              ? await openApi.getImportConfig(apiProps.swaggerUrl, k)
+              ? await openApi.getImportConfig(apiProps.swaggerUrl, v)
               : undefined,
         },
         {
@@ -166,17 +166,22 @@ export default class ApimApiBuilder
       //Create Aoi Operations
       if ('operations' in apiProps) {
         apiProps.operations.map((op) => {
-          const opsName = `${apiRevName}-ops-${op.name}`;
+          const opsName = op.name.replace(/\//g, '');
+          const opsRsName =
+            `${apiRevName}-ops-${opsName}-${op.method}`.toLowerCase();
           return new apim.ApiOperation(
-            opsName,
+            opsRsName,
             {
-              ...op,
-              operationId: op.name,
-              apiId: apiRevName,
-              displayName: op.name,
-              description: op.name,
+              operationId: opsName,
               serviceName: this.args.apimServiceName,
               resourceGroupName: this.args.group.resourceGroupName,
+              apiId: apiName,
+              displayName: op.name,
+              description: op.name,
+
+              urlTemplate: op.urlTemplate ?? op.name,
+              method: op.method,
+
               request: {
                 description: op.name,
                 headers: [],
@@ -187,7 +192,7 @@ export default class ApimApiBuilder
                   },
                 ],
               },
-              responses: [
+              responses: op.responses ?? [
                 {
                   description: 'successful operation',
                   headers: [],
