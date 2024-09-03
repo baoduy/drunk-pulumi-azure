@@ -91,7 +91,7 @@ export default class ApimApiBuilder
     const date = new Date();
     const tasks = Object.keys(this._apis).map(async (k) => {
       const apiName = `${this.args.name}-${k}-api`;
-
+      const apiRevName = `${apiName};rev=1`;
       //Create Api
       const apiProps = this._apis[k];
 
@@ -112,8 +112,8 @@ export default class ApimApiBuilder
           apiVersion: k,
           apiVersionDescription: k,
 
-          //apiRevision: apiRevName,
-          apiRevisionDescription: `${apiName} ${date.toLocaleDateString()}`,
+          apiRevision: apiRevName,
+          apiRevisionDescription: `${apiRevName} ${date.toLocaleDateString()}`,
 
           subscriptionKeyParameterNames: this._keyParameters,
           path: this._serviceUrl!.apiPath,
@@ -165,13 +165,13 @@ export default class ApimApiBuilder
       //Create Aoi Operations
       if ('operations' in apiProps) {
         apiProps.operations.map((op) => {
-          const opsName = `${apiName}-ops-${op.name}`;
+          const opsName = `${apiRevName}-ops-${op.name}`;
           return new apim.ApiOperation(
             opsName,
             {
               ...op,
               operationId: op.name,
-              apiId: api.apiRevision,
+              apiId: apiRevName,
               displayName: op.name,
               description: op.name,
               serviceName: this.args.apimServiceName,
