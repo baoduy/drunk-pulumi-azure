@@ -113,7 +113,7 @@ export default class ApimApiBuilder
           apiVersion: k,
           apiVersionDescription: k,
 
-          apiRevision: revision,
+          apiRevision: revision.toString(),
           apiRevisionDescription: `${apiRevName} ${date.toLocaleDateString()}`,
 
           subscriptionKeyParameterNames: this._keyParameters,
