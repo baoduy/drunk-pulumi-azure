@@ -171,7 +171,7 @@ export default class ApimApiBuilder
             {
               ...op,
               operationId: op.name,
-              apiId: apiName,
+              apiId: api.apiRevision,
               displayName: op.name,
               description: op.name,
               serviceName: this.args.apimServiceName,
