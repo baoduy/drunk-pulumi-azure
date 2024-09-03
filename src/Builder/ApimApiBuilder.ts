@@ -91,7 +91,8 @@ export default class ApimApiBuilder
     const date = new Date();
     const tasks = Object.keys(this._apis).map(async (k) => {
       const apiName = `${this.args.name}-${k}-api`;
-      const apiRevName = `${apiName};rev=1`;
+      const revision = 1;
+      const apiRevName = `${apiName};rev=${revision}`;
       //Create Api
       const apiProps = this._apis[k];
 
@@ -112,7 +113,7 @@ export default class ApimApiBuilder
           apiVersion: k,
           apiVersionDescription: k,
 
-          apiRevision: apiRevName,
+          apiRevision: revision,
           apiRevisionDescription: `${apiRevName} ${date.toLocaleDateString()}`,
 
           subscriptionKeyParameterNames: this._keyParameters,
