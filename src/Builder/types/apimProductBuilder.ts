@@ -107,6 +107,8 @@ export type ApimApiOperationType = WithNamedType & {
    * The responses of the operation.
    */
   responses?: Input<Input<inputs.apimanagement.ResponseContractArgs>[]>;
+
+  policies?: ApimApiPolicyType;
 };
 
 /**

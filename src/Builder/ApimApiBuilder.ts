@@ -2,10 +2,11 @@ import * as apim from '@pulumi/azure-native/apimanagement';
 import { enums } from '@pulumi/azure-native/types';
 import { Input, interpolate } from '@pulumi/pulumi';
 import { openApi } from '../Common';
-import { ResourceInfo } from '../types';
+import { ResourceInfo, WithDependsOn } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
 import {
   ApimApiKeysType,
+  ApimApiOperationType,
   ApimApiPolicyType,
   ApimApiProps,
   ApimApiServiceUrlType,
@@ -87,6 +88,80 @@ export default class ApimApiBuilder
     );
   }
 
+  private buildOperations({
+    operations,
+    apiName,
+    dependsOn,
+  }: {
+    apiName: string;
+    operations: ApimApiOperationType[];
+  } & WithDependsOn) {
+    return operations.map((op) => {
+      const opsName = op.name.replace(/\//g, '');
+      const opsRsName = `${apiName}-ops-${opsName}-${op.method}`.toLowerCase();
+      const apiOps = new apim.ApiOperation(
+        opsRsName,
+        {
+          operationId: opsName,
+          serviceName: this.args.apimServiceName,
+          resourceGroupName: this.args.group.resourceGroupName,
+          apiId: apiName,
+          displayName: op.name,
+          description: op.name,
+
+          urlTemplate: op.urlTemplate ?? op.name,
+          method: op.method,
+
+          request: {
+            description: op.name,
+            headers: [],
+            queryParameters: [],
+            representations: [
+              {
+                contentType: 'application/json',
+              },
+            ],
+          },
+          responses: op.responses ?? [
+            {
+              description: 'successful operation',
+              headers: [],
+              representations: [
+                {
+                  contentType: 'application/json',
+                },
+              ],
+              statusCode: 200,
+            },
+          ],
+        },
+        { dependsOn },
+      );
+
+      if (op.policies) {
+        const policyString = op
+          .policies(
+            new ApimPolicyBuilder({
+              ...this.args,
+              name: opsRsName,
+            }),
+          )
+          .build();
+        new apim.ApiOperationPolicy(opsRsName, {
+          operationId: opsName,
+          serviceName: this.args.apimServiceName,
+          resourceGroupName: this.args.group.resourceGroupName,
+          apiId: apiName,
+          policyId: 'policy',
+          format: 'xml',
+          value: policyString,
+        });
+      }
+
+      return apiOps;
+    });
+  }
+
   private async buildApis() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map(async (v) => {
@@ -135,7 +210,6 @@ export default class ApimApiBuilder
           customTimeouts: { create: '20m', update: '20m' },
         },
       );
-
       //Link API to Product
       new apim.ProductApi(
         apiName,
@@ -147,7 +221,7 @@ export default class ApimApiBuilder
         },
         { dependsOn: api },
       );
-      //Apply Policy for the API
+      // Apply Policy for the API
       if (this._policyString) {
         new apim.ApiPolicy(
           `${apiName}-policy`,
@@ -165,48 +239,10 @@ export default class ApimApiBuilder
 
       //Create Aoi Operations
       if ('operations' in apiProps) {
-        apiProps.operations.map((op) => {
-          const opsName = op.name.replace(/\//g, '');
-          const opsRsName =
-            `${apiRevName}-ops-${opsName}-${op.method}`.toLowerCase();
-          return new apim.ApiOperation(
-            opsRsName,
-            {
-              operationId: opsName,
-              serviceName: this.args.apimServiceName,
-              resourceGroupName: this.args.group.resourceGroupName,
-              apiId: apiName,
-              displayName: op.name,
-              description: op.name,
-
-              urlTemplate: op.urlTemplate ?? op.name,
-              method: op.method,
-
-              request: {
-                description: op.name,
-                headers: [],
-                queryParameters: [],
-                representations: [
-                  {
-                    contentType: 'application/json',
-                  },
-                ],
-              },
-              responses: op.responses ?? [
-                {
-                  description: 'successful operation',
-                  headers: [],
-                  representations: [
-                    {
-                      contentType: 'application/json',
-                    },
-                  ],
-                  statusCode: 200,
-                },
-              ],
-            },
-            { dependsOn: api },
-          );
+        this.buildOperations({
+          apiName,
+          operations: apiProps.operations,
+          dependsOn: api,
         });
       }
     });
