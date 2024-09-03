@@ -176,6 +176,28 @@ export default class ApimApiBuilder
               description: op.name,
               serviceName: this.args.apimServiceName,
               resourceGroupName: this.args.group.resourceGroupName,
+              request: {
+                description: op.name,
+                headers: [],
+                queryParameters: [],
+                representations: [
+                  {
+                    contentType: 'application/json',
+                  },
+                ],
+              },
+              responses: [
+                {
+                  description: 'successful operation',
+                  headers: [],
+                  representations: [
+                    {
+                      contentType: 'application/json',
+                    },
+                  ],
+                  statusCode: 200,
+                },
+              ],
             },
             { dependsOn: api },
           );
