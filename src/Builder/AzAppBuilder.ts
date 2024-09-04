@@ -71,9 +71,17 @@ class AzAppBuilder
             allowedOrigins: ['*'],
           },
           http20Enabled: true,
+          use32BitWorkerProcess: false,
           nodeVersion: f.nodeVersion,
           netFrameworkVersion: f.netFrameworkVersion,
-          scmIpSecurityRestrictionsDefaultAction: 'Deny',
+          scmIpSecurityRestrictionsDefaultAction: f.network?.ipAddresses
+            ? 'Deny'
+            : 'Allow',
+          ipSecurityRestrictionsDefaultAction: f.network?.ipAddresses
+            ? 'Deny'
+            : 'Allow',
+          //scmIpSecurityRestrictions: [],
+          scmIpSecurityRestrictionsUseMain: Boolean(f.network?.ipAddresses),
           ipSecurityRestrictions: f.network?.ipAddresses
             ? f.network?.ipAddresses.map((ip) => ({
                 action: 'Allow',
