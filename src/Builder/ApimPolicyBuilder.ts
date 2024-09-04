@@ -259,11 +259,13 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     });
     this.rewriteUri({ template: `${props.topicOrQueueName}/messages` });
     if (props.brokerProperties) {
-      this.setHeader({
-        name: 'BrokerProperties',
-        type: types.SetHeaderTypes.override,
-        value: JSON.stringify(props.brokerProperties),
-      });
+      Object.keys(props.brokerProperties).forEach((key) =>
+        this.setHeader({
+          name: key,
+          type: types.SetHeaderTypes.append,
+          value: props.brokerProperties[key],
+        }),
+      );
     }
     return this;
   }

@@ -29,7 +29,7 @@ export enum SetHeaderTypes {
   delete = 'delete',
   override = 'override',
   skip = 'skip',
-  //append = 'append',
+  append = 'append',
 }
 
 /**
