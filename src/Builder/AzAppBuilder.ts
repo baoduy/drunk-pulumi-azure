@@ -79,6 +79,9 @@ class AzAppBuilder
         },
         publicNetworkAccess: f.network?.privateLink ? 'Disabled' : 'Enabled',
         virtualNetworkSubnetId: f.network?.subnetId,
+        vnetContentShareEnabled: Boolean(f.network?.subnetId),
+        vnetImagePullEnabled: Boolean(f.network?.subnetId),
+        vnetRouteAllEnabled: Boolean(f.network?.subnetId),
       });
     });
   }
