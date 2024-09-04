@@ -7,7 +7,7 @@ import {
   IAzAppBuilder,
   IAzAppPlanBuilder,
 } from './types';
-import { ResourceInfo } from '../types';
+import { NamingType, ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 
 class AzAppBuilder
@@ -71,6 +71,8 @@ class AzAppBuilder
             allowedOrigins: ['*'],
           },
           http20Enabled: true,
+          nodeVersion: f.nodeVersion,
+          netFrameworkVersion: f.netFrameworkVersion,
           scmIpSecurityRestrictionsDefaultAction: 'Deny',
           ipSecurityRestrictions: f.network?.ipAddresses
             ? f.network?.ipAddresses.map((ip) => ({
@@ -99,6 +101,14 @@ class AzAppBuilder
     };
   }
 }
+
+export const getFuncHostInfo = (name: NamingType) => {
+  const funcName = naming.getFuncAppName(name);
+  return {
+    host: `${funcName}.azurewebsites.net`,
+    scm: `${funcName}.scm.azurewebsites.net`,
+  };
+};
 
 export default (props: AzAppBuilderArgs) =>
   new AzAppBuilder(props) as IAzAppPlanBuilder;
