@@ -1,9 +1,14 @@
 import { BuilderProps, IBuilder } from './genericBuilder';
-import { NetworkPropsType, ResourceInfo, WithEnvRoles } from '../../types';
+import {
+  NetworkPropsType,
+  ResourceInfo,
+  WithEnvRoles,
+  WithLogInfo,
+} from '../../types';
 import { Input } from '@pulumi/pulumi';
 import { enums } from '@pulumi/azure-native/types';
 
-export type AzAppBuilderArgs = BuilderProps & WithEnvRoles;
+export type AzAppBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
 
 export type AzAppBuilderKinds = {
   kind: 'app' | 'FunctionApp';

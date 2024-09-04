@@ -8,7 +8,8 @@ import {
   IAzAppPlanBuilder,
 } from './types';
 import { NamingType, ResourceInfo } from '../types';
-import { isPrd, naming } from '../Common';
+import { currentRegionCode, isPrd, naming } from '../Common';
+import { interpolate } from '@pulumi/pulumi';
 
 class AzAppBuilder
   extends Builder<ResourceInfo>
@@ -44,11 +45,25 @@ class AzAppBuilder
       zoneRedundant: isPrd,
     });
   }
+
   private buildFuncApps() {
-    const { envUIDInfo } = this.args;
+    const { envUIDInfo, logInfo } = this.args;
+
     this._funcs.map((f) => {
       const fName = naming.getFuncAppName(f.name);
       const n = `${this._instanceName}-${fName}`;
+      const appSettings = f.appSettings ?? [];
+
+      if (logInfo?.appInsight) {
+        appSettings.push({
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY',
+          value: logInfo.appInsight.instrumentationKey,
+        });
+        appSettings.push({
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING',
+          value: logInfo.appInsight.connectionString,
+        });
+      }
 
       return new azure.web.WebApp(n, {
         ...this.args.group,

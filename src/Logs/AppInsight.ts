@@ -72,16 +72,16 @@ export default ({
   return appInsight;
 };
 
-export const getAppInsightKey = async ({
-  resourceInfo,
-  vaultInfo,
-}: {
-  resourceInfo: ResourceInfo;
-  vaultInfo: KeyVaultInfo;
-}): Promise<string> => {
-  const key = await getSecret({
-    name: resourceInfo.name,
-    vaultInfo,
-  });
-  return key?.value ?? '';
-};
+// export const getAppInsightKey = async ({
+//   resourceInfo,
+//   vaultInfo,
+// }: {
+//   resourceInfo: ResourceInfo;
+//   vaultInfo: KeyVaultInfo;
+// }): Promise<string> => {
+//   const key = await getSecret({
+//     name: resourceInfo.name,
+//     vaultInfo,
+//   });
+//   return key?.value ?? '';
+// };

@@ -242,13 +242,14 @@ export type StorageInfo = ResourceInfo &
  * Application Insights secrets information.
  */
 export type AppInsightSecretsInfo = {
-  instrumentationKey?: Output<string>;
+  instrumentationKey: Output<string>;
 };
 
 /**
  * Application Insights information.
  */
-export type AppInsightInfo = ResourceInfo & AppInsightSecretsInfo;
+export type AppInsightInfo = ResourceInfo &
+  AppInsightSecretsInfo & { connectionString: Output<string> };
 
 /**
  * Log workspace secrets information.
