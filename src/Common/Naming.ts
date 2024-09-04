@@ -96,11 +96,13 @@ export const rules = {
   },
   getWebAppName: {
     cleanName: true,
+    includeOrgName: true,
     maxLength: 80,
     suffix: 'web',
   },
   getFuncAppName: {
     cleanName: true,
+    includeOrgName: true,
     maxLength: 80,
     suffix: 'func',
   },

@@ -12,6 +12,9 @@ export type AzAppBuilderKinds = {
 
 export type AzFuncAppBuilderType = {
   name: string;
+  netFrameworkVersion?: 'v8.0' | 'v6.0' | string;
+  nodeVersion?: string;
+
   appSettings?: Array<{ name: Input<string>; value: Input<string> }>;
   connectionStrings?: Array<{
     connectionString: Input<string>;
