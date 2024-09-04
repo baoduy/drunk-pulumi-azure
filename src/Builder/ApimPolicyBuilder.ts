@@ -263,7 +263,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
         this.setHeader({
           name: key,
           type: types.SetHeaderTypes.append,
-          value: props.brokerProperties[key],
+          value: props.brokerProperties![key],
         }),
       );
     }
