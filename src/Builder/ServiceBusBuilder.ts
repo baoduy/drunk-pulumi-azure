@@ -22,7 +22,7 @@ const defaultQueueOptions: types.ServiceBusQueueArgs = {
   maxSizeInMegabytes: isPrd ? 10 * 1024 : 1024,
   //Default is 'PT1M' (1 minute) and max is 5 minutes.
   lockDuration: 'PT1M',
-  defaultMessageTimeToLive: isPrd ? 'P30D' : 'P5D',
+  defaultMessageTimeToLive: isPrd ? 'P90D' : 'P5D',
   deadLetteringOnMessageExpiration: true,
 };
 
@@ -38,8 +38,8 @@ const defaultTopicOptions: types.ServiceBusTopicArgs = {
 
 const defaultSubOptions: types.ServiceBusSubArgs = {
   duplicateDetectionHistoryTimeWindow: 'P10M',
-  autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
-  defaultMessageTimeToLive: isPrd ? 'P30D' : 'P5D',
+  //autoDeleteOnIdle: isPrd ? 'P180D' : 'P90D',
+  defaultMessageTimeToLive: isPrd ? 'P90D' : 'P5D',
   enableBatchedOperations: true,
   deadLetteringOnMessageExpiration: true,
   lockDuration: 'PT1M',
@@ -101,6 +101,7 @@ class ServiceBusBuilder
     this._topics = { ...this._topics, ...props };
     return this;
   }
+
   private buildNamespace() {
     const {
       dependsOn,
