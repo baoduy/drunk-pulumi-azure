@@ -47,10 +47,12 @@ class AzAppBuilder
   private buildFuncApps() {
     const { envUIDInfo } = this.args;
     this._funcs.map((f) => {
-      const n = `${this._instanceName}-${f.name}`;
-      const func = new azure.web.WebApp(n, {
+      const fName = naming.getFuncAppName(f.name);
+      const n = `${this._instanceName}-${fName}`;
+
+      return new azure.web.WebApp(n, {
         ...this.args.group,
-        name: f.name,
+        name: fName,
         enabled: true,
         httpsOnly: true,
         //storageAccountRequired: true,
