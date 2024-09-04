@@ -23,8 +23,8 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   public authCert(props: types.ApimAuthCertType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
       'thumbprint' in props
-        ? `<authentication-certificate thumbprint="${props.thumbprint}" />`
-        : `<authentication-certificate certificate-id="${props.certId}" password="${props.password}" />`,
+        ? `\t<authentication-certificate thumbprint="${props.thumbprint}" />`
+        : `\t<authentication-certificate certificate-id="${props.certId}" password="${props.password}" />`,
     );
     return this;
   }
@@ -34,8 +34,8 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
       'clientId' in props
-        ? `<authentication-managed-identity resource="${props.resource}" client-id="${props.clientId}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`
-        : `<authentication-managed-identity resource="${props.resource}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`,
+        ? `\t<authentication-managed-identity resource="${props.resource}" client-id="${props.clientId}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`
+        : `\t<authentication-managed-identity resource="${props.resource}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`,
     );
 
     if (props.setHeaderKey)
