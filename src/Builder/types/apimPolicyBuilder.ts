@@ -139,6 +139,7 @@ export type ApimFindAndReplaceType = {
 export type ApimForwardToServiceBusType = {
   serviceBusName: string;
   topicOrQueueName: string;
+  brokerProperties?: Record<string, string>;
 };
 
 /**
@@ -241,7 +242,7 @@ export interface IApimPolicyBuilder {
    */
   verifyClientCert(props: ApimClientCertType): IApimPolicyBuilder;
 
-  forwardToServiceBUs(props: ApimForwardToServiceBusType): IApimPolicyBuilder;
+  forwardToServiceBus(props: ApimForwardToServiceBusType): IApimPolicyBuilder;
   /**
    * Builds the policy and returns it as a string.
    * @returns The built policy as a string.

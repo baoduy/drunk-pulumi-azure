@@ -245,7 +245,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     return this;
   }
 
-  public forwardToServiceBUs(
+  public forwardToServiceBus(
     props: types.ApimForwardToServiceBusType,
   ): types.IApimPolicyBuilder {
     this.authIdentity({
@@ -258,6 +258,13 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
       url: `https://${props.serviceBusName}.servicebus.windows.net`,
     });
     this.rewriteUri({ template: `${props.topicOrQueueName}/messages` });
+    if (props.brokerProperties) {
+      this.setHeader({
+        name: 'BrokerProperties',
+        type: types.SetHeaderTypes.override,
+        value: JSON.stringify(props.brokerProperties),
+      });
+    }
     return this;
   }
 
