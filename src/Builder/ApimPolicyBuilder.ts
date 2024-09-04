@@ -1,258 +1,149 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { organization } from '../Common';
 import { getIpsRange } from '../VNet/Helper';
-import {
-  ApimAuthCertType,
-  ApimBaseUrlType,
-  ApimCheckHeaderType,
-  ApimChildBuilderProps,
-  ApimClientCertType,
-  ApimClientIpHeaderType,
-  ApimCorsType,
-  ApimFindAndReplaceType,
-  ApimMockPropsType,
-  ApimOutCacheType,
-  ApimRateLimitType,
-  ApimRewriteUriType,
-  ApimSetHeaderType,
-  ApimValidateJwtWhitelistIpType,
-  ApimWhitelistIpType,
-  IApimPolicyBuilder,
-  SetHeaderTypes,
-} from './types';
+import * as types from './types';
+import { ApimForwardToServiceBusType } from './types';
 
-export default class ApimPolicyBuilder implements IApimPolicyBuilder {
-  private _baseUrl: ApimBaseUrlType | undefined = undefined;
-  private _rewriteUri: ApimRewriteUriType | undefined = undefined;
-  private _rateLimit: ApimRateLimitType | undefined = undefined;
-  private _cacheOptions: ApimOutCacheType | undefined = undefined;
-  private _backendCert: ApimAuthCertType | undefined = undefined;
-  private _verifyClientCert: ApimClientCertType | undefined = undefined;
-  private _cors: ApimCorsType | undefined = undefined;
-  private _validateJwtWhitelistIp: ApimValidateJwtWhitelistIpType | undefined =
-    undefined;
-  private _mockResponses: ApimMockPropsType[] = [];
-  private _headers: ApimSetHeaderType[] = [];
-  private _checkHeaders: ApimCheckHeaderType[] = [];
-  private _whitelistIps: ApimWhitelistIpType[] = [];
-  private _findAndReplaces: ApimFindAndReplaceType[] = [];
-  //private _inboundCustomPolicies: ApimCustomPolicyType[] = [];
-  //private _outboundCustomPolicies: ApimCustomPolicyType[] = [];
-
+export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   private _inboundPolicies: string[] = [];
   private _outboundPolicies: string[] = [];
+  private _certVerification: types.ApimClientCertType | undefined = undefined;
+  private _mockResponse: boolean = false;
+  private _cors: types.ApimCorsType | undefined = undefined;
 
-  public constructor(private props: ApimChildBuilderProps) {}
+  public constructor(private args: types.ApimChildBuilderProps) {}
 
-  public setBaseUrl(props: ApimBaseUrlType): IApimPolicyBuilder {
-    this._baseUrl = props;
-    return this;
-  }
-  public setHeader(props: ApimSetHeaderType): IApimPolicyBuilder {
-    this._headers.push(props);
-    return this;
-  }
-  public checkHeader(props: ApimCheckHeaderType): IApimPolicyBuilder {
-    this._checkHeaders.push(props);
-    return this;
-  }
-  public mockResponse(props: ApimMockPropsType): IApimPolicyBuilder {
-    this._mockResponses.push(props);
-    return this;
-  }
-  public rewriteUri(props: ApimRewriteUriType): IApimPolicyBuilder {
-    this._rewriteUri = props;
-    return this;
-  }
-  public setRateLimit(props: ApimRateLimitType): IApimPolicyBuilder {
-    this._rateLimit = props;
-    return this;
-  }
-  public setCacheOptions(props: ApimOutCacheType): IApimPolicyBuilder {
-    this._cacheOptions = props;
-    return this;
-  }
-  public setBackendCert(props: ApimAuthCertType): IApimPolicyBuilder {
-    this._backendCert = props;
-    return this;
-  }
-  public verifyClientCert(props: ApimClientCertType): IApimPolicyBuilder {
-    this._verifyClientCert = props;
-    return this;
-  }
-  public setCors(props: ApimCorsType): IApimPolicyBuilder {
-    this._cors = props;
-    return this;
-  }
-  public setClientIpHeader(props: ApimClientIpHeaderType): IApimPolicyBuilder {
-    this._headers.push({
-      name: props.headerKey ?? `x-${organization}-clientIp`,
-      value: '@(context.Request.IpAddress)',
-      type: SetHeaderTypes.override,
-    });
-    return this;
-  }
-
-  /** Filter IP from Bearer Token */
-  public validateJwtWhitelistIp(
-    props: ApimValidateJwtWhitelistIpType,
-  ): IApimPolicyBuilder {
-    this._validateJwtWhitelistIp = props;
-    return this;
-  }
-
-  /** IP Address Whitelisting */
-  public setWhitelistIPs(props: ApimWhitelistIpType): IApimPolicyBuilder {
-    this._whitelistIps.push(props);
-    return this;
-  }
-
-  /**Replace outbound results */
-  public setFindAndReplaces(props: ApimFindAndReplaceType): IApimPolicyBuilder {
-    this._findAndReplaces.push(props);
-    return this;
-  }
-
-  //Custom Policies
-  // public withInboundPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder {
-  //   this._inboundCustomPolicies.push(props);
-  //   return this;
-  // }
-  // public withOutPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder {
-  //   this._outboundCustomPolicies.push(props);
-  //   return this;
-  // }
-
-  private buildBaseUrl() {
-    if (!this._baseUrl) return;
+  public authBasic(props: types.ApimAuthBasicType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      `<set-backend-service base-url="${this._baseUrl.url}" />`,
+      `\t<authentication-basic username="${props.userName}" password="${props.password}" />`,
     );
+    return this;
   }
 
-  private buildHeaders() {
+  public authCert(props: types.ApimAuthCertType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      ...this._headers.map((h) => {
-        let rs = `\t<set-header name="${h.name}" exists-action="${h.type}">`;
-        if (h.value) {
-          rs += ` <value>${h.value}</value>`;
-        }
-        rs += '</set-header>';
-        return rs;
-      }),
+      'thumbprint' in props
+        ? `<authentication-certificate thumbprint="${props.thumbprint}" />`
+        : `<authentication-certificate certificate-id="${props.certId}" password="${props.password}" />`,
     );
+    return this;
   }
 
-  private buildCheckHeaders() {
+  public authIdentity(
+    props: types.ApimAuthIdentityType,
+  ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      ...this._checkHeaders.map(
-        (ch) => `\t<check-header name="${
-          ch.name
-        }" failed-check-httpcode="401" failed-check-error-message="The header ${
-          ch.name
-        } is not found" ignore-case="true">
-    ${ch.value ? ch.value.map((v) => `<value>${v}</value>`).join('\n') : ''}
-\t</check-header>`,
-      ),
+      'clientId' in props
+        ? `<authentication-managed-identity resource="${props.resource}" client-id="${props.clientId}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`
+        : `<authentication-managed-identity resource="${props.resource}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`,
     );
+
+    if (props.setHeaderKey)
+      this.setHeader({
+        name: props.setHeaderKey,
+        type: types.SetHeaderTypes.override,
+        value: `@((string) context.Variables[&quot;${props.variableName}&quot;])`,
+      });
+
+    return this;
   }
 
-  private buildMockResponse() {
+  public setBaseUrl(props: types.ApimBaseUrlType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      ...this._mockResponses.map(
-        (m) =>
-          `<mock-response status-code="${m.code ?? 200}" content-type="${m.contentType ?? 'application/json'}" />`,
-      ),
+      `\t<set-backend-service base-url="${props.url}" />`,
     );
+    return this;
   }
 
-  private buildRewriteUri() {
-    if (!this._rewriteUri) return;
+  public setHeader(props: types.ApimSetHeaderType): types.IApimPolicyBuilder {
+    let rs = `\t<set-header name="${props.name}" exists-action="${props.type}">`;
+    if (props.value) {
+      rs += ` <value>${props.value}</value>`;
+    }
+    rs += '</set-header>';
 
+    this._inboundPolicies.push(rs);
+    return this;
+  }
+
+  public checkHeader(
+    props: types.ApimCheckHeaderType,
+  ): types.IApimPolicyBuilder {
+    const rs = `\t<check-header name="${
+      props.name
+    }" failed-check-httpcode="401" failed-check-error-message="The header ${
+      props.name
+    } is not found" ignore-case="true">
+    ${props.value ? props.value.map((v) => `<value>${v}</value>`).join('\n') : ''}
+\t</check-header>`;
+
+    this._inboundPolicies.push(rs);
+    return this;
+  }
+
+  public mockResponse(
+    props: types.ApimMockPropsType,
+  ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      `<rewrite-uri template="${this._rewriteUri.template ?? '/'}" />`,
+      `<mock-response status-code="${props.code ?? 200}" content-type="${props.contentType ?? 'application/json'}" />`,
     );
+    this._mockResponse = true;
+    return this;
   }
 
-  private buildRateLimit() {
-    if (!this._rateLimit) return;
+  public rewriteUri(props: types.ApimRewriteUriType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      this._rateLimit.successConditionOnly
-        ? `<rate-limit-by-key calls="${this._rateLimit.calls ?? 10}" renewal-period="${this._rateLimit.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" increment-condition="@(context.Response.StatusCode &gt;= 200 &amp;&amp; context.Response.StatusCode &lt; 300)" />`
-        : `<rate-limit-by-key calls="${this._rateLimit.calls ?? 10}" renewal-period="${this._rateLimit.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" />`,
+      `<rewrite-uri template="${props.template ?? '/'}" />`,
     );
+    return this;
   }
 
-  private buildCacheOptions() {
-    if (!this._cacheOptions) return;
+  public setRateLimit(
+    props: types.ApimRateLimitType,
+  ): types.IApimPolicyBuilder {
+    this._inboundPolicies.push(
+      props.successConditionOnly
+        ? `<rate-limit-by-key calls="${props.calls ?? 10}" renewal-period="${props.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" increment-condition="@(context.Response.StatusCode &gt;= 200 &amp;&amp; context.Response.StatusCode &lt; 300)" />`
+        : `<rate-limit-by-key calls="${props.calls ?? 10}" renewal-period="${props.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" />`,
+    );
+    return this;
+  }
+
+  public setCacheOptions(
+    props: types.ApimOutCacheType,
+  ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(`<cache-lookup vary-by-developer="false" 
             vary-by-developer-groups="false" 
             allow-private-response-caching="true" 
             must-revalidate="true" 
             downstream-caching-type="public" />`);
     this._outboundPolicies.push(
-      `<cache-store duration="${this._cacheOptions.duration ?? 60}" />`,
+      `<cache-store duration="${props.duration ?? 60}" />`,
     );
+    return this;
   }
 
-  private buildBackendCert() {
-    if (!this._backendCert) return;
-    this._inboundPolicies.push(
-      `<authentication-certificate thumbprint="${this._backendCert.thumbprint}" />`,
-    );
+  public setCors(props: types.ApimCorsType): types.IApimPolicyBuilder {
+    this._cors = props;
+    return this;
   }
 
-  private buildVerifyClientCert() {
-    if (!this._verifyClientCert) return;
-    this._inboundPolicies.push(`<choose>
-        <when condition="@(context.Request.Certificate == null${
-          this._verifyClientCert.verifyCert
-            ? ' || !context.Request.Certificate.VerifyNoRevocation()'
-            : ''
-        }${
-          this._verifyClientCert.issuer
-            ? ` || context.Request.Certificate.Issuer != "${this._verifyClientCert.issuer}"`
-            : ''
-        }${
-          this._verifyClientCert.subject
-            ? ` || context.Request.Certificate.SubjectName.Name != "${this._verifyClientCert.subject}"`
-            : ''
-        }${
-          this._verifyClientCert.thumbprint
-            ? ` || context.Request.Certificate.Thumbprint != "${this._verifyClientCert.thumbprint}"`
-            : ''
-        })" >
-          <return-response>
-            <set-status code="403" reason="Invalid client certificate" />
-          </return-response>
-      </when>
-    </choose>`);
+  public setClientIpHeader(
+    props: types.ApimClientIpHeaderType,
+  ): types.IApimPolicyBuilder {
+    this.setHeader({
+      name: props.headerKey ?? `x-${organization}-clientIp`,
+      value: '@(context.Request.IpAddress)',
+      type: types.SetHeaderTypes.override,
+    });
+    return this;
   }
 
-  private buildCors() {
-    if (!this._cors) return;
-    const orgs = this._cors.origins
-      ? this._cors.origins.map((o) => `<origin>${o}</origin>`)
-      : ['<origin>*</origin>'];
-
-    const cors = `<cors allow-credentials="${Array.isArray(this._cors.origins)}">
-    <allowed-origins>
-        ${orgs.join('\n')}
-    </allowed-origins>
-    <allowed-methods preflight-result-max-age="300">
-        <method>*</method>
-    </allowed-methods>
-    <allowed-headers>
-        <header>*</header>
-    </allowed-headers>
-</cors>`;
-    this._inboundPolicies.push(cors);
-  }
-
-  private buildValidateJwtWhitelistIp() {
-    if (!this._validateJwtWhitelistIp) return;
-    const claimKey =
-      this._validateJwtWhitelistIp.claimKey ?? 'client_IpWhitelist';
+  /** Filter IP from Bearer Token */
+  public validateJwtWhitelistIp(
+    props: types.ApimValidateJwtWhitelistIpType,
+  ): types.IApimPolicyBuilder {
+    const claimKey = props.claimKey ?? 'client_IpWhitelist';
     const setHeader = `<set-header name="IpAddressValidation" exists-action="override">
       <value>@{
 		Boolean ipAddressValid = false;
@@ -298,12 +189,12 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
 </choose>`;
 
     //Create Policy Fragment
-    const pfName = `${this.props.name}-PolicyFragment`;
+    const pfName = `${this.args.name}-PolicyFragment`;
     new apim.PolicyFragment(pfName, {
       id: pfName,
       description: pfName,
-      serviceName: this.props.apimServiceName,
-      resourceGroupName: this.props.group.resourceGroupName,
+      serviceName: this.args.apimServiceName,
+      resourceGroupName: this.args.group.resourceGroupName,
       format: 'xml',
       value: `
         <fragment>
@@ -312,14 +203,17 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
         </fragment>
       `,
     });
+
     this._inboundPolicies.push(`<include-fragment fragment-id="${pfName}" />`);
+    return this;
   }
 
-  private buildWhiteListIps() {
-    if (this._whitelistIps.length <= 0) return;
-
-    const ipAddresses = this._whitelistIps.flatMap((ip) => ip.ipAddresses);
-    const policy = `<ip-filter action="allow">\r\n${ipAddresses
+  /** IP Address Whitelisting */
+  public setWhitelistIPs(
+    props: types.ApimWhitelistIpType,
+  ): types.IApimPolicyBuilder {
+    const ipAddresses = props.ipAddresses;
+    const policy = `\t<ip-filter action="allow">\r\n${ipAddresses
       .map((ip) => {
         if (ip.includes('/')) {
           const range = getIpsRange(ip);
@@ -328,52 +222,100 @@ export default class ApimPolicyBuilder implements IApimPolicyBuilder {
         return `<address>${ip}</address>`;
       })
       .join('\r\n')}
-        </ip-filter>`;
+\t</ip-filter>`;
 
     this._inboundPolicies.push(policy);
+    return this;
   }
 
-  private buildFindAndReplace() {
-    if (!this._findAndReplaces) return;
+  /**Replace outbound results */
+  public setFindAndReplaces(
+    props: types.ApimFindAndReplaceType,
+  ): types.IApimPolicyBuilder {
     this._outboundPolicies.push(
-      ...this._findAndReplaces
-        .map((f) => `<find-and-replace from="${f.from}" to="${f.to}" />`)
-        .join('\n'),
+      `<find-and-replace from="${props.from}" to="${props.to}" />`,
     );
+    return this;
   }
 
-  // private buildCustomRules() {
-  //   if (this._inboundCustomPolicies) {
-  //     this._inboundPolicies.push(
-  //       ...this._inboundCustomPolicies.map((i) => i.policy),
-  //     );
-  //   }
-  //   if (this._outboundPolicies) {
-  //     this._outboundPolicies.push(
-  //       ...this._outboundCustomPolicies.map((i) => i.policy),
-  //     );
-  //   }
-  // }
+  public verifyClientCert(
+    props: types.ApimClientCertType,
+  ): types.IApimPolicyBuilder {
+    this._certVerification = props;
+    return this;
+  }
+
+  public forwardToServiceBUs(
+    props: types.ApimForwardToServiceBusType,
+  ): types.IApimPolicyBuilder {
+    this.authIdentity({
+      variableName: 'x-forward-to-bus',
+      setHeaderKey: 'Authorization',
+      resource: 'https://servicebus.azure.net',
+      ignoreError: false,
+    });
+    this.setBaseUrl({
+      url: `https://${props.serviceBusName}.servicebus.windows.net`,
+    });
+    this.rewriteUri({ template: `${props.topicOrQueueName}/messages` });
+    return this;
+  }
+
+  private buildCors() {
+    if (!this._cors) return;
+    const orgs = this._cors?.origins
+      ? this._cors!.origins!.map((o) => `<origin>${o}</origin>`)
+      : ['<origin>*</origin>'];
+
+    const cors = `<cors allow-credentials="${Array.isArray(this._cors?.origins)}">
+    <allowed-origins>
+        ${orgs.join('\n')}
+    </allowed-origins>
+    <allowed-methods preflight-result-max-age="300">
+        <method>*</method>
+    </allowed-methods>
+    <allowed-headers>
+        <header>*</header>
+    </allowed-headers>
+</cors>`;
+    this._inboundPolicies.push(cors);
+  }
+
+  private buildCertVerification() {
+    if (!this._certVerification) return;
+
+    this._inboundPolicies.push(`<choose>
+        <when condition="@(context.Request.Certificate == null${
+          this._certVerification.verifyCert
+            ? ' || !context.Request.Certificate.VerifyNoRevocation()'
+            : ''
+        }${
+          this._certVerification.issuer
+            ? ` || context.Request.Certificate.Issuer != "${this._certVerification.issuer}"`
+            : ''
+        }${
+          this._certVerification.subject
+            ? ` || context.Request.Certificate.SubjectName.Name != "${this._certVerification.subject}"`
+            : ''
+        }${
+          this._certVerification.thumbprint
+            ? ` || context.Request.Certificate.Thumbprint != "${this._certVerification.thumbprint}"`
+            : ''
+        })" >
+          <return-response>
+            <set-status code="403" reason="Invalid client certificate" />
+          </return-response>
+      </when>
+    </choose>`);
+  }
 
   public build(): string {
-    this.buildHeaders();
-    this.buildCacheOptions();
-    this.buildMockResponse();
-    this.buildRateLimit();
-    this.buildBackendCert();
     this.buildCors();
-    this.buildValidateJwtWhitelistIp();
-    this.buildWhiteListIps();
-    this.buildFindAndReplace();
-    this.buildRewriteUri();
-    this.buildCheckHeaders();
-    this.buildBaseUrl();
-    //this.buildCustomRules();
     //This must be a last rule
-    this.buildVerifyClientCert();
+    this.buildCertVerification();
 
     let backend = '<base />';
-    if (!this._mockResponses) {
+    if (!this._mockResponse) {
       backend =
         '<forward-request timeout="120" follow-redirects="true" buffer-request-body="true" fail-on-error-status-code="true"/>';
     }
