@@ -331,8 +331,12 @@ class ServiceBusBuilder
   } & WithDependsOn &
     WithNamedType) {
     if (this._options?.disableLocalAuth || !this.args.vaultInfo) return;
-    const authorizationRuleName = `${level}-${name}-${type}`;
-    const n = `${this._instanceName}-${authorizationRuleName}`;
+    const authorizationRuleName =
+      level === 'namespace' ? `${name}-${type}` : `${level}-${name}-${type}`;
+    const n =
+      level === 'namespace'
+        ? authorizationRuleName
+        : `${this._instanceName}-${authorizationRuleName}`;
 
     const rights =
       type === 'manage'
