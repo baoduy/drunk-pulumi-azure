@@ -98,7 +98,15 @@ export type ApimApiOperationType = WithNamedType & {
   /**
    * The HTTP method of the operation.
    */
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
+  method:
+    | 'GET'
+    | 'POST'
+    | 'PUT'
+    | 'DELETE'
+    | 'PATCH'
+    | 'HEAD'
+    | 'OPTIONS'
+    | string;
   /**
    * The URL template of the operation.
    */
