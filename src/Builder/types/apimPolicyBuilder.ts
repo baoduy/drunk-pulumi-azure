@@ -247,6 +247,7 @@ export interface IApimPolicyBuilder {
   setResponseHeaders(props: ApimSetHeaderType): IApimPolicyBuilder;
 
   setResponse(...props: ApimSetResponseBodyType[]): IApimPolicyBuilder;
+
   /**
    * Sets find and replace operations.
    * @param props - The find and replace configuration.
