@@ -135,6 +135,13 @@ export type ApimFindAndReplaceType = {
   to: string;
 };
 
+export type ApimSetResponseBodyType = {
+  condition?: string;
+  conditionStatusCode?: number;
+  responseBody: string;
+  responseStatusCode?: number;
+};
+
 //===============================Helper Polices
 export type ApimForwardToServiceBusType = {
   serviceBusName: string;
@@ -229,13 +236,6 @@ export interface IApimPolicyBuilder {
   setWhitelistIPs(props: ApimWhitelistIpType): IApimPolicyBuilder;
 
   /**
-   * Sets find and replace operations.
-   * @param props - The find and replace configuration.
-   * @returns The policy builder instance.
-   */
-  setFindAndReplaces(props: ApimFindAndReplaceType): IApimPolicyBuilder;
-
-  /**
    * Verifies a client certificate.
    * @param props - The client certificate configuration.
    * @returns The policy builder instance.
@@ -243,6 +243,17 @@ export interface IApimPolicyBuilder {
   verifyClientCert(props: ApimClientCertType): IApimPolicyBuilder;
 
   forwardToServiceBus(props: ApimForwardToServiceBusType): IApimPolicyBuilder;
+
+  setResponseHeaders(props: ApimSetHeaderType): IApimPolicyBuilder;
+
+  setResponse(...props: ApimSetResponseBodyType[]): IApimPolicyBuilder;
+  /**
+   * Sets find and replace operations.
+   * @param props - The find and replace configuration.
+   * @returns The policy builder instance.
+   */
+  findAndReplacesResponse(props: ApimFindAndReplaceType): IApimPolicyBuilder;
+
   /**
    * Builds the policy and returns it as a string.
    * @returns The built policy as a string.

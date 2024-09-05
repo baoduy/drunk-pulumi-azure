@@ -2,7 +2,7 @@ import * as apim from '@pulumi/azure-native/apimanagement';
 import { organization } from '../Common';
 import { getIpsRange } from '../VNet/Helper';
 import * as types from './types';
-import { ApimForwardToServiceBusType } from './types';
+import { ApimForwardToServiceBusType, ApimSetResponseBodyType } from './types';
 
 export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   private _inboundPolicies: string[] = [];
@@ -146,34 +146,33 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     const claimKey = props.claimKey ?? 'client_IpWhitelist';
     const setHeader = `<set-header name="IpAddressValidation" exists-action="override">
       <value>@{
-		Boolean ipAddressValid = false;
-		string authHeader = context.Request.Headers.GetValueOrDefault("Authorization", "");
-		if (authHeader?.Length > 0)
-		{
-			string[] authHeaderParts = authHeader.Split(' ');
-			if (authHeaderParts?.Length == 2 && authHeaderParts[0].Equals("Bearer", StringComparison.InvariantCultureIgnoreCase))
-			{
-				if (authHeaderParts[1].TryParseJwt(out Jwt jwt))
-				{
-					var ipsWhitelist = jwt.Claims.GetValueOrDefault("${claimKey}", "");
-                    IEnumerable<string> ips = ipsWhitelist
-                        .Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(p => p.Trim());
-              
-                    if(string.IsNullOrEmpty(ipsWhitelist) || ips.Contains(context.Request.IpAddress))
-                    {
-                        ipAddressValid = true;
-                    }
-			    }
-			}
-        }
-        else
+      Boolean ipAddressValid = false;
+      string authHeader = context.Request.Headers.GetValueOrDefault("Authorization", "");
+      if (authHeader?.Length > 0)
+      {
+        string[] authHeaderParts = authHeader.Split(' ');
+        if (authHeaderParts?.Length == 2 && authHeaderParts[0].Equals("Bearer", StringComparison.InvariantCultureIgnoreCase))
         {
-           ipAddressValid = true;
-        }
-				
-        return ipAddressValid.ToString();
-      }</value>
+            if (authHeaderParts[1].TryParseJwt(out Jwt jwt))
+            {
+                var ipsWhitelist = jwt.Claims.GetValueOrDefault("${claimKey}", "");
+                IEnumerable<string> ips = ipsWhitelist
+                          .Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                          .Select(p => p.Trim());
+                
+                if(string.IsNullOrEmpty(ipsWhitelist) || ips.Contains(context.Request.IpAddress))
+                {
+                    ipAddressValid = true;
+                }
+            }
+			  }
+      }
+      else
+      {
+         ipAddressValid = true;
+      } 
+    return ipAddressValid.ToString();
+  }</value>
   </set-header>`;
     const checkHeader = `<choose>
 		<when condition="@(context.Request.Headers.GetValueOrDefault(&quot;IpAddressValidation&quot;, &quot;&quot;).Equals(Boolean.FalseString))">
@@ -189,7 +188,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 </choose>`;
 
     //Create Policy Fragment
-    const pfName = `${this.args.name}-PolicyFragment`;
+    const pfName = `${this.args.apimServiceName}-validateJwtWhitelistIp-pf`;
     new apim.PolicyFragment(pfName, {
       id: pfName,
       description: pfName,
@@ -228,16 +227,6 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     return this;
   }
 
-  /**Replace outbound results */
-  public setFindAndReplaces(
-    props: types.ApimFindAndReplaceType,
-  ): types.IApimPolicyBuilder {
-    this._outboundPolicies.push(
-      `<find-and-replace from="${props.from}" to="${props.to}" />`,
-    );
-    return this;
-  }
-
   public verifyClientCert(
     props: types.ApimClientCertType,
   ): types.IApimPolicyBuilder {
@@ -267,6 +256,50 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
         }),
       );
     }
+    return this;
+  }
+
+  public setResponseHeaders(
+    props: types.ApimSetHeaderType,
+  ): types.IApimPolicyBuilder {
+    let rs = `\t<set-header name="${props.name}" exists-action="${props.type}">`;
+    if (props.value) {
+      rs += ` <value>${props.value}</value>`;
+    }
+    rs += '</set-header>';
+
+    this._outboundPolicies.push(rs);
+    return this;
+  }
+
+  /**Replace outbound results */
+  public findAndReplacesResponse(
+    props: types.ApimFindAndReplaceType,
+  ): types.IApimPolicyBuilder {
+    this._outboundPolicies.push(
+      `<find-and-replace from="${props.from}" to="${props.to}" />`,
+    );
+    return this;
+  }
+
+  public setResponse(
+    ...props: types.ApimSetResponseBodyType[]
+  ): types.IApimPolicyBuilder {
+    const options = props.map((c) =>
+      c.conditionStatusCode
+        ? `\t<when condition="@(context.Response.StatusCode == ${c.conditionStatusCode})">
+          <set-status code="${c.responseStatusCode ?? 200}" />
+          <set-body>${c.responseBody}</set-body> 
+\t</when>`
+        : `\t<when condition="${c.condition}">
+          <set-status code="${c.responseStatusCode ?? 200}" />
+          <set-body>${c.responseBody}</set-body>
+\t</when>`,
+    );
+
+    this._outboundPolicies.push(`\t<choose>
+  ${options.join('\n')}
+\t</choose>`);
     return this;
   }
 
