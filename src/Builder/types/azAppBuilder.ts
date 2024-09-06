@@ -1,8 +1,14 @@
 import { BuilderProps, IBuilder } from './genericBuilder';
-import { ResourceInfo } from '../../types';
+import {
+  NetworkPropsType,
+  ResourceInfo,
+  WithEnvRoles,
+  WithLogInfo,
+} from '../../types';
 import { Input } from '@pulumi/pulumi';
+import { enums } from '@pulumi/azure-native/types';
 
-export type AzAppBuilderArgs = BuilderProps;
+export type AzAppBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
 
 export type AzAppBuilderKinds = {
   kind: 'app' | 'FunctionApp';
@@ -11,8 +17,16 @@ export type AzAppBuilderKinds = {
 
 export type AzFuncAppBuilderType = {
   name: string;
-  storageConnectionString: Input<string>;
+  netFrameworkVersion?: 'v8.0' | 'v6.0' | string;
+  nodeVersion?: string;
+
   appSettings?: Array<{ name: Input<string>; value: Input<string> }>;
+  connectionStrings?: Array<{
+    connectionString: Input<string>;
+    name: Input<string>;
+    type?: Input<enums.web.ConnectionStringType>;
+  }>;
+  network?: NetworkPropsType;
 };
 
 export interface IAzAppPlanBuilder {

@@ -1,12 +1,18 @@
 import { SkuType } from '@pulumi/azure-native/apimanagement';
 import { Input } from '@pulumi/pulumi';
 import { BuilderProps, IBuilder } from './genericBuilder';
-import { PrivateLinkPropsType, ResourceInfo, WithLogInfo } from '../../types';
+import {
+  EnvRoleKeyTypes,
+  PrivateLinkPropsType,
+  ResourceInfo,
+  WithEnvRoles,
+  WithLogInfo,
+} from '../../types';
 
 /**
  * Type for arguments passed to the APIM builder.
  */
-export type ApimBuilderArgs = BuilderProps & WithLogInfo;
+export type ApimBuilderArgs = BuilderProps & WithEnvRoles & WithLogInfo;
 
 /**
  * Type for configuring SKU (Stock Keeping Unit) for APIM.
@@ -199,6 +205,7 @@ export interface IApimBuilder extends IBuilder<ResourceInfo>, IApimAuthBuilder {
    */
   withPrivateLink(props: ApimPrivateLinkType): IApimBuilder;
 
+  withEnvRole(role: EnvRoleKeyTypes): IApimBuilder;
   /**
    * Restores APIM from a deleted state.
    * @returns The APIM builder instance.

@@ -1,8 +1,9 @@
-import { cleanName, defaultSubScope, naming } from '../Common';
+import { cleanName, defaultSubScope, naming, rsInfo } from '../Common';
 import env from '../env';
 import { getSecrets } from '../KeyVault/Helper';
 import {
   KeyVaultInfo,
+  NamingType,
   ResourceWithVaultArgs,
   StorageConnectionInfo,
   StorageInfo,
@@ -55,3 +56,14 @@ export const getStorageInfo = ({
     id: interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`,
   };
 };
+
+export const getStorageInfoByName = (
+  name: string,
+  groupName: NamingType,
+  vaultInfo: KeyVaultInfo | undefined = undefined,
+) =>
+  getStorageInfo({
+    name,
+    group: rsInfo.getRGInfo(groupName),
+    vaultInfo,
+  });

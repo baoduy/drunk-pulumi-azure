@@ -1,5 +1,27 @@
 import { WithNamedType } from '../../types';
 
+export type ApimAuthBasicType = {
+  userName: string;
+  password: string;
+};
+
+export type ApimAuthCertType =
+  | {
+      certId: string;
+      password?: string;
+    }
+  | {
+      thumbprint: string;
+    };
+
+export type ApimAuthIdentityType = {
+  resource: string;
+  clientId?: string;
+  variableName: string;
+  ignoreError?: boolean;
+  setHeaderKey?: string;
+};
+
 /**
  * Enum for different types of header operations.
  */
@@ -44,7 +66,7 @@ export type ApimMockPropsType = {
  * Type for rewriting URIs.
  */
 export type ApimRewriteUriType = {
-  template?: string;
+  template: string;
 };
 
 /**
@@ -67,19 +89,13 @@ export type ApimOutCacheType = {
 };
 
 /**
- * Type for authentication certificate configuration.
- */
-export type ApimAuthCertType = {
-  thumbprint: string;
-};
-
-/**
  * Type for client certificate configuration, extends Partial<ApimAuthCertType>.
  */
-export type ApimClientCertType = Partial<ApimAuthCertType> & {
+export type ApimClientCertType = {
   issuer?: string;
   subject?: string;
   verifyCert?: boolean;
+  thumbprint?: string;
 };
 
 /**
@@ -119,17 +135,27 @@ export type ApimFindAndReplaceType = {
   to: string;
 };
 
-/**
- * Type for custom policies.
- */
-export type ApimCustomPolicyType = {
-  policy: string;
+export type ApimSetResponseBodyType = {
+  condition?: string;
+  conditionStatusCode?: number;
+  responseBody: string;
+  responseStatusCode?: number;
+};
+
+//===============================Helper Polices
+export type ApimForwardToServiceBusType = {
+  serviceBusName: string;
+  topicOrQueueName: string;
+  brokerProperties?: Record<string, string>;
 };
 
 /**
  * Interface for building APIM policies.
  */
 export interface IApimPolicyBuilder {
+  authBasic(props: ApimAuthBasicType): IApimPolicyBuilder;
+  authCert(props: ApimAuthCertType): IApimPolicyBuilder;
+  authIdentity(props: ApimAuthIdentityType): IApimPolicyBuilder;
   /**
    * Sets the base URL.
    * @param props - The base URL configuration.
@@ -180,20 +206,6 @@ export interface IApimPolicyBuilder {
   setCacheOptions(props: ApimOutCacheType): IApimPolicyBuilder;
 
   /**
-   * Sets a backend certificate.
-   * @param props - The backend certificate configuration.
-   * @returns The policy builder instance.
-   */
-  setBackendCert(props: ApimAuthCertType): IApimPolicyBuilder;
-
-  /**
-   * Verifies a client certificate.
-   * @param props - The client certificate configuration.
-   * @returns The policy builder instance.
-   */
-  verifyClientCert(props: ApimClientCertType): IApimPolicyBuilder;
-
-  /**
    * Sets CORS options.
    * @param props - The CORS configuration.
    * @returns The policy builder instance.
@@ -224,26 +236,24 @@ export interface IApimPolicyBuilder {
   setWhitelistIPs(props: ApimWhitelistIpType): IApimPolicyBuilder;
 
   /**
+   * Verifies a client certificate.
+   * @param props - The client certificate configuration.
+   * @returns The policy builder instance.
+   */
+  verifyClientCert(props: ApimClientCertType): IApimPolicyBuilder;
+
+  forwardToServiceBus(props: ApimForwardToServiceBusType): IApimPolicyBuilder;
+
+  setResponseHeaders(props: ApimSetHeaderType): IApimPolicyBuilder;
+
+  setResponse(...props: ApimSetResponseBodyType[]): IApimPolicyBuilder;
+
+  /**
    * Sets find and replace operations.
    * @param props - The find and replace configuration.
    * @returns The policy builder instance.
    */
-  setFindAndReplaces(props: ApimFindAndReplaceType): IApimPolicyBuilder;
-
-  // Custom Policies (commented out)
-  // /**
-  //  * Adds an inbound custom policy.
-  //  * @param props - The custom policy configuration.
-  //  * @returns The policy builder instance.
-  //  */
-  // withInboundPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder;
-
-  // /**
-  //  * Adds an outbound custom policy.
-  //  * @param props - The custom policy configuration.
-  //  * @returns The policy builder instance.
-  //  */
-  // withOutPolicy(props: ApimCustomPolicyType): IApimPolicyBuilder;
+  findAndReplacesResponse(props: ApimFindAndReplaceType): IApimPolicyBuilder;
 
   /**
    * Builds the policy and returns it as a string.

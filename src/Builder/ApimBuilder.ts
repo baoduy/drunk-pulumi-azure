@@ -1,5 +1,5 @@
 import * as types from './types';
-import { ResourceInfo } from '../types';
+import { EnvRoleKeyTypes, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { naming, organization, subscriptionId, tenantId } from '../Common';
 import {
@@ -34,12 +34,14 @@ class ApimBuilder
   private _caCerts: types.ApimCertBuilderType[] = [];
   private _auths: types.ApimAuthType[] = [];
 
-  private _instanceName: string | undefined = undefined;
+  private readonly _instanceName: string;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
   private _apimInstance: apim.ApiManagementService | undefined = undefined;
+  private _envRoleType: EnvRoleKeyTypes | undefined = undefined;
 
   public constructor(private args: types.ApimBuilderArgs) {
     super(args);
+    this._instanceName = naming.getApimName(this.commonProps.name);
   }
   public disableSignIn(): types.IApimBuilder {
     this._disableSignIn = true;
@@ -101,6 +103,10 @@ class ApimBuilder
     this._sku = props;
     return this;
   }
+  public withEnvRole(role: EnvRoleKeyTypes): types.IApimBuilder {
+    this._envRoleType = role;
+    return this;
+  }
 
   private buildPublicIpAddress() {
     if (!this._apimVnet) return;
@@ -123,7 +129,8 @@ class ApimBuilder
     }
   }
   private buildAPIM() {
-    this._instanceName = naming.getApimName(this.commonProps.name);
+    const { group, envRoles } = this.args;
+
     const sku = {
       name: this._sku!.sku,
       capacity:
@@ -135,7 +142,7 @@ class ApimBuilder
       this._instanceName,
       {
         serviceName: this._instanceName,
-        ...this.commonProps.group,
+        ...group,
         publisherEmail: this._publisher!.publisherEmail,
         publisherName: this._publisher!.publisherName ?? organization,
         notificationSenderEmail:
@@ -246,7 +253,12 @@ class ApimBuilder
         ignoreChanges: ['publicNetworkAccess'],
       },
     );
+
+    if (this._envRoleType && envRoles) {
+      envRoles.addIdentity(this._envRoleType, this._apimInstance.identity);
+    }
   }
+
   private buildEntraID() {
     if (!this._enableEntraID || this._disableSignIn) return;
 

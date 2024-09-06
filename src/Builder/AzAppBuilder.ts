@@ -7,8 +7,9 @@ import {
   IAzAppBuilder,
   IAzAppPlanBuilder,
 } from './types';
-import { ResourceInfo } from '../types';
-import { isPrd, naming } from '../Common';
+import { NamingType, ResourceInfo } from '../types';
+import { currentRegionCode, isPrd, naming } from '../Common';
+import { interpolate } from '@pulumi/pulumi';
 
 class AzAppBuilder
   extends Builder<ResourceInfo>
@@ -44,30 +45,70 @@ class AzAppBuilder
       zoneRedundant: isPrd,
     });
   }
+
   private buildFuncApps() {
+    const { envUIDInfo, logInfo } = this.args;
+
     this._funcs.map((f) => {
-      const n = `${this._instanceName}-${f.name}`;
+      const fName = naming.getFuncAppName(f.name);
+      const n = `${this._instanceName}-${fName}`;
+      const appSettings = f.appSettings ?? [];
+
+      if (logInfo?.appInsight) {
+        appSettings.push({
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY',
+          value: logInfo.appInsight.instrumentationKey,
+        });
+        appSettings.push({
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING',
+          value: logInfo.appInsight.connectionString,
+        });
+      }
+
       return new azure.web.WebApp(n, {
         ...this.args.group,
-        name: f.name,
+        name: fName,
         enabled: true,
         httpsOnly: true,
-        storageAccountRequired: true,
+        //storageAccountRequired: true,
         serverFarmId: this._appPlanInstance!.id,
         kind: 'FunctionApp',
+        identity: {
+          type: envUIDInfo
+            ? azure.web.ManagedServiceIdentityType.SystemAssigned_UserAssigned
+            : azure.web.ManagedServiceIdentityType.SystemAssigned,
+          userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+        },
         siteConfig: {
-          appSettings: [
-            {
-              name: 'AzureWebJobsStorage',
-              value: f.storageConnectionString,
-            },
-            { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' },
-            ...(f.appSettings ?? []),
-          ],
+          connectionStrings: f.connectionStrings,
+          appSettings: f.appSettings ?? [],
           cors: {
             allowedOrigins: ['*'],
           },
+          http20Enabled: true,
+          use32BitWorkerProcess: false,
+          nodeVersion: f.nodeVersion,
+          netFrameworkVersion: f.netFrameworkVersion,
+          scmIpSecurityRestrictionsDefaultAction: f.network?.ipAddresses
+            ? 'Deny'
+            : 'Allow',
+          ipSecurityRestrictionsDefaultAction: f.network?.ipAddresses
+            ? 'Deny'
+            : 'Allow',
+          //scmIpSecurityRestrictions: [],
+          scmIpSecurityRestrictionsUseMain: Boolean(f.network?.ipAddresses),
+          ipSecurityRestrictions: f.network?.ipAddresses
+            ? f.network?.ipAddresses.map((ip) => ({
+                action: 'Allow',
+                ipAddress: ip,
+              }))
+            : undefined,
         },
+        publicNetworkAccess: f.network?.privateLink ? 'Disabled' : 'Enabled',
+        virtualNetworkSubnetId: f.network?.subnetId,
+        vnetContentShareEnabled: Boolean(f.network?.subnetId),
+        vnetImagePullEnabled: Boolean(f.network?.subnetId),
+        vnetRouteAllEnabled: Boolean(f.network?.subnetId),
       });
     });
   }
@@ -83,6 +124,14 @@ class AzAppBuilder
     };
   }
 }
+
+export const getFuncHostInfo = (name: NamingType) => {
+  const funcName = naming.getFuncAppName(name);
+  return {
+    host: `${funcName}.azurewebsites.net`,
+    scm: `${funcName}.scm.azurewebsites.net`,
+  };
+};
 
 export default (props: AzAppBuilderArgs) =>
   new AzAppBuilder(props) as IAzAppPlanBuilder;

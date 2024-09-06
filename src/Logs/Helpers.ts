@@ -139,11 +139,18 @@ const getAppInsightInfo = ({
 }: ResourceWithVaultArgs): AppInsightInfo => {
   const n = naming.getAppInsightName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
+  const com = native.insights.getComponentOutput({
+    resourceName: n,
+    resourceGroupName: group.resourceGroupName,
+  });
 
-  const secrets = vaultInfo
-    ? getAppInsightSecrets({ insightName: n, vaultInfo })
-    : {};
-  return { name: n, group, id, ...secrets };
+  return {
+    name: n,
+    group,
+    id,
+    connectionString: com.connectionString,
+    instrumentationKey: com.instrumentationKey,
+  };
 };
 
 export const getLogInfo = (
