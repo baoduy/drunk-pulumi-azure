@@ -123,6 +123,7 @@ export const rules = {
   },
   getServiceBusName: {
     cleanName: true,
+    includeOrgName: true,
     maxLength: 80,
     suffix: 'bus',
   },
