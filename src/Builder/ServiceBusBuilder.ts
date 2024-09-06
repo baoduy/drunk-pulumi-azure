@@ -9,7 +9,7 @@ import {
 import { naming, isPrd } from '../Common';
 import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
 import { addEncryptKey } from '../KeyVault/Helper';
-import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ServiceBusPrivateLink } from '../VNet';
 
 const defaultQueueOptions: types.ServiceBusQueueArgs = {
@@ -174,6 +174,19 @@ class ServiceBusBuilder
         dependsOn: this._sbInstance,
       }),
     );
+
+    //Add ServiceBus endpoint to vault
+    if (vaultInfo) {
+      addCustomSecret({
+        name: `${this._instanceName}-endpoint`,
+        dependsOn: this._sbInstance,
+        contentType: `Service Bus ${this._instanceName}`,
+        value: this._sbInstance!.serviceBusEndpoint.apply(
+          (e) => new URL(e).hostname,
+        ),
+        vaultInfo,
+      });
+    }
   }
 
   private buildNetwork() {
