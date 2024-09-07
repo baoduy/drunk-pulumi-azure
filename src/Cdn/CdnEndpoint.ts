@@ -91,7 +91,7 @@ export default ({
           customDomainName: replaceAll(d, '.', '-'),
           hostName: d,
         },
-        { dependsOn: endpoint },
+        { dependsOn: endpoint, deleteBeforeReplace: true },
       );
 
       return new CdnHttpsEnable(
@@ -103,7 +103,7 @@ export default ({
           customDomainName: customDomain.name,
           subscriptionId,
         },
-        { dependsOn: customDomain },
+        { dependsOn: customDomain, deleteBeforeReplace: true },
       );
     });
   }
