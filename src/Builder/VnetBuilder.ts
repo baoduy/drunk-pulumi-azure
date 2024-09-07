@@ -89,6 +89,7 @@ class VnetBuilder
     this._ipType = type;
     return this;
   }
+
   public withPublicIPFrom(id: Input<string>): IGatewayFireWallBuilder {
     this._finalIpAddressIds.push(id);
     this._ipType = 'existing';
