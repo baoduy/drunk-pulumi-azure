@@ -15,7 +15,7 @@ export interface CdnEndpointProps extends OptsArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];
-  domainNames: string[];
+  domainNames?: string[];
   securityResponseHeaders?: Record<string, string>;
   cdnProfileInfo: ResourceInfo;
 }
