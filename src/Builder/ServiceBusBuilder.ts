@@ -366,12 +366,16 @@ class ServiceBusBuilder
 
     const rule =
       level === 'namespace'
-        ? new bus.NamespaceAuthorizationRule(n, {
-            ...this.args.group,
-            authorizationRuleName,
-            namespaceName: this._instanceName,
-            rights,
-          })
+        ? new bus.NamespaceAuthorizationRule(
+            n,
+            {
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              rights,
+            },
+            { dependsOn },
+          )
         : level === 'topic'
           ? new bus.TopicAuthorizationRule(
               n,
