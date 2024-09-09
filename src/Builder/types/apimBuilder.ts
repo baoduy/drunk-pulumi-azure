@@ -174,6 +174,10 @@ export interface IApimBuilder extends IBuilder<ResourceInfo>, IApimAuthBuilder {
    * @returns The APIM builder instance.
    */
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
+  withProxyDomainIf(
+    condition: boolean,
+    props: ApimDomainBuilderType,
+  ): IApimBuilder;
 
   // withInsightLog(props: AppInsightInfo): IApimBuilder;
 

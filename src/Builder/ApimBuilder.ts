@@ -94,6 +94,15 @@ class ApimBuilder
     this._proxyDomain = props;
     return this;
   }
+  public withProxyDomainIf(
+    condition: boolean,
+    props: types.ApimDomainBuilderType,
+  ): types.IApimBuilder {
+    if (condition) {
+      this.withProxyDomain(props);
+    }
+    return this;
+  }
   public withPublisher(
     props: types.ApimPublisherBuilderType,
   ): types.IApimBuilder {
