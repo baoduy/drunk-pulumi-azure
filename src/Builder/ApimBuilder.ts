@@ -1,6 +1,7 @@
 import * as types from './types';
-import { EnvRoleKeyTypes, ResourceInfo } from '../types';
+import { CertType, EnvRoleKeyTypes, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
+import { getSecretOutput } from '../KeyVault/Helper';
 import { naming, organization, subscriptionId, tenantId } from '../Common';
 import {
   ApimSignInSettingsResource,
@@ -128,6 +129,22 @@ class ApimBuilder
       });
     }
   }
+
+  private getCert(props: types.ApimCertBuilderType) {
+    if ('vaultCertName' in props) {
+      const cert = getSecretOutput({
+        name: props.vaultCertName,
+        vaultInfo: this.args.vaultInfo!,
+      });
+      return { encodedCertificate: cert.apply((c) => c!.value!) };
+    }
+
+    return {
+      encodedCertificate: props.certificate,
+      certificatePassword: props.certificatePassword,
+    };
+  }
+
   private buildAPIM() {
     const { group, envRoles } = this.args;
 
@@ -141,8 +158,8 @@ class ApimBuilder
     this._apimInstance = new apim.ApiManagementService(
       this._instanceName,
       {
-        serviceName: this._instanceName,
         ...group,
+        serviceName: this._instanceName,
         publisherEmail: this._publisher!.publisherEmail,
         publisherName: this._publisher!.publisherName ?? organization,
         notificationSenderEmail:
@@ -153,26 +170,29 @@ class ApimBuilder
         sku,
 
         certificates: [
-          ...this._rootCerts.map((c) => ({
-            encodedCertificate: c.certificate,
-            certificatePassword: c.certificatePassword,
-            storeName: 'Root',
-          })),
-          ...this._caCerts.map((c) => ({
-            encodedCertificate: c.certificate,
-            certificatePassword: c.certificatePassword,
-            storeName: 'CertificateAuthority',
-          })),
+          ...this._rootCerts.map((c) => {
+            const crt = this.getCert(c);
+            return {
+              ...crt,
+              storeName: 'Root',
+            };
+          }),
+          ...this._caCerts.map((c) => {
+            const crt = this.getCert(c);
+            return {
+              ...crt,
+              storeName: 'CertificateAuthority',
+            };
+          }),
         ],
 
         enableClientCertificate: true,
         hostnameConfigurations: this._proxyDomain
           ? [
               {
+                ...this.getCert(this._proxyDomain),
                 type: 'Proxy',
                 hostName: this._proxyDomain.domain,
-                encodedCertificate: this._proxyDomain.certificate,
-                certificatePassword: this._proxyDomain.certificatePassword,
                 negotiateClientCertificate: false,
                 defaultSslBinding: false,
               },
