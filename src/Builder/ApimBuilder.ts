@@ -1,7 +1,7 @@
 import * as types from './types';
-import { CertType, EnvRoleKeyTypes, ResourceInfo } from '../types';
+import { EnvRoleKeyTypes, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
-import { getSecretOutput } from '../KeyVault/Helper';
+import { getSecretOutput, addCustomSecret } from '../KeyVault';
 import { naming, organization, subscriptionId, tenantId } from '../Common';
 import {
   ApimSignInSettingsResource,
@@ -155,7 +155,7 @@ class ApimBuilder
   }
 
   private buildAPIM() {
-    const { group, envRoles } = this.args;
+    const { group, envRoles, vaultInfo } = this.args;
 
     const sku = {
       name: this._sku!.sku,
@@ -285,6 +285,16 @@ class ApimBuilder
 
     if (this._envRoleType && envRoles) {
       envRoles.addIdentity(this._envRoleType, this._apimInstance.identity);
+    }
+
+    if (vaultInfo) {
+      addCustomSecret({
+        name: `${this._instanceName}-host`,
+        value: this._proxyDomain?.domain ?? this._apimInstance.gatewayUrl,
+        contentType: `APIM ${this._instanceName}`,
+        dependsOn: this._apimInstance,
+        vaultInfo,
+      });
     }
   }
 

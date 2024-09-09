@@ -5,6 +5,9 @@ import { naming, tenantId } from '../Common';
 import { BasicResourceArgs, NetworkPropsType } from '../types';
 import { VaultPrivateLink } from '../VNet';
 
+export * from './Helper';
+export * from './CustomHelper';
+
 export interface KeyVaultProps extends BasicResourceArgs {
   softDeleteRetentionInDays?: Input<number>;
   network?: NetworkPropsType;
