@@ -42,7 +42,7 @@ export default ({
     immediatePurgeDataOn30Days,
     ingestionMode,
 
-    disableLocalAuth: true,
+    disableLocalAuth: false,
     workspaceResourceId,
   });
 
