@@ -9,12 +9,8 @@ import {
   ApplicationOptionalClaims,
   ApplicationRequiredResourceAccess,
 } from '@pulumi/azuread/types/input';
-import {
-  WithNamedType,
-  NamedWithVaultBasicArgs,
-  AdIdentityInfoWithInstance,
-} from '../types';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { NamedWithVaultBasicArgs, AdIdentityInfoWithInstance } from '../types';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault';
 import { getIdentitySecretNames } from './Helper';
 
 type PreAuthApplicationProps = {
