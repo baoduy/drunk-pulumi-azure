@@ -1,7 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { enums } from '@pulumi/azure-native/types';
 import { Input, interpolate } from '@pulumi/pulumi';
-import { openApi } from '../Common';
+import { openApi, subscriptionId } from '../Common';
 import { ResourceInfo, WithDependsOn } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
 import {
@@ -173,38 +173,14 @@ export default class ApimApiBuilder
         resourceGroupName: this.args.group.resourceGroupName,
         apiId,
         alwaysLog: apim.AlwaysLog.AllErrors,
-        loggerId: `${this.args.apimServiceName}-appInsight`,
+        httpCorrelationProtocol: 'W3C',
+        operationNameFormat: 'Url',
+        logClientIp: true,
+        verbosity: 'information',
+        loggerId: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this.args.group.resourceGroupName}/providers/Microsoft.ApiManagement/service/${this.args.apimServiceName}/loggers/${this.args.apimServiceName}-appInsight`,
         diagnosticId: 'applicationinsights',
-        backend: {
-          request: {
-            body: {
-              bytes: 512,
-            },
-            headers: ['Content-type'],
-          },
-          response: {
-            body: {
-              bytes: 512,
-            },
-            headers: ['Content-type'],
-          },
-        },
-        frontend: {
-          request: {
-            body: {
-              bytes: 512,
-            },
-            headers: ['Content-type'],
-          },
-          response: {
-            body: {
-              bytes: 512,
-            },
-            headers: ['Content-type'],
-          },
-        },
         sampling: {
-          percentage: 80,
+          percentage: 100,
           samplingType: apim.SamplingType.Fixed,
         },
       },
