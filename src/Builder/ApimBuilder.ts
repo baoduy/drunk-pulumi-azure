@@ -1,6 +1,7 @@
 import * as types from './types';
 import { EnvRoleKeyTypes, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
+import { getSecretOutput, addCustomSecret } from '../KeyVault';
 import { naming, organization, subscriptionId, tenantId } from '../Common';
 import {
   ApimSignInSettingsResource,
@@ -93,6 +94,15 @@ class ApimBuilder
     this._proxyDomain = props;
     return this;
   }
+  public withProxyDomainIf(
+    condition: boolean,
+    props: types.ApimDomainBuilderType,
+  ): types.IApimBuilder {
+    if (condition) {
+      this.withProxyDomain(props);
+    }
+    return this;
+  }
   public withPublisher(
     props: types.ApimPublisherBuilderType,
   ): types.IApimBuilder {
@@ -128,8 +138,24 @@ class ApimBuilder
       });
     }
   }
+
+  private getCert(props: types.ApimCertBuilderType) {
+    if ('vaultCertName' in props) {
+      const cert = getSecretOutput({
+        name: props.vaultCertName,
+        vaultInfo: this.args.vaultInfo!,
+      });
+      return { encodedCertificate: cert.apply((c) => c!.value!) };
+    }
+
+    return {
+      encodedCertificate: props.certificate,
+      certificatePassword: props.certificatePassword,
+    };
+  }
+
   private buildAPIM() {
-    const { group, envRoles } = this.args;
+    const { group, envRoles, vaultInfo } = this.args;
 
     const sku = {
       name: this._sku!.sku,
@@ -141,8 +167,8 @@ class ApimBuilder
     this._apimInstance = new apim.ApiManagementService(
       this._instanceName,
       {
-        serviceName: this._instanceName,
         ...group,
+        serviceName: this._instanceName,
         publisherEmail: this._publisher!.publisherEmail,
         publisherName: this._publisher!.publisherName ?? organization,
         notificationSenderEmail:
@@ -153,26 +179,29 @@ class ApimBuilder
         sku,
 
         certificates: [
-          ...this._rootCerts.map((c) => ({
-            encodedCertificate: c.certificate,
-            certificatePassword: c.certificatePassword,
-            storeName: 'Root',
-          })),
-          ...this._caCerts.map((c) => ({
-            encodedCertificate: c.certificate,
-            certificatePassword: c.certificatePassword,
-            storeName: 'CertificateAuthority',
-          })),
+          ...this._rootCerts.map((c) => {
+            const crt = this.getCert(c);
+            return {
+              ...crt,
+              storeName: 'Root',
+            };
+          }),
+          ...this._caCerts.map((c) => {
+            const crt = this.getCert(c);
+            return {
+              ...crt,
+              storeName: 'CertificateAuthority',
+            };
+          }),
         ],
 
         enableClientCertificate: true,
         hostnameConfigurations: this._proxyDomain
           ? [
               {
+                ...this.getCert(this._proxyDomain),
                 type: 'Proxy',
                 hostName: this._proxyDomain.domain,
-                encodedCertificate: this._proxyDomain.certificate,
-                certificatePassword: this._proxyDomain.certificatePassword,
                 negotiateClientCertificate: false,
                 defaultSslBinding: false,
               },
@@ -256,6 +285,16 @@ class ApimBuilder
 
     if (this._envRoleType && envRoles) {
       envRoles.addIdentity(this._envRoleType, this._apimInstance.identity);
+    }
+
+    if (vaultInfo) {
+      addCustomSecret({
+        name: `${this._instanceName}-host`,
+        value: this._proxyDomain?.domain ?? this._apimInstance.gatewayUrl,
+        contentType: `APIM ${this._instanceName}`,
+        dependsOn: this._apimInstance,
+        vaultInfo,
+      });
     }
   }
 
@@ -346,7 +385,8 @@ class ApimBuilder
     });
   }
   private buildInsightLog() {
-    if (!this.args.logInfo?.appInsight) return;
+    const { logInfo } = this.args;
+    if (!logInfo?.appInsight) return;
     //App Insight Logs
     new apim.Logger(
       `${this._instanceName}-insight`,
@@ -356,11 +396,11 @@ class ApimBuilder
 
         loggerType: apim.LoggerType.ApplicationInsights,
         description: 'App Insight Logger',
-        loggerId: randomUuId(this._instanceName!).result,
-        resourceId: this.args.logInfo.appInsight.id,
+        loggerId: `${this._instanceName}-appInsight`,
+        resourceId: logInfo!.appInsight.id,
         credentials: {
           //This credential will be added to NameValue automatically.
-          instrumentationKey: this.args.logInfo?.appInsight.instrumentationKey!,
+          instrumentationKey: logInfo!.appInsight.instrumentationKey!,
         },
       },
       { dependsOn: this._apimInstance },

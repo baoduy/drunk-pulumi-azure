@@ -6,7 +6,7 @@ import {
   defaultSubScope,
   getResourceName,
 } from '../Common';
-import { getSecrets } from '../KeyVault/Helper';
+import { getSecrets } from '../KeyVault';
 import { getStorageInfo } from '../Storage/Helper';
 import {
   DiagnosticProps,

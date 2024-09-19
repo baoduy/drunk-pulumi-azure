@@ -367,7 +367,6 @@ export default ({
         sqlServerName: sqlName,
         dependsOn: ep?.instance ? [ep.instance, sqlServer] : sqlServer,
         elasticPoolId: ep?.id,
-        lock,
       });
 
       if (vaultInfo) {

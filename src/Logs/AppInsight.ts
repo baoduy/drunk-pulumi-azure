@@ -1,15 +1,10 @@
 import * as native from '@pulumi/azure-native';
-import {
-  BasicResourceWithVaultArgs,
-  KeyVaultInfo,
-  ResourceInfo,
-} from '../types';
-import { getSecret } from '../KeyVault/Helper';
+import { BasicResourceWithVaultArgs, WithDependsOn } from '../types';
 import { naming } from '../Common';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret } from '../KeyVault';
 import { Input } from '@pulumi/pulumi';
 
-interface Props extends BasicResourceWithVaultArgs {
+interface Props extends BasicResourceWithVaultArgs, WithDependsOn {
   dailyCapGb?: number;
   immediatePurgeDataOn30Days?: boolean;
   ingestionMode?: native.insights.IngestionMode;
@@ -24,27 +19,32 @@ export default ({
   ingestionMode = native.insights.IngestionMode.ApplicationInsights,
   workspaceResourceId,
   vaultInfo,
+  dependsOn,
 }: Props) => {
   name = naming.getAppInsightName(name);
 
-  const appInsight = new native.insights.Component(name, {
-    resourceName: name,
-    ...group,
+  const appInsight = new native.insights.Component(
+    name,
+    {
+      resourceName: name,
+      ...group,
 
-    kind: 'web',
-    disableIpMasking: true,
-    applicationType: 'web',
-    flowType: 'Bluefield',
+      kind: 'web',
+      disableIpMasking: true,
+      applicationType: 'web',
+      flowType: 'Bluefield',
 
-    //samplingPercentage: isPrd ? 100 : 50,
-    retentionInDays: 30,
+      //samplingPercentage: isPrd ? 100 : 50,
+      retentionInDays: 30,
 
-    immediatePurgeDataOn30Days,
-    ingestionMode,
+      immediatePurgeDataOn30Days,
+      ingestionMode,
 
-    disableLocalAuth: true,
-    workspaceResourceId,
-  });
+      disableLocalAuth: false,
+      workspaceResourceId,
+    },
+    { dependsOn },
+  );
 
   new native.insights.ComponentCurrentBillingFeature(
     `${name}-CurrentBillingFeature`,

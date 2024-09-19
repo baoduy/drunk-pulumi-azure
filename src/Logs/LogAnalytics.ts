@@ -1,7 +1,7 @@
 import * as insights from '@pulumi/azure-native/operationalinsights';
 import { BasicResourceWithVaultArgs } from '../types';
 import { naming } from '../Common';
-import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault';
 
 interface Props extends BasicResourceWithVaultArgs {
   sku?: insights.WorkspaceSkuNameEnum;

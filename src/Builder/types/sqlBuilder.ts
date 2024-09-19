@@ -35,7 +35,7 @@ export type SqlBuilderAuthOptionsType = Omit<
 /**
  * Arguments for defining a SQL database.
  */
-export type SqlDbBuilderType = {
+export type SqlDbBuilderType = WithLockable & {
   /**
    * The name of the database.
    */

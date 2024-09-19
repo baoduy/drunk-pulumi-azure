@@ -59,6 +59,15 @@ export const addEncryptKey = (
   };
 };
 
+export const getCert = ({ name, vaultInfo }: GetVaultItemProps) => {
+  const n = env.DPA_VAULT_DISABLE_FORMAT_NAME ? name : getVaultItemName(name);
+  const client = getKeyVaultBase(vaultInfo.name);
+  return client.getCert(n);
+};
+
+export const getCertOutput = (props: GetVaultItemProps) =>
+  output(getCert(props));
+
 /** Get Secret */
 export const getSecret = async ({
   name,

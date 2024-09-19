@@ -5,6 +5,8 @@ import {
   EnvRoleKeyTypes,
   PrivateLinkPropsType,
   ResourceInfo,
+  CertType,
+  VaultCertType,
   WithEnvRoles,
   WithLogInfo,
 } from '../../types';
@@ -38,10 +40,8 @@ export type ApimPublisherBuilderType = {
 /**
  * Type for configuring certificates for APIM.
  */
-export type ApimCertBuilderType = {
-  certificate: Input<string>;
-  certificatePassword?: Input<string>;
-};
+
+export type ApimCertBuilderType = CertType | VaultCertType;
 
 /**
  * Type for configuring domain and certificates for APIM.
@@ -174,6 +174,10 @@ export interface IApimBuilder extends IBuilder<ResourceInfo>, IApimAuthBuilder {
    * @returns The APIM builder instance.
    */
   withProxyDomain(props: ApimDomainBuilderType): IApimBuilder;
+  withProxyDomainIf(
+    condition: boolean,
+    props: ApimDomainBuilderType,
+  ): IApimBuilder;
 
   // withInsightLog(props: AppInsightInfo): IApimBuilder;
 

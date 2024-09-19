@@ -1,7 +1,7 @@
 import * as apim from '@pulumi/azure-native/apimanagement';
 import { enums } from '@pulumi/azure-native/types';
 import { Input, interpolate } from '@pulumi/pulumi';
-import { openApi } from '../Common';
+import { openApi, subscriptionId } from '../Common';
 import { ResourceInfo, WithDependsOn } from '../types';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
 import {
@@ -162,6 +162,32 @@ export default class ApimApiBuilder
     });
   }
 
+  private buildApiDiagnostic({
+    apiId,
+    dependsOn,
+  }: { apiId: string } & WithDependsOn) {
+    new apim.ApiDiagnostic(
+      `apim-${apiId}-apiDiagnostic`,
+      {
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
+        apiId,
+        alwaysLog: apim.AlwaysLog.AllErrors,
+        httpCorrelationProtocol: 'W3C',
+        operationNameFormat: 'Url',
+        logClientIp: true,
+        verbosity: 'information',
+        loggerId: interpolate`/subscriptions/${subscriptionId}/resourceGroups/${this.args.group.resourceGroupName}/providers/Microsoft.ApiManagement/service/${this.args.apimServiceName}/loggers/${this.args.apimServiceName}-appInsight`,
+        diagnosticId: 'applicationinsights',
+        sampling: {
+          percentage: 100,
+          samplingType: apim.SamplingType.Fixed,
+        },
+      },
+      { dependsOn },
+    );
+  }
+
   private async buildApis() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map(async (v) => {
@@ -236,6 +262,9 @@ export default class ApimApiBuilder
           { dependsOn: api },
         );
       }
+
+      //Diagnostic
+      this.buildApiDiagnostic({ apiId: apiName, dependsOn: api });
 
       //Create Aoi Operations
       if ('operations' in apiProps) {

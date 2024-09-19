@@ -15,7 +15,7 @@ export interface CdnEndpointProps extends OptsArgs {
   name: string;
   origin: Input<string>;
   cors?: string[];
-  domainNames: string[];
+  domainNames?: string[];
   securityResponseHeaders?: Record<string, string>;
   cdnProfileInfo: ResourceInfo;
 }
@@ -91,7 +91,7 @@ export default ({
           customDomainName: replaceAll(d, '.', '-'),
           hostName: d,
         },
-        { dependsOn: endpoint },
+        { dependsOn: endpoint, deleteBeforeReplace: true },
       );
 
       return new CdnHttpsEnable(
@@ -103,7 +103,7 @@ export default ({
           customDomainName: customDomain.name,
           subscriptionId,
         },
-        { dependsOn: customDomain },
+        { dependsOn: customDomain, deleteBeforeReplace: true },
       );
     });
   }
