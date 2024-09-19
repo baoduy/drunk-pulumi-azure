@@ -385,7 +385,8 @@ class ApimBuilder
     });
   }
   private buildInsightLog() {
-    if (!this.args.logInfo?.appInsight) return;
+    const { logInfo } = this.args;
+    if (!logInfo?.appInsight) return;
     //App Insight Logs
     new apim.Logger(
       `${this._instanceName}-insight`,
@@ -395,11 +396,11 @@ class ApimBuilder
 
         loggerType: apim.LoggerType.ApplicationInsights,
         description: 'App Insight Logger',
-        loggerId: randomUuId(this._instanceName!).result,
-        resourceId: this.args.logInfo.appInsight.id,
+        loggerId: `${this._instanceName}-appInsight`,
+        resourceId: logInfo!.appInsight.id,
         credentials: {
           //This credential will be added to NameValue automatically.
-          instrumentationKey: this.args.logInfo?.appInsight.instrumentationKey!,
+          instrumentationKey: logInfo!.appInsight.instrumentationKey!,
         },
       },
       { dependsOn: this._apimInstance },

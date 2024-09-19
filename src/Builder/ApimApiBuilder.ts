@@ -162,6 +162,56 @@ export default class ApimApiBuilder
     });
   }
 
+  private buildApiDiagnostic({
+    apiId,
+    dependsOn,
+  }: { apiId: string } & WithDependsOn) {
+    new apim.ApiDiagnostic(
+      `apim-${apiId}-apiDiagnostic`,
+      {
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
+        apiId,
+        alwaysLog: apim.AlwaysLog.AllErrors,
+        loggerId: `${this.args.apimServiceName}-appInsight`,
+        diagnosticId: 'applicationinsights',
+        backend: {
+          request: {
+            body: {
+              bytes: 512,
+            },
+            headers: ['Content-type'],
+          },
+          response: {
+            body: {
+              bytes: 512,
+            },
+            headers: ['Content-type'],
+          },
+        },
+        frontend: {
+          request: {
+            body: {
+              bytes: 512,
+            },
+            headers: ['Content-type'],
+          },
+          response: {
+            body: {
+              bytes: 512,
+            },
+            headers: ['Content-type'],
+          },
+        },
+        sampling: {
+          percentage: 80,
+          samplingType: apim.SamplingType.Fixed,
+        },
+      },
+      { dependsOn },
+    );
+  }
+
   private async buildApis() {
     const date = new Date();
     const tasks = Object.keys(this._apis).map(async (v) => {
@@ -236,6 +286,9 @@ export default class ApimApiBuilder
           { dependsOn: api },
         );
       }
+
+      //Diagnostic
+      this.buildApiDiagnostic({ apiId: apiName, dependsOn: api });
 
       //Create Aoi Operations
       if ('operations' in apiProps) {
