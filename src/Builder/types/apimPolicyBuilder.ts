@@ -162,6 +162,7 @@ export interface IApimPolicyBuilder {
    * @returns The policy builder instance.
    */
   setBaseUrl(props: ApimBaseUrlType): IApimPolicyBuilder;
+  setBaseUrlIf(condition: boolean, props: ApimBaseUrlType): IApimPolicyBuilder;
 
   /**
    * Sets a header.
@@ -242,7 +243,11 @@ export interface IApimPolicyBuilder {
    */
   verifyClientCert(props: ApimClientCertType): IApimPolicyBuilder;
 
-  forwardToServiceBus(props: ApimForwardToServiceBusType): IApimPolicyBuilder;
+  forwardToBus(props: ApimForwardToServiceBusType): IApimPolicyBuilder;
+  forwardToBusIf(
+    condition: boolean,
+    props: ApimForwardToServiceBusType,
+  ): IApimPolicyBuilder;
 
   setResponseHeaders(props: ApimSetHeaderType): IApimPolicyBuilder;
 

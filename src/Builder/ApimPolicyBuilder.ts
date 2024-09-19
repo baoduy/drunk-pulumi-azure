@@ -55,6 +55,13 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     return this;
   }
 
+  public setBaseUrlIf(
+    condition: boolean,
+    props: types.ApimBaseUrlType,
+  ): types.IApimPolicyBuilder {
+    if (condition) this.setBaseUrl(props);
+    return this;
+  }
   public setHeader(props: types.ApimSetHeaderType): types.IApimPolicyBuilder {
     let rs = `\t<set-header name="${props.name}" exists-action="${props.type}">`;
     if (props.value) {
@@ -234,7 +241,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     return this;
   }
 
-  public forwardToServiceBus(
+  public forwardToBus(
     props: types.ApimForwardToServiceBusType,
   ): types.IApimPolicyBuilder {
     this.authIdentity({
@@ -243,9 +250,11 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
       resource: 'https://servicebus.azure.net',
       ignoreError: false,
     });
+
     this.setBaseUrl({
       url: `https://${props.serviceBusName}.servicebus.windows.net`,
     });
+
     this.rewriteUri({ template: `${props.topicOrQueueName}/messages` });
     if (props.brokerProperties) {
       Object.keys(props.brokerProperties).forEach((key) =>
@@ -256,6 +265,14 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
         }),
       );
     }
+    return this;
+  }
+
+  public forwardToBusIf(
+    condition: boolean,
+    props: types.ApimForwardToServiceBusType,
+  ): types.IApimPolicyBuilder {
+    if (condition) this.forwardToBus(props);
     return this;
   }
 
