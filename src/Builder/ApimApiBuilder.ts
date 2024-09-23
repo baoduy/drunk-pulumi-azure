@@ -89,23 +89,24 @@ export default class ApimApiBuilder
   }
 
   private buildOperations({
+    name,
+    api,
     operations,
-    apiName,
-    dependsOn,
   }: {
-    apiName: string;
+    name: string;
+    api: apim.Api;
     operations: ApimApiOperationType[];
-  } & WithDependsOn) {
+  }) {
     return operations.map((op) => {
       const opsName = op.name.replace(/\//g, '');
-      const opsRsName = `${apiName}-ops-${opsName}-${op.method}`.toLowerCase();
+      const opsRsName = `${name}-ops-${opsName}-${op.method}`.toLowerCase();
       const apiOps = new apim.ApiOperation(
         opsRsName,
         {
           operationId: opsName,
           serviceName: this.args.apimServiceName,
           resourceGroupName: this.args.group.resourceGroupName,
-          apiId: apiName,
+          apiId: name,
           displayName: op.name,
           description: op.name,
 
@@ -135,7 +136,7 @@ export default class ApimApiBuilder
             },
           ],
         },
-        { dependsOn },
+        { dependsOn: api },
       );
 
       if (op.policies) {
@@ -147,31 +148,32 @@ export default class ApimApiBuilder
             }),
           )
           .build();
-        new apim.ApiOperationPolicy(opsRsName, {
-          operationId: opsName,
-          serviceName: this.args.apimServiceName,
-          resourceGroupName: this.args.group.resourceGroupName,
-          apiId: apiName,
-          policyId: 'policy',
-          format: 'xml',
-          value: policyString,
-        });
+        new apim.ApiOperationPolicy(
+          opsRsName,
+          {
+            operationId: opsName,
+            serviceName: this.args.apimServiceName,
+            resourceGroupName: this.args.group.resourceGroupName,
+            apiId: name,
+            policyId: 'policy',
+            format: 'xml',
+            value: policyString,
+          },
+          { dependsOn: apiOps },
+        );
       }
 
       return apiOps;
     });
   }
 
-  private buildApiDiagnostic({
-    apiId,
-    dependsOn,
-  }: { apiId: string } & WithDependsOn) {
+  private buildApiDiagnostic(name: string, api: apim.Api) {
     new apim.ApiDiagnostic(
-      `apim-${apiId}-apiDiagnostic`,
+      `apim-${name}-apiDiagnostic`,
       {
         serviceName: this.args.apimServiceName,
         resourceGroupName: this.args.group.resourceGroupName,
-        apiId,
+        apiId: name,
         alwaysLog: apim.AlwaysLog.AllErrors,
         httpCorrelationProtocol: 'W3C',
         operationNameFormat: 'Url',
@@ -184,7 +186,38 @@ export default class ApimApiBuilder
           samplingType: apim.SamplingType.Fixed,
         },
       },
-      { dependsOn },
+      { dependsOn: api },
+    );
+  }
+
+  private buildProductLink(name: string, api: apim.Api) {
+    //Link API to Product
+    return new apim.ProductApi(
+      name,
+      {
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
+        productId: this.args.productId,
+        apiId: name,
+      },
+      { dependsOn: api },
+    );
+  }
+
+  private buildApiPolicy(name: string, api: apim.Api) {
+    if (!this._policyString) return;
+
+    return new apim.ApiPolicy(
+      `${name}-policy`,
+      {
+        serviceName: this.args.apimServiceName,
+        resourceGroupName: this.args.group.resourceGroupName,
+        apiId: name,
+        policyId: 'policy',
+        format: 'xml',
+        value: this._policyString,
+      },
+      { dependsOn: api },
     );
   }
 
@@ -236,42 +269,17 @@ export default class ApimApiBuilder
           customTimeouts: { create: '20m', update: '20m' },
         },
       );
-      //Link API to Product
-      new apim.ProductApi(
-        apiName,
-        {
-          serviceName: this.args.apimServiceName,
-          resourceGroupName: this.args.group.resourceGroupName,
-          productId: this.args.productId,
-          apiId: apiName,
-        },
-        { dependsOn: api },
-      );
-      // Apply Policy for the API
-      if (this._policyString) {
-        new apim.ApiPolicy(
-          `${apiName}-policy`,
-          {
-            serviceName: this.args.apimServiceName,
-            resourceGroupName: this.args.group.resourceGroupName,
-            apiId: apiName,
-            policyId: 'policy',
-            format: 'xml',
-            value: this._policyString,
-          },
-          { dependsOn: api },
-        );
-      }
 
-      //Diagnostic
-      this.buildApiDiagnostic({ apiId: apiName, dependsOn: api });
+      this.buildProductLink(apiName, api);
+      this.buildApiPolicy(apiName, api);
+      this.buildApiDiagnostic(apiName, api);
 
       //Create Aoi Operations
       if ('operations' in apiProps) {
         this.buildOperations({
-          apiName,
+          name: apiRevName,
           operations: apiProps.operations,
-          dependsOn: api,
+          api,
         });
       }
     });
