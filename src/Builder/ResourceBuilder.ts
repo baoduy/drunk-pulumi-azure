@@ -15,8 +15,7 @@ import {
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { Input } from '@pulumi/pulumi';
 import VnetBuilder from './VnetBuilder';
-import { VaultNetworkResource } from '@drunk-pulumi/azure-providers';
-import { subscriptionId, naming, cleanName, rsInfo } from '../Common';
+import { naming, cleanName, rsInfo, currentRegionName } from '../Common';
 import {
   CertBuilderType,
   IVaultBuilderResults,
@@ -68,7 +67,10 @@ class ResourceBuilder
   private _loadEnvUIDFromVault: boolean = false;
   private _loadLogInfoFrom: string | undefined = undefined;
 
-  constructor(public name: string) {}
+  constructor(
+    private name: string,
+    private location: Input<string> | undefined = undefined,
+  ) {}
 
   public createRoles(): types.IResourceGroupBuilder {
     this._createRole = true;
@@ -224,7 +226,9 @@ class ResourceBuilder
     const rgName = naming.getResourceGroupName(this.name);
     this._RGInstance = new resources.ResourceGroup(rgName, {
       resourceGroupName: rgName,
+      location: this.location ?? currentRegionName,
     });
+
     //Collect Info
     this._RGInfo = {
       resourceGroupName: rgName,
