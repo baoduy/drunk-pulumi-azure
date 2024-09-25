@@ -17,7 +17,6 @@ import {
 import { convertToIpRange } from '../VNet/Helper';
 import { SqlPrivateLink } from '../VNet';
 import sqlDbCreator from './SqlDb';
-import enableDbReadOnly from './EnableDbReadOnly';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -387,15 +386,6 @@ export default ({
       }
 
       dbs[key] = d;
-    });
-  }
-
-  //Create ReadOnly Roles for All Db
-  if (envRoles?.readOnly) {
-    enableDbReadOnly({
-      dependsOn: sqlServer,
-      sqlServer: { name: sqlName, group, id: sqlServer.id },
-      entraGroup: envRoles.readOnly,
     });
   }
 

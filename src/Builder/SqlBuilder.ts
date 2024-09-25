@@ -16,6 +16,8 @@ import {
   SqlFromDbType,
 } from './types';
 import { randomLogin } from '../Core/Random';
+import console from 'node:console';
+import enableDbReadOnly from '../Sql/EnableDbReadOnly';
 
 class SqlBuilder
   extends Builder<SqlResults>
@@ -175,9 +177,23 @@ class SqlBuilder
     });
   }
 
+  private buildReadOnlyRoles() {
+    const { envRoles } = this.args;
+    if (!envRoles?.readOnly) return;
+
+    //Create ReadOnly Roles for All Db
+    console.log('Creating ReadOnly roles for:', this._sqlInstance!.name);
+    enableDbReadOnly({
+      dependsOn: this._sqlInstance!.resource,
+      sqlServer: this._sqlInstance!,
+      group: envRoles!.readOnly,
+    });
+  }
+
   public build() {
     this.buildLogin();
     this.buildSql();
+    this.buildReadOnlyRoles();
 
     return this._sqlInstance!;
   }

@@ -4,10 +4,10 @@ import { EnvRoleInfoType, ResourceInfo, WithDependsOn } from '../types';
 
 type Props = {
   sqlServer: ResourceInfo;
-  entraGroup: Input<EnvRoleInfoType>;
+  group: Input<EnvRoleInfoType>;
 } & WithDependsOn;
 
-export default ({ sqlServer, entraGroup, dependsOn }: Props) => {
+export default ({ sqlServer, group, dependsOn }: Props) => {
   const providerMssql = new mssql.Provider(
     `${sqlServer.name}-provider-mssql`,
     {
@@ -26,14 +26,14 @@ export default ({ sqlServer, entraGroup, dependsOn }: Props) => {
         `${sqlServer.name}-${db.name}-readonly`,
         {
           databaseId: db.id,
-          readScript: output(entraGroup).apply(
+          readScript: output(group).apply(
             (g) =>
               `select COUNT(*) as existed from sys.database_principals where name ='${g.displayName}'`,
           ),
-          deleteScript: output(entraGroup).apply(
+          deleteScript: output(group).apply(
             (g) => `DROP USER [${g.displayName}]`,
           ),
-          updateScript: output(entraGroup).apply(
+          updateScript: output(group).apply(
             (g) => `CREATE USER [${g.displayName}] FROM EXTERNAL PROVIDER;
             ALTER ROLE db_datareader ADD MEMBER [${g.displayName}];
             ALTER ROLE db_denydatawriter ADD MEMBER [${g.displayName}];
