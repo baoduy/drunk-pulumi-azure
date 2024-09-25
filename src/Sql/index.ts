@@ -18,6 +18,7 @@ import { convertToIpRange } from '../VNet/Helper';
 import { SqlPrivateLink } from '../VNet';
 import sqlDbCreator from './SqlDb';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
+import enableDbReadOnly from './EnableDbReadOnly';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
 
@@ -390,15 +391,13 @@ export default ({
     });
   }
 
-  // if (encryptKey) {
-  //   //Enable TransparentDataEncryption for each database
-  //   new sql.TransparentDataEncryption(`${sqlName}-${db.name}`, {
-  //     serverName: sqlName,
-  //     databaseName: d.name,
-  //     resourceGroupName: group.resourceGroupName,
-  //     state: "Enabled",
-  //   });
-  // }
+  if (envRoles?.readOnly) {
+    enableDbReadOnly({
+      dependsOn: sqlServer,
+      sqlServer: { name: sqlName, group, id: sqlServer.id },
+      entraGroup: envRoles.readOnly,
+    });
+  }
 
   return {
     name: sqlName,

@@ -146,6 +146,7 @@
     "src/Logs/LogAnalytics.ts",
     "src/Logs/WebTest.ts",
     "src/Logs/index.ts",
+    "src/Sql/EnableDbReadOnly.ts",
     "src/Sql/SqlDb.ts",
     "src/Sql/index.ts",
     "src/Storage/Helper.ts",
