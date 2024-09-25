@@ -16,17 +16,17 @@ type Props = {
 } & WithDependsOn;
 
 export default ({ sqlServer, login, group, dependsOn }: Props) => {
-  //const config = authorization.getClientConfigOutput();
+  const config = authorization.getClientConfigOutput();
   const providerMssql = new mssql.Provider(
     `${sqlServer.name}-provider-mssql`,
     {
       hostname: `${sqlServer.name}.database.windows.net`,
       port: 1433,
-      // azureAuth: {
-      //   clientId: config.clientId,
-      //   tenantId: config.tenantId,
-      //   clientSecret: process.env.ARM_CLIENT_SECRET,
-      // },
+      azureAuth: {
+        clientId: config.clientId,
+        tenantId: config.tenantId,
+        clientSecret: process.env.ARM_CLIENT_SECRET,
+      },
       sqlAuth: login
         ? { username: login.adminLogin, password: login.password }
         : undefined,
