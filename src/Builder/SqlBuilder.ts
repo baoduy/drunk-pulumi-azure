@@ -187,6 +187,7 @@ class SqlBuilder
       dependsOn: this._sqlInstance!.resource,
       sqlServer: this._sqlInstance!,
       group: envRoles!.readOnly,
+      login: this._loginInfo,
     });
   }
 
