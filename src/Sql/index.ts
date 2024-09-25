@@ -2,7 +2,7 @@ import * as sql from '@pulumi/azure-native/sql';
 import { all, Input, interpolate, Output } from '@pulumi/pulumi';
 import { FullSqlDbPropsType } from '../Builder';
 import { Locker } from '../Core/Locker';
-import { addEncryptKey } from '../KeyVault/Helper';
+import { addEncryptKey, addCustomSecret } from '../KeyVault';
 import { naming, isPrd, subscriptionId, tenantId } from '../Common';
 import {
   BasicEncryptResourceArgs,
@@ -17,7 +17,6 @@ import {
 import { convertToIpRange } from '../VNet/Helper';
 import { SqlPrivateLink } from '../VNet';
 import sqlDbCreator from './SqlDb';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
 import enableDbReadOnly from './EnableDbReadOnly';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
@@ -391,6 +390,7 @@ export default ({
     });
   }
 
+  //Create ReadOnly Roles for All Db
   if (envRoles?.readOnly) {
     enableDbReadOnly({
       dependsOn: sqlServer,
