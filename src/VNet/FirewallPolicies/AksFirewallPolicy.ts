@@ -127,15 +127,15 @@ export default ({
       ],
       destinationPorts: ['443'],
     },
-    {
-      ruleType: 'NetworkRule',
-      name: 'others-dns',
-      description: 'Others DNS.',
-      ipProtocols: ['TCP', 'UDP'],
-      sourceAddresses: subnetSpaces,
-      destinationAddresses: ['*'],
-      destinationPorts: ['53'],
-    },
+    // {
+    //   ruleType: 'NetworkRule',
+    //   name: 'others-dns',
+    //   description: 'Others DNS.',
+    //   ipProtocols: ['TCP', 'UDP'],
+    //   sourceAddresses: subnetSpaces,
+    //   destinationAddresses: ['*'],
+    //   destinationPorts: ['53'],
+    // },
   );
 
   //AKS Apps Rules
