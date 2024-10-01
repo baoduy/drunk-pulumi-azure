@@ -6,7 +6,7 @@ export default (name: string = 'default') => {
   //This should be added if not all internal access will be blocked
   rs.push({
     name: `${name}-allows-vnet-outbound`,
-    description: 'Allows Vnet Internet Outbound',
+    description: 'Allows Vnet to Vnet Outbound',
     priority: 4095,
     protocol: '*',
     access: 'Allow',

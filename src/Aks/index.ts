@@ -15,10 +15,9 @@ import { currentEnv, rsInfo, isPrd, tenantId, stack, naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import aksIdentityCreator from './Identity';
 import { getAksConfig } from './Helper';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addCustomSecret } from '../KeyVault';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { roleAssignment } from '../AzAd';
-import { groupName } from '@azure/arm-sql/src/models/parameters';
 
 const autoScaleFor = ({
   enableAutoScaling,

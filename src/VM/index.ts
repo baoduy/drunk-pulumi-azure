@@ -4,8 +4,8 @@ import * as network from '@pulumi/azure-native/network';
 import { naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import { randomPassword } from '../Core/Random';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
-import { addEncryptKey } from '../KeyVault/Helper';
+import { addCustomSecret } from '../KeyVault';
+import { addEncryptKey } from '../KeyVault';
 import {
   BasicEncryptResourceArgs,
   LoginArgs,

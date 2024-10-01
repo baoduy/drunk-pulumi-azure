@@ -1,6 +1,6 @@
 import * as compute from '@pulumi/azure-native/compute';
 import { naming } from '../Common';
-import { addEncryptKey } from '../KeyVault/Helper';
+import { addEncryptKey } from '../KeyVault';
 import {
   BasicResourceWithVaultArgs,
   ResourceInfoWithInstance,
