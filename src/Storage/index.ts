@@ -6,9 +6,8 @@ import {
   ResourceInfoWithInstance,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
-import { addEncryptKey } from '../KeyVault/Helper';
+import { addEncryptKey, addCustomSecrets } from '../KeyVault';
 import { isPrd, naming } from '../Common';
-import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { Locker } from '../Core/Locker';
 import { StoragePrivateLink } from '../VNet';
 import { createManagementRules, ManagementRules } from './ManagementRules';
