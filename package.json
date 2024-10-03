@@ -58,7 +58,7 @@
     "@drunk-pulumi/azure-providers": "^1.0.6",
     "@pulumi/azure-native": "^2.59.0",
     "@pulumi/azuread": "5.53.3",
-    "@pulumi/pulumi": "^3.131.0",
+    "@pulumi/pulumi": "^3.132.0",
     "@pulumi/random": "^4.16.4",
     "@pulumi/tls": "^5.0.5",
     "netmask": "^2.0.2",
