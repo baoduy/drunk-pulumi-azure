@@ -5,13 +5,15 @@ import { organization, projectName, stack } from '../StackEnv';
 import { getCountryCode, getRegionCode } from '../Location';
 import { Environments } from '../../types';
 
-const config = pulumi.output(authorization.getClientConfig());
-export const tenantId = config.apply((c) => c.tenantId);
-export const subscriptionId = config.apply((c) => c.subscriptionId);
-export const currentPrincipal = config.apply((c) => c.objectId);
+const azEnv = JSON.parse(process.env.PULUMI_CONFIG ?? '{}');
+const config = authorization.getClientConfigOutput();
 
-const env = JSON.parse(process.env.PULUMI_CONFIG ?? '{}');
-export const currentRegionName = (env['azure-native:config:location'] ??
+export const tenantId =
+  azEnv['azure-native:config:tenantId'] ?? config.tenantId;
+export const subscriptionId =
+  azEnv['azure-native:config:subscriptionId'] ?? config.subscriptionId;
+export const currentPrincipal = config.objectId;
+export const currentRegionName = (azEnv['azure-native:config:location'] ??
   'SoutheastAsia') as string;
 export const currentRegionCode = getRegionCode(currentRegionName);
 export const currentCountryCode = getCountryCode(currentRegionName);
