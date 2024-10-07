@@ -35,10 +35,11 @@ const getCurrentEnv = () => {
 export const currentEnv = getCurrentEnv();
 
 //Print and Check
-pulumi.all([subscriptionId, tenantId]).apply(([s, t]) => {
+pulumi.all([subscriptionId, tenantId,currentPrincipal]).apply(([s, t,p]) => {
   console.log(`Azure Environment:`, {
     tenantId: t,
     subscriptionId: s,
+    principalId: p,
     currentRegionCode,
     currentRegionName,
     currentCountryCode,
