@@ -9,8 +9,8 @@ import env from '../env';
 import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 import * as appConfig from '@pulumi/azure-native/appconfiguration/v20230901preview';
-import { addEncryptKey } from '../KeyVault/Helper';
-import { addCustomSecret } from '../KeyVault/CustomHelper';
+import { addEncryptKey } from '../KeyVault';
+import { addCustomSecret } from '../KeyVault';
 import { AppConfigPrivateLink } from '../VNet';
 
 class AppConfigBuilder
@@ -24,7 +24,8 @@ class AppConfigBuilder
   private _privateLink: AppConfigNetworkType | undefined = undefined;
   private _options: AppConfigOptionsBuilder = {
     enablePurgeProtection: isPrd,
-    softDeleteRetentionInDays: isPrd ? 90 : 1,
+    //Min is 1 and max is 7
+    softDeleteRetentionInDays: isPrd ? 7 : 1,
   };
 
   constructor(private args: AppConfigBuilderArgs) {
