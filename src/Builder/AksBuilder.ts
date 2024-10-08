@@ -201,7 +201,7 @@ class AksBuilder
    * @async
    */
   private async buildAsk() {
-    const sshKey = this._sshInstance!.lists.getPublicKey();
+    const sshKey = this._sshInstance!.publicKey;
 
     this._askInstance = await Aks({
       ...this.commonProps,
