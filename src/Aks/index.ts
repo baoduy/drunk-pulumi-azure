@@ -266,8 +266,8 @@ export default async ({
         },
 
         azurePolicy: { enabled: true },
-        kubeDashboard: { enabled: false },
-        httpApplicationRouting: { enabled: false },
+        // kubeDashboard: { enabled: false },
+        // httpApplicationRouting: { enabled: false },
 
         aciConnectorLinux: {
           enabled: Boolean(network.virtualHostSubnetName),
