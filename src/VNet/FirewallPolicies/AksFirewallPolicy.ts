@@ -127,15 +127,24 @@ export default ({
       ],
       destinationPorts: ['443'],
     },
-    // {
-    //   ruleType: 'NetworkRule',
-    //   name: 'others-dns',
-    //   description: 'Others DNS.',
-    //   ipProtocols: ['TCP', 'UDP'],
-    //   sourceAddresses: subnetSpaces,
-    //   destinationAddresses: ['*'],
-    //   destinationPorts: ['53'],
-    // },
+    {
+      ruleType: 'NetworkRule',
+      name: 'aks-allows-commons-dns',
+      description: 'Others DNS.',
+      ipProtocols: ['TCP', 'UDP'],
+      sourceAddresses: ['*'],
+      destinationAddresses: [
+        //Azure
+        '168.63.129.16',
+        //CloudFlare
+        '1.1.1.1',
+        '1.0.0.1',
+        //Google
+        '8.8.8.8',
+        '8.8.4.4',
+      ],
+      destinationPorts: ['53'],
+    },
   );
 
   //AKS Apps Rules
