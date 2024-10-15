@@ -72,7 +72,7 @@ export default ({
     dependsOn,
     ignoreChanges,
     import: importUri,
-    deleteBeforeReplace: true,
+    retainOnDelete: true,
     protect: lock,
   });
   //Lock from delete
