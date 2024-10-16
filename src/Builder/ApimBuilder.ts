@@ -1,8 +1,15 @@
 import * as types from './types';
 import { EnvRoleKeyTypes, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
+import * as pulumi from '@pulumi/pulumi';
 import { getSecretOutput, addCustomSecret } from '../KeyVault';
-import { naming, organization, subscriptionId, tenantId } from '../Common';
+import {
+  naming,
+  organization,
+  readFileAsBase64,
+  subscriptionId,
+  tenantId,
+} from '../Common';
 import {
   ApimSignInSettingsResource,
   ApimSignUpSettingsResource,
@@ -145,6 +152,16 @@ class ApimBuilder
         vaultInfo: this.args.vaultInfo!,
       });
       return { encodedCertificate: cert.apply((c) => c!.value!) };
+    }
+
+    if ('certificatePath' in props) {
+      const cert = pulumi
+        .output(props.certificatePath)
+        .apply((p) => readFileAsBase64(p));
+      return {
+        encodedCertificate: cert,
+        certificatePassword: props.certificatePassword,
+      };
     }
 
     return {
@@ -338,7 +355,7 @@ class ApimBuilder
   private buildDisableSigIn() {
     if (!this._disableSignIn) return;
 
-    //Turn off Sign up setting
+    //Turn off Sign upsetting
     new ApimSignUpSettingsResource(
       this._instanceName!,
       {
