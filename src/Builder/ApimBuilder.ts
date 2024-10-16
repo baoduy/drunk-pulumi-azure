@@ -282,10 +282,10 @@ class ApimBuilder
       envRoles.addIdentity(this._envRoleType, this._apimInstance.identity);
     }
 
-    if (vaultInfo) {
+    if (vaultInfo && this._proxyDomains.length > 0) {
       addCustomSecret({
         name: `${this._instanceName}-host`,
-        value: this._proxyDomain?.domain ?? this._apimInstance.gatewayUrl,
+        value: this._proxyDomains[0].domain ?? this._apimInstance.gatewayUrl,
         contentType: `APIM ${this._instanceName}`,
         dependsOn: this._apimInstance,
         vaultInfo,
