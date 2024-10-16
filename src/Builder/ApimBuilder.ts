@@ -7,7 +7,6 @@ import {
   ApimSignInSettingsResource,
   ApimSignUpSettingsResource,
 } from '@drunk-pulumi/azure-providers';
-import { randomUuId } from '../Core/Random';
 import * as network from '@pulumi/azure-native/network';
 import * as IpAddress from '../VNet/IpAddress';
 import Identity from '../AzAd/Identity';
@@ -22,7 +21,7 @@ class ApimBuilder
     types.IApimBuilder
 {
   private _publisher: types.ApimPublisherBuilderType | undefined = undefined;
-  private _proxyDomain: types.ApimDomainBuilderType | undefined = undefined;
+  private _proxyDomains: types.ApimDomainBuilderType[] = [];
   private _sku: types.ApimSkuBuilderType | undefined = undefined;
   private _additionalLocations: types.ApimAdditionalLocationType[] = [];
   private _zones: types.ApimZoneType | undefined = undefined;
@@ -91,7 +90,7 @@ class ApimBuilder
   public withProxyDomain(
     props: types.ApimDomainBuilderType,
   ): types.IApimBuilder {
-    this._proxyDomain = props;
+    this._proxyDomains.push(props);
     return this;
   }
   public withProxyDomainIf(
@@ -196,22 +195,18 @@ class ApimBuilder
         ],
 
         enableClientCertificate: true,
-        hostnameConfigurations: this._proxyDomain
-          ? [
-              {
-                ...this.getCert(this._proxyDomain),
-                type: 'Proxy',
-                hostName: this._proxyDomain.domain,
-                negotiateClientCertificate: false,
-                defaultSslBinding: false,
-              },
-            ]
-          : undefined,
+        hostnameConfigurations: this._proxyDomains.map((d) => ({
+          ...this.getCert(d),
+          type: 'Proxy',
+          hostName: d.domain,
+          negotiateClientCertificate: false,
+          defaultSslBinding: false,
+        })),
 
         //Restore APIM from Deleted
         restore: this._restoreFromDeleted,
 
-        //Only support when link to a virtual network
+        //Only support when linking to a virtual network
         publicIpAddressId: this._apimVnet
           ? this._ipAddressInstances[this.commonProps.name]?.id
           : undefined,
