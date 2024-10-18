@@ -176,6 +176,7 @@ class VnetBuilder
       ipAddresses: ipNames.map((n) => ({ name: n })),
       createPrefix: this._ipType === 'prefix',
       config: { version: 'IPv4', allocationMethod: 'Static' },
+      retainOnDelete: true,
     });
 
     //Collect All IpAddresses

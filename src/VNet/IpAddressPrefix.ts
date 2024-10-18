@@ -20,6 +20,7 @@ export interface PublicIpAddressPrefixProps extends BasicResourceArgs {
   ipAddresses?: AddressNameType;
   //This need a lock
   lock?: boolean;
+  retainOnDelete?: boolean;
 }
 
 export type PublicIpAddressPrefixResult = {
@@ -39,6 +40,7 @@ export default ({
   },
   dependsOn,
   lock = true,
+  retainOnDelete,
 }: PublicIpAddressPrefixProps): PublicIpAddressPrefixResult => {
   const n = naming.getIpAddressPrefixName(name);
   const sku = { name: 'Standard', tier: 'Regional' };
@@ -52,7 +54,7 @@ export default ({
           prefixLength,
           sku,
         },
-        { dependsOn, ignoreChanges: ['prefixLength'] },
+        { dependsOn, ignoreChanges: ['prefixLength'], retainOnDelete },
       )
     : undefined;
 

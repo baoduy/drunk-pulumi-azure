@@ -1,6 +1,9 @@
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 /* eslint-disable  @typescript-eslint/no-unsafe-argument */
 
+import fs from 'fs/promises';
+import * as console from 'node:console';
+
 /** Replace all characters in string*/
 export function replaceAll(value: string, search: string, replace: string) {
   if (!value) return value;
@@ -18,7 +21,7 @@ export const shallowEquals = (obj1: any, obj2: any) =>
 export const getDomainFromUrl = (url: string) =>
   url.replace('https://', '').replace('http://', '').split('/')[0];
 
-/** Get Root Domain from Url or Sub domain*/
+/** Get Root Domain from Url or Subdomain*/
 export const getRootDomainFromUrl = (url: string) => {
   const array = getDomainFromUrl(url).split('.');
   return array.slice(Math.max(array.length - 2, 0)).join('.');
@@ -38,31 +41,9 @@ export function isObject(item: any): boolean {
 }
 
 /**
- * Deep merge two or more objects.
- * @param target
- * @param sources
- * @returns {T}
+ * Asynchronously reads a file and converts its content to a base64-encoded string.
+ * @param filePath The path of the file to be read.
+ * @returns A promise that resolves to the base64-encoded string of the file's content.
  */
-// export function mergeDeep<T>(target: T, ...sources: any[]): T {
-//   if (!sources.length) return target;
-//
-//   for (const source of sources) {
-//     if (isObject(source)) {
-//       for (const key of Object.keys(source)) {
-//         const sourceValue = source[key];
-//         const targetValue = (target as any)[key];
-//
-//         if (isObject(sourceValue)) {
-//           if (!targetValue) {
-//             (target as any)[key] = {};
-//           }
-//           mergeDeep((target as any)[key], sourceValue);
-//         } else {
-//           (target as any)[key] = sourceValue;
-//         }
-//       }
-//     }
-//   }
-//
-//   return target;
-// }
+export const readFileAsBase64 = async (filePath: string) =>
+  await fs.readFile(filePath).then((f) => f.toString('base64'));

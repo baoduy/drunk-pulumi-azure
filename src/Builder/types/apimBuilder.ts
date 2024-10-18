@@ -9,6 +9,7 @@ import {
   VaultCertType,
   WithEnvRoles,
   WithLogInfo,
+  CertFile,
 } from '../../types';
 
 /**
@@ -41,7 +42,7 @@ export type ApimPublisherBuilderType = {
  * Type for configuring certificates for APIM.
  */
 
-export type ApimCertBuilderType = CertType | VaultCertType;
+export type ApimCertBuilderType = CertType | VaultCertType | CertFile;
 
 /**
  * Type for configuring domain and certificates for APIM.
@@ -73,13 +74,13 @@ export type ApimVnetType = {
    * The type of VPN in which API Management service needs to be configured in.
    * None (Default Value) means the API Management service is not part of any Virtual Network,
    * External means the API Management deployment is set up inside a Virtual Network having an Internet Facing Endpoint,
-   * and Internal means that API Management deployment is setup inside a Virtual Network having an Intranet Facing Endpoint only.
+   * and Internal means that API Management deployment is set up inside a Virtual Network having an Intranet Facing Endpoint only.
    */
   type: 'External' | 'Internal';
 };
 
 /**
- * Type for configuring private link for APIM.
+ * Type for configuring a private link for APIM.
  */
 export type ApimPrivateLinkType = PrivateLinkPropsType & {
   disablePublicAccess?: boolean;
@@ -131,7 +132,7 @@ export interface IApimPublisherBuilder {
  */
 export interface IApimAuthBuilder {
   /**
-   * Configures Entra ID authentication for APIM.
+   * Configures EntraID authentication for APIM.
    * @returns The APIM builder instance.
    */
   withEntraID(): IApimBuilder;

@@ -1,13 +1,19 @@
 import * as types from './types';
 import { EnvRoleKeyTypes, ResourceInfo } from '../types';
 import * as apim from '@pulumi/azure-native/apimanagement';
+import * as pulumi from '@pulumi/pulumi';
 import { getSecretOutput, addCustomSecret } from '../KeyVault';
-import { naming, organization, subscriptionId, tenantId } from '../Common';
+import {
+  naming,
+  organization,
+  readFileAsBase64,
+  subscriptionId,
+  tenantId,
+} from '../Common';
 import {
   ApimSignInSettingsResource,
   ApimSignUpSettingsResource,
 } from '@drunk-pulumi/azure-providers';
-import { randomUuId } from '../Core/Random';
 import * as network from '@pulumi/azure-native/network';
 import * as IpAddress from '../VNet/IpAddress';
 import Identity from '../AzAd/Identity';
@@ -22,7 +28,7 @@ class ApimBuilder
     types.IApimBuilder
 {
   private _publisher: types.ApimPublisherBuilderType | undefined = undefined;
-  private _proxyDomain: types.ApimDomainBuilderType | undefined = undefined;
+  private _proxyDomains: types.ApimDomainBuilderType[] = [];
   private _sku: types.ApimSkuBuilderType | undefined = undefined;
   private _additionalLocations: types.ApimAdditionalLocationType[] = [];
   private _zones: types.ApimZoneType | undefined = undefined;
@@ -91,7 +97,7 @@ class ApimBuilder
   public withProxyDomain(
     props: types.ApimDomainBuilderType,
   ): types.IApimBuilder {
-    this._proxyDomain = props;
+    this._proxyDomains.push(props);
     return this;
   }
   public withProxyDomainIf(
@@ -148,6 +154,16 @@ class ApimBuilder
       return { encodedCertificate: cert.apply((c) => c!.value!) };
     }
 
+    if ('certificatePath' in props) {
+      const cert = pulumi
+        .output(props.certificatePath)
+        .apply((p) => readFileAsBase64(p));
+      return {
+        encodedCertificate: cert,
+        certificatePassword: props.certificatePassword,
+      };
+    }
+
     return {
       encodedCertificate: props.certificate,
       certificatePassword: props.certificatePassword,
@@ -196,22 +212,18 @@ class ApimBuilder
         ],
 
         enableClientCertificate: true,
-        hostnameConfigurations: this._proxyDomain
-          ? [
-              {
-                ...this.getCert(this._proxyDomain),
-                type: 'Proxy',
-                hostName: this._proxyDomain.domain,
-                negotiateClientCertificate: false,
-                defaultSslBinding: false,
-              },
-            ]
-          : undefined,
+        hostnameConfigurations: this._proxyDomains.map((d) => ({
+          ...this.getCert(d),
+          type: 'Proxy',
+          hostName: d.domain,
+          negotiateClientCertificate: false,
+          defaultSslBinding: false,
+        })),
 
         //Restore APIM from Deleted
         restore: this._restoreFromDeleted,
 
-        //Only support when link to a virtual network
+        //Only support when linking to a virtual network
         publicIpAddressId: this._apimVnet
           ? this._ipAddressInstances[this.commonProps.name]?.id
           : undefined,
@@ -287,10 +299,10 @@ class ApimBuilder
       envRoles.addIdentity(this._envRoleType, this._apimInstance.identity);
     }
 
-    if (vaultInfo) {
+    if (vaultInfo && this._proxyDomains.length > 0) {
       addCustomSecret({
         name: `${this._instanceName}-host`,
-        value: this._proxyDomain?.domain ?? this._apimInstance.gatewayUrl,
+        value: this._proxyDomains[0].domain ?? this._apimInstance.gatewayUrl,
         contentType: `APIM ${this._instanceName}`,
         dependsOn: this._apimInstance,
         vaultInfo,
@@ -343,7 +355,7 @@ class ApimBuilder
   private buildDisableSigIn() {
     if (!this._disableSignIn) return;
 
-    //Turn off Sign up setting
+    //Turn off Sign upsetting
     new ApimSignUpSettingsResource(
       this._instanceName!,
       {

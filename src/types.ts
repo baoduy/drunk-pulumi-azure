@@ -194,6 +194,11 @@ export type ResourceInfoWithSub = ResourceInfo & WithSubId;
  */
 export type KeyVaultInfo = ResourceInfo;
 
+export type CertFile = {
+  certificatePath: Input<string>;
+  certificatePassword?: Input<string>;
+};
+
 export type CertType = {
   certificate: Input<string>;
   certificatePassword?: Input<string>;

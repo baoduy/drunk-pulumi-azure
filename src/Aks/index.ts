@@ -23,16 +23,17 @@ const autoScaleFor = ({
   enableAutoScaling,
   nodeType,
   env,
+  maxCount,
 }: {
   env: Environments;
   nodeType: 'Default' | 'System' | 'User';
   enableAutoScaling?: boolean;
+  maxCount?: number;
 }) => {
   const nodeCount = 1;
   const minCount = 1;
-  let maxCount = 3;
 
-  if (env === Environments.Prd) {
+  if (!maxCount) {
     switch (nodeType) {
       case 'User':
         maxCount = 5;
@@ -116,6 +117,7 @@ export type AskAddonProps = {
 export type AskFeatureProps = {
   enablePrivateCluster?: boolean;
   enableAutoScale?: boolean;
+  maxAutoScaleNodes?: number;
   enablePodIdentity?: boolean;
   enableWorkloadIdentity?: boolean;
   //enableDiagnosticSetting?: boolean;
@@ -131,7 +133,7 @@ export type AksAccessProps = {
 export type AksNetworkProps = {
   subnetId: pulumi.Input<string>;
   virtualHostSubnetName?: pulumi.Input<string>;
-  /** This is using for Private DNZ linking only*/
+  /** This uses for Private DNZ linking only*/
   extraVnetIds?: pulumi.Input<string>[];
   outboundIpAddress?: {
     ipAddressId?: pulumi.Input<string>;
@@ -185,7 +187,6 @@ export default async ({
   aksAccess,
 
   envRoles,
-  envUIDInfo,
   vaultInfo,
   diskEncryptionSetId,
 
@@ -210,7 +211,7 @@ export default async ({
   const secretName = `${aksName}-config`;
   const nodeResourceGroup = naming.getResourceGroupName(`${aksName}-nodes`);
 
-  //Auto detect and disable Local Account
+  //Auto-detect and disable Local Account
   if (aksAccess.disableLocalAccounts === undefined && vaultInfo) {
     aksAccess.disableLocalAccounts = await getKeyVaultBase(vaultInfo.name)
       .checkSecretExist(secretName)
@@ -308,6 +309,7 @@ export default async ({
             env: currentEnv,
             nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
+            maxCount: features?.maxAutoScaleNodes,
           }),
 
           name: 'defaultnodes',
@@ -478,6 +480,7 @@ export default async ({
             env: currentEnv,
             nodeType: p.mode,
             enableAutoScaling: features.enableAutoScale,
+            maxCount: features?.maxAutoScaleNodes,
           }),
 
           //This already added into defaultNodePoolProps
