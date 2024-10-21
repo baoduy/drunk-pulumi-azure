@@ -287,10 +287,10 @@ export default async ({
             : undefined,
         },
         omsAgent: {
-          enabled: Boolean(logInfo?.logWp?.workspaceId),
-          config: logInfo?.logWp?.workspaceId
+          enabled: Boolean(logInfo?.logWp?.id),
+          config: logInfo?.logWp?.id
             ? {
-                logAnalyticsWorkspaceResourceID: logInfo.logWp.workspaceId!,
+                logAnalyticsWorkspaceResourceID: logInfo.logWp.id,
               }
             : undefined,
         },

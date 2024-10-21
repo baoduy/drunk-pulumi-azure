@@ -168,8 +168,6 @@ export default ({
     principalSecret = new azureAD.ServicePrincipalPassword(name, {
       displayName: name,
       servicePrincipalId: principal.objectId,
-      endDateRelative: '43800h',
-      //value: randomPassword({ name: `${name}-principalSecret` }).result,
     }).value;
 
     if (vaultInfo) {
