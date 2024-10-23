@@ -70,19 +70,22 @@ export default ({
       description: 'Allows Cloud PC to access to Azure.',
       ipProtocols: ['TCP', 'UDP'],
       sourceAddresses: subnetSpaces,
-      destinationAddresses: [`AzureCloud.${currentRegionCode}`],
+      destinationAddresses: [
+        `AzureCloud.${currentRegionCode}`,
+        `Sql.${currentRegionCode}`,
+      ],
       destinationPorts: allAzurePorts,
     });
 
-    netRules.push({
-      ruleType: 'NetworkRule',
-      name: `${name}-net-allows-azure-all`,
-      description: 'Allows Cloud PC to access to Azure.',
-      ipProtocols: ['TCP', 'UDP'],
-      sourceAddresses: subnetSpaces,
-      destinationAddresses: [`AzureCloud`],
-      destinationPorts: allAzurePorts,
-    });
+    // netRules.push({
+    //   ruleType: 'NetworkRule',
+    //   name: `${name}-net-allows-azure-all`,
+    //   description: 'Allows Cloud PC to access to Azure.',
+    //   ipProtocols: ['TCP', 'UDP'],
+    //   sourceAddresses: subnetSpaces,
+    //   destinationAddresses: [`AzureCloud`],
+    //   destinationPorts: allAzurePorts,
+    // });
 
     appRules.push({
       ruleType: 'ApplicationRule',
