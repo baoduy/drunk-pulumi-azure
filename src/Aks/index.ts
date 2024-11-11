@@ -24,14 +24,15 @@ const autoScaleFor = ({
   nodeType,
   env,
   maxCount,
+  minCount = 1,
 }: {
   env: Environments;
   nodeType: 'Default' | 'System' | 'User';
   enableAutoScaling?: boolean;
   maxCount?: number;
+  minCount?: number;
 }) => {
   const nodeCount = 1;
-  const minCount = 1;
 
   if (!maxCount) {
     switch (nodeType) {
