@@ -164,8 +164,6 @@
     "src/VNet/FirewallPolicies/DefaultFirewallPolicy.ts",
     "src/VNet/FirewallPolicies/index.ts",
     "src/VNet/FirewallPolicy.ts",
-    "src/VNet/FirewallRules/AksFirewallRules.ts",
-    "src/VNet/FirewallRules/DefaultRules.ts",
     "src/VNet/Helper.ts",
     "src/VNet/IpAddress.ts",
     "src/VNet/IpAddressPrefix.ts",

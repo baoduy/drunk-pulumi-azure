@@ -326,7 +326,7 @@ class VnetBuilder
       ...this.commonProps,
       ...this._bastionProps,
       subnetId: this._vnetInstance.bastionSubnet.apply((s) => s!.id!),
-      dependsOn: [this._vnetInstance.vnet],
+      dependsOn: this._vnetInstance.vnet,
     });
   }
 

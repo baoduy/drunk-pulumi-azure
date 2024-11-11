@@ -167,7 +167,7 @@ export default ({
 
     principalSecret = new azureAD.ServicePrincipalPassword(name, {
       displayName: name,
-      servicePrincipalId: principal.objectId,
+      servicePrincipalId: pulumi.interpolate`/servicePrincipals/${principal.objectId}`,
     }).value;
 
     if (vaultInfo) {
