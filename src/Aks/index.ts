@@ -118,6 +118,7 @@ export type AskFeatureProps = {
   enablePrivateCluster?: boolean;
   enableAutoScale?: boolean;
   maxAutoScaleNodes?: number;
+  minAutoScaleNodes?: number;
   enablePodIdentity?: boolean;
   enableWorkloadIdentity?: boolean;
   //enableDiagnosticSetting?: boolean;
@@ -309,6 +310,7 @@ export default async ({
             env: currentEnv,
             nodeType: 'System',
             enableAutoScaling: features?.enableAutoScale,
+            minCount: features?.minAutoScaleNodes,
             maxCount: features?.maxAutoScaleNodes,
           }),
 
@@ -480,6 +482,7 @@ export default async ({
             env: currentEnv,
             nodeType: p.mode,
             enableAutoScaling: features.enableAutoScale,
+            minCount: features?.minAutoScaleNodes,
             maxCount: features?.maxAutoScaleNodes,
           }),
 
