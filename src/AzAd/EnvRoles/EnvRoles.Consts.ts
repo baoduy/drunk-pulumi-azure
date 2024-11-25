@@ -185,11 +185,11 @@ const SignalRRoles: Record<EnvRoleKeyTypes, string[]> = {
   admin: ['SignalR REST API Owner'],
 };
 
-// const RedisCacheRoles: Record<EnvRoleKeyTypes, string[]> = {
-//   readOnly: ['Azure Service Bus Data Receiver'],
-//   contributor: ['Azure Service Bus Data Sender'],
-//   admin: ['Azure Service Bus Data Owner'],
-// };
+const RedisCacheRoles: Record<EnvRoleKeyTypes, string[]> = {
+  readOnly: [],
+  contributor: ['Redis Cache Contributor'],
+  admin: [],
+};
 
 export const getRoleNames = ({
   enableRGRoles,
@@ -201,6 +201,7 @@ export const getRoleNames = ({
   enableAppConfig,
   enableServiceBus,
   enableSignalR,
+  enableRedisCache,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
   const rs: ListRoleType = {
     readOnly: new Set<string>(),
@@ -217,6 +218,7 @@ export const getRoleNames = ({
   getRoleFor(enableAppConfig, AppConfigRoleNames, rs);
   getRoleFor(enableServiceBus, ServiceBusRoles, rs);
   getRoleFor(enableSignalR, SignalRRoles, rs);
+  getRoleFor(enableRedisCache, RedisCacheRoles, rs);
 
   return {
     readOnly: Array.from(rs.readOnly).sort(),
