@@ -84,7 +84,7 @@ function Storage({
   ignoreChanges = [],
 }: StorageProps): ResourceInfoWithInstance<storage.StorageAccount> {
   name = naming.getStorageName(name);
-
+  const publicNetworkAccess = network?.privateEndpoint ? 'Disabled' : 'Enabled';
   const encryptionKey = enableEncryption
     ? addEncryptKey(name, vaultInfo!)
     : undefined;
@@ -173,7 +173,7 @@ function Storage({
         sasExpirationPeriod: '00.00:30:00',
       },
       //isLocalUserEnabled: false,
-      publicNetworkAccess: network?.privateEndpoint ? 'Disabled' : 'Enabled',
+      publicNetworkAccess,
       networkRuleSet: {
         bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
         defaultAction: 'Allow',
@@ -365,6 +365,7 @@ function Storage({
     }
   });
 
+  console.log(`Storage ${name}, allows public access:`, publicNetworkAccess);
   return {
     name,
     group,
