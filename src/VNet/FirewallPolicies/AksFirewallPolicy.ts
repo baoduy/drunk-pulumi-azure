@@ -21,7 +21,7 @@ interface AzureFirewallPolicyProps {
       name: string;
       allowHttp?: boolean;
       publicIpAddresses: Input<string>[];
-      /** Default value is '*' and it will allows all incoming requests */
+      /** Default value is '*' and it will allow all incoming requests */
       sourceIpAddress?: Input<string>;
       internalIpAddress: Input<string>;
     },

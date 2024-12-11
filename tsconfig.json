@@ -162,6 +162,7 @@
     "src/VNet/FirewallPolicies/CFTunnelFirewallPolicy.ts",
     "src/VNet/FirewallPolicies/CloudPCFirewallPolicy.ts",
     "src/VNet/FirewallPolicies/DefaultFirewallPolicy.ts",
+    "src/VNet/FirewallPolicies/UbuntuFirewallPolicy.ts",
     "src/VNet/FirewallPolicies/index.ts",
     "src/VNet/FirewallPolicy.ts",
     "src/VNet/Helper.ts",
