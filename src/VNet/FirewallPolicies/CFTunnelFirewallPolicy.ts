@@ -77,8 +77,11 @@ export default ({
       '*.cftunnel.com',
       '*.cloudflareaccess.com',
       '*.cloudflareresearch.com',
-      'github.com',
       'docker.io',
+      'github.com',
+      '*.githubassets.com',
+      '*.githubusercontent.com',
+      '*.googleapis.com',
     ],
     protocols: [
       { protocolType: 'Https', port: 443 },
