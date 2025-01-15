@@ -318,7 +318,7 @@ export default ({
       name: `${name}-app-allow-jetbrains`,
       description: 'Allows JetBrains',
       sourceAddresses: subnetSpaces,
-      targetFqdns: ['jetbrains.com','*.jetbrains.com'],
+      targetFqdns: ['jetbrains.com','*.jetbrains.com','maven.org','*.maven.org'],
       protocols: [{ protocolType: 'Https', port: 443 }],
     });
   }
