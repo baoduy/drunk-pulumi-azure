@@ -20,6 +20,7 @@ interface Props {
   allowsSearch?: boolean;
   allowsOffice365?: boolean;
   allowsWindows365?: boolean;
+  allowsJetbrains?: boolean;
 }
 
 //https://www.robtex.com/dns-lookup/global.azure-devices-provisioning.net
@@ -37,6 +38,7 @@ export default ({
   allowIpCheckApi,
   allowsSearch,
   allowAllOutbound,
+  allowsJetbrains,
 }: Props): FirewallPolicyRuleCollectionResults => {
   const netRules = new Array<Input<NetworkRuleArgs>>();
   const appRules = new Array<Input<ApplicationRuleArgs>>();
@@ -306,6 +308,17 @@ export default ({
       description: 'Allows Search Engines',
       sourceAddresses: subnetSpaces,
       targetFqdns: ['google.com', 'www.google.com', 'bing.com', 'www.bing.com'],
+      protocols: [{ protocolType: 'Https', port: 443 }],
+    });
+  }
+
+  if(allowsJetbrains){
+    appRules.push({
+      ruleType: 'ApplicationRule',
+      name: `${name}-app-allow-jetbrains`,
+      description: 'Allows JetBrains',
+      sourceAddresses: subnetSpaces,
+      targetFqdns: ['jetbrains.com','*.jetbrains.com'],
       protocols: [{ protocolType: 'Https', port: 443 }],
     });
   }
