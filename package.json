@@ -17,11 +17,11 @@
     "url": "https://github.com/baoduy/drunk-pulumi-azure.git"
   },
   "scripts": {
-    "fastBuild": "cross-env NODE_ENV=production && NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc",
+    "fastBuild": "cross-env NODE_ENV=production && NODE_OPTIONS=--max-old-space-size=4096 npx tsc",
     "build": "npm run update-tsconfig && npm run fastBuild && npm run copy-pkg",
     "ciBuild": "npm run fastBuild",
     "copy-pkg": "ts-node ./.tasks/npm-package.ts && cpy README.md .out-bin/",
-    "update-tsconfig": "ts-node ./.tasks/update-tsconfig.ts",
+    "update-tsconfig": "NODE_OPTIONS=--max-old-space-size=4096 && ts-node ./.tasks/update-tsconfig.ts",
     "pack": "cd .out-bin && npm pack && cd ../",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",
     "up": "pulumi up --yes --skip-preview",
@@ -47,7 +47,7 @@
     "cpy-cli": "^5.0.0",
     "cross-env": "^7.0.3",
     "husky": "^9.1.7",
-    "lint-staged": "^15.2.10",
+    "lint-staged": "^15.2.11",
     "mocha": "^9.2.2",
     "nyc": "^17.1.0",
     "replace-in-file": "7.2.0",
@@ -56,8 +56,8 @@
   },
   "dependencies": {
     "@drunk-pulumi/azure-providers": "^1.0.7",
-    "@pulumi/azure-native": "^2.75.0",
-    "@pulumi/azuread": "6.0.1",
+    "@pulumi/azure-native": "^2.76.0",
+    "@pulumi/azuread": "6.0.2",
     "@pulumi/pulumi": "^3.142.0",
     "@pulumi/random": "^4.16.7",
     "@pulumi/tls": "^5.0.9",
