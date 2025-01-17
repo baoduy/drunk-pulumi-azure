@@ -75,9 +75,32 @@ export default ({
     retainOnDelete: true,
     protect: lock,
   });
+
   //Lock from delete
   if (lock) {
     Locker({ name, resource: sqlDb });
+  }
+
+  new sql.BackupShortTermRetentionPolicy(`${name}-short-term`, {
+    ...group,
+    databaseName: sqlDb.name,
+    serverName: sqlServerName,
+    policyName: 'default',
+    diffBackupIntervalInHours: isPrd ? 12 : 24,
+    retentionDays: 7,
+  });
+
+  if (isPrd) {
+    new sql.BackupLongTermRetentionPolicy(`${name}-long-term`, {
+      ...group,
+      databaseName: sqlDb.name,
+      serverName: sqlServerName,
+      policyName: 'default',
+      weekOfYear: 5,
+      monthlyRetention: 'P1Y',
+      weeklyRetention: 'P1M',
+      yearlyRetention: 'P3Y',
+    });
   }
 
   return { name, group, id: sqlDb.id, instance: sqlDb };
