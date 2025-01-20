@@ -96,8 +96,8 @@ export default ({
       databaseName: sqlDb.name,
       serverName: sqlServerName,
       policyName: 'default',
-      weekOfYear: 5,
-      monthlyRetention: 'P1Y',
+      weekOfYear: 2,
+      monthlyRetention: 'P6M',
       weeklyRetention: 'P1M',
       yearlyRetention: 'P3Y',
     });
