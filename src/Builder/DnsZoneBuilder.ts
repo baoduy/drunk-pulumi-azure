@@ -5,13 +5,13 @@ import {
   DnsZoneBuilderArgs,
   IDnsZoneBuilder,
 } from './types';
-import * as network from '@pulumi/azure-native/network';
+import * as dns from '@pulumi/azure-native/dns';
 
 class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
   private _aRecords: DnsZoneARecordType[] = [];
   private _children: string[] = [];
 
-  private _zoneInstance: network.Zone | undefined = undefined;
+  private _zoneInstance: dns.Zone | undefined = undefined;
   private _childrenInstances: ResourceInfo[] | undefined = undefined;
 
   public constructor({ group, ...others }: DnsZoneBuilderArgs) {
@@ -40,11 +40,11 @@ class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
 
   private buildZone() {
     const { name, group, dependsOn } = this.commonProps;
-    this._zoneInstance = new network.Zone(
+    this._zoneInstance = new dns.Zone(
       name,
       {
         zoneName: name,
-        zoneType: network.ZoneType.Public,
+        zoneType: dns.ZoneType.Public,
         ...group,
       },
       { dependsOn },
@@ -58,7 +58,7 @@ class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
             ? `Root-ARecord`
             : `${a.recordName}-ARecord`;
 
-      return new network.RecordSet(
+      return new dns.RecordSet(
         `${this.commonProps.name}-${n}`,
         {
           zoneName: this._zoneInstance!.name,
@@ -89,7 +89,7 @@ class DnsZoneBuilder extends Builder<ResourceInfo> implements IDnsZoneBuilder {
       const cc = builder.getZoneInstance()!;
       cc.nameServers.apply(
         (ns) =>
-          new network.RecordSet(
+          new dns.RecordSet(
             `${n}-NS`,
             {
               zoneName: this._zoneInstance!.name,

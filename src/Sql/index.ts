@@ -25,7 +25,7 @@ interface ElasticPoolProps extends BasicResourceArgs {
   /** Minimum is 50 Gd*/
   maxSizeBytesGb?: number;
   preferredEnclaveType?:
-    | sql.v20230501preview.AlwaysEncryptedEnclaveType
+    | sql.AlwaysEncryptedEnclaveType
     | string;
   sku?: { name: 'Standard' | 'Basic'; capacity: ElasticPoolCapacityProps };
 }
@@ -36,14 +36,14 @@ const createElasticPool = ({
   sqlName,
   //Minimum is 50 GD
   maxSizeBytesGb,
-  preferredEnclaveType = sql.v20230501preview.AlwaysEncryptedEnclaveType.VBS,
+  preferredEnclaveType = sql.AlwaysEncryptedEnclaveType.VBS,
   sku = { name: isPrd ? 'Standard' : 'Basic', capacity: 50 },
   dependsOn,
 }: ElasticPoolProps): ResourceInfoWithInstance<sql.ElasticPool> => {
   //Create Sql Elastic
   const elasticName = naming.getElasticPoolName(name);
 
-  const ep = new sql.v20230501preview.ElasticPool(
+  const ep = new sql.ElasticPool(
     elasticName,
     {
       elasticPoolName: elasticName,

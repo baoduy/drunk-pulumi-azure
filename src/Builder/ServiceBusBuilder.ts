@@ -7,7 +7,7 @@ import {
   WithNamedType,
 } from '../types';
 import { naming, isPrd } from '../Common';
-import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
+import * as bus from '@pulumi/azure-native/servicebus';
 import { addEncryptKey } from '../KeyVault/Helper';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ServiceBusPrivateLink } from '../VNet';

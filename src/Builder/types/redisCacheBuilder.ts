@@ -1,5 +1,5 @@
 import { BuilderProps, IBuilder } from './genericBuilder';
-import * as cache from '@pulumi/azure-native/cache';
+import * as cache from '@pulumi/azure-native/redis';
 import { NetworkPropsType, ResourceInfo } from '../../types';
 
 /**

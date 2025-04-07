@@ -5,7 +5,7 @@ import {
   WithEncryption,
   WithEnvRoles,
 } from '../../types';
-import * as bus from '@pulumi/azure-native/servicebus/v20230101preview';
+import * as bus from '@pulumi/azure-native/servicebus';
 
 /**
  * Arguments required for building a Service Bus resource.

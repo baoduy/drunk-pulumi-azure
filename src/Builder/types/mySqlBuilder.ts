@@ -8,7 +8,6 @@ import {
 import * as pulumi from '@pulumi/pulumi';
 import * as dbformysql from '@pulumi/azure-native/dbformysql';
 import { Input } from '@pulumi/pulumi';
-import { enums } from '@pulumi/azure-native/types';
 
 /**
  * Arguments for the MySQL Builder.
@@ -26,7 +25,7 @@ type MySqlSkuArgs = {
   /**
    * The tier of the particular SKU, e.g. GeneralPurpose.
    */
-  tier: pulumi.Input<string | enums.dbformysql.SkuTier>;
+  tier: pulumi.Input<string>;
 };
 
 /**

@@ -1,6 +1,6 @@
 import { BuilderProps, IBuilder } from './genericBuilder';
 import { ResourceInfo, WithEncryptionInfo } from '../../types';
-import * as devices from '@pulumi/azure-native/devices';
+import * as iothub from '@pulumi/azure-native/iothub';
 import { Input } from '@pulumi/pulumi';
 
 /**
@@ -12,7 +12,7 @@ export type IotHubBuilderArgs = BuilderProps & WithEncryptionInfo;
  * Properties for configuring the SKU of an IoT Hub.
  */
 export type IotHubSkuBuilderType = {
-  name: devices.IotHubSku;
+  name: iothub.IotHubSku;
   capacity?: number;
 };
 

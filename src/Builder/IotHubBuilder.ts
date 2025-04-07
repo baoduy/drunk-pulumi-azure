@@ -10,7 +10,7 @@ import {
 import { ResourceInfo } from '../types';
 import { naming, subscriptionId } from '../Common';
 import { Input } from '@pulumi/pulumi';
-import * as devices from '@pulumi/azure-native/devices';
+import * as devices from '@pulumi/azure-native/iothub';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 
 type StorageEndpointPropertiesArgs = {

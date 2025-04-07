@@ -28,13 +28,13 @@ export const addInsightMonitor = ({
   pulumi.all([guid, appInsight.id]).apply(async ([g, id]) => {
     if (!g) return;
 
-    const webTest = new native.insights.WebTest(name, {
+    const webTest = new native.applicationinsights.WebTest(name, {
       webTestName: naming.getWebTestName(name),
       resourceGroupName: appInsight.group.resourceGroupName,
       syntheticMonitorId: g,
 
       description: `Health check ${name}`,
-      webTestKind: native.insights.WebTestKind.Ping,
+      webTestKind: native.applicationinsights.WebTestKind.Ping,
       kind: 'ping',
       locations: [
         { location: 'apac-sg-sin-azr' },
@@ -64,25 +64,25 @@ export const addInsightMonitor = ({
 
     //Enable Alert
     if (alertGroupAction) {
-      const alertGroup = await native.insights.getActionGroup(alertGroupAction);
+    //   const alertGroup = await native.applicationinsights.getActionGroup(alertGroupAction);
 
-      const alertName = naming.getAlertName(name);
-      new native.insights.MetricAlert(alertName, {
-        resourceGroupName: appInsight.group.resourceGroupName,
-        enabled: true,
-        scopes: [webTest.id, appInsight.id],
-        severity: 100,
-        evaluationFrequency: 'PT15M',
-        criteria: {
-          webTestId: webTest.id,
-          componentId: id,
-          failedLocationCount: webTest.locations.length,
-          odataType:
-            'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria',
-        },
-        windowSize: 'PT15M',
-        actions: [{ actionGroupId: alertGroup.id }],
-      });
+    //   const alertName = naming.getAlertName(name);
+    //   new native.applicationinsights.MetricAlert(alertName, {
+    //     resourceGroupName: appInsight.group.resourceGroupName,
+    //     enabled: true,
+    //     scopes: [webTest.id, appInsight.id],
+    //     severity: 100,
+    //     evaluationFrequency: 'PT15M',
+    //     criteria: {
+    //       webTestId: webTest.id,
+    //       componentId: id,
+    //       failedLocationCount: webTest.locations.length,
+    //       odataType:
+    //         'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria',
+    //     },
+    //     windowSize: 'PT15M',
+    //     actions: [{ actionGroupId: alertGroup.id }],
+    //   });
     }
   });
 };
