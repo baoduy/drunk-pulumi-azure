@@ -11,7 +11,7 @@ import {
 import { IdentityInfoWithInstance, LoginArgs, ResourceInfo } from '../types';
 import { isPrd, naming, tenantId } from '../Common';
 import { randomLogin } from '../Core/Random';
-import * as mysql from '@pulumi/azure-native/dbformysql/v20231230';
+import * as mysql from '@pulumi/azure-native/dbformysql';
 import * as mid from '@pulumi/azure-native/managedidentity';
 import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';

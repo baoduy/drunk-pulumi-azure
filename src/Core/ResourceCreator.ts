@@ -3,7 +3,7 @@ import * as authorization from '@pulumi/azure-native/authorization';
 import * as pulumi from '@pulumi/pulumi';
 import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
 import { Locker } from './Locker';
-import { createDiagnostic } from '../Logs/Helpers';
+//import { createDiagnostic } from '../Logs/Helpers';
 import { OptsArgs, DiagnosticProps } from '../types';
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
@@ -74,12 +74,12 @@ export default function <
   //Azure DiagnosticSetting
   let diagnostic: DiagnosticSetting | undefined = undefined;
   if (monitoring) {
-    diagnostic = createDiagnostic({
-      name,
-      targetResourceId: resource.id,
-      ...monitoring,
-      dependsOn: resource,
-    });
+    // diagnostic = createDiagnostic({
+    //   name,
+    //   targetResourceId: resource.id,
+    //   ...monitoring,
+    //   dependsOn: resource,
+    // });
   }
 
   return { resource, locker, diagnostic };

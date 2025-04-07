@@ -9,7 +9,7 @@ import {
   IAcrSkuBuilder,
 } from './types';
 import { naming } from '../Common';
-import * as registry from '@pulumi/azure-native/containerregistry/v20231101preview';
+import * as registry from '@pulumi/azure-native/containerregistry';
 import { addEncryptKey } from '../KeyVault/Helper';
 import { AcrPrivateLink } from '../VNet';
 
@@ -104,7 +104,7 @@ class AcrBuilder
             ? registry.ResourceIdentityType.SystemAssigned_UserAssigned
             : registry.ResourceIdentityType.SystemAssigned,
 
-          userAssignedIdentities: envUIDInfo ? [envUIDInfo.id] : undefined,
+          userAssignedIdentities: envUIDInfo ? envUIDInfo.id.apply(id=>({[id]:envUIDInfo})) : undefined,
         },
 
         encryption:

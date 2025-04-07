@@ -8,7 +8,7 @@ import {
 import env from '../env';
 import { NetworkPropsType, ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
-import * as cache from '@pulumi/azure-native/cache';
+import * as cache from '@pulumi/azure-native/redis';
 import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';

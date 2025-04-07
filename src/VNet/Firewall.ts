@@ -13,7 +13,7 @@ import {
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './types';
 import * as IpAddress from './IpAddress';
-import { createDiagnostic } from '../Logs/Helpers';
+//import { createDiagnostic } from '../Logs/Helpers';
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
@@ -144,17 +144,17 @@ export const create = ({
   );
 
   if (logInfo) {
-    createDiagnostic({
-      name,
-      targetResourceId: firewall.id,
-      logInfo,
-      logsCategories: [
-        'AzureFirewallApplicationRule',
-        'AzureFirewallNetworkRule',
-        'AzureFirewallDnsProxy',
-      ],
-      dependsOn: firewall,
-    });
+    // createDiagnostic({
+    //   name,
+    //   targetResourceId: firewall.id,
+    //   logInfo,
+    //   logsCategories: [
+    //     'AzureFirewallApplicationRule',
+    //     'AzureFirewallNetworkRule',
+    //     'AzureFirewallDnsProxy',
+    //   ],
+    //   dependsOn: firewall,
+    // });
   }
 
   //Link Rule to Policy

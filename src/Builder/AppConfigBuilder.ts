@@ -8,7 +8,7 @@ import {
 import env from '../env';
 import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
-import * as appConfig from '@pulumi/azure-native/appconfiguration/v20230901preview';
+import * as appConfig from '@pulumi/azure-native/appconfiguration';
 import { addEncryptKey } from '../KeyVault';
 import { addCustomSecret } from '../KeyVault';
 import { AppConfigPrivateLink } from '../VNet';

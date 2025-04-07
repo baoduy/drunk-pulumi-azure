@@ -11,7 +11,7 @@ import {
 import { IdentityInfoWithInstance, LoginArgs, ResourceInfo } from '../types';
 import { isPrd, naming, tenantId } from '../Common';
 import { randomLogin } from '../Core/Random';
-import * as postgresql from '@pulumi/azure-native/dbforpostgresql/v20231201preview';
+import * as postgresql from '@pulumi/azure-native/dbforpostgresql';
 import * as mid from '@pulumi/azure-native/managedidentity';
 import { addEncryptKey } from '../KeyVault/Helper';
 import UserAssignedIdentity from '../AzAd/UserAssignedIdentity';

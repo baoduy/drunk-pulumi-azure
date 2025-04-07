@@ -4,7 +4,7 @@ import {
   PrivateDnsZoneBuilderArgs,
 } from './types';
 import { ResourceInfo } from '../types';
-import * as network from '@pulumi/azure-native/network';
+import * as privatedns from '@pulumi/azure-native/privatedns';
 import { IPrivateDnsZoneBuilder, PrivateDnsZoneVnetLinkingType } from './types';
 import * as native from '@pulumi/azure-native';
 import { output } from '@pulumi/pulumi';
@@ -20,7 +20,7 @@ class PrivateDnsZoneBuilder
   private _vnetLinks: PrivateDnsZoneVnetLinkingType[] = [];
 
   private _dnsInfo: ResourceInfo | undefined = undefined;
-  private _zoneInstance: network.PrivateZone | undefined = undefined;
+  private _zoneInstance: privatedns.PrivateZone | undefined = undefined;
 
   public constructor(props: PrivateDnsZoneBuilderArgs) {
     super({
@@ -50,7 +50,7 @@ class PrivateDnsZoneBuilder
   private buildZone() {
     if (this._dnsInfo) return;
     const { name, group, dependsOn } = this.commonProps;
-    this._zoneInstance = new network.PrivateZone(
+    this._zoneInstance = new privatedns.PrivateZone(
       name,
       {
         privateZoneName: name,
@@ -75,7 +75,7 @@ class PrivateDnsZoneBuilder
             ? `Root-ARecord`
             : `${a.recordName}-ARecord`;
 
-      return new network.PrivateRecordSet(
+      return new privatedns.PrivateRecordSet(
         `${this._dnsInfo!.name}-${n}`,
         {
           privateZoneName: this._dnsInfo!.name,
@@ -111,7 +111,7 @@ class PrivateDnsZoneBuilder
     output(vnetIds).apply((vids) =>
       vids.map((v) => {
         const vnetName = rsInfo.getNameFromId(v);
-        return new native.network.VirtualNetworkLink(
+        return new native.privatedns.VirtualNetworkLink(
           `${linkName}-${vnetName}`,
           {
             ...this._dnsInfo!.group,

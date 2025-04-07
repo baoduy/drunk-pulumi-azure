@@ -20,58 +20,58 @@ import {
   LogInfo,
 } from '../types';
 
-export const createDiagnostic = ({
-  name,
-  targetResourceId,
-  logInfo,
-  metricsCategories = ['AllMetrics'],
-  logsCategories,
-  dependsOn,
-}: DiagnosticProps) => {
-  //Ensure logWpId or logStorageId is provided
-  if (!logInfo.logWp && !logInfo.logStorage) {
-    console.error(
-      `Diagnostic for "${name}" must have either a "logWp" or "storage".`,
-    );
-    return undefined;
-  }
-  //Ensure targetResourceId is valid
-  if (!targetResourceId) {
-    console.error(`Target resource of "${name}" must be provided .`);
-    return undefined;
-  }
-  const wpId = logInfo.logWp?.id;
-  const n = `${name}-diag`;
-  return new native.insights.DiagnosticSetting(
-    n,
-    {
-      name: n,
-      resourceUri: targetResourceId,
-      logAnalyticsDestinationType: 'AzureDiagnostics',
+// export const createDiagnostic = ({
+//   name,
+//   targetResourceId,
+//   logInfo,
+//   metricsCategories = ['AllMetrics'],
+//   logsCategories,
+//   dependsOn,
+// }: DiagnosticProps) => {
+//   //Ensure logWpId or logStorageId is provided
+//   if (!logInfo.logWp && !logInfo.logStorage) {
+//     console.error(
+//       `Diagnostic for "${name}" must have either a "logWp" or "storage".`,
+//     );
+//     return undefined;
+//   }
+//   //Ensure targetResourceId is valid
+//   if (!targetResourceId) {
+//     console.error(`Target resource of "${name}" must be provided .`);
+//     return undefined;
+//   }
+//   const wpId = logInfo.logWp?.id;
+//   const n = `${name}-diag`;
+//   return new native.applicationinsights.DiagnosticSetting(
+//     n,
+//     {
+//       name: n,
+//       resourceUri: targetResourceId,
+//       logAnalyticsDestinationType: 'AzureDiagnostics',
 
-      workspaceId: wpId,
-      storageAccountId: wpId ? undefined : logInfo.logStorage?.id,
+//       workspaceId: wpId,
+//       storageAccountId: wpId ? undefined : logInfo.logStorage?.id,
 
-      //Metric
-      metrics: metricsCategories
-        ? metricsCategories.map((c) => ({
-            category: c,
-            retentionPolicy: { enabled: false, days: 7 },
-            enabled: true,
-          }))
-        : undefined,
-      //Logs
-      logs: logsCategories
-        ? logsCategories.map((c) => ({
-            category: c,
-            retentionPolicy: { enabled: false, days: 7 },
-            enabled: true,
-          }))
-        : undefined,
-    },
-    { dependsOn },
-  );
-};
+//       //Metric
+//       metrics: metricsCategories
+//         ? metricsCategories.map((c) => ({
+//             category: c,
+//             retentionPolicy: { enabled: false, days: 7 },
+//             enabled: true,
+//           }))
+//         : undefined,
+//       //Logs
+//       logs: logsCategories
+//         ? logsCategories.map((c) => ({
+//             category: c,
+//             retentionPolicy: { enabled: false, days: 7 },
+//             enabled: true,
+//           }))
+//         : undefined,
+//     },
+//     { dependsOn },
+//   );
+// };
 
 interface ThreatProtectionProps extends WithNamedType {
   targetResourceId: Input<string>;
@@ -139,7 +139,7 @@ const getAppInsightInfo = ({
 }: ResourceWithVaultArgs): AppInsightInfo => {
   const n = naming.getAppInsightName(name);
   const id = interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/microsoft.insights/components/${n}`;
-  const com = native.insights.getComponentOutput({
+  const com = native.applicationinsights.getComponentOutput({
     resourceName: n,
     resourceGroupName: group.resourceGroupName,
   });

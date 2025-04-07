@@ -7,7 +7,7 @@ import { Input } from '@pulumi/pulumi';
 interface Props extends BasicResourceWithVaultArgs, WithDependsOn {
   dailyCapGb?: number;
   immediatePurgeDataOn30Days?: boolean;
-  ingestionMode?: native.insights.IngestionMode;
+  ingestionMode?: native.applicationinsights.IngestionMode;
   workspaceResourceId?: Input<string>;
 }
 
@@ -16,14 +16,14 @@ export default ({
   name,
   dailyCapGb = 0.023,
   immediatePurgeDataOn30Days = true,
-  ingestionMode = native.insights.IngestionMode.ApplicationInsights,
+  ingestionMode = native.applicationinsights.IngestionMode.ApplicationInsights,
   workspaceResourceId,
   vaultInfo,
   dependsOn,
 }: Props) => {
   name = naming.getAppInsightName(name);
 
-  const appInsight = new native.insights.Component(
+  const appInsight = new native.applicationinsights.Component(
     name,
     {
       resourceName: name,
@@ -46,7 +46,7 @@ export default ({
     { dependsOn },
   );
 
-  new native.insights.ComponentCurrentBillingFeature(
+  new native.applicationinsights.ComponentCurrentBillingFeature(
     `${name}-CurrentBillingFeature`,
     {
       currentBillingFeatures: ['Basic'], // ['Basic', 'Application Insights Enterprise'],
