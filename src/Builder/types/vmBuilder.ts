@@ -4,7 +4,7 @@ import {
   WithEncryption,
   WithLogInfo,
 } from '../../types';
-import { VmScheduleType } from '../../VM';
+import { VmScheduleType } from '../../vm';
 import {
   BuilderProps,
   IBuilder,
@@ -104,7 +104,7 @@ export interface IVmOsBuilder {
    * @returns An instance of IVmSizeBuilder.
    */
   withWindowsImage(props: VmOsBuilderWindowsProps): IVmSizeBuilder;
-  
+
   /**
    * Sets the OS properties for a Linux VM.
    * @param props - The Linux OS properties.
@@ -154,14 +154,14 @@ export interface IVmBuilder
    * @returns An instance of IVmBuilder.
    */
   enableEncryption(props: VmEncryptionType): IVmBuilder;
-  
+
   /**
    * Sets the tags for the VM.
    * @param props - The tags.
    * @returns An instance of IVmBuilder.
    */
   withTags(props: Record<string, Input<string>>): IVmBuilder;
-  
+
   /**
    * Sets the schedule for the VM.
    * @param props - The schedule properties.
