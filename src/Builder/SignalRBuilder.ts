@@ -69,9 +69,10 @@ class SignalRBuilder
 
   private buildSignalR() {
     let { group, dependsOn, ignoreChanges } = this.args;
+    const isFreeTier = this._sku.name === 'Free_F1';
     if(!ignoreChanges) ignoreChanges = [];
     //Free tier does not support private link (!ignoreChanges) ignoreChanges = [];
-    if(this._sku.tier==='Free'){
+    if(isFreeTier){
       ignoreChanges.push('networkACLs');
     }
 
@@ -91,7 +92,7 @@ class SignalRBuilder
         tls: { clientCertEnabled: this._options?.clientCertEnabled },
         identity: { type: ss.ManagedIdentityType.None },
 
-        networkACLs: this._privateLink
+        networkACLs: isFreeTier ? undefined : this._privateLink
           ? {
               defaultAction: ss.ACLAction.Allow,
               publicNetwork: {
