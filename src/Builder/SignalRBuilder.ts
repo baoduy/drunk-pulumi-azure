@@ -68,7 +68,13 @@ class SignalRBuilder
   // }
 
   private buildSignalR() {
-    const { group, dependsOn, ignoreChanges } = this.args;
+    let { group, dependsOn, ignoreChanges } = this.args;
+    if(!ignoreChanges) ignoreChanges = [];
+    //Free tier does not support private link (!ignoreChanges) ignoreChanges = [];
+    if(this._sku.tier==='Free'){
+      ignoreChanges.push('networkACLs');
+    }
+
     this._signalRInstance = new ss.SignalR(
       this._instanceName,
       {
