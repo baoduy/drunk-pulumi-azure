@@ -116,29 +116,27 @@ class RedisCacheBuilder
         resourceGroupName: this.args.group.resourceGroupName,
       });
 
+      const secrets =[
+        { name: `${this._instanceName}-host`, value: h },
+        { name: `${this._instanceName}-pass`, value: keys.primaryKey },
+        {
+          name: `${this._instanceName}-conn`,
+          value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
+        },
+      ];
+
+      if (env.DPA_CONN_ENABLE_SECONDARY){
+        secrets.push({
+          name: `${this._instanceName}-conn-secondary`,
+          value: `${h}:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
+        });
+      }
+
       addCustomSecrets({
         vaultInfo,
         contentType: 'Redis Cache',
         dependsOn: this._redisInstance,
-        items: env.DPA_CONN_ENABLE_SECONDARY
-          ? [
-              { name: `${this._instanceName}-host`, value: h },
-              {
-                name: `${this._instanceName}-conn-primary`,
-                value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
-              },
-              {
-                name: `${this._instanceName}-conn-secondary`,
-                value: `${h}:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
-              },
-            ]
-          : [
-              { name: `${this._instanceName}-host`, value: h },
-              {
-                name: `${this._instanceName}-conn`,
-                value: `${h}:6380,password=${keys.primaryKey},ssl=True,abortConnect=False`,
-              },
-            ],
+        items: secrets,
       });
     });
   }
