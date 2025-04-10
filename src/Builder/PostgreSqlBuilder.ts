@@ -19,7 +19,7 @@ import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
 import { output } from '@pulumi/pulumi';
 import { PostgreSqlPrivateLink } from '../VNet';
-import { addCustomSecrets } from 'KeyVault';
+import { addCustomSecrets } from '../KeyVault/CustomHelper';
 
 class PostgreSqlBuilder
   extends Builder<ResourceInfo>
