@@ -197,10 +197,10 @@ class PostgreSqlBuilder
       addCustomSecrets({
         vaultInfo, dependsOn,
         items: [{
-          name: `${this._instanceName}-host}`,
+          name: `${this._instanceName}-host`,
           value: this._sqlInstance!.fullyQualifiedDomainName!,
         }, {
-          name: `${this._instanceName}-username}`,
+          name: `${this._instanceName}-username`,
           value: this._loginInfo!.adminLogin,
         },
         {

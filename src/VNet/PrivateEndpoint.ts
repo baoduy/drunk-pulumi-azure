@@ -154,7 +154,7 @@ export const RedisCachePrivateLink = (props: ResourceLinkType) =>
 export const PostgreSqlPrivateLink = (props: ResourceLinkType) =>
   create({
     ...props,
-    privateDnsZoneName: 'privatelink.database.azure.com',
+    privateDnsZoneName: 'privatelink.postgres.database.azure.com',
     linkServiceGroupIds: ['postgresqlServer'],
   });
 export const MySqlPrivateLink = (props: ResourceLinkType) =>
