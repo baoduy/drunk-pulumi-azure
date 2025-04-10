@@ -19,11 +19,11 @@ import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
 import { output } from '@pulumi/pulumi';
 import { PostgreSqlPrivateLink } from '../VNet';
+import { addCustomSecrets } from 'KeyVault';
 
 class PostgreSqlBuilder
   extends Builder<ResourceInfo>
-  implements IPostgreSqlSkuBuilder, IPostgreSqlLoginBuilder, IPostgreSqlBuilder
-{
+  implements IPostgreSqlSkuBuilder, IPostgreSqlLoginBuilder, IPostgreSqlBuilder {
   private readonly _instanceName: string;
   private _sqlInstance: postgresql.Server | undefined = undefined;
   private _uid: IdentityInfoWithInstance<mid.UserAssignedIdentity> | undefined =
@@ -67,8 +67,29 @@ class PostgreSqlBuilder
   }
 
   private buildLogin() {
-    if (!this._generateLogin) return;
-    const { name, vaultInfo } = this.args;
+    const { name, vaultInfo, dependsOn } = this.args;
+
+    if (!this._generateLogin) {
+      //The username and password already provided.
+      //Just add them to key vault
+      if (vaultInfo) {
+        addCustomSecrets({
+          vaultInfo, dependsOn,
+          items: [{
+            name: `${this._instanceName}-host}`,
+            value: `${this._instanceName}.postgres.database.azure.com`,
+          },{
+            name: `${this._instanceName}-username}`,
+            value: this._loginInfo!.adminLogin,
+          },
+          {
+            name: `${this._instanceName}-pass`,
+            value: this._loginInfo!.password
+          }]
+        });
+      }
+      return;
+    }
 
     const login = randomLogin({
       name: this._instanceName,
@@ -167,10 +188,10 @@ class PostgreSqlBuilder
 
         dataEncryption: encryptKey
           ? {
-              type: 'AzureKeyVault',
-              primaryUserAssignedIdentityId: envUIDInfo?.id ?? this._uid!.id,
-              primaryKeyURI: encryptKey.url,
-            }
+            type: 'AzureKeyVault',
+            primaryUserAssignedIdentityId: envUIDInfo?.id ?? this._uid!.id,
+            primaryKeyURI: encryptKey.url,
+          }
           : { type: 'SystemManaged' },
 
         maintenanceWindow: this._options?.maintenanceWindow ?? {
