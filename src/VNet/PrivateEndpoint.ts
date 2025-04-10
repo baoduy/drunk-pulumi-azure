@@ -155,7 +155,7 @@ export const PostgreSqlPrivateLink = (props: ResourceLinkType) =>
   create({
     ...props,
     privateDnsZoneName: 'privatelink.database.azure.com',
-    linkServiceGroupIds: ['postgreSql'],
+    linkServiceGroupIds: ['postgresqlServer'],
   });
 export const MySqlPrivateLink = (props: ResourceLinkType) =>
   create({
