@@ -155,7 +155,7 @@ class PostgreSqlBuilder
         },
         administratorLogin: this._loginInfo!.adminLogin,
         administratorLoginPassword: this._loginInfo!.password,
-
+        network: { publicNetworkAccess: this._network?.allowsPublicAccess ? "Enabled" : this._network?.privateLink ? 'Disabled' : 'Enabled' },
         dataEncryption: encryptKey
           ? {
             type: 'AzureKeyVault',
