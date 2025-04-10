@@ -39,6 +39,8 @@ class VmBuilder
 
   private _vmInstance: VirtualMachine | undefined = undefined;
   private _ignoreChanges: string[] | undefined = undefined;
+  private _osDiskSize: number = 128;
+  private _dataDiskSize?: number = undefined;
 
   constructor(private args: VmBuilderArgs) {
     super(args);
@@ -84,6 +86,14 @@ class VmBuilder
     this._ignoreChanges = props;
     return this;
   }
+  public withOSDiskSize(props: number): IVmBuilder {
+    this._osDiskSize = props;
+    return this;
+  }
+  public withDataDiskSize(props: number): IVmBuilder {
+    this._dataDiskSize = props;
+    return this;
+  }
 
   private buildLogin() {
     if (!this._generateLogin) return;
@@ -111,6 +121,9 @@ class VmBuilder
         Boolean(this._encryptionProps) || this.args.enableEncryption,
       diskEncryptionSetId: this._encryptionProps?.diskEncryptionSetId,
 
+      osDiskSizeGB: this._osDiskSize,
+      dataDiskSizeGB: this._dataDiskSize,
+      
       subnetId: this._subnetProps!,
       vmSize: this._vmSize!,
       osType: Boolean(this._linuxImage) ? 'Linux' : 'Windows',

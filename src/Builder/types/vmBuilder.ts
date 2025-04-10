@@ -168,4 +168,18 @@ export interface IVmBuilder
    * @returns An instance of IVmBuilder.
    */
   withSchedule(props: VmScheduleType): IVmBuilder;
+
+  /**
+   * Sets the size of the OS disk for the VM.
+   * @param props - The size of the OS disk in GB.
+   * @returns An instance of IVmBuilder.
+   */
+  withOSDiskSize(props: number): IVmBuilder;
+
+  /**
+   * Sets the size of the data disk for the VM.
+   * @param props - The size of the data disk in GB.
+   * @returns An instance of IVmBuilder.
+   */
+  withDataDiskSize(props: number): IVmBuilder;
 }
