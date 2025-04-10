@@ -103,6 +103,9 @@ class PostgreSqlBuilder
       vaultInfo,
     });
     this._loginInfo = { adminLogin: login.userName, password: login.password };
+    login.userName.apply((u) =>
+      console.log(`[${this._instanceName}]: The login is ${u}.`),
+    );
   }
 
   private buildUID() {
@@ -155,22 +158,13 @@ class PostgreSqlBuilder
             ([id1, id2]) => {
               const rs: Record<
                 string,
-                {
-                  clientId?: pulumi.Input<string>;
-                  principalId?: pulumi.Input<string>;
-                }
+                {}
               > = {};
               if (id1) {
-                rs[id1 as string] = {
-                  clientId: envUIDInfo!.clientId,
-                  principalId: envUIDInfo!.principalId,
-                };
+                rs[id1 as string] = {};
               }
               if (id2) {
-                rs[id2 as string] = {
-                  clientId: this._uid!.clientId,
-                  principalId: this._uid!.principalId,
-                };
+                rs[id2 as string] = {};
               }
               return rs;
             },
@@ -180,7 +174,7 @@ class PostgreSqlBuilder
         //TODO: move this options to out of hard code
         authConfig: {
           passwordAuth: 'Enabled',
-          activeDirectoryAuth: 'Enabled',
+          activeDirectoryAuth: 'Disabled',
           tenantId,
         },
         administratorLogin: this._loginInfo!.adminLogin,
@@ -190,24 +184,26 @@ class PostgreSqlBuilder
           ? {
             type: 'AzureKeyVault',
             primaryUserAssignedIdentityId: envUIDInfo?.id ?? this._uid!.id,
-            primaryKeyURI: encryptKey.url,
+            primaryKeyUri: encryptKey.url,
           }
           : { type: 'SystemManaged' },
 
         maintenanceWindow: this._options?.maintenanceWindow ?? {
-          dayOfWeek: 6,
+          customWindow: "Enabled",
+          dayOfWeek: 0, //0 is Sunday
           startHour: 0,
-          startMinute: 0,
+          startMinute: 0
         },
 
         backup: {
           geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
-          backupRetentionDays: isPrd ? 7 : 1,
+          backupRetentionDays: isPrd ? 30 : 7,
         },
-        highAvailability: {
-          mode: isPrd ? 'ZoneRedundant' : 'Disabled',
-          standbyAvailabilityZone: '3',
-        },
+
+        highAvailability: isPrd ? {
+          mode: 'ZoneRedundant',
+          standbyAvailabilityZone:  '3' ,
+        } : undefined,
         availabilityZone: isPrd ? '3' : '1',
       },
       {
@@ -270,7 +266,7 @@ class PostgreSqlBuilder
     this._databases.forEach(
       (d) =>
         new postgresql.Database(
-          `${this._sqlInstance}-${d}`,
+          `${this._instanceName}-${d}`,
           {
             ...group,
             serverName: this._sqlInstance!.name,
