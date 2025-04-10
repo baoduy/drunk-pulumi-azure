@@ -67,29 +67,9 @@ class PostgreSqlBuilder
   }
 
   private buildLogin() {
-    const { name, vaultInfo, dependsOn } = this.args;
+    const { name } = this.args;
 
-    if (!this._generateLogin) {
-      //The username and password already provided.
-      //Just add them to key vault
-      if (vaultInfo) {
-        addCustomSecrets({
-          vaultInfo, dependsOn,
-          items: [{
-            name: `${this._instanceName}-host}`,
-            value: `${this._instanceName}.postgres.database.azure.com`,
-          },{
-            name: `${this._instanceName}-username}`,
-            value: this._loginInfo!.adminLogin,
-          },
-          {
-            name: `${this._instanceName}-pass`,
-            value: this._loginInfo!.password
-          }]
-        });
-      }
-      return;
-    }
+    if (!this._generateLogin) return;
 
     const login = randomLogin({
       name: this._instanceName,
@@ -100,12 +80,8 @@ class PostgreSqlBuilder
         policy: 'yearly',
         options: { lower: true, upper: true, special: false, numeric: true },
       },
-      vaultInfo,
     });
     this._loginInfo = { adminLogin: login.userName, password: login.password };
-    login.userName.apply((u) =>
-      console.log(`[${this._instanceName}]: The login is ${u}.`),
-    );
   }
 
   private buildUID() {
@@ -202,7 +178,7 @@ class PostgreSqlBuilder
 
         highAvailability: isPrd ? {
           mode: 'ZoneRedundant',
-          standbyAvailabilityZone:  '3' ,
+          standbyAvailabilityZone: '3',
         } : undefined,
         availabilityZone: isPrd ? '3' : '1',
       },
@@ -211,6 +187,28 @@ class PostgreSqlBuilder
         ignoreChanges: [...ignoreChanges, 'administratorLogin'],
       },
     );
+  }
+
+  private buildSecrets() {
+    const { vaultInfo, dependsOn } = this.args;
+    //The username and password already provided.
+    //Just add them to key vault
+    if (vaultInfo) {
+      addCustomSecrets({
+        vaultInfo, dependsOn,
+        items: [{
+          name: `${this._instanceName}-host}`,
+          value: this._sqlInstance!.fullyQualifiedDomainName!,
+        }, {
+          name: `${this._instanceName}-username}`,
+          value: this._loginInfo!.adminLogin,
+        },
+        {
+          name: `${this._instanceName}-pass`,
+          value: this._loginInfo!.password
+        }]
+      });
+    }
   }
 
   private buildNetwork() {
@@ -281,7 +279,7 @@ class PostgreSqlBuilder
     this.buildLogin();
     this.buildUID();
     this.buildPostgreSql();
-    //this.buildAdAdmin();
+    this.buildSecrets();
     this.buildNetwork();
     this.buildDatabases();
 
