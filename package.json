@@ -9,7 +9,7 @@
     "pulumi-azure"
   ],
   "pulumi": {
-    "resource": true,
+    "resource": false,
     "name": "@drunk-pulumi/azure"
   },
   "repository": {
