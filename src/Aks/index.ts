@@ -124,6 +124,9 @@ export type AskFeatureProps = {
   enableWorkloadIdentity?: boolean;
   //enableDiagnosticSetting?: boolean;
   enableMaintenance?: boolean;
+  //https://learn.microsoft.com/en-us/azure/aks/vertical-pod-autoscaler
+  enableVerticalPodAutoscaler?: boolean;
+  enableKeda?: boolean;
 };
 
 export type AksAccessProps = {
@@ -227,7 +230,7 @@ export default async ({
     'nodeResourceGroup',
     'linuxProfile',
     'windowsProfile',
-    'diskEncryptionSetID',
+    'diskEncryptionSetID'
   );
 
   const serviceIdentity = aksIdentityCreator({
@@ -355,7 +358,12 @@ export default async ({
         skipNodesWithLocalStorage: 'false',
         skipNodesWithSystemPods: 'true',
       },
-
+      workloadAutoScalerProfile: {
+        verticalPodAutoscaler: {
+          enabled: features?.enableVerticalPodAutoscaler || false,
+        },
+        keda: { enabled: features?.enableKeda || false },
+      },
       //Still under preview
       // workloadAutoScalerProfile: enableAutoScale
       //   ? { keda: { enabled: true } }
@@ -443,7 +451,7 @@ export default async ({
       deleteBeforeReplace: true,
       ignoreChanges,
       protect: lock,
-    },
+    }
   );
 
   //Lock from delete
@@ -466,7 +474,7 @@ export default async ({
           },
         ],
       },
-      { dependsOn: aks, deleteBeforeReplace: true },
+      { dependsOn: aks, deleteBeforeReplace: true }
     );
   }
 
@@ -495,7 +503,7 @@ export default async ({
           kubeletDiskType: 'OS',
           osSKU: 'Ubuntu',
           osType: 'Linux',
-        }),
+        })
     );
   }
 
@@ -511,7 +519,7 @@ export default async ({
           //Add into EnvRoles for Other resources accessing and download container images
           envRoles?.addMember(
             'contributor',
-            identityProfile['kubeletidentity'].objectId!,
+            identityProfile['kubeletidentity'].objectId!
           );
         }
         if (identity) {
@@ -598,7 +606,7 @@ export default async ({
         ? output(
             getKeyVaultBase(vaultInfo.name)
               .getSecret(secretName)
-              .then((s) => s!.value!),
+              .then((s) => s!.value!)
           )
         : undefined,
   };
