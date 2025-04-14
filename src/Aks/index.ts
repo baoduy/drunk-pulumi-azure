@@ -124,7 +124,7 @@ export type AskFeatureProps = {
   enableWorkloadIdentity?: boolean;
   //enableDiagnosticSetting?: boolean;
   enableMaintenance?: boolean;
-  //https://learn.microsoft.com/en-us/azure/aks/vertical-pod-autoscaler
+  //https://learn.microsoft.com/en-us/azure/aks/use-vertical-pod-autoscaler
   enableVerticalPodAutoscaler?: boolean;
   enableKeda?: boolean;
 };
