@@ -23,22 +23,22 @@ export const createDiagnostic = (
     name,
     {
       logAnalyticsDestinationType: 'Dedicated',
-      logs: logs?.map((l) => ({
+      logs:logs? logs.map((l) => ({
         categoryGroup: l.categoryGroup,
         enabled: true,
         retentionPolicy: {
           days: l.dayRetention,
           enabled: false,
         },
-      })),
-      metrics: metrics?.map((m) => ({
+      })):[],
+      metrics: metrics? metrics.map((m) => ({
         category: m.category,
         enabled: true,
         retentionPolicy: {
           days: m.dayRetention,
           enabled: true,
         },
-      })),
+      })):[],
       resourceUri,
       storageAccountId,
       workspaceId,
