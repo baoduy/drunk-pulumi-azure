@@ -364,10 +364,7 @@ export default async ({
         },
         keda: { enabled: features?.enableKeda || false },
       },
-      //Still under preview
-      // workloadAutoScalerProfile: enableAutoScale
-      //   ? { keda: { enabled: true } }
-      //   : undefined,
+     
       //azureMonitorProfile: { metrics: { enabled } },
       //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
       //enablePodSecurityPolicy: true,

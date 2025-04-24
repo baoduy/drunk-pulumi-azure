@@ -3,7 +3,6 @@ import * as authorization from '@pulumi/azure-native/authorization';
 import * as pulumi from '@pulumi/pulumi';
 import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
 import { Locker } from './Locker';
-//import { createDiagnostic } from '../Logs/Helpers';
 import { OptsArgs, DiagnosticProps } from '../types';
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
@@ -37,7 +36,7 @@ const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
 type ClassOf = new (
   name: string,
   props: any,
-  opts?: pulumi.CustomResourceOptions,
+  opts?: pulumi.CustomResourceOptions
 ) => pulumi.CustomResource & {
   id: pulumi.Output<string>;
   urn: pulumi.Output<string>;
@@ -51,10 +50,10 @@ export type DefaultCreatorProps = OptsArgs & {
 /** Create Resource with Locker */
 export default function <
   TClass extends ClassOf,
-  TProps extends DefaultCreatorProps,
+  TProps extends DefaultCreatorProps
 >(
   Class: TClass,
-  { lock, monitoring, dependsOn, ignoreChanges, importUri, ...props }: TProps,
+  { lock, monitoring, dependsOn, ignoreChanges, importUri, ...props }: TProps
 ) {
   const isResourceGroup = Class.name.endsWith('ResourceGroup');
   const name = tryFindName(props, isResourceGroup);
@@ -62,7 +61,7 @@ export default function <
   const resource = new Class(
     name,
     { name, ...props },
-    { dependsOn, import: importUri, ignoreChanges, deleteBeforeReplace: true },
+    { dependsOn, import: importUri, ignoreChanges, deleteBeforeReplace: true }
   );
 
   //Lock Azure Resource from Delete
