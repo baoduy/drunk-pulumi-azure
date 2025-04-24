@@ -22,7 +22,6 @@ export const createDiagnostic = (
   new monitor.DiagnosticSetting(
     name,
     {
-      logAnalyticsDestinationType: 'Dedicated',
       logs:logs? logs.map((l) => ({
         categoryGroup: l.categoryGroup,
         enabled: true,
