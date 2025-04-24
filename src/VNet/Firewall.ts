@@ -155,6 +155,7 @@ export const create = ({
         { categoryGroup: 'AzureFirewallNetworkRule', dayRetention: 7 },
         { categoryGroup: 'AzureFirewallDnsProxy', dayRetention: 7 },
       ],
+      dependsOn: firewall,
     });
   }
 
