@@ -15,8 +15,8 @@ export const createDiagnostic = (
     resourceUri: Input<string>;
     storageAccountId?: Input<string>;
     workspaceId?: Input<string>;
-    logs?: Array<{ categoryGroup: string; dayRetention: number }>;
-    metrics?: Array<{ category: string; dayRetention: number }>;
+    logs?: Array<{ categoryGroup: string; dayRetention?: number }>;
+    metrics?: Array<{ category: string; dayRetention?: number }>;
   } & WithDependsOn
 ) =>
   new monitor.DiagnosticSetting(
@@ -26,16 +26,16 @@ export const createDiagnostic = (
         categoryGroup: l.categoryGroup,
         enabled: true,
         retentionPolicy: {
-          days: l.dayRetention,
-          enabled: false,
+          days: l.dayRetention || 7,
+          enabled: Boolean(l.dayRetention),
         },
       })):[],
       metrics: metrics? metrics.map((m) => ({
         category: m.category,
         enabled: true,
         retentionPolicy: {
-          days: m.dayRetention,
-          enabled: true,
+          days: m.dayRetention || 7,
+          enabled: Boolean(m.dayRetention),
         },
       })):[],
       resourceUri,
