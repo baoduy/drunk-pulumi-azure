@@ -20,59 +20,6 @@ import {
   LogInfo,
 } from '../types';
 
-// export const createDiagnostic = ({
-//   name,
-//   targetResourceId,
-//   logInfo,
-//   metricsCategories = ['AllMetrics'],
-//   logsCategories,
-//   dependsOn,
-// }: DiagnosticProps) => {
-//   //Ensure logWpId or logStorageId is provided
-//   if (!logInfo.logWp && !logInfo.logStorage) {
-//     console.error(
-//       `Diagnostic for "${name}" must have either a "logWp" or "storage".`,
-//     );
-//     return undefined;
-//   }
-//   //Ensure targetResourceId is valid
-//   if (!targetResourceId) {
-//     console.error(`Target resource of "${name}" must be provided .`);
-//     return undefined;
-//   }
-//   const wpId = logInfo.logWp?.id;
-//   const n = `${name}-diag`;
-//   return new native.applicationinsights.DiagnosticSetting(
-//     n,
-//     {
-//       name: n,
-//       resourceUri: targetResourceId,
-//       logAnalyticsDestinationType: 'AzureDiagnostics',
-
-//       workspaceId: wpId,
-//       storageAccountId: wpId ? undefined : logInfo.logStorage?.id,
-
-//       //Metric
-//       metrics: metricsCategories
-//         ? metricsCategories.map((c) => ({
-//             category: c,
-//             retentionPolicy: { enabled: false, days: 7 },
-//             enabled: true,
-//           }))
-//         : undefined,
-//       //Logs
-//       logs: logsCategories
-//         ? logsCategories.map((c) => ({
-//             category: c,
-//             retentionPolicy: { enabled: false, days: 7 },
-//             enabled: true,
-//           }))
-//         : undefined,
-//     },
-//     { dependsOn },
-//   );
-// };
-
 interface ThreatProtectionProps extends WithNamedType {
   targetResourceId: Input<string>;
 }
@@ -155,7 +102,7 @@ const getAppInsightInfo = ({
 
 export const getLogInfo = (
   groupName: string,
-  vaultInfo: KeyVaultInfo | undefined = undefined,
+  vaultInfo: KeyVaultInfo | undefined = undefined
 ): LogInfo => {
   const rgName = naming.getResourceGroupName(groupName);
   const name = getResourceName(groupName, {

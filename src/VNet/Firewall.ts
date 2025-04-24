@@ -4,7 +4,6 @@ import { Input, Output } from '@pulumi/pulumi';
 import { naming, rsInfo, isPrd } from '../Common';
 import {
   BasicResourceArgs,
-  ConventionProps,
   LogInfo,
   NamingType,
   ResourceInfo,
@@ -13,7 +12,7 @@ import {
 import FirewallPolicy, { linkRulesToPolicy } from './FirewallPolicy';
 import { FirewallPolicyProps } from './types';
 import * as IpAddress from './IpAddress';
-//import { createDiagnostic } from '../Logs/Helpers';
+import { createDiagnostic } from '../Monitor';
 
 export interface FwOutboundConfig {
   subnetId: pulumi.Input<string>;
@@ -29,6 +28,7 @@ export interface FirewallProps extends BasicResourceArgs {
   outbound: Array<FwOutboundConfig>;
   /** This must be provided if sku is Basic or want to enable the Force Tunneling mode */
   management?: Pick<FwOutboundConfig, 'subnetId'>;
+  autoScale?: { minCapacity: number; maxCapacity: number };
   snat?: {
     privateRanges?: Input<string>;
     autoLearnPrivateRanges?: boolean;
@@ -55,6 +55,7 @@ export const create = ({
   management,
   logInfo,
   enableDnsProxy,
+  autoScale,
   sku = {
     name: network.AzureFirewallSkuName.AZFW_VNet,
     tier: network.AzureFirewallSkuTier.Basic,
@@ -139,22 +140,22 @@ export const create = ({
         : undefined,
 
       additionalProperties,
+
+      autoscaleConfiguration: autoScale,
     },
-    { dependsOn, ignoreChanges },
+    { dependsOn, ignoreChanges }
   );
 
   if (logInfo) {
-    // createDiagnostic({
-    //   name,
-    //   targetResourceId: firewall.id,
-    //   logInfo,
-    //   logsCategories: [
-    //     'AzureFirewallApplicationRule',
-    //     'AzureFirewallNetworkRule',
-    //     'AzureFirewallDnsProxy',
-    //   ],
-    //   dependsOn: firewall,
-    // });
+    createDiagnostic(name, {
+      resourceUri: firewall.id,
+      workspaceId: logInfo.logWp.id,
+      logs: [
+        { categoryGroup: 'AzureFirewallApplicationRule', dayRetention: 7 },
+        { categoryGroup: 'AzureFirewallNetworkRule', dayRetention: 7 },
+        { categoryGroup: 'AzureFirewallDnsProxy', dayRetention: 7 },
+      ],
+    });
   }
 
   //Link Rule to Policy
@@ -177,7 +178,7 @@ type FirewallIPOutputType = {
 };
 
 export const getFirewallIPAddresses = (
-  info: ResourceInfo,
+  info: ResourceInfo
 ): Output<FirewallIPOutputType> => {
   const firewall = network.getAzureFirewallOutput({
     azureFirewallName: info.name,
@@ -190,7 +191,7 @@ export const getFirewallIPAddresses = (
 
     if (cf![0]!.publicIPAddress?.id) {
       const publicInfo = rsInfo.getResourceInfoFromId(
-        cf![0]!.publicIPAddress!.id,
+        cf![0]!.publicIPAddress!.id
       )!;
       publicIPAddress = await IpAddress.getPublicIPAddress(publicInfo);
     }
@@ -200,7 +201,7 @@ export const getFirewallIPAddresses = (
 };
 
 export const getFirewallInfoWithIPAddresses = (
-  groupName: NamingType,
+  groupName: NamingType
 ): ResourceInfo & {
   ipAddresses: Output<FirewallIPOutputType>;
 } => {
