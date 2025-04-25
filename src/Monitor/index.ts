@@ -1,4 +1,4 @@
-import monitor from '@pulumi/azure-native/monitor';
+import * as azure_native from '@pulumi/azure-native';
 import { Input } from '@pulumi/pulumi';
 import { WithDependsOn } from '../types';
 
@@ -15,32 +15,37 @@ export const createDiagnostic = (
     resourceUri: Input<string>;
     storageAccountId?: Input<string>;
     workspaceId?: Input<string>;
-    logs?: Array<{ categoryGroup: string; dayRetention: number }>;
-    metrics?: Array<{ category: string; dayRetention: number }>;
+    logs?: Array<{ categoryGroup: string; dayRetention?: number }>;
+    metrics?: Array<{ category: string; dayRetention?: number }>;
   } & WithDependsOn
-) =>
-  new monitor.DiagnosticSetting(
-    name,
-    {
-      logs:logs? logs.map((l) => ({
-        categoryGroup: l.categoryGroup,
-        enabled: true,
-        retentionPolicy: {
-          days: l.dayRetention,
-          enabled: false,
-        },
-      })):[],
-      metrics: metrics? metrics.map((m) => ({
-        category: m.category,
-        enabled: true,
-        retentionPolicy: {
-          days: m.dayRetention,
-          enabled: true,
-        },
-      })):[],
-      resourceUri,
-      storageAccountId,
-      workspaceId,
-    },
-    { dependsOn }
-  );
+) => {
+  // return new azure_native.monitor.DiagnosticSetting(
+  //   name,
+  //   {
+  //     logs: logs
+  //       ? logs.map((l) => ({
+  //           categoryGroup: l.categoryGroup,
+  //           enabled: true,
+  //           retentionPolicy: {
+  //             days: l.dayRetention || 7,
+  //             enabled: Boolean(l.dayRetention),
+  //           },
+  //         }))
+  //       : [],
+  //     metrics: metrics
+  //       ? metrics.map((m) => ({
+  //           category: m.category,
+  //           enabled: true,
+  //           retentionPolicy: {
+  //             days: m.dayRetention || 7,
+  //             enabled: Boolean(m.dayRetention),
+  //           },
+  //         }))
+  //       : [],
+  //     resourceUri,
+  //     storageAccountId,
+  //     workspaceId,
+  //   },
+  //   { dependsOn }
+  // );
+};

@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/typescript-node
+    env_file:
+      - .env
+    entrypoint:
+      - sleep
+      - infinity
+    init: true
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: ../
+        target: /code
