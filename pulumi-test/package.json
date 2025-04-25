@@ -12,7 +12,7 @@
         "import": "pulumi stack import --file state.json"
     },
     "devDependencies": {
-        "@types/node": "^20"
+        "@types/node": "^22"
     },
     "dependencies": {
         "@azure/identity": "^4.9.1",
