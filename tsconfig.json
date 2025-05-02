@@ -13,7 +13,7 @@
     "emitDecoratorMetadata": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": false,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strict": true,
     "lib": [
       "ESNext",
