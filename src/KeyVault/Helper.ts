@@ -1,6 +1,8 @@
 import { Output, output } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import { KeyVaultCertificateWithPolicy } from '@azure/keyvault-certificates';
+import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
 import { stack, removeLeadingAndTrailingDash } from '../Common';
 import env from '../env';
@@ -59,7 +61,7 @@ export const addEncryptKey = (
   };
 };
 
-export const getCert = ({ name, vaultInfo }: GetVaultItemProps) => {
+export const getCert = ({ name, vaultInfo }: GetVaultItemProps): Promise<KeyVaultCertificateWithPolicy | undefined> => {
   const n = env.DPA_VAULT_DISABLE_FORMAT_NAME ? name : getVaultItemName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getCert(n);
@@ -73,7 +75,7 @@ export const getSecret = async ({
   name,
   version,
   vaultInfo,
-}: GetVaultItemProps) => {
+}: GetVaultItemProps): Promise<KeyVaultSecret | undefined> => {
   const n = env.DPA_VAULT_DISABLE_FORMAT_NAME ? name : getVaultItemName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getSecret(n, version);
