@@ -5,6 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@azure/keyvault-certificates':
+    specifier: ^4.9.0
+    version: 4.9.0
+  '@azure/keyvault-secrets':
+    specifier: ^4.9.0
+    version: 4.9.0
   '@drunk-pulumi/azure-providers':
     specifier: ^1.0.9
     version: 1.0.9(ts-node@10.9.2)(typescript@5.8.3)

@@ -25,10 +25,9 @@ const outboundIpName = 'outbound';
 class VnetBuilder
   extends types.Builder<types.VnetBuilderResults>
   implements
-    types.IGatewayFireWallBuilder,
-    types.IVnetBuilder,
-    types.IVnetBuilderStart
-{
+  types.IGatewayFireWallBuilder,
+  types.IVnetBuilder,
+  types.IVnetBuilderStart {
   /** The Instances */
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
     undefined;
@@ -161,7 +160,7 @@ class VnetBuilder
     //IP Address Already provided
     if (this._ipType === 'existing') return;
 
-    const ipNames = [];
+    const ipNames = new Array<string>();
     //No gateway and no firewall then Do nothing
     if (!this._natGatewayEnabled && !this._firewallProps) return;
 
@@ -209,16 +208,16 @@ class VnetBuilder
 
     const subnets = this._subnetProps
       ? Object.keys(this._subnetProps!).map(
-          (k) =>
-            ({
-              name: k,
-              //Link all subnets to nate gateway if available without a firewall.
-              enableNatGateway:
-                this._natGatewayEnabled && !Boolean(this._firewallInstance),
-              //However, till able to overwrite from outside.
-              ...this._subnetProps![k],
-            }) as SubnetProps,
-        )
+        (k) =>
+          ({
+            name: k,
+            //Link all subnets to nate gateway if available without a firewall.
+            enableNatGateway:
+              this._natGatewayEnabled && !Boolean(this._firewallInstance),
+            //However, till able to overwrite from outside.
+            ...this._subnetProps![k],
+          }) as SubnetProps,
+      )
       : [];
 
     this._vnetInstance = Vnet({
@@ -243,15 +242,15 @@ class VnetBuilder
         //Firewall
         firewall: this._firewallProps
           ? {
-              ...this._firewallProps.subnet,
-              enableNatGateway: this._natGatewayEnabled,
-            }
+            ...this._firewallProps.subnet,
+            enableNatGateway: this._natGatewayEnabled,
+          }
           : undefined,
         //Bastion
         bastion: this._bastionProps
           ? {
-              ...this._bastionProps.subnet,
-            }
+            ...this._bastionProps.subnet,
+          }
           : undefined,
         //Gateway
         gatewaySubnet: this._vpnGatewayProps
@@ -292,8 +291,8 @@ class VnetBuilder
       //This is required for Force Tunneling mode
       management: manageSubnetId
         ? {
-            subnetId: manageSubnetId,
-          }
+          subnetId: manageSubnetId,
+        }
         : undefined,
 
       logInfo: this.args.logInfo,
