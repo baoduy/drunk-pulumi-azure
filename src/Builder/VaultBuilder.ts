@@ -3,7 +3,6 @@ import {
   IVaultBuilder,
   IVaultBuilderResults,
   VaultBuilderArgs,
-  VaultBuilderSecretFunc,
   VaultBuilderSecretType,
 } from './types/vaultBuilder';
 import Vault from '../KeyVault';
@@ -12,12 +11,8 @@ import {
   PrivateLinkPropsType,
   ResourceGroupInfo,
 } from '../types';
-import { Input, Output } from '@pulumi/pulumi';
-import {
-  VaultCertResource,
-  VaultNetworkResource,
-} from '@drunk-pulumi/azure-providers';
-import { subscriptionId } from '../Common';
+import { Output } from '@pulumi/pulumi';
+import { VaultCertResource } from '@drunk-pulumi/azure-providers';
 import { addCustomSecret } from '../KeyVault/CustomHelper';
 import { requireSecret } from '../Common/ConfigHelper';
 import { VaultPrivateLink } from '../VNet';
@@ -67,7 +62,7 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
   public privateLinkToIf(
     condition: boolean,
-    props: PrivateLinkPropsType,
+    props: PrivateLinkPropsType
   ): IVaultBuilderResults {
     if (condition) this.privateLinkTo(props);
     return this;
@@ -100,14 +95,14 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
   public addSecretsIf(
     condition: boolean,
-    items: VaultBuilderSecretType,
+    items: VaultBuilderSecretType
   ): IVaultBuilderResults {
     if (condition) this.addSecrets(items);
     return this;
   }
 
   public addCerts(
-    items: Record<string, CertBuilderType>,
+    items: Record<string, CertBuilderType>
   ): IVaultBuilderResults {
     Object.keys(items).map((key) => {
       const val = items[key];
@@ -122,7 +117,7 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
   public addCertsIf(
     condition: boolean,
-    items: Record<string, CertBuilderType>,
+    items: Record<string, CertBuilderType>
   ): IVaultBuilderResults {
     if (condition) this.addCerts(items);
     return this;
