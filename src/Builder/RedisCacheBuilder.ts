@@ -44,7 +44,7 @@ class RedisCacheBuilder
   }
   public withNetworkIf(
     condition: boolean,
-    props: NetworkPropsType,
+    props: NetworkPropsType
   ): IRedisCacheBuilder {
     if (condition) this.withNetwork(props);
     return this;
@@ -67,7 +67,7 @@ class RedisCacheBuilder
           ? 'Disabled'
           : 'Enabled',
       },
-      { dependsOn, import: importUri, ignoreChanges },
+      { dependsOn, import: importUri, ignoreChanges }
     );
   }
   private buildNetwork() {
@@ -85,7 +85,7 @@ class RedisCacheBuilder
               startIP: range.start,
               endIP: range.end,
             },
-            { dependsOn: this._redisInstance },
+            { dependsOn: this._redisInstance }
           );
         });
       });
@@ -104,6 +104,7 @@ class RedisCacheBuilder
       });
     }
   }
+
   private buildSecrets() {
     const { vaultInfo } = this.args;
     if (!vaultInfo) return;
@@ -116,7 +117,7 @@ class RedisCacheBuilder
         resourceGroupName: this.args.group.resourceGroupName,
       });
 
-      const secrets =[
+      const secrets = [
         { name: `${this._instanceName}-host`, value: h },
         { name: `${this._instanceName}-pass`, value: keys.primaryKey },
         {
@@ -125,7 +126,7 @@ class RedisCacheBuilder
         },
       ];
 
-      if (env.DPA_CONN_ENABLE_SECONDARY){
+      if (env.DPA_CONN_ENABLE_SECONDARY) {
         secrets.push({
           name: `${this._instanceName}-conn-secondary`,
           value: `${h}:6380,password=${keys.secondaryKey},ssl=True,abortConnect=False`,
