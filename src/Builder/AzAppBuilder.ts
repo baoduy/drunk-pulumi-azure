@@ -8,8 +8,7 @@ import {
   IAzAppPlanBuilder,
 } from './types';
 import { NamingType, ResourceInfo } from '../types';
-import { currentRegionCode, isPrd, naming } from '../Common';
-import { interpolate } from '@pulumi/pulumi';
+import { isPrd, naming } from '../Common';
 
 class AzAppBuilder
   extends Builder<ResourceInfo>
