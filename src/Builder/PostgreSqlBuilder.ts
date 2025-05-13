@@ -160,7 +160,7 @@ class PostgreSqlBuilder
           ? {
             type: 'AzureKeyVault',
             primaryUserAssignedIdentityId: envUIDInfo?.id ?? this._uid!.id,
-            primaryKeyUri: encryptKey.url,
+            primaryKeyURI: encryptKey.url,
           }
           : { type: 'SystemManaged' },
 

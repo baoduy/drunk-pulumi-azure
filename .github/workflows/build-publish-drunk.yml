@@ -48,16 +48,25 @@ jobs:
           node-version: 20
           registry-url: 'https://registry.npmjs.org/'
 
-      - run: npm install --force
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
-#      - name: Run Lints
-#        continue-on-error: true
-#        run: npm run lint
+      - name: Cache pnpm modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - run: pnpm install --no-frozen-lockfile
 
       - name: Build and Pack
         run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run build
+          pnpm run build
 
       - name: Update version in package.json
         run: |
@@ -81,8 +90,8 @@ jobs:
         if: ${{ env.Enable_Release == 'true' }}
         run: |
           cd .out-bin
-          npm config set //registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN
-          npm config set scope "@drunk-pulumi"
-          npm publish --access public --no-git-checks
+          pnpm config set //registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN
+          pnpm config set scope "@drunk-pulumi"
+          pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

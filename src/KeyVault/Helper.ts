@@ -1,6 +1,8 @@
 import { Output, output } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
+import { KeyVaultCertificateWithPolicy } from '@azure/keyvault-certificates';
+import { KeyVaultSecret } from '@azure/keyvault-secrets';
 import { VaultKeyResource } from '@drunk-pulumi/azure-providers';
 import { stack, removeLeadingAndTrailingDash } from '../Common';
 import env from '../env';
@@ -8,7 +10,7 @@ import env from '../env';
 /** Get Vault Secret Name. Remove the stack name and replace all _ with - then lower cases. */
 export const getVaultItemName = (
   name: string,
-  currentStack: string = stack,
+  currentStack: string = stack
 ) => {
   name = name
     .replace(new RegExp(currentStack, 'g'), '') // Replace occurrences of "stack" variable with "-"
@@ -34,7 +36,7 @@ interface KeyVaultPropertiesResults {
 export const addEncryptKey = (
   name: string,
   vaultInfo: KeyVaultInfo,
-  keySize: 2048 | 3072 | 4096 = 4096,
+  keySize: 2048 | 3072 | 4096 = 4096
 ): KeyVaultPropertiesResults => {
   const key = new VaultKeyResource(
     `${name}-encryptKey`,
@@ -43,11 +45,11 @@ export const addEncryptKey = (
       vaultName: vaultInfo.name,
       key: { keySize },
     },
-    { retainOnDelete: true },
+    { retainOnDelete: true }
   );
 
   const urlWithoutVersion: Output<string> = output([key.version, key.id]).apply(
-    ([v, id]) => id.replace(`/${v}`, ''),
+    ([v, id]) => id.replace(`/${v}`, '')
   );
 
   return {
@@ -59,7 +61,10 @@ export const addEncryptKey = (
   };
 };
 
-export const getCert = ({ name, vaultInfo }: GetVaultItemProps) => {
+export const getCert = ({
+  name,
+  vaultInfo,
+}: GetVaultItemProps): Promise<KeyVaultCertificateWithPolicy | undefined> => {
   const n = env.DPA_VAULT_DISABLE_FORMAT_NAME ? name : getVaultItemName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getCert(n);
@@ -73,7 +78,7 @@ export const getSecret = async ({
   name,
   version,
   vaultInfo,
-}: GetVaultItemProps) => {
+}: GetVaultItemProps): Promise<KeyVaultSecret | undefined> => {
   const n = env.DPA_VAULT_DISABLE_FORMAT_NAME ? name : getVaultItemName(name);
   const client = getKeyVaultBase(vaultInfo.name);
   return client.getSecret(n, version);

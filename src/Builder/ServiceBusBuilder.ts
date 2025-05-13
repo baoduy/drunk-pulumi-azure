@@ -242,7 +242,7 @@ class ServiceBusBuilder
           ...defaultQueueOptions,
           ...queueOps,
         },
-        { dependsOn: this._sbInstance }
+        { dependsOn: this._sbInstance, ignoreChanges: ['enablePartitioning'] }
       );
 
       ['send', 'listen'].map((type) =>
@@ -344,7 +344,6 @@ class ServiceBusBuilder
   } & WithDependsOn &
     WithNamedType) {
     if (this._options?.disableLocalAuth || !this.args.vaultInfo) return;
-
     const authorizationRuleName =
       level === 'namespace' ? `${name}-${type}` : `${level}-${name}-${type}`;
     const n =
