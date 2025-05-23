@@ -1,16 +1,16 @@
-import * as types from './types';
+import * as bus from '@pulumi/azure-native/servicebus';
+import { isPrd, naming } from '../Common';
 import env from '../env';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import {
   NetworkPropsType,
   ResourceInfo,
   WithDependsOn,
   WithNamedType,
 } from '../types';
-import { naming, isPrd } from '../Common';
-import * as bus from '@pulumi/azure-native/servicebus';
-import { addEncryptKey } from '../KeyVault/Helper';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ServiceBusPrivateLink } from '../VNet';
+import * as types from './types';
 
 const defaultQueueOptions: types.ServiceBusQueueArgs = {
   //duplicateDetectionHistoryTimeWindow: 'P10M',
@@ -151,6 +151,7 @@ class ServiceBusBuilder
                 requireInfrastructureEncryption: true,
               }
             : undefined,
+
         publicNetworkAccess: this._network?.privateLink
           ? 'Disabled'
           : 'Enabled',
@@ -205,6 +206,7 @@ class ServiceBusBuilder
           ipMask: i,
           action: bus.NetworkRuleIPAction.Allow,
         })),
+
         virtualNetworkRules: subnetId
           ? [
               {
