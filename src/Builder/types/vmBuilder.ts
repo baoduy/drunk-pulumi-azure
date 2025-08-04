@@ -4,7 +4,7 @@ import {
   WithEncryption,
   WithLogInfo,
 } from '../../types';
-import { VmScheduleType } from '../../VM';
+import { VmScheduleType } from '../../VirtualMachine';
 import {
   BuilderProps,
   IBuilder,

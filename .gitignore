@@ -137,3 +137,4 @@ bin
 .idea
 .fleet
 .env
+.pnpm-store
