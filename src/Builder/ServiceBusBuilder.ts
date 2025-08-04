@@ -1,16 +1,16 @@
-import * as types from './types';
+import * as bus from '@pulumi/azure-native/servicebus';
+import { isPrd, naming } from '../Common';
 import env from '../env';
+import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addEncryptKey } from '../KeyVault/Helper';
 import {
   NetworkPropsType,
   ResourceInfo,
   WithDependsOn,
   WithNamedType,
 } from '../types';
-import { naming, isPrd } from '../Common';
-import * as bus from '@pulumi/azure-native/servicebus';
-import { addEncryptKey } from '../KeyVault/Helper';
-import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { ServiceBusPrivateLink } from '../VNet';
+import * as types from './types';
 
 const defaultQueueOptions: types.ServiceBusQueueArgs = {
   //duplicateDetectionHistoryTimeWindow: 'P10M',
@@ -76,7 +76,7 @@ class ServiceBusBuilder
   public withNetwork(props: NetworkPropsType): types.IServiceBusBuilder {
     if (this._sku !== 'Premium')
       throw new Error(
-        "The network only support for Service Bus with 'Premium' tier.",
+        "The network only support for Service Bus with 'Premium' tier."
       );
 
     this._network = props;
@@ -84,19 +84,19 @@ class ServiceBusBuilder
   }
   public withNetworkIf(
     condition: boolean,
-    props: NetworkPropsType,
+    props: NetworkPropsType
   ): types.IServiceBusBuilder {
     if (condition) return this.withNetwork(props);
     return this;
   }
   public withQueues(
-    props: Record<string, types.ServiceBusQueueArgs>,
+    props: Record<string, types.ServiceBusQueueArgs>
   ): types.IServiceBusBuilder {
     this._queues = { ...this._queues, ...props };
     return this;
   }
   public withTopics(
-    props: Record<string, types.ServiceBusTopicArgs>,
+    props: Record<string, types.ServiceBusTopicArgs>
   ): types.IServiceBusBuilder {
     this._topics = { ...this._topics, ...props };
     return this;
@@ -151,6 +151,7 @@ class ServiceBusBuilder
                 requireInfrastructureEncryption: true,
               }
             : undefined,
+
         publicNetworkAccess: this._network?.privateLink
           ? 'Disabled'
           : 'Enabled',
@@ -163,7 +164,7 @@ class ServiceBusBuilder
           'requireInfrastructureEncryption',
           'encryption.requireInfrastructureEncryption',
         ],
-      },
+      }
     );
 
     ['manage', 'listen'].map((type) =>
@@ -172,7 +173,7 @@ class ServiceBusBuilder
         level: 'namespace',
         name: this._instanceName,
         dependsOn: this._sbInstance,
-      }),
+      })
     );
 
     //Add ServiceBus endpoint to vault
@@ -182,7 +183,7 @@ class ServiceBusBuilder
         dependsOn: this._sbInstance,
         contentType: `Service Bus ${this._instanceName}`,
         value: this._sbInstance!.serviceBusEndpoint.apply(
-          (e) => new URL(e).hostname,
+          (e) => new URL(e).hostname
         ),
         vaultInfo,
       });
@@ -205,6 +206,7 @@ class ServiceBusBuilder
           ipMask: i,
           action: bus.NetworkRuleIPAction.Allow,
         })),
+
         virtualNetworkRules: subnetId
           ? [
               {
@@ -214,7 +216,7 @@ class ServiceBusBuilder
             ]
           : undefined,
       },
-      { dependsOn: this._sbInstance },
+      { dependsOn: this._sbInstance }
     );
 
     if (privateLink) {
@@ -242,7 +244,7 @@ class ServiceBusBuilder
           ...defaultQueueOptions,
           ...queueOps,
         },
-        { dependsOn: this._sbInstance },
+        { dependsOn: this._sbInstance, ignoreChanges: ['enablePartitioning'] }
       );
 
       ['send', 'listen'].map((type) =>
@@ -251,7 +253,7 @@ class ServiceBusBuilder
           level: 'queue',
           name: queueName,
           dependsOn: queue,
-        }),
+        })
       );
     });
   }
@@ -268,7 +270,7 @@ class ServiceBusBuilder
           ...defaultTopicOptions,
           ...tpOps,
         },
-        { dependsOn: this._sbInstance },
+        { dependsOn: this._sbInstance }
       );
 
       ['manage', 'send', 'listen'].map((type) =>
@@ -277,7 +279,7 @@ class ServiceBusBuilder
           level: 'topic',
           name: topicName,
           dependsOn: topic,
-        }),
+        })
       );
 
       //Subscriptions
@@ -313,7 +315,7 @@ class ServiceBusBuilder
           ...defaultSubOptions,
           ...subOps,
         },
-        { dependsOn: topic },
+        { dependsOn: topic }
       );
 
       if (subOps.rules) {
@@ -326,7 +328,7 @@ class ServiceBusBuilder
             subscriptionName,
             ...subOps.rules,
           },
-          { dependsOn: sub },
+          { dependsOn: sub }
         );
       }
       return sub;
@@ -359,10 +361,10 @@ class ServiceBusBuilder
             bus.AccessRights.Listen,
           ]
         : type == 'both'
-          ? [bus.AccessRights.Send, bus.AccessRights.Listen]
-          : type === 'send'
-            ? [bus.AccessRights.Send]
-            : [bus.AccessRights.Listen];
+        ? [bus.AccessRights.Send, bus.AccessRights.Listen]
+        : type === 'send'
+        ? [bus.AccessRights.Send]
+        : [bus.AccessRights.Listen];
 
     const rule =
       level === 'namespace'
@@ -374,31 +376,31 @@ class ServiceBusBuilder
               namespaceName: this._instanceName,
               rights,
             },
-            { dependsOn },
+            { dependsOn }
           )
         : level === 'topic'
-          ? new bus.TopicAuthorizationRule(
-              n,
-              {
-                ...this.args.group,
-                authorizationRuleName,
-                namespaceName: this._instanceName,
-                rights,
-                topicName: name,
-              },
-              { dependsOn },
-            )
-          : new bus.QueueAuthorizationRule(
-              n,
-              {
-                ...this.args.group,
-                authorizationRuleName,
-                namespaceName: this._instanceName,
-                rights,
-                queueName: name,
-              },
-              { dependsOn },
-            );
+        ? new bus.TopicAuthorizationRule(
+            n,
+            {
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              rights,
+              topicName: name,
+            },
+            { dependsOn }
+          )
+        : new bus.QueueAuthorizationRule(
+            n,
+            {
+              ...this.args.group,
+              authorizationRuleName,
+              namespaceName: this._instanceName,
+              rights,
+              queueName: name,
+            },
+            { dependsOn }
+          );
 
     rule.id.apply(async (id) => {
       if (!id) return;
@@ -409,18 +411,18 @@ class ServiceBusBuilder
             namespaceName: this._instanceName,
           })
         : level === 'topic'
-          ? bus.listTopicKeys({
-              ...this.args.group,
-              authorizationRuleName,
-              namespaceName: this._instanceName,
-              topicName: name,
-            })
-          : bus.listQueueKeys({
-              ...this.args.group,
-              authorizationRuleName,
-              namespaceName: this._instanceName,
-              queueName: name,
-            }));
+        ? bus.listTopicKeys({
+            ...this.args.group,
+            authorizationRuleName,
+            namespaceName: this._instanceName,
+            topicName: name,
+          })
+        : bus.listQueueKeys({
+            ...this.args.group,
+            authorizationRuleName,
+            namespaceName: this._instanceName,
+            queueName: name,
+          }));
 
       return addCustomSecrets({
         vaultInfo: this.args.vaultInfo!,

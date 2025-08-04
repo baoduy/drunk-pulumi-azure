@@ -115,7 +115,7 @@ function Storage({
       isSftpEnabled: Boolean(features.isSftpEnabled),
 
       allowCrossTenantReplication: Boolean(
-        features.allowCrossTenantReplication,
+        features.allowCrossTenantReplication
       ),
 
       identity: {
@@ -203,8 +203,9 @@ function Storage({
         ...ignoreChanges,
         'encryption.requireInfrastructureEncryption',
       ],
-    },
+    }
   );
+
   //Allows to Read Key Vault
   envRoles?.addIdentity('readOnly', stg.identity);
 
@@ -223,7 +224,7 @@ function Storage({
             : undefined,
         resourceInfo: { name, group, id: stg.id },
         dependsOn: stg,
-      }),
+      })
     );
   }
 
@@ -237,7 +238,7 @@ function Storage({
           blobServicesName: 'default',
           ...policies.blobProperties,
         },
-        { dependsOn: stg },
+        { dependsOn: stg }
       )
     : undefined;
 
@@ -266,7 +267,7 @@ function Storage({
         indexDocument: 'index.html',
         error404Document: 'index.html',
       },
-      { dependsOn: stg },
+      { dependsOn: stg }
     );
   }
 
