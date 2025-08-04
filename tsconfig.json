@@ -15,10 +15,7 @@
     "forceConsistentCasingInFileNames": false,
     "noImplicitAny": false,
     "strict": true,
-    "lib": [
-      "ESNext",
-      "Decorators"
-    ]
+    "lib": ["ESNext", "Decorators"]
   },
   "ts-node": {
     "experimentalResolver": true
@@ -29,9 +26,6 @@
     ".tools",
     "src/z_tests/**/*.ts",
     "pulumi-test"
-  ],
-  "include": [
-    "src/**/*.ts"
   ],
   "files": [
     "src/Aks/Helper.ts",
