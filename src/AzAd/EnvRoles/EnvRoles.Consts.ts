@@ -83,12 +83,11 @@ const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
     'Azure Kubernetes Service Cluster User Role',
   ],
   contributor: [
-    'Azure Kubernetes Service RBAC Writer',
     'Azure Kubernetes Service Cluster User Role',
+    'Azure Kubernetes Service Contributor Role'
   ],
   admin: [
-    'Azure Kubernetes Service RBAC Cluster Admin',
-    'Azure Kubernetes Service RBAC Cluster Admin',
+    'Azure Kubernetes Service RBAC Cluster Admin'
   ],
 };
 
