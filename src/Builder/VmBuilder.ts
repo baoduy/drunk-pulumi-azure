@@ -15,7 +15,7 @@ import {
   VmSizeTypes,
 } from './types';
 import { randomLogin } from '../Core/Random';
-import VM, { VmScheduleType } from '../VM';
+import VM, { VmScheduleType } from '../VirtualMachine';
 import { VirtualMachine } from '@pulumi/azure-native/compute';
 
 class VmBuilder
@@ -123,7 +123,7 @@ class VmBuilder
 
       osDiskSizeGB: this._osDiskSize,
       dataDiskSizeGB: this._dataDiskSize,
-      
+
       subnetId: this._subnetProps!,
       vmSize: this._vmSize!,
       osType: Boolean(this._linuxImage) ? 'Linux' : 'Windows',

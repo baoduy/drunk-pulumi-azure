@@ -25,11 +25,13 @@
   },
   "exclude": [
     "node_modules",
-    "z_tests",
     ".out-bin",
     ".tools",
-    "z_tests",
+    "src/z_tests/**/*.ts",
     "pulumi-test"
+  ],
+  "include": [
+    "src/**/*.ts"
   ],
   "files": [
     "src/Aks/Helper.ts",
@@ -152,11 +154,6 @@
     "src/Storage/Helper.ts",
     "src/Storage/ManagementRules.ts",
     "src/Storage/index.ts",
-    "src/VM/AzureDevOpsExtension.ts",
-    "src/VM/DiskEncryptionSet.ts",
-    "src/VM/Extension.ts",
-    "src/VM/GlobalSchedule.ts",
-    "src/VM/index.ts",
     "src/VNet/Bastion.ts",
     "src/VNet/Firewall.ts",
     "src/VNet/FirewallPolicies/AksFirewallPolicy.ts",
@@ -185,6 +182,11 @@
     "src/VNet/Vnet.ts",
     "src/VNet/index.ts",
     "src/VNet/types.ts",
+    "src/VirtualMachine/AzureDevOpsExtension.ts",
+    "src/VirtualMachine/DiskEncryptionSet.ts",
+    "src/VirtualMachine/Extension.ts",
+    "src/VirtualMachine/GlobalSchedule.ts",
+    "src/VirtualMachine/index.ts",
     "src/env.ts",
     "src/index.ts",
     "src/types.ts"
