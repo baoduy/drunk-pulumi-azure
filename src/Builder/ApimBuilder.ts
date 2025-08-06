@@ -89,20 +89,20 @@ class ApimBuilder
     return this;
   }
   public withAdditionalLocation(
-    props: types.ApimAdditionalLocationType,
+    props: types.ApimAdditionalLocationType
   ): types.IApimBuilder {
     this._additionalLocations.push(props);
     return this;
   }
   public withProxyDomain(
-    props: types.ApimDomainBuilderType,
+    props: types.ApimDomainBuilderType
   ): types.IApimBuilder {
     this._proxyDomains.push(props);
     return this;
   }
   public withProxyDomainIf(
     condition: boolean,
-    props: types.ApimDomainBuilderType,
+    props: types.ApimDomainBuilderType
   ): types.IApimBuilder {
     if (condition) {
       this.withProxyDomain(props);
@@ -110,7 +110,7 @@ class ApimBuilder
     return this;
   }
   public withPublisher(
-    props: types.ApimPublisherBuilderType,
+    props: types.ApimPublisherBuilderType
   ): types.IApimBuilder {
     this._publisher = props;
     return this;
@@ -175,8 +175,7 @@ class ApimBuilder
 
     const sku = {
       name: this._sku!.sku,
-      capacity:
-        this._sku!.sku === 'Consumption' ? 0 : (this._sku!.capacity ?? 1),
+      capacity: this._sku!.sku === 'Consumption' ? 0 : this._sku!.capacity ?? 1,
     };
     const zones = sku.name === 'Premium' ? this._zones : undefined;
 
@@ -194,6 +193,9 @@ class ApimBuilder
         identity: { type: 'SystemAssigned' },
         sku,
 
+        apiVersionConstraint: {
+          minApiVersion: '2019-12-01',
+        },
         certificates: [
           ...this._rootCerts.map((c) => {
             const crt = this.getCert(c);
@@ -292,7 +294,7 @@ class ApimBuilder
         dependsOn: this.commonProps.dependsOn,
         deleteBeforeReplace: true,
         ignoreChanges: ['publicNetworkAccess'],
-      },
+      }
     );
 
     if (this._envRoleType && envRoles) {
@@ -332,7 +334,7 @@ class ApimBuilder
         allowedTenants: [tenantId],
         signinTenant: tenantId,
       },
-      { dependsOn: this._apimInstance },
+      { dependsOn: this._apimInstance }
     );
   }
   private buildAuths() {
@@ -348,8 +350,8 @@ class ApimBuilder
             identityProviderName: auth.type,
             serviceName: this._apimInstance!.name,
           },
-          { dependsOn: this._apimInstance },
-        ),
+          { dependsOn: this._apimInstance }
+        )
     );
   }
   private buildDisableSigIn() {
@@ -369,7 +371,7 @@ class ApimBuilder
           text: 'Terms & Conditions Of Service',
         },
       },
-      { dependsOn: this._apimInstance, deleteBeforeReplace: true },
+      { dependsOn: this._apimInstance, deleteBeforeReplace: true }
     );
 
     //Turn of the SignIn setting
@@ -381,7 +383,7 @@ class ApimBuilder
         subscriptionId,
         enabled: false,
       },
-      { dependsOn: this._apimInstance, deleteBeforeReplace: true },
+      { dependsOn: this._apimInstance, deleteBeforeReplace: true }
     );
   }
   private buildPrivateLink() {
@@ -415,7 +417,7 @@ class ApimBuilder
           instrumentationKey: logInfo!.appInsight.instrumentationKey!,
         },
       },
-      { dependsOn: this._apimInstance },
+      { dependsOn: this._apimInstance }
     );
   }
 
