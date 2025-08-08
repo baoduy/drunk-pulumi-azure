@@ -20,15 +20,15 @@ export default ({
   const profile = new cdn.Profile(name, {
     profileName: name,
     ...internalGroup,
-    identity: { type: cdn.ManagedServiceIdentityType.SystemAssigned },
-    sku: { name: cdn.SkuName.Standard_Microsoft },
+    //identity: { type: cdn.ManagedServiceIdentityType.SystemAssigned },
+    sku: { name: cdn.SkuName.Standard_AzureFrontDoor },
   });
 
   if (envRoles) {
     //Add identity to read only group in order to read the certificate from the key vault
     envRoles.addMember(
       'readOnly',
-      profile.identity.apply((i) => i!.principalId!),
+      profile.identity.apply((i) => i!.principalId!)
     );
   }
 

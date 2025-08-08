@@ -1,4 +1,5 @@
 export * from './acrBuilder';
+export * from './afdBuilder';
 export * from './apimBuilder';
 export * from './apimPolicyBuilder';
 export * from './apimProductBuilder';

@@ -15,7 +15,10 @@
     "forceConsistentCasingInFileNames": false,
     "noImplicitAny": false,
     "strict": true,
-    "lib": ["ESNext", "Decorators"]
+    "lib": [
+      "ESNext",
+      "Decorators"
+    ]
   },
   "ts-node": {
     "experimentalResolver": true
@@ -49,6 +52,7 @@
     "src/AzAd/Roles/index.ts",
     "src/AzAd/UserAssignedIdentity.ts",
     "src/AzAd/index.ts",
+    "src/Builder/AFDBuilder.ts",
     "src/Builder/AcrBuilder.ts",
     "src/Builder/AksBuilder.ts",
     "src/Builder/ApimApiBuilder.ts",
@@ -64,6 +68,7 @@
     "src/Builder/CdnBuilder.ts",
     "src/Builder/DnsZoneBuilder.ts",
     "src/Builder/EnvRoleBuilder.ts",
+    "src/Builder/FrontDoorBuilder.ts",
     "src/Builder/IotHubBuilder.ts",
     "src/Builder/LogicAppBuilder.ts",
     "src/Builder/MySqlBuilder.ts",
@@ -81,6 +86,7 @@
     "src/Builder/VnetBuilder.ts",
     "src/Builder/index.ts",
     "src/Builder/types/acrBuilder.ts",
+    "src/Builder/types/afdBuilder.ts",
     "src/Builder/types/apimBuilder.ts",
     "src/Builder/types/apimPolicyBuilder.ts",
     "src/Builder/types/apimProductBuilder.ts",
@@ -93,6 +99,7 @@
     "src/Builder/types/cdnBuilder.ts",
     "src/Builder/types/dnsZoneBuilder.ts",
     "src/Builder/types/envRoleBuilder.ts",
+    "src/Builder/types/frontDoorBuilder.ts",
     "src/Builder/types/genericBuilder.ts",
     "src/Builder/types/index.ts",
     "src/Builder/types/iotHubBuilder.ts",

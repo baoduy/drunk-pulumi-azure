@@ -1,6 +1,9 @@
 name: drunk-pulumi-az-test
-runtime: nodejs
 description: A testing project for @drunk-pulumi/azure
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
 config:
   pulumi:tags:
     value:

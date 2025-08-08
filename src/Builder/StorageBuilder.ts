@@ -4,6 +4,7 @@ import Storage, {
   StoragePolicyType,
 } from '../Storage';
 import CdnEndpoint from '../Cdn/CdnEndpoint';
+
 import { getDefaultResponseHeaders } from '../Cdn/CdnRules';
 import { ResourceInfo, ResourceInfoWithInstance } from '../types';
 import {
@@ -15,11 +16,12 @@ import {
   StorageBuilderArgs,
   StorageCdnType,
   StorageFeatureBuilderType,
+  StorageResult,
 } from './types';
 import * as storage from '@pulumi/azure-native/storage';
 
 class StorageBuilder
-  extends Builder<ResourceInfo>
+  extends Builder<StorageResult>
   implements IStorageStarterBuilder, IStorageBuilder, IStaticWebStorageBuilder
 {
   //Instance
@@ -56,7 +58,7 @@ class StorageBuilder
   }
   public withCdnIf(
     condition: boolean,
-    props: StorageCdnType,
+    props: StorageCdnType
   ): IStaticWebStorageBuilder {
     if (condition) this.withCdn(props);
     return this;
@@ -67,7 +69,7 @@ class StorageBuilder
   }
   public withContainerIf(
     condition: boolean,
-    props: ContainerProps,
+    props: ContainerProps
   ): IStorageBuilder {
     if (condition) this.withContainer(props);
     return this;
@@ -94,7 +96,7 @@ class StorageBuilder
   }
   public withPoliciesIf(
     condition: boolean,
-    props: StoragePolicyType,
+    props: StoragePolicyType
   ): IStorageBuilder {
     if (condition) this.withPolicies(props);
     return this;
@@ -105,7 +107,7 @@ class StorageBuilder
   }
   public withNetworkIf(
     condition: boolean,
-    props: StorageNetworkType,
+    props: StorageNetworkType
   ): IStorageSharedBuilder {
     if (condition) this.withNetwork(props);
     return this;
@@ -144,17 +146,19 @@ class StorageBuilder
       ...this._cdnProps,
       name: this._storageInstance!.name,
       origin: this._storageInstance!.instance!.primaryEndpoints.apply((p) =>
-        p.web.replace('https://', '').slice(0, -1),
+        p.web.replace('https://', '').slice(0, -1)
       ),
       securityResponseHeaders: securityHeaders,
       dependsOn: this._storageInstance?.instance,
     });
   }
 
-  public build(): ResourceInfo {
+  public build(): StorageResult {
     this.buildStorage();
     this.buildCDN();
-    return this._storageInstance!;
+
+    const endpoints = this._storageInstance?.instance.primaryEndpoints!;
+    return { ...this._storageInstance!, endpoints };
   }
 }
 
