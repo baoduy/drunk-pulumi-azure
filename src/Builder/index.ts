@@ -1,4 +1,5 @@
 export { default as AcrBuilder } from './AcrBuilder';
+export { default as AFDBuilder } from './AFDBuilder';
 export { default as AksBuilder } from './AksBuilder';
 export { default as ApimBuilder } from './ApimBuilder';
 export { default as ApimRootBuilder } from './ApimRootBuilder';

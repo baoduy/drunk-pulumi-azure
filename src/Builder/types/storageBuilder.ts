@@ -8,12 +8,23 @@ import {
 } from '../../Storage';
 import { ResourceInfo, WithEncryptionInfo } from '../../types';
 import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
+import * as pulumi from '@pulumi/pulumi';
 
 /**
  * Arguments required for building a Storage resource.
  */
 export type StorageBuilderArgs = BuilderProps & WithEncryptionInfo;
 
+export type StorageResult = ResourceInfo & {
+  endpoints: pulumi.Output<{
+    blob: string;
+    dfs: string;
+    file: string;
+    queue: string;
+    table: string;
+    web: string;
+  }>;
+};
 /**
  * Type for defining CDN properties for a Storage resource.
  */
@@ -57,7 +68,7 @@ export interface IStorageStarterBuilder {
  * Interface for shared storage builder methods.
  */
 export interface IStorageSharedBuilder
-  extends IBuilder<ResourceInfo>,
+  extends IBuilder<StorageResult>,
     ILockable<IStorageSharedBuilder> {
   /**
    * Sets the network properties for the storage resource.
@@ -67,7 +78,7 @@ export interface IStorageSharedBuilder
   withNetwork(props: StorageNetworkType): IStorageSharedBuilder;
   withNetworkIf(
     condition: boolean,
-    props: StorageNetworkType,
+    props: StorageNetworkType
   ): IStorageSharedBuilder;
 }
 
@@ -75,7 +86,7 @@ export interface IStorageSharedBuilder
  * Interface for building a standard Storage resource.
  */
 export interface IStorageBuilder
-  extends IBuilder<ResourceInfo>,
+  extends IBuilder<StorageResult>,
     IStorageSharedBuilder {
   /**
    * Adds a container to the storage resource.
@@ -114,7 +125,7 @@ export interface IStorageBuilder
  * Interface for building a static web Storage resource.
  */
 export interface IStaticWebStorageBuilder
-  extends IBuilder<ResourceInfo>,
+  extends IBuilder<StorageResult>,
     IStorageSharedBuilder {
   /**
    * Sets the CDN properties for the static web storage resource.
@@ -125,6 +136,6 @@ export interface IStaticWebStorageBuilder
 
   withCdnIf(
     condition: boolean,
-    props: StorageCdnType,
+    props: StorageCdnType
   ): IStaticWebStorageBuilder;
 }

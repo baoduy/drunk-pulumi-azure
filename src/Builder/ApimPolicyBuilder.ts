@@ -15,7 +15,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   public authBasic(props: types.ApimAuthBasicType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      `\t<authentication-basic username="${props.userName}" password="${props.password}" />`,
+      `\t<authentication-basic username="${props.userName}" password="${props.password}" />`
     );
     return this;
   }
@@ -24,18 +24,18 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     this._inboundPolicies.push(
       'thumbprint' in props
         ? `\t<authentication-certificate thumbprint="${props.thumbprint}" />`
-        : `\t<authentication-certificate certificate-id="${props.certId}" password="${props.password}" />`,
+        : `\t<authentication-certificate certificate-id="${props.certId}" password="${props.password}" />`
     );
     return this;
   }
 
   public authIdentity(
-    props: types.ApimAuthIdentityType,
+    props: types.ApimAuthIdentityType
   ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
       'clientId' in props
         ? `\t<authentication-managed-identity resource="${props.resource}" client-id="${props.clientId}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`
-        : `\t<authentication-managed-identity resource="${props.resource}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`,
+        : `\t<authentication-managed-identity resource="${props.resource}" output-token-variable-name="${props.variableName}" ignore-error="${props.ignoreError}"/>`
     );
 
     if (props.setHeaderKey)
@@ -50,14 +50,14 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   public setBaseUrl(props: types.ApimBaseUrlType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      `\t<set-backend-service base-url="${props.url}" />`,
+      `\t<set-backend-service base-url="${props.url}" />`
     );
     return this;
   }
 
   public setBaseUrlIf(
     condition: boolean,
-    props: types.ApimBaseUrlType,
+    props: types.ApimBaseUrlType
   ): types.IApimPolicyBuilder {
     if (condition) this.setBaseUrl(props);
     return this;
@@ -74,14 +74,18 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   }
 
   public checkHeader(
-    props: types.ApimCheckHeaderType,
+    props: types.ApimCheckHeaderType
   ): types.IApimPolicyBuilder {
     const rs = `\t<check-header name="${
       props.name
     }" failed-check-httpcode="401" failed-check-error-message="The header ${
       props.name
     } is not found" ignore-case="true">
-    ${props.value ? props.value.map((v) => `<value>${v}</value>`).join('\n') : ''}
+    ${
+      props.value
+        ? props.value.map((v) => `<value>${v}</value>`).join('\n')
+        : ''
+    }
 \t</check-header>`;
 
     this._inboundPolicies.push(rs);
@@ -89,10 +93,12 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   }
 
   public mockResponse(
-    props: types.ApimMockPropsType,
+    props: types.ApimMockPropsType
   ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      `<mock-response status-code="${props.code ?? 200}" content-type="${props.contentType ?? 'application/json'}" />`,
+      `<mock-response status-code="${props.code ?? 200}" content-type="${
+        props.contentType ?? 'application/json'
+      }" />`
     );
     this._mockResponse = true;
     return this;
@@ -100,24 +106,28 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   public rewriteUri(props: types.ApimRewriteUriType): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
-      `<rewrite-uri template="${props.template ?? '/'}" />`,
+      `<rewrite-uri template="${props.template ?? '/'}" />`
     );
     return this;
   }
 
   public setRateLimit(
-    props: types.ApimRateLimitType,
+    props: types.ApimRateLimitType
   ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(
       props.successConditionOnly
-        ? `<rate-limit-by-key calls="${props.calls ?? 10}" renewal-period="${props.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" increment-condition="@(context.Response.StatusCode &gt;= 200 &amp;&amp; context.Response.StatusCode &lt; 300)" />`
-        : `<rate-limit-by-key calls="${props.calls ?? 10}" renewal-period="${props.inSecond ?? 10}" counter-key="@(context.Request.IpAddress)" />`,
+        ? `<rate-limit-by-key calls="${props.calls ?? 10}" renewal-period="${
+            props.inSecond ?? 10
+          }" counter-key="@(context.Request.IpAddress)" increment-condition="@(context.Response.StatusCode &gt;= 200 &amp;&amp; context.Response.StatusCode &lt; 300)" />`
+        : `<rate-limit-by-key calls="${props.calls ?? 10}" renewal-period="${
+            props.inSecond ?? 10
+          }" counter-key="@(context.Request.IpAddress)" />`
     );
     return this;
   }
 
   public setCacheOptions(
-    props: types.ApimOutCacheType,
+    props: types.ApimOutCacheType
   ): types.IApimPolicyBuilder {
     this._inboundPolicies.push(`<cache-lookup vary-by-developer="false" 
             vary-by-developer-groups="false" 
@@ -125,7 +135,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
             must-revalidate="true" 
             downstream-caching-type="public" />`);
     this._outboundPolicies.push(
-      `<cache-store duration="${props.duration ?? 60}" />`,
+      `<cache-store duration="${props.duration ?? 60}" />`
     );
     return this;
   }
@@ -136,7 +146,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   }
 
   public setClientIpHeader(
-    props: types.ApimClientIpHeaderType,
+    props: types.ApimClientIpHeaderType
   ): types.IApimPolicyBuilder {
     this.setHeader({
       name: props.headerKey ?? `x-${organization}-clientIp`,
@@ -148,7 +158,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   /** Filter IP from Bearer Token */
   public validateJwtWhitelistIp(
-    props: types.ApimValidateJwtWhitelistIpType,
+    props: types.ApimValidateJwtWhitelistIpType
   ): types.IApimPolicyBuilder {
     const claimKey = props.claimKey ?? 'client_IpWhitelist';
     const setHeader = `<set-header name="IpAddressValidation" exists-action="override">
@@ -216,7 +226,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   /** IP Address Whitelisting */
   public setWhitelistIPs(
-    props: types.ApimWhitelistIpType,
+    props: types.ApimWhitelistIpType
   ): types.IApimPolicyBuilder {
     const ipAddresses = props.ipAddresses;
     const policy = `\t<ip-filter action="allow">\r\n${ipAddresses
@@ -235,14 +245,14 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   }
 
   public verifyClientCert(
-    props: types.ApimClientCertType,
+    props: types.ApimClientCertType
   ): types.IApimPolicyBuilder {
     this._certVerification = props;
     return this;
   }
 
   public forwardToBus(
-    props: types.ApimForwardToServiceBusType,
+    props: types.ApimForwardToServiceBusType
   ): types.IApimPolicyBuilder {
     this.authIdentity({
       variableName: 'x-forward-to-bus',
@@ -262,7 +272,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
           name: key,
           type: types.SetHeaderTypes.append,
           value: props.brokerProperties![key],
-        }),
+        })
       );
     }
     return this;
@@ -270,14 +280,14 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   public forwardToBusIf(
     condition: boolean,
-    props: types.ApimForwardToServiceBusType,
+    props: types.ApimForwardToServiceBusType
   ): types.IApimPolicyBuilder {
     if (condition) this.forwardToBus(props);
     return this;
   }
 
   public setResponseHeaders(
-    props: types.ApimSetHeaderType,
+    props: types.ApimSetHeaderType
   ): types.IApimPolicyBuilder {
     let rs = `\t<set-header name="${props.name}" exists-action="${props.type}">`;
     if (props.value) {
@@ -291,10 +301,10 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
 
   /**Replace outbound results */
   public findAndReplacesResponse(
-    props: types.ApimFindAndReplaceType,
+    props: types.ApimFindAndReplaceType
   ): types.IApimPolicyBuilder {
     this._outboundPolicies.push(
-      `<find-and-replace from="${props.from}" to="${props.to}" />`,
+      `<find-and-replace from="${props.from}" to="${props.to}" />`
     );
     return this;
   }
@@ -304,14 +314,16 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   ): types.IApimPolicyBuilder {
     const options = props.map((c) =>
       c.conditionStatusCode
-        ? `\t<when condition="@(context.Response.StatusCode == ${c.conditionStatusCode})">
+        ? `\t<when condition="@(context.Response.StatusCode == ${
+            c.conditionStatusCode
+          })">
           <set-status code="${c.responseStatusCode ?? 200}" />
           <set-body>${c.responseBody}</set-body> 
 \t</when>`
         : `\t<when condition="${c.condition}">
           <set-status code="${c.responseStatusCode ?? 200}" />
           <set-body>${c.responseBody}</set-body>
-\t</when>`,
+\t</when>`
     );
 
     this._outboundPolicies.push(`\t<choose>
@@ -326,7 +338,9 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
       ? this._cors!.origins!.map((o) => `<origin>${o}</origin>`)
       : ['<origin>*</origin>'];
 
-    const cors = `<cors allow-credentials="${Array.isArray(this._cors?.origins)}">
+    const cors = `<cors allow-credentials="${Array.isArray(
+      this._cors?.origins
+    )}">
     <allowed-origins>
         ${orgs.join('\n')}
     </allowed-origins>
@@ -349,18 +363,18 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
             ? ' || !context.Request.Certificate.VerifyNoRevocation()'
             : ''
         }${
-          this._certVerification.issuer
-            ? ` || context.Request.Certificate.Issuer != "${this._certVerification.issuer}"`
-            : ''
-        }${
-          this._certVerification.subject
-            ? ` || context.Request.Certificate.SubjectName.Name != "${this._certVerification.subject}"`
-            : ''
-        }${
-          this._certVerification.thumbprint
-            ? ` || context.Request.Certificate.Thumbprint != "${this._certVerification.thumbprint}"`
-            : ''
-        })" >
+      this._certVerification.issuer
+        ? ` || context.Request.Certificate.Issuer != "${this._certVerification.issuer}"`
+        : ''
+    }${
+      this._certVerification.subject
+        ? ` || context.Request.Certificate.SubjectName.Name != "${this._certVerification.subject}"`
+        : ''
+    }${
+      this._certVerification.thumbprint
+        ? ` || context.Request.Certificate.Thumbprint != "${this._certVerification.thumbprint}"`
+        : ''
+    })" >
           <return-response>
             <set-status code="403" reason="Invalid client certificate" />
           </return-response>

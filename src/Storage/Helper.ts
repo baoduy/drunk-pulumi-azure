@@ -34,6 +34,12 @@ const getStorageSecrets = ({
   });
 };
 
+export const getStorageEndpoints = (name: string) => ({
+  blob: `https://${name}.blob.core.windows.net`,
+  file: `https://${name}.file.core.windows.net`,
+  table: `https://${name}.table.core.windows.net`,
+});
+
 export const getStorageInfo = ({
   name,
   group,
@@ -47,11 +53,7 @@ export const getStorageInfo = ({
   return {
     name,
     group,
-    endpoints: {
-      blob: `https://${name}.blob.core.windows.net`,
-      file: `https://${name}.file.core.windows.net`,
-      table: `https://${name}.table.core.windows.net`,
-    },
+    endpoints: getStorageEndpoints(name),
     ...secrets,
     id: interpolate`${defaultSubScope}/resourceGroups/${group.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${name}`,
   };
@@ -60,7 +62,7 @@ export const getStorageInfo = ({
 export const getStorageInfoByName = (
   name: string,
   groupName: NamingType,
-  vaultInfo: KeyVaultInfo | undefined = undefined,
+  vaultInfo: KeyVaultInfo | undefined = undefined
 ) =>
   getStorageInfo({
     name,
