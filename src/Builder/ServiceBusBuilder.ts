@@ -46,33 +46,67 @@ const defaultSubOptions: types.ServiceBusSubArgs = {
   maxDeliveryCount: 10,
 };
 
+/**
+ * ServiceBusBuilder class for creating and configuring Azure Service Bus resources.
+ * This class implements the Builder pattern for Service Bus configuration including
+ * namespaces, queues, topics, and subscriptions.
+ * @extends Builder<ResourceInfo>
+ * @implements IServiceBusBuilder
+ * @implements IServiceBusSkuBuilder
+ */
 class ServiceBusBuilder
   extends types.Builder<ResourceInfo>
   implements types.IServiceBusBuilder, types.IServiceBusSkuBuilder
 {
   private readonly _instanceName: string;
+  
+  // Resource instances
   private _sbInstance: bus.Namespace | undefined = undefined;
   private _networkInstance: bus.NamespaceNetworkRuleSet | undefined = undefined;
 
+  // Configuration properties
   private _sku: types.ServiceBusSkuTypes = 'Basic';
   private _network: NetworkPropsType | undefined = undefined;
   private _queues: Record<string, types.ServiceBusQueueArgs> = {};
   private _topics: Record<string, types.ServiceBusTopicArgs> = {};
   private _options: types.ServiceBusOptions = {};
 
+  /**
+   * Creates an instance of ServiceBusBuilder.
+   * @param {types.ServiceBusBuilderArgs} args - The arguments for building the Service Bus.
+   */
   constructor(private args: types.ServiceBusBuilderArgs) {
     super(args);
     this._instanceName = naming.getServiceBusName(args.name);
   }
 
+  /**
+   * Sets the SKU for the Service Bus namespace.
+   * @param {types.ServiceBusSkuTypes} sku - The SKU to set (Basic, Standard, or Premium).
+   * @returns {types.IServiceBusBuilder} The current ServiceBusBuilder instance.
+   */
   public withSku(sku: types.ServiceBusSkuTypes): types.IServiceBusBuilder {
     this._sku = sku;
     return this;
   }
+
+  /**
+   * Sets additional options for the Service Bus namespace.
+   * @param {types.ServiceBusOptions} props - The options to set for the Service Bus.
+   * @returns {types.IServiceBusBuilder} The current ServiceBusBuilder instance.
+   */
   public withOptions(props: types.ServiceBusOptions): types.IServiceBusBuilder {
     this._options = props;
     return this;
   }
+
+  /**
+   * Sets network configuration for the Service Bus namespace.
+   * Note: Network configuration is only supported for Premium tier.
+   * @param {NetworkPropsType} props - The network properties to set.
+   * @returns {types.IServiceBusBuilder} The current ServiceBusBuilder instance.
+   * @throws {Error} When network is configured for non-Premium tier.
+   */
   public withNetwork(props: NetworkPropsType): types.IServiceBusBuilder {
     if (this._sku !== 'Premium')
       throw new Error(
@@ -82,6 +116,13 @@ class ServiceBusBuilder
     this._network = props;
     return this;
   }
+
+  /**
+   * Conditionally sets network configuration for the Service Bus namespace.
+   * @param {boolean} condition - Whether to apply the network configuration.
+   * @param {NetworkPropsType} props - The network properties to set.
+   * @returns {types.IServiceBusBuilder} The current ServiceBusBuilder instance.
+   */
   public withNetworkIf(
     condition: boolean,
     props: NetworkPropsType
@@ -89,12 +130,24 @@ class ServiceBusBuilder
     if (condition) return this.withNetwork(props);
     return this;
   }
+
+  /**
+   * Adds queues to the Service Bus namespace.
+   * @param {Record<string, types.ServiceBusQueueArgs>} props - A record of queue names and their configurations.
+   * @returns {types.IServiceBusBuilder} The current ServiceBusBuilder instance.
+   */
   public withQueues(
     props: Record<string, types.ServiceBusQueueArgs>
   ): types.IServiceBusBuilder {
     this._queues = { ...this._queues, ...props };
     return this;
   }
+
+  /**
+   * Adds topics to the Service Bus namespace.
+   * @param {Record<string, types.ServiceBusTopicArgs>} props - A record of topic names and their configurations.
+   * @returns {types.IServiceBusBuilder} The current ServiceBusBuilder instance.
+   */
   public withTopics(
     props: Record<string, types.ServiceBusTopicArgs>
   ): types.IServiceBusBuilder {

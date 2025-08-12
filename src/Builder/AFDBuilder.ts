@@ -12,35 +12,63 @@ import {
   IAFDBuilder,
 } from './types';
 
+/**
+ * AFDBuilder class for creating and configuring Azure Front Door (AFD) resources.
+ * This class implements the Builder pattern for AFD configuration including profiles,
+ * endpoints, custom domains, and response headers.
+ * @extends Builder<ResourceInfo>
+ * @implements IAFDBuilder
+ */
 export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
   private _name: string;
 
+  // Resource instances
   private _ruleSetRs: cdn.RuleSet | undefined;
   private _customDomainRs: cdn.AFDCustomDomain[] = [];
   private _profileRs: cdn.Profile | undefined;
   private _endpointRs: cdn.AFDEndpoint | undefined;
 
+  // Configuration properties
   private _sdk: string = cdn.SkuName.Standard_AzureFrontDoor;
   private _customDomains: string[] = [];
-
   private _endpointArgs: AFDBuilderEndpoint | undefined;
   private _responseHeaders: ResponseHeaderType | undefined;
 
+  /**
+   * Creates an instance of AFDBuilder.
+   * @param {BuilderProps} props - The arguments for building the AFD.
+   */
   public constructor(props: BuilderProps) {
     super(props);
     this._name = naming.getCdnEndpointName(props.name);
   }
 
+  /**
+   * Sets the SKU for the Azure Front Door.
+   * @param {cdn.SkuName} sdk - The SKU to set for the AFD (e.g., Standard_AzureFrontDoor, Premium_AzureFrontDoor).
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withSdk(sdk: cdn.SkuName): IAFDBuilder {
     this._sdk = sdk;
     return this;
   }
 
+  /**
+   * Sets custom domains for the Azure Front Door.
+   * @param {string[]} domains - Array of custom domain names to associate with the AFD.
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withCustomDomains(domains: string[]): IAFDBuilder {
     this._customDomains = domains;
     return this;
   }
 
+  /**
+   * Conditionally sets custom domains for the Azure Front Door.
+   * @param {boolean} condition - Whether to apply the custom domains.
+   * @param {string[]} domains - Array of custom domain names to associate with the AFD.
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withCustomDomainsIf(
     condition: boolean,
     domains: string[]
@@ -49,11 +77,22 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
     return this;
   }
 
+  /**
+   * Sets the endpoint configuration for the Azure Front Door.
+   * @param {AFDBuilderEndpoint} endpoint - The endpoint configuration to set.
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withEndpoint(endpoint: AFDBuilderEndpoint): IAFDBuilder {
     this._endpointArgs = endpoint;
     return this;
   }
 
+  /**
+   * Conditionally sets the endpoint configuration for the Azure Front Door.
+   * @param {boolean} condition - Whether to apply the endpoint configuration.
+   * @param {AFDBuilderEndpoint} endpoint - The endpoint configuration to set.
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withEndpointIf(
     condition: boolean,
     endpoint: AFDBuilderEndpoint
@@ -62,11 +101,22 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
     return this;
   }
 
+  /**
+   * Sets custom response headers for the Azure Front Door.
+   * @param {ResponseHeaderType} headers - The response headers configuration to set.
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withResponseHeaders(headers: ResponseHeaderType): IAFDBuilder {
     this._responseHeaders = headers;
     return this;
   }
 
+  /**
+   * Conditionally sets custom response headers for the Azure Front Door.
+   * @param {boolean} condition - Whether to apply the response headers.
+   * @param {ResponseHeaderType} headers - The response headers configuration to set.
+   * @returns {IAFDBuilder} The current AFDBuilder instance.
+   */
   public withResponseHeadersIf(
     condition: boolean,
     headers: ResponseHeaderType

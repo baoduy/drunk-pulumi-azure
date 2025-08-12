@@ -1,12 +1,20 @@
-# `ServiceBusBuilder` Class Overview
+# **ServiceBusBuilder Class Documentation**
 
-The `ServiceBusBuilder` class is designed to build and configure an Azure Service Bus instance with specific configurations such as SKU, network settings, queues, topics, and subscriptions.
+## **Overview**
+The `ServiceBusBuilder` class is designed to simplify the creation and configuration of Azure Service Bus resources using Pulumi. This class follows the Builder pattern, providing a fluent interface for defining various aspects of a Service Bus, including namespaces, SKU selection, network configurations, queues, and topics.
 
-### Constructor
-#### Purpose:
+## **Key Methods and Their Attributes**
+
+### **Constructor**
+```typescript
+constructor(args: ServiceBusBuilderArgs)
+```
 Initializes the `ServiceBusBuilder` with the provided arguments and sets the instance name.
 
-#### Sample Usage:
+**Parameters:**
+- `args`: ServiceBusBuilderArgs - The basic configuration properties for the Service Bus resource.
+
+**Usage:**
 ```typescript
 const serviceBusBuilder = new ServiceBusBuilder({
   name: 'myServiceBus',
@@ -15,147 +23,169 @@ const serviceBusBuilder = new ServiceBusBuilder({
 });
 ```
 
+### **`withSku(sku: ServiceBusSkuTypes)`**
+Sets the SKU for the Service Bus namespace.
 
-### `withSku`
-#### Purpose:
-Sets the SKU for the Service Bus.
+**Parameters:**
+- `sku`: ServiceBusSkuTypes - The SKU to set:
+  - `'Basic'`: Basic tier with limited features
+  - `'Standard'`: Standard tier with topics and subscriptions
+  - `'Premium'`: Premium tier with advanced features and network isolation
 
-#### Sample Usage:
+**Returns:** `IServiceBusBuilder` - The current ServiceBusBuilder instance for method chaining.
+
+**Usage:**
 ```typescript
-serviceBusBuilder.withSku('Standard');
+serviceBusBuilder.withSku('Premium');
 ```
 
+### **`withOptions(props: ServiceBusOptions)`**
+Sets additional options for the Service Bus namespace.
 
-### `withOptions`
-#### Purpose:
-Sets additional options for the Service Bus.
+**Parameters:**
+- `props`: ServiceBusOptions - Configuration options for the Service Bus namespace.
 
-#### Sample Usage:
+**Returns:** `IServiceBusBuilder` - The current ServiceBusBuilder instance for method chaining.
+
+**Usage:**
 ```typescript
 serviceBusBuilder.withOptions({
   // ServiceBusOptions properties
+  disableLocalAuth: true,
+  minimumTlsVersion: '1.2'
 });
 ```
 
+### **`withNetwork(props: NetworkPropsType)`**
+Sets the network properties for the Service Bus. 
+**Note:** Network configuration is only supported for 'Premium' tier.
 
-### `withNetwork`
-#### Purpose:
-Sets the network properties for the Service Bus. Only supported for 'Premium' tier.
+**Parameters:**
+- `props`: NetworkPropsType - Network configuration including:
+  - `subnetId`: string - The subnet ID for private endpoint
+  - `privateLink`: Private link configuration
+  - `ipAddresses`: string[] - Array of IP addresses for network rules
 
-#### Sample Usage:
+**Returns:** `IServiceBusBuilder` - The current ServiceBusBuilder instance for method chaining.
+
+**Throws:** Error when network is configured for non-Premium tier.
+
+**Usage:**
 ```typescript
 serviceBusBuilder.withNetwork({
   subnetId: 'subnet-id',
   privateLink: {
-    // private link properties
+    subnetIds: ['subnet-id-1', 'subnet-id-2'],
+    privateDnsZoneId: 'dns-zone-id'
   },
   ipAddresses: ['192.168.1.1', '192.168.1.2'],
 });
 ```
 
-
-### `withNetworkIf`
-#### Purpose:
+### **`withNetworkIf(condition: boolean, props: NetworkPropsType)`**
 Conditionally sets the network properties for the Service Bus.
 
-#### Sample Usage:
+**Parameters:**
+- `condition`: boolean - Whether to apply the network configuration.
+- `props`: NetworkPropsType - Network configuration properties.
+
+**Returns:** `IServiceBusBuilder` - The current ServiceBusBuilder instance for method chaining.
+
+**Usage:**
 ```typescript
-serviceBusBuilder.withNetworkIf(true, {
+serviceBusBuilder.withNetworkIf(isPremiumTier, {
   subnetId: 'subnet-id',
   privateLink: {
-    // private link properties
+    subnetIds: ['subnet-id-1'],
+    privateDnsZoneId: 'dns-zone-id'
   },
-  ipAddresses: ['192.168.1.1', '192.168.1.2'],
+  ipAddresses: ['192.168.1.1'],
 });
 ```
 
+### **`withQueues(props: Record<string, ServiceBusQueueArgs>)`**
+Adds queues to the Service Bus namespace.
 
-### `withQueues`
-#### Purpose:
-Sets the queues for the Service Bus.
+**Parameters:**
+- `props`: Record<string, ServiceBusQueueArgs> - A record of queue names and their configurations:
+  - Key: Queue name
+  - Value: ServiceBusQueueArgs with properties like:
+    - `maxDeliveryCount`: number - Maximum delivery attempts
+    - `defaultMessageTimeToLive`: string - Message TTL
+    - `lockDuration`: string - Message lock duration
+    - `enablePartitioning`: boolean - Enable partitioning
+    - `deadLetteringOnMessageExpiration`: boolean - Enable dead lettering
 
-#### Sample Usage:
+**Returns:** `IServiceBusBuilder` - The current ServiceBusBuilder instance for method chaining.
+
+**Usage:**
 ```typescript
 serviceBusBuilder.withQueues({
-  myQueue: {
-    // ServiceBusQueueArgs properties
+  'order-queue': {
+    maxDeliveryCount: 5,
+    defaultMessageTimeToLive: 'P7D',
+    lockDuration: 'PT30S',
+    enablePartitioning: true,
+    deadLetteringOnMessageExpiration: true
   },
+  'notification-queue': {
+    maxDeliveryCount: 3,
+    defaultMessageTimeToLive: 'P1D'
+  }
 });
 ```
 
+### **`withTopics(props: Record<string, ServiceBusTopicArgs>)`**
+Adds topics to the Service Bus namespace.
 
-### `withTopics`
-#### Purpose:
-Sets the topics for the Service Bus.
+**Parameters:**
+- `props`: Record<string, ServiceBusTopicArgs> - A record of topic names and their configurations:
+  - Key: Topic name
+  - Value: ServiceBusTopicArgs with properties like:
+    - `defaultMessageTimeToLive`: string - Message TTL
+    - `enablePartitioning`: boolean - Enable partitioning
+    - `maxSizeInMegabytes`: number - Maximum topic size
+    - `subscriptions`: Record<string, ServiceBusSubArgs> - Topic subscriptions
 
-#### Sample Usage:
+**Returns:** `IServiceBusBuilder` - The current ServiceBusBuilder instance for method chaining.
+
+**Usage:**
 ```typescript
 serviceBusBuilder.withTopics({
-  myTopic: {
-    // ServiceBusTopicArgs properties
-  },
+  'order-events': {
+    defaultMessageTimeToLive: 'P30D',
+    enablePartitioning: true,
+    maxSizeInMegabytes: 1024,
+    subscriptions: {
+      'email-processor': {
+        maxDeliveryCount: 5,
+        lockDuration: 'PT1M'
+      },
+      'sms-processor': {
+        maxDeliveryCount: 3,
+        lockDuration: 'PT30S'
+      }
+    }
+  }
 });
 ```
 
-
-### `buildNamespace`
-#### Purpose:
-Creates the Service Bus namespace with the specified configurations.
-
-#### Sample Usage:
-This method is called internally by the `build` method and is not typically called directly.
-
-### `buildNetwork`
-#### Purpose:
-Configures network settings for the Service Bus, including IP rules and private link.
-
-#### Sample Usage:
-This method is called internally by the `build` method and is not typically called directly.
-
-### `buildQueues`
-#### Purpose:
-Creates the queues for the Service Bus.
-
-#### Sample Usage:
-This method is called internally by the `build` method and is not typically called directly.
-
-### `buildTopics`
-#### Purpose:
-Creates the topics for the Service Bus and their subscriptions.
-
-#### Sample Usage:
-This method is called internally by the `build` method and is not typically called directly.
-
-### `buildSubscriptions`
-#### Purpose:
-Creates the subscriptions for a given topic.
-
-#### Sample Usage:
-This method is called internally by the `buildTopics` method and is not typically called directly.
-
-### `buildConnectionString`
-#### Purpose:
-Creates the connection strings for the Service Bus entities and stores them in Key Vault.
-
-#### Sample Usage:
-This method is called internally by the `buildQueues` and `buildTopics` methods and is not typically called directly.
-
-### `build`
-#### Purpose:
+### **`build()`**
 Builds the Service Bus namespace, network settings, queues, and topics, and returns the resource information.
 
-#### Sample Usage:
+**Returns:** `ResourceInfo` - Resource information for the deployed Service Bus instance.
+
+**Usage:**
 ```typescript
 const resourceInfo = serviceBusBuilder.build();
 console.log(resourceInfo);
 ```
 
-
-### Full Example
-Here is a full example demonstrating how to use the `ServiceBusBuilder` class:
+## **Example of Full Usage**
+Here's a complete example demonstrating how to use the `ServiceBusBuilder` with all available properties:
 
 ```typescript
-import ServiceBusBuilder from './Builder/ServiceBusBuilder';
+import { ServiceBusBuilder } from './Builder/ServiceBusBuilder';
 import { ServiceBusBuilderArgs } from './types';
 
 const args: ServiceBusBuilderArgs = {
@@ -167,47 +197,62 @@ const args: ServiceBusBuilderArgs = {
 const serviceBusBuilder = new ServiceBusBuilder(args);
 
 serviceBusBuilder
-  .withSku('Standard')
+  .withSku('Premium')
   .withOptions({
-    // ServiceBusOptions properties
+    disableLocalAuth: true,
+    minimumTlsVersion: '1.2'
   })
   .withNetwork({
     subnetId: 'subnet-id',
     privateLink: {
-      // private link properties
+      subnetIds: ['subnet-id-1', 'subnet-id-2'],
+      privateDnsZoneId: 'dns-zone-id'
     },
     ipAddresses: ['192.168.1.1', '192.168.1.2'],
   })
   .withQueues({
-    myQueue: {
-      // ServiceBusQueueArgs properties
+    'order-queue': {
+      maxDeliveryCount: 5,
+      defaultMessageTimeToLive: 'P7D',
+      lockDuration: 'PT30S',
+      enablePartitioning: true,
+      deadLetteringOnMessageExpiration: true
     },
+    'notification-queue': {
+      maxDeliveryCount: 3,
+      defaultMessageTimeToLive: 'P1D'
+    }
   })
   .withTopics({
-    myTopic: {
-      // ServiceBusTopicArgs properties
-    },
+    'order-events': {
+      defaultMessageTimeToLive: 'P30D',
+      enablePartitioning: true,
+      maxSizeInMegabytes: 1024,
+      subscriptions: {
+        'email-processor': {
+          maxDeliveryCount: 5,
+          lockDuration: 'PT1M'
+        },
+        'sms-processor': {
+          maxDeliveryCount: 3,
+          lockDuration: 'PT30S'
+        }
+      }
+    }
   });
 
 const resourceInfo = serviceBusBuilder.build();
 console.log(resourceInfo);
 ```
 
-
-### Summary
+## **Summary**
 - **Constructor**: Initializes the builder with necessary arguments.
-- **withSku**: Configures the SKU for the Service Bus.
-- **withOptions**: Sets additional options for the Service Bus.
-- **withNetwork**: Configures network settings for the Service Bus.
-- **withNetworkIf**: Conditionally configures network settings for the Service Bus.
-- **withQueues**: Sets the queues for the Service Bus.
-- **withTopics**: Sets the topics for the Service Bus.
-- **buildNamespace**: Internally creates the Service Bus namespace.
-- **buildNetwork**: Internally configures network settings.
-- **buildQueues**: Internally creates the queues for the Service Bus.
-- **buildTopics**: Internally creates the topics for the Service Bus.
-- **buildSubscriptions**: Internally creates the subscriptions for a given topic.
-- **buildConnectionString**: Internally creates the connection strings for the Service Bus entities.
+- **withSku**: Configures the SKU for the Service Bus (Basic, Standard, Premium).
+- **withOptions**: Sets additional options like authentication and TLS settings.
+- **withNetwork**: Configures network settings including private endpoints (Premium only).
+- **withNetworkIf**: Conditionally configures network settings.
+- **withQueues**: Adds queues with specific configurations.
+- **withTopics**: Adds topics with subscriptions.
 - **build**: Executes the build process and returns resource information.
 
 This guideline should help developers understand and reuse the methods in the `ServiceBusBuilder` class effectively.
