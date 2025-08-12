@@ -4,7 +4,7 @@ import Storage, {
   StoragePolicyType,
 } from '../Storage';
 import CdnEndpoint from '../Cdn/CdnEndpoint';
-
+import AFDBuilder from './AFDBuilder';
 import { getDefaultResponseHeaders } from '../Cdn/CdnRules';
 import { ResourceInfo, ResourceInfoWithInstance } from '../types';
 import {
@@ -39,6 +39,7 @@ class StorageBuilder
   private _cdnProps: StorageCdnType | undefined = undefined;
   private _network: StorageNetworkType | undefined = undefined;
   private _lock: boolean = false;
+  private _afdArgs: StorageCdnType | undefined = undefined;
 
   public constructor(props: StorageBuilderArgs) {
     super(props);
@@ -52,10 +53,25 @@ class StorageBuilder
     this._type = 'staticWeb';
     return this;
   }
+
+  public withAFD(props: StorageCdnType): IStaticWebStorageBuilder {
+    this._afdArgs = props;
+    return this;
+  }
+
+  public withAFDIf(
+    condition: boolean,
+    props: StorageCdnType
+  ): IStaticWebStorageBuilder {
+    if (condition) this.withAFD(props);
+    return this;
+  }
+
   public withCdn(props: StorageCdnType): IStaticWebStorageBuilder {
     this._cdnProps = props;
     return this;
   }
+
   public withCdnIf(
     condition: boolean,
     props: StorageCdnType
@@ -63,6 +79,7 @@ class StorageBuilder
     if (condition) this.withCdn(props);
     return this;
   }
+
   public withContainer(props: ContainerProps): IStorageBuilder {
     this._containers.push(props);
     return this;
@@ -86,14 +103,17 @@ class StorageBuilder
     this._fileShares.push(name);
     return this;
   }
+
   public withFileShareIf(condition: boolean, name: string): IStorageBuilder {
     if (condition) this.withFileShare(name);
     return this;
   }
+
   public withPolicies(props: StoragePolicyType): IStorageBuilder {
     this._policies = props;
     return this;
   }
+
   public withPoliciesIf(
     condition: boolean,
     props: StoragePolicyType
@@ -101,6 +121,7 @@ class StorageBuilder
     if (condition) this.withPolicies(props);
     return this;
   }
+
   public withNetwork(props: StorageNetworkType): IStorageSharedBuilder {
     this._network = props;
     return this;
@@ -153,9 +174,28 @@ class StorageBuilder
     });
   }
 
+  private buildAFD() {
+    if (!this._afdArgs || !this._storageInstance?.instance) return;
+    AFDBuilder(this.commonProps)
+      .withCustomDomainsIf(
+        Boolean(this._afdArgs.domainNames),
+        this._afdArgs.domainNames!
+      )
+      .withEndpoint({
+        name: this._storageInstance.name,
+        origin: this._storageInstance.instance.primaryEndpoints.web,
+      })
+      .withResponseHeadersIf(
+        Boolean(this._afdArgs.securityResponse),
+        getDefaultResponseHeaders(this._afdArgs.securityResponse!)
+      )
+      .build();
+  }
+
   public build(): StorageResult {
     this.buildStorage();
     this.buildCDN();
+    this.buildAFD();
 
     const endpoints = this._storageInstance?.instance.primaryEndpoints!;
     return { ...this._storageInstance!, endpoints };
