@@ -10,26 +10,51 @@ import {
 import { NamingType, ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 
+/**
+ * AzAppBuilder class for creating and configuring Azure App Service and Function App resources.
+ * This class implements the Builder pattern for App Service configuration including
+ * app service plans and function apps.
+ * @extends Builder<ResourceInfo>
+ * @implements IAzAppBuilder
+ * @implements IAzAppPlanBuilder
+ */
 class AzAppBuilder
   extends Builder<ResourceInfo>
   implements IAzAppBuilder, IAzAppPlanBuilder
 {
   private readonly _instanceName: string;
+  
+  // Resource instances
   private _appPlanInstance: azure.web.AppServicePlan | undefined = undefined;
 
+  // Configuration properties  
   private _planSku: AzAppBuilderKinds | undefined = undefined;
   private _funcs: AzFuncAppBuilderType[] = [];
 
+  /**
+   * Creates an instance of AzAppBuilder.
+   * @param {AzAppBuilderArgs} args - The arguments for building the Azure App Service.
+   */
   constructor(private args: AzAppBuilderArgs) {
     super(args);
     this._instanceName = naming.getAppPlanName(args.name);
   }
 
+  /**
+   * Sets the App Service Plan configuration for the Azure App Service.
+   * @param {AzAppBuilderKinds} props - The App Service Plan configuration including SKU and kind.
+   * @returns {IAzAppBuilder} The current AzAppBuilder instance.
+   */
   public withPlan(props: AzAppBuilderKinds): IAzAppBuilder {
     this._planSku = props;
     return this;
   }
 
+  /**
+   * Adds a Function App to the App Service Plan.
+   * @param {AzFuncAppBuilderType} props - The Function App configuration including name and settings.
+   * @returns {IAzAppBuilder} The current AzAppBuilder instance.
+   */
   public withFunc(props: AzFuncAppBuilderType): IAzAppBuilder {
     this._funcs.push(props);
     return this;

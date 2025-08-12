@@ -11,25 +11,51 @@ import { naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault/CustomHelper';
 import { AzSearchPrivateLink } from '../VNet';
 
+/**
+ * AzSearchBuilder class for creating and configuring Azure Search Service resources.
+ * This class implements the Builder pattern for Azure Search configuration including
+ * SKU selection, network configurations, and encryption settings.
+ * @extends Builder<ResourceInfo>
+ * @implements IAzSearchSkuBuilder
+ * @implements IAzSearchBuilder
+ */
 class AzSearchBuilder
   extends Builder<ResourceInfo>
   implements IAzSearchSkuBuilder, IAzSearchBuilder
 {
   private readonly _instanceName: string;
+  
+  // Resource instances
   private _azSearch: search.Service | undefined = undefined;
 
+  // Configuration properties
   private _sku: search.SkuName = search.SkuName.Free;
   private _network: AzSearchNetworkType | undefined = undefined;
 
+  /**
+   * Creates an instance of AzSearchBuilder.
+   * @param {AzSearchBuilderArgs} args - The arguments for building the Azure Search Service.
+   */
   constructor(private args: AzSearchBuilderArgs) {
     super(args);
     this._instanceName = naming.getSearchServiceName(args.name);
   }
 
+  /**
+   * Sets the SKU for the Azure Search Service.
+   * @param {search.SkuName} sku - The SKU to set (Free, Basic, Standard, Storage_Optimized_L1, Storage_Optimized_L2).
+   * @returns {IAzSearchBuilder} The current AzSearchBuilder instance.
+   */
   public withSku(sku: search.SkuName): IAzSearchBuilder {
     this._sku = sku;
     return this;
   }
+
+  /**
+   * Sets network configuration for the Azure Search Service.
+   * @param {AzSearchNetworkType} props - The network properties including private endpoint configuration.
+   * @returns {IAzSearchBuilder} The current AzSearchBuilder instance.
+   */
   public withNetwork(props: AzSearchNetworkType): IAzSearchBuilder {
     this._network = props;
     return this;

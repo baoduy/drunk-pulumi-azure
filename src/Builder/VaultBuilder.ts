@@ -52,6 +52,11 @@ export class VaultBuilderResults implements IVaultBuilderResults {
   //   return this;
   // }
 
+  /**
+   * Creates a private link for the Key Vault.
+   * @param {PrivateLinkPropsType} props - The private link configuration properties.
+   * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
+   */
   public privateLinkTo(props: PrivateLinkPropsType): IVaultBuilderResults {
     VaultPrivateLink({
       ...props,
@@ -60,6 +65,12 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
+  /**
+   * Conditionally creates a private link for the Key Vault.
+   * @param {boolean} condition - Whether to create the private link.
+   * @param {PrivateLinkPropsType} props - The private link configuration properties.
+   * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
+   */
   public privateLinkToIf(
     condition: boolean,
     props: PrivateLinkPropsType
@@ -68,6 +79,11 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
+  /**
+   * Adds secrets to the Key Vault.
+   * @param {VaultBuilderSecretType} items - Secrets to add (string key, object, or function).
+   * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
+   */
   public addSecrets(items: VaultBuilderSecretType): IVaultBuilderResults {
     //Add secret from project secret
     if (typeof items === 'string') {
@@ -93,6 +109,12 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
+  /**
+   * Conditionally adds secrets to the Key Vault.
+   * @param {boolean} condition - Whether to add the secrets.
+   * @param {VaultBuilderSecretType} items - Secrets to add.
+   * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
+   */
   public addSecretsIf(
     condition: boolean,
     items: VaultBuilderSecretType
@@ -101,6 +123,11 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
+  /**
+   * Adds certificates to the Key Vault.
+   * @param {Record<string, CertBuilderType>} items - Certificates to add as key-value pairs.
+   * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
+   */
   public addCerts(
     items: Record<string, CertBuilderType>
   ): IVaultBuilderResults {
@@ -115,6 +142,12 @@ export class VaultBuilderResults implements IVaultBuilderResults {
     return this;
   }
 
+  /**
+   * Conditionally adds certificates to the Key Vault.
+   * @param {boolean} condition - Whether to add the certificates.
+   * @param {Record<string, CertBuilderType>} items - Certificates to add.
+   * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
+   */
   public addCertsIf(
     condition: boolean,
     items: Record<string, CertBuilderType>
@@ -124,7 +157,16 @@ export class VaultBuilderResults implements IVaultBuilderResults {
   }
 }
 
+/**
+ * VaultBuilder class for creating and configuring Azure Key Vault resources.
+ * This class implements the Builder pattern for Key Vault configuration.
+ * @implements IVaultBuilder
+ */
 class VaultBuilder implements IVaultBuilder {
+  /**
+   * Creates an instance of VaultBuilder.
+   * @param {VaultBuilderArgs} args - The arguments for building the Key Vault.
+   */
   constructor(private args: VaultBuilderArgs) {}
 
   // public withDiagnostic(logInfo: BasicMonitorArgs): IVaultBuilder {
@@ -132,6 +174,10 @@ class VaultBuilder implements IVaultBuilder {
   //   return this;
   // }
 
+  /**
+   * Builds and deploys the Key Vault based on the current configuration.
+   * @returns {IVaultBuilderResults} The Key Vault builder results with management methods.
+   */
   public build(): IVaultBuilderResults {
     const rs = Vault(this.args);
     //if (this._logInfo) rs.addDiagnostic(this._logInfo);

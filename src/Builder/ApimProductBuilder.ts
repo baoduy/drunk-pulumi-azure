@@ -18,21 +18,35 @@ import {
   SetHeaderTypes,
 } from './types';
 
+/**
+ * ApimProductBuilder class for creating and configuring Azure API Management Product resources.
+ * This class implements the Builder pattern for APIM Product configuration including
+ * APIs, subscriptions, policies, and hook proxies.
+ * @extends BuilderAsync<ResourceInfo>
+ * @implements IApimProductBuilder
+ */
 export class ApimProductBuilder
   extends BuilderAsync<ResourceInfo>
   implements IApimProductBuilder
 {
+  // Configuration properties
   private _apis: Record<string, APimApiBuilderFunction> = {};
   private _requiredSubscription:
     | ApimProductSubscriptionBuilderType
     | undefined = undefined;
 
+  // Resource instances
   private _productInstance: apim.Product | undefined = undefined;
   private _subInstance: apim.Subscription | undefined = undefined;
+  
   private readonly _productInstanceName: string;
   private _policyString: string;
   private _state: apim.ProductState = 'notPublished';
 
+  /**
+   * Creates an instance of ApimProductBuilder.
+   * @param {ApimChildBuilderProps} args - The arguments for building the APIM Product.
+   */
   public constructor(private args: ApimChildBuilderProps) {
     super(args);
 
@@ -44,6 +58,11 @@ export class ApimProductBuilder
     }).build();
   }
 
+  /**
+   * Sets policies for the APIM Product.
+   * @param {ApimApiPolicyType} props - A function that takes a policy builder and returns a configured policy.
+   * @returns {IApimProductBuilder} The current ApimProductBuilder instance.
+   */
   public withPolicies(props: ApimApiPolicyType): IApimProductBuilder {
     this._policyString = props(
       new ApimPolicyBuilder({ ...this.args, name: this._productInstanceName }),
@@ -51,6 +70,11 @@ export class ApimProductBuilder
     return this;
   }
 
+  /**
+   * Configures subscription requirements for the APIM Product.
+   * @param {ApimProductSubscriptionBuilderType} props - The subscription configuration including limits and approval settings.
+   * @returns {IApimProductBuilder} The current ApimProductBuilder instance.
+   */
   public requiredSubscription(
     props: ApimProductSubscriptionBuilderType,
   ): IApimProductBuilder {
@@ -58,6 +82,12 @@ export class ApimProductBuilder
     return this;
   }
 
+  /**
+   * Adds an API to the APIM Product.
+   * @param {string} name - The name of the API.
+   * @param {APimApiBuilderFunction} props - A function that configures the API builder.
+   * @returns {IApimProductBuilder} The current ApimProductBuilder instance.
+   */
   public withApi(
     name: string,
     props: APimApiBuilderFunction,
@@ -66,6 +96,12 @@ export class ApimProductBuilder
     return this;
   }
 
+  /**
+   * Adds a hook proxy API to the APIM Product for webhook forwarding.
+   * @param {string} name - The name of the hook proxy API.
+   * @param {ApimHookProxyBuilderType} props - The hook proxy configuration including header keys.
+   * @returns {IApimProductBuilder} The current ApimProductBuilder instance.
+   */
   public withHookProxy(
     name: string,
     props: ApimHookProxyBuilderType,
@@ -96,6 +132,10 @@ export class ApimProductBuilder
     return this;
   }
 
+  /**
+   * Sets the product state to published, making it available for subscription.
+   * @returns {IBuilderAsync<ResourceInfo>} The current ApimProductBuilder instance.
+   */
   public published(): IBuilderAsync<ResourceInfo> {
     this._state = 'published';
     return this;
