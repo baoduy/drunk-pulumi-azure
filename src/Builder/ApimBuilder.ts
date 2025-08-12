@@ -20,6 +20,15 @@ import Identity from '../AzAd/Identity';
 import { interpolate } from '@pulumi/pulumi';
 import { ApimPrivateLink } from '../VNet';
 
+/**
+ * ApimBuilder class for creating and configuring Azure API Management (APIM) services.
+ * This class implements the Builder pattern for APIM configuration including
+ * SKU selection, publisher settings, domains, additional locations, and security features.
+ * @extends Builder<ResourceInfo>
+ * @implements IApimSkuBuilder
+ * @implements IApimPublisherBuilder
+ * @implements IApimBuilder
+ */
 class ApimBuilder
   extends types.Builder<ResourceInfo>
   implements
@@ -27,6 +36,7 @@ class ApimBuilder
     types.IApimPublisherBuilder,
     types.IApimBuilder
 {
+  // Configuration properties
   private _publisher: types.ApimPublisherBuilderType | undefined = undefined;
   private _proxyDomains: types.ApimDomainBuilderType[] = [];
   private _sku: types.ApimSkuBuilderType | undefined = undefined;
@@ -41,11 +51,16 @@ class ApimBuilder
   private _caCerts: types.ApimCertBuilderType[] = [];
   private _auths: types.ApimAuthType[] = [];
 
+  // Resource instances
   private readonly _instanceName: string;
   private _ipAddressInstances: Record<string, network.PublicIPAddress> = {};
   private _apimInstance: apim.ApiManagementService | undefined = undefined;
   private _envRoleType: EnvRoleKeyTypes | undefined = undefined;
 
+  /**
+   * Creates an instance of ApimBuilder.
+   * @param {types.ApimBuilderArgs} args - The arguments for building the APIM service.
+   */
   public constructor(private args: types.ApimBuilderArgs) {
     super(args);
     this._instanceName = naming.getApimName(this.commonProps.name);

@@ -17,6 +17,17 @@ import {
 } from './types';
 import { randomLogin } from '../Core/Random';
 
+/**
+ * SqlBuilder class for creating and configuring Azure SQL Database resources.
+ * This class implements the Builder pattern for SQL Server and Database configuration including
+ * authentication, networking, elastic pools, databases, and security assessments.
+ * @extends Builder<SqlResults>
+ * @implements ISqlLoginBuilder
+ * @implements ISqlAuthBuilder
+ * @implements ISqlNetworkBuilder
+ * @implements ISqlTierBuilder
+ * @implements ISqlBuilder
+ */
 class SqlBuilder
   extends Builder<SqlResults>
   implements
@@ -26,10 +37,10 @@ class SqlBuilder
     ISqlTierBuilder,
     ISqlBuilder
 {
-  //Instances
+  // Resource instances
   private _sqlInstance: SqlResults | undefined = undefined;
 
-  //Fields
+  // Configuration properties
   private _generateLogin: boolean = false;
   private _loginInfo: LoginArgs | undefined = undefined;
   private _authOptions: SqlBuilderAuthOptionsType = {};
@@ -42,10 +53,20 @@ class SqlBuilder
     | undefined = undefined;
   private _ignoreChanges: string[] | undefined = undefined;
 
+  /**
+   * Creates an instance of SqlBuilder.
+   * @param {SqlBuilderArgs} args - The arguments for building the SQL Server and databases.
+   */
   constructor(private args: SqlBuilderArgs) {
     super(args);
   }
 
+  /**
+   * Conditionally configures vulnerability assessment for the SQL Server.
+   * @param {boolean} condition - Whether to apply the vulnerability assessment.
+   * @param {SqlBuilderVulnerabilityAssessmentType} props - The vulnerability assessment configuration.
+   * @returns {ISqlBuilder} The current SqlBuilder instance.
+   */
   withVulnerabilityAssessmentIf(
     condition: boolean,
     props: SqlBuilderVulnerabilityAssessmentType,
@@ -53,6 +74,12 @@ class SqlBuilder
     if (condition) this.withVulnerabilityAssessment(props);
     return this;
   }
+
+  /**
+   * Configures vulnerability assessment for the SQL Server.
+   * @param {SqlBuilderVulnerabilityAssessmentType} props - The vulnerability assessment configuration.
+   * @returns {ISqlBuilder} The current SqlBuilder instance.
+   */
   withVulnerabilityAssessment(
     props: SqlBuilderVulnerabilityAssessmentType,
   ): ISqlBuilder {
@@ -60,10 +87,22 @@ class SqlBuilder
     return this;
   }
 
+  /**
+   * Configures an elastic pool for the SQL Server.
+   * @param {SqlElasticPoolType} props - The elastic pool configuration.
+   * @returns {ISqlBuilder} The current SqlBuilder instance.
+   */
   public withElasticPool(props: SqlElasticPoolType): ISqlBuilder {
     this._elasticPoolProps = props;
     return this;
   }
+
+  /**
+   * Conditionally configures an elastic pool for the SQL Server.
+   * @param {boolean} condition - Whether to apply the elastic pool configuration.
+   * @param {SqlElasticPoolType} props - The elastic pool configuration.
+   * @returns {ISqlBuilder} The current SqlBuilder instance.
+   */
   public withElasticPoolIf(
     condition: boolean,
     props: SqlElasticPoolType,
@@ -72,10 +111,21 @@ class SqlBuilder
     return this;
   }
 
+  /**
+   * Sets the default SKU tier for databases.
+   * @param {SqlDbSku} sku - The default SKU for databases (e.g., 'S0', 'S1', 'P1').
+   * @returns {ISqlBuilder} The current SqlBuilder instance.
+   */
   public withTier(sku: SqlDbSku): ISqlBuilder {
     this._defaultSku = sku;
     return this;
   }
+
+  /**
+   * Adds a database to the SQL Server.
+   * @param {SqlDbBuilderType} props - The database configuration including name and optional SKU.
+   * @returns {ISqlBuilder} The current SqlBuilder instance.
+   */
   public withDatabases(props: SqlDbBuilderType): ISqlBuilder {
     if (!props.sku) props.sku = this._defaultSku;
     this._databasesProps[props.name] = props;

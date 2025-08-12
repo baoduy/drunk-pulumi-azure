@@ -12,22 +12,43 @@ import { addEncryptKey } from '../KeyVault/Helper';
 import * as automation from '@pulumi/azure-native/automation';
 import * as mid from '@pulumi/azure-native/managedidentity';
 
+/**
+ * AutomationBuilder class for creating and configuring Azure Automation Account resources.
+ * This class implements the Builder pattern for Automation Account configuration including
+ * SKU selection, identity management, and encryption settings.
+ * @extends Builder<ResourceInfo>
+ * @implements IAutomationBuilder
+ * @implements IAutomationSkuBuilder
+ */
 class AutomationBuilder
   extends Builder<ResourceInfo>
   implements IAutomationBuilder, IAutomationSkuBuilder
 {
   private readonly _instanceName: string;
+  
+  // Resource instances
   private _uid: IdentityInfoWithInstance<mid.UserAssignedIdentity> | undefined =
     undefined;
   private _automationInstance: automation.AutomationAccount | undefined =
     undefined;
+    
+  // Configuration properties
   private _sku: AutomationSkuBuilder = automation.SkuNameEnum.Free;
 
+  /**
+   * Creates an instance of AutomationBuilder.
+   * @param {AutomationBuilderArgs} args - The arguments for building the Automation Account.
+   */
   constructor(private args: AutomationBuilderArgs) {
     super(args);
     this._instanceName = naming.getAutomationAccountName(args.name);
   }
 
+  /**
+   * Sets the SKU for the Automation Account.
+   * @param {AutomationSkuBuilder} props - The SKU to set (Free or Basic).
+   * @returns {IAutomationBuilder} The current AutomationBuilder instance.
+   */
   public withSku(props: AutomationSkuBuilder): IAutomationBuilder {
     this._sku = props;
     return this;
