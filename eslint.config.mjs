@@ -30,7 +30,7 @@ export default [...compat.extends(
         sourceType: "module",
 
         parserOptions: {
-            tsconfigRootDir: "/Users/steven/_WIXO/WIXO.Infra/drunk-pulumi-azure",
+            tsconfigRootDir: __dirname,
             project: ["./tsconfig.json"],
         },
     },
