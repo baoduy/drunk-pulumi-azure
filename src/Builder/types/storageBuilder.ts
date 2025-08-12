@@ -138,4 +138,10 @@ export interface IStaticWebStorageBuilder
     condition: boolean,
     props: StorageCdnType
   ): IStaticWebStorageBuilder;
+
+  withAFD(props: StorageCdnType): IStaticWebStorageBuilder;
+  withAFDIf(
+    condition: boolean,
+    props: StorageCdnType
+  ): IStaticWebStorageBuilder;
 }

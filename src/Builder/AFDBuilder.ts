@@ -16,15 +16,15 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
   private _name: string;
 
   private _ruleSetRs: cdn.RuleSet | undefined;
-  private _customDomainRs: cdn.AFDCustomDomain | undefined;
+  private _customDomainRs: cdn.AFDCustomDomain[] = [];
   private _profileRs: cdn.Profile | undefined;
   private _endpointRs: cdn.AFDEndpoint | undefined;
 
   private _sdk: string = cdn.SkuName.Standard_AzureFrontDoor;
-  private _customDomain: string | undefined;
+  private _customDomains: string[] = [];
 
   private _endpointArgs: AFDBuilderEndpoint | undefined;
-  private _responseHeaders: ResponseHeaderType[] | undefined;
+  private _responseHeaders: ResponseHeaderType | undefined;
 
   public constructor(props: BuilderProps) {
     super(props);
@@ -36,8 +36,16 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
     return this;
   }
 
-  public withCustomDomain(domain: string): IAFDBuilder {
-    this._customDomain = domain;
+  public withCustomDomains(domains: string[]): IAFDBuilder {
+    this._customDomains = domains;
+    return this;
+  }
+
+  public withCustomDomainsIf(
+    condition: boolean,
+    domains: string[]
+  ): IAFDBuilder {
+    if (condition) this.withCustomDomains(domains);
     return this;
   }
 
@@ -46,8 +54,24 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
     return this;
   }
 
-  public withResponseHeaders(headers: ResponseHeaderType[]): IAFDBuilder {
+  public withEndpointIf(
+    condition: boolean,
+    endpoint: AFDBuilderEndpoint
+  ): IAFDBuilder {
+    if (condition) this.withEndpoint(endpoint);
+    return this;
+  }
+
+  public withResponseHeaders(headers: ResponseHeaderType): IAFDBuilder {
     this._responseHeaders = headers;
+    return this;
+  }
+
+  public withResponseHeadersIf(
+    condition: boolean,
+    headers: ResponseHeaderType
+  ): IAFDBuilder {
+    if (condition) this.withResponseHeaders(headers);
     return this;
   }
 
@@ -62,23 +86,26 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
     });
   }
 
-  private buildCustomDomain() {
-    if (!this._customDomain) return;
+  private buildCustomDomains() {
+    if (!this._customDomains) return;
 
-    this._customDomainRs = new cdn.AFDCustomDomain(
-      `${this._name}-custom-domain`,
-      {
-        profileName: this._profileRs!.name,
-        resourceGroupName: this.commonProps.group.resourceGroupName,
-        hostName: this._customDomain,
-        tlsSettings: {
-          certificateType: 'ManagedCertificate',
-          minimumTlsVersion: 'TLS12',
-        },
-      },
-      {
-        dependsOn: this._profileRs,
-      }
+    this._customDomainRs = this._customDomains.map(
+      (d) =>
+        new cdn.AFDCustomDomain(
+          `${this._name}-custom-domain`,
+          {
+            profileName: this._profileRs!.name,
+            resourceGroupName: this.commonProps.group.resourceGroupName,
+            hostName: d,
+            tlsSettings: {
+              certificateType: 'ManagedCertificate',
+              minimumTlsVersion: 'TLS12',
+            },
+          },
+          {
+            dependsOn: this._profileRs,
+          }
+        )
     );
   }
 
@@ -103,13 +130,13 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
         ruleSetName: this._ruleSetRs.name,
         ruleName: 'AddResponseHeaders',
         order: 100,
-        actions: this._responseHeaders!.map((h) => ({
+        actions: Object.keys(this._responseHeaders!).map((k) => ({
           name: 'ModifyResponseHeader',
           parameters: {
             typeName: 'DeliveryRuleHeaderActionParameters',
             headerAction: 'Append',
-            headerName: h.header,
-            value: h.value,
+            headerName: k,
+            value: this._responseHeaders![k],
           },
         })),
 
@@ -189,11 +216,9 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
           id: oGroup.id,
         },
         customDomains: this._customDomainRs
-          ? [
-              {
-                id: this._customDomainRs.id,
-              },
-            ]
+          ? this._customDomainRs.map((d) => ({
+              id: d.id,
+            }))
           : undefined,
         ruleSets: this._ruleSetRs ? [{ id: this._ruleSetRs.id }] : undefined,
 
@@ -309,7 +334,7 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
 
   public build(): ResourceInfo {
     this.buildProfile();
-    this.buildCustomDomain();
+    this.buildCustomDomains();
     this.buildRuleSets();
     this.buildEndpoints();
     this.buildWAF();

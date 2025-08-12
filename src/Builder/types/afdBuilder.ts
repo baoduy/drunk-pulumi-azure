@@ -11,13 +11,20 @@ export type AFDBuilderEndpoint = {
   origin: pulumi.Input<string>;
 };
 
-export type ResponseHeaderType = { header: string; value: string };
+/** The header ley value configurations */
+export type ResponseHeaderType = Record<string, string>;
 /**
  * Interface for building a CDN resource.
  */
 export interface IAFDBuilder extends IBuilder<ResourceInfo> {
   withSdk(sdk: cdn.SkuName): IAFDBuilder;
-  withCustomDomain(domain: string): IAFDBuilder;
-  withResponseHeaders(headers: ResponseHeaderType[]): IAFDBuilder;
+  withCustomDomains(domains: string[]): IAFDBuilder;
+  withCustomDomainsIf(condition: boolean, domains: string[]): IAFDBuilder;
+  withResponseHeaders(headers: ResponseHeaderType): IAFDBuilder;
+  withResponseHeadersIf(
+    condition: boolean,
+    headers: ResponseHeaderType
+  ): IAFDBuilder;
   withEndpoint(endpoint: AFDBuilderEndpoint): IAFDBuilder;
+  withEndpointIf(condition: boolean, endpoint: AFDBuilderEndpoint): IAFDBuilder;
 }
