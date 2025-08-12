@@ -11,7 +11,7 @@ export type AFDBuilderEndpoint = {
   origin: pulumi.Input<string>;
 };
 
-/** The header ley value configurations */
+/** The header key value configurations */
 export type ResponseHeaderType = Record<string, string>;
 /**
  * Interface for building a CDN resource.
