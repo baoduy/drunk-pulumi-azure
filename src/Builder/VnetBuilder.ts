@@ -22,13 +22,22 @@ import { Input } from '@pulumi/pulumi';
 
 const outboundIpName = 'outbound';
 
+/**
+ * VnetBuilder class for creating and configuring Azure Virtual Network resources.
+ * This class implements the Builder pattern for VNet configuration including
+ * subnets, firewalls, gateways, private DNS zones, and network security features.
+ * @extends Builder<VnetBuilderResults>
+ * @implements IGatewayFireWallBuilder
+ * @implements IVnetBuilder
+ * @implements IVnetBuilderStart
+ */
 class VnetBuilder
   extends types.Builder<types.VnetBuilderResults>
   implements
   types.IGatewayFireWallBuilder,
   types.IVnetBuilder,
   types.IVnetBuilderStart {
-  /** The Instances */
+  // Resource instances
   private _ipAddressInstance: PublicIpAddressPrefixResult | undefined =
     undefined;
   private _firewallInstance: Firewall.FirewallResult | undefined = undefined;
@@ -39,7 +48,7 @@ class VnetBuilder
   private _privateDnsInstances: Record<string, ResourceInfo> = {};
   private _finalIpAddressIds: Input<string>[] = [];
 
-  /** The Props */
+  // Configuration properties
   private _subnetProps: types.SubnetCreationProps | undefined = undefined;
   private _vnetProps: Partial<types.VnetBuilderProps> = {};
   private _firewallProps: types.FirewallCreationProps | undefined = undefined;
