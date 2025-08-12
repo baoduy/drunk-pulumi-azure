@@ -87,12 +87,12 @@ export class AFDBuilder extends Builder<ResourceInfo> implements IAFDBuilder {
   }
 
   private buildCustomDomains() {
-    if (!this._customDomains) return;
+    if (this._customDomains.length <= 0) return;
 
     this._customDomainRs = this._customDomains.map(
       (d) =>
         new cdn.AFDCustomDomain(
-          `${this._name}-custom-domain`,
+          `${this._name}-domain-${helpers.replaceAll(d, '.', '')}`,
           {
             profileName: this._profileRs!.name,
             resourceGroupName: this.commonProps.group.resourceGroupName,
