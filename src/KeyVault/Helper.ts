@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { Output, output } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
@@ -13,7 +14,7 @@ export const getVaultItemName = (
   currentStack: string = stack
 ) => {
   name = name
-    .replace(new RegExp(currentStack, 'g'), '') // Replace occurrences of "stack" variable with "-"
+    .replace(new RegExp(_.escapeRegExp(currentStack), 'g'), '') // Replace occurrences of "stack" variable with "-"
     .replace(/\.|_|\s/g, '-') // Replace ".", "_", and spaces with "-"
     .replace(/-+/g, '-') // Replace multiple dashes with a single dash
     .toLowerCase(); // Convert the result to lowercase
