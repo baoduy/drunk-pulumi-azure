@@ -51,8 +51,8 @@ export default ({
   const serviceEndpoints = Array.isArray(subnet.allowedServiceEndpoints)
     ? subnet.allowedServiceEndpoints
     : subnet.allowedServiceEndpoints === true
-      ? defaultServicesEndpoints
-      : undefined;
+    ? defaultServicesEndpoints
+    : undefined;
 
   return {
     name: subnet.name,
@@ -62,6 +62,7 @@ export default ({
     virtualNetworkName: vnetName,
     networkSecurityGroup: securityGroup ? { id: securityGroup.id } : undefined,
     natGateway: natGateway ? { id: natGateway.id } : undefined,
+    defaultOutboundAccess: false,
 
     routeTable:
       subnet.enableRouteTable !== false && routeTable
