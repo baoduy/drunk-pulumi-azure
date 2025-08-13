@@ -105,6 +105,7 @@ export type NodePoolProps = {
   osDiskSizeGB: number;
   osDiskType?: ccs.OSDiskType | string;
   maxPods?: number;
+  subnetId?: pulumi.Input<string>;
   //osType?: pulumi.Input<string | ccs.OSType>;
   //role?: pulumi.Input<string>;
 };
@@ -364,7 +365,7 @@ export default async ({
         },
         keda: { enabled: features?.enableKeda || false },
       },
-     
+
       //azureMonitorProfile: { metrics: { enabled } },
       //Refer here for details https://learn.microsoft.com/en-us/azure/aks/use-managed-identity
       //enablePodSecurityPolicy: true,
@@ -478,29 +479,33 @@ export default async ({
   if (nodePools) {
     nodePools.map(
       (p) =>
-        new ccs.AgentPool(`${name}-${p.name}`, {
-          //agentPoolName:p.name,
-          resourceName: aks.name,
-          ...group,
-          ...defaultNodePoolProps,
-          ...p,
-          ...autoScaleFor({
-            env: currentEnv,
-            nodeType: p.mode,
-            enableAutoScaling: features.enableAutoScale,
-            minCount: features?.minAutoScaleNodes,
-            maxCount: features?.maxAutoScaleNodes,
-          }),
+        new ccs.AgentPool(
+          `${name}-${p.name}`,
+          {
+            //agentPoolName:p.name,
+            resourceName: aks.name,
+            ...group,
+            ...defaultNodePoolProps,
+            ...p,
+            ...autoScaleFor({
+              env: currentEnv,
+              nodeType: p.mode,
+              enableAutoScaling: features.enableAutoScale,
+              minCount: features?.minAutoScaleNodes,
+              maxCount: features?.maxAutoScaleNodes,
+            }),
 
-          //This already added into defaultNodePoolProps
-          //enableEncryptionAtHost: true,
+            //This already added into defaultNodePoolProps
+            //enableEncryptionAtHost: true,
 
-          count: p.mode === 'System' ? 1 : 0,
-          vnetSubnetID: network.subnetId,
-          kubeletDiskType: 'OS',
-          osSKU: 'Ubuntu',
-          osType: 'Linux',
-        })
+            count: p.mode === 'System' ? 1 : 0,
+            vnetSubnetID: p.subnetId ?? network.subnetId,
+            kubeletDiskType: 'OS',
+            osSKU: 'Ubuntu',
+            osType: 'Linux',
+          },
+          { dependsOn: aks }
+        )
     );
   }
 
