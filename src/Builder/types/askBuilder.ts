@@ -87,6 +87,7 @@ export interface IAksBuilder extends IBuilderAsync<AksResults> {
    * @returns An instance of IAksBuilder.
    */
   withNodePool(props: NodePoolProps): IAksBuilder;
+  withNodePoolIf(condition: boolean, props: NodePoolProps): IAksBuilder;
 
   /**
    * Method to add an addon to the AKS cluster.

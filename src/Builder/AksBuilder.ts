@@ -89,6 +89,13 @@ class AksBuilder
     return this;
   }
 
+  public withNodePoolIf(condition: boolean, props: NodePoolProps): IAksBuilder {
+    if (condition) {
+      this._nodePoolsProps.push(props);
+    }
+    return this;
+  }
+
   /**
    * Sets the addon properties for the AKS.
    * @param {AskAddonProps} props - The addon properties to set.
