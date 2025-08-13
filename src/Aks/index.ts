@@ -494,7 +494,7 @@ export default async ({
               minCount: features?.minAutoScaleNodes,
               maxCount: features?.maxAutoScaleNodes,
             }),
-
+            agentPoolName: p.name,
             //This already added into defaultNodePoolProps
             //enableEncryptionAtHost: true,
 
