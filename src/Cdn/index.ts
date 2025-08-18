@@ -7,12 +7,14 @@ interface Props {
   name: string;
   group: ResourceGroupInfo;
   envRoles?: IEnvRoleBuilder;
+  sku?: cdn.SkuName;
 }
 
 export default ({
   name,
   group,
   envRoles,
+  sku = cdn.SkuName.Standard_Microsoft,
 }: Props): ResourceInfoWithInstance<cdn.Profile> => {
   name = naming.getCdnProfileName(name);
   const internalGroup = { ...group, location: 'global' };
@@ -21,7 +23,7 @@ export default ({
     profileName: name,
     ...internalGroup,
     //identity: { type: cdn.ManagedServiceIdentityType.SystemAssigned },
-    sku: { name: cdn.SkuName.Standard_AzureFrontDoor },
+    sku: { name: sku },
   });
 
   if (envRoles) {
