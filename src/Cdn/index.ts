@@ -26,13 +26,13 @@ export default ({
     sku: { name: sku },
   });
 
-  if (envRoles) {
-    //Add identity to read only group in order to read the certificate from the key vault
-    envRoles.addMember(
-      'readOnly',
-      profile.identity.apply((i) => i!.principalId!)
-    );
-  }
+  // if (envRoles) {
+  //   profile.identity.apply((i) => {
+  //     if (!i) return;
+  //     //Add identity to read only group in order to read the certificate from the key vault
+  //     envRoles.addMember('readOnly', i.principalId);
+  //   });
+  // }
 
   return {
     name,

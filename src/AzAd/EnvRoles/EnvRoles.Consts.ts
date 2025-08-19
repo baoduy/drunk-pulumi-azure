@@ -10,7 +10,7 @@ import {
 const getRoleFor = (
   roleType: RoleEnableItem | undefined,
   roleCollection: Record<EnvRoleKeyTypes, string[]>,
-  results: ListRoleType,
+  results: ListRoleType
 ) => {
   if (!roleType) return results;
 
@@ -50,7 +50,7 @@ export const grantEnvRolesAccess = ({
     const objectId = envRoles[type].objectId;
     if (!objectId) {
       console.warn(
-        `The Env role '${type}' was ignored as the objectId was NULL.`,
+        `The Env role '${type}' was ignored as the objectId was NULL.`
       );
       return;
     }
@@ -64,7 +64,7 @@ export const grantEnvRolesAccess = ({
         principalType: 'Group',
         scope,
         dependsOn,
-      }),
+      })
     );
   });
 };
@@ -72,8 +72,8 @@ export const grantEnvRolesAccess = ({
 //Resource Group Role
 const RGRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   readOnly: ['Reader'],
-  contributor: ['Contributor'],
-  admin: ['Owner'],
+  contributor: [],
+  admin: ['Contributor'],
 };
 
 //AKS Roles
@@ -84,11 +84,9 @@ const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   ],
   contributor: [
     'Azure Kubernetes Service Cluster User Role',
-    'Azure Kubernetes Service Contributor Role'
+    'Azure Kubernetes Service Contributor Role',
   ],
-  admin: [
-    'Azure Kubernetes Service RBAC Cluster Admin'
-  ],
+  admin: ['Azure Kubernetes Service RBAC Cluster Admin'],
 };
 
 //IOT Roles
