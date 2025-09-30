@@ -204,7 +204,6 @@ class ApimBuilder
         notificationSenderEmail:
           this._publisher?.notificationSenderEmail ??
           'apimgmt-noreply@mail.windowsazure.com',
-
         identity: { type: 'SystemAssigned' },
         sku,
 
@@ -352,6 +351,7 @@ class ApimBuilder
       { dependsOn: this._apimInstance }
     );
   }
+
   private buildAuths() {
     if (this._disableSignIn) return;
 
@@ -369,6 +369,7 @@ class ApimBuilder
         )
     );
   }
+
   private buildDisableSigIn() {
     if (!this._disableSignIn) return;
 
@@ -401,6 +402,7 @@ class ApimBuilder
       { dependsOn: this._apimInstance, deleteBeforeReplace: true }
     );
   }
+
   private buildPrivateLink() {
     if (!this._privateLink) return;
     ApimPrivateLink({
@@ -413,6 +415,7 @@ class ApimBuilder
       dependsOn: this._apimInstance,
     });
   }
+
   private buildInsightLog() {
     const { logInfo } = this.args;
     if (!logInfo?.appInsight) return;
