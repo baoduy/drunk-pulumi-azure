@@ -85,8 +85,12 @@ const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   contributor: [
     'Azure Kubernetes Service Cluster User Role',
     'Azure Kubernetes Service Contributor Role',
+    'Azure Kubernetes Service RBAC Writer',
   ],
-  admin: ['Azure Kubernetes Service RBAC Cluster Admin'],
+  admin: [
+    'Azure Kubernetes Service RBAC Cluster Admin',
+    'Azure Kubernetes Service RBAC Admin',
+  ],
 };
 
 //IOT Roles

@@ -209,11 +209,12 @@ class VnetBuilder
   }
 
   private buildVnet() {
-    if (!this._firewallProps) {
-      this.withSecurityRules(
-        ...BlockInternetSecurityRule(this.commonProps.name),
-      );
-    }
+      //This is not required anymore as the Subnet is private by default
+    // if (!this._firewallProps) {
+    //   this.withSecurityRules(
+    //     ...BlockInternetSecurityRule(this.commonProps.name),
+    //   );
+    // }
 
     const subnets = this._subnetProps
       ? Object.keys(this._subnetProps!).map(

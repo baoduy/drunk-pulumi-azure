@@ -2,7 +2,6 @@ import * as apim from '@pulumi/azure-native/apimanagement';
 import { organization } from '../Common';
 import { getIpsRange } from '../VNet/Helper';
 import * as types from './types';
-import { ApimForwardToServiceBusType, ApimSetResponseBodyType } from './types';
 
 export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
   private _inboundPolicies: string[] = [];
@@ -62,6 +61,7 @@ export default class ApimPolicyBuilder implements types.IApimPolicyBuilder {
     if (condition) this.setBaseUrl(props);
     return this;
   }
+
   public setHeader(props: types.ApimSetHeaderType): types.IApimPolicyBuilder {
     let rs = `\t<set-header name="${props.name}" exists-action="${props.type}">`;
     if (props.value) {

@@ -2,7 +2,7 @@ import * as apim from '@pulumi/azure-native/apimanagement';
 import env from '../env';
 import { interpolate } from '@pulumi/pulumi';
 import { randomPassword } from '../Core/Random';
-import { addCustomSecrets } from '../KeyVault/CustomHelper';
+import { addCustomSecrets } from '../KeyVault';
 import { ResourceInfo } from '../types';
 import ApimApiBuilder from './ApimApiBuilder';
 import ApimPolicyBuilder from './ApimPolicyBuilder';
