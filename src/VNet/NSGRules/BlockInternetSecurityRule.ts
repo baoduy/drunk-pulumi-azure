@@ -7,7 +7,7 @@ export default (name: string = 'default') => {
   rs.push({
     name: `${name}-allows-vnet-outbound`,
     description: 'Allows Vnet to Vnet Outbound',
-    priority: 4095,
+    priority: 4090,
     protocol: '*',
     access: 'Allow',
     direction: 'Outbound',
