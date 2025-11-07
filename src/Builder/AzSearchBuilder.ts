@@ -24,7 +24,7 @@ class AzSearchBuilder
   implements IAzSearchSkuBuilder, IAzSearchBuilder
 {
   private readonly _instanceName: string;
-  
+
   // Resource instances
   private _azSearch: search.Service | undefined = undefined;
 
@@ -76,7 +76,7 @@ class AzSearchBuilder
               search.AadAuthFailureMode.Http401WithBearerChallenge,
           },
         },
-        hostingMode: 'default',
+        //hostingMode: 'default',
         encryptionWithCmk: enableEncryption
           ? {
               enforcement: search.SearchEncryptionWithCmk.Enabled,
@@ -99,7 +99,7 @@ class AzSearchBuilder
             }
           : undefined,
       },
-      { dependsOn, ignoreChanges },
+      { dependsOn, ignoreChanges }
     );
   }
 
