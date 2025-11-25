@@ -28,7 +28,8 @@
     ".out-bin",
     ".tools",
     "src/z_tests/**/*.ts",
-    "pulumi-test"
+    "pulumi-test",
+    "examples"
   ],
   "files": [
     "src/Aks/Helper.ts",
@@ -62,6 +63,7 @@
     "src/Builder/ApimRootBuilder.ts",
     "src/Builder/AppCertBuilder.ts",
     "src/Builder/AppConfigBuilder.ts",
+    "src/Builder/AppContainerBuilder.ts",
     "src/Builder/AutomationBuilder.ts",
     "src/Builder/AzAppBuilder.ts",
     "src/Builder/AzSearchBuilder.ts",
@@ -76,6 +78,7 @@
     "src/Builder/PrivateDnsZoneBuilder.ts",
     "src/Builder/RedisCacheBuilder.ts",
     "src/Builder/ResourceBuilder.ts",
+    "src/Builder/Samples/AppContainerBuilder.example.ts",
     "src/Builder/ServiceBusBuilder.ts",
     "src/Builder/SignalRBuilder.ts",
     "src/Builder/SqlBuilder.ts",
@@ -92,6 +95,7 @@
     "src/Builder/types/apimProductBuilder.ts",
     "src/Builder/types/appCertBuilder.ts",
     "src/Builder/types/appConfigBuilder.ts",
+    "src/Builder/types/appContainerBuilder.ts",
     "src/Builder/types/askBuilder.ts",
     "src/Builder/types/automationBuilder.ts",
     "src/Builder/types/azAppBuilder.ts",

@@ -5,6 +5,7 @@ export { default as ApimBuilder } from './ApimBuilder';
 export { default as ApimRootBuilder } from './ApimRootBuilder';
 export { default as AppCertBuilder } from './AppCertBuilder';
 export { default as AppConfigBuilder } from './AppConfigBuilder';
+export { default as AppContainerBuilder } from './AppContainerBuilder';
 export { default as AutomationBuilder } from './AutomationBuilder';
 export { default as AzAppBuilder, getFuncHostInfo } from './AzAppBuilder';
 export { default as AzSearchBuilder } from './AzSearchBuilder';

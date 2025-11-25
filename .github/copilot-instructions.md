@@ -913,7 +913,7 @@ const api = apim.addApi({
 ```typescript
 import { naming, cleanName, getResourceName } from '@drunk-pulumi/azure/Common';
 
-// Auto-naming (uses environment, region, organization from config)
+// Auto-naming (uses environment, region, org from config)
 naming.getStorageName('mydata');
 // Dev: "devmydataseastgmyorg"
 // Prd: "prdmydataseastgmyorg"
@@ -1675,7 +1675,7 @@ export const MyServicePrivateLink = ({
   subnetIds,
   privateIpAddress,
   extraVnetIds,
-}: PrivateLinkPropsType & { 
+}: PrivateLinkPropsType & {
   resourceInfo: ResourceInfo;
   type?: MyServiceType[];  // Service-specific types
 }) => {
@@ -1704,27 +1704,6 @@ export const MyServicePrivateLink = ({
 
   return dnsZone;
 };
-```
-
-### Naming Convention Pattern
-
-```typescript
-// Always use naming utilities
-import { naming } from '../Common';
-
-// ✅ Correct - uses environment, region, org
-const storageName = naming.getStorageName('mydata');
-
-// ❌ Wrong - hardcoded name
-const storageName = 'prd-mydata-seau-stg-myorg';
-
-// Custom naming for special cases
-const customName = getResourceName('special', {
-  prefix: 'custom',
-  suffix: 'srv',
-  cleanName: true,
-  maxLength: 24,
-});
 ```
 
 ### Secrets Management Pattern
@@ -1919,8 +1898,9 @@ describe('MyService tests', () => {
    );
    
    // ❌ Bad - multiple applies
-   const config1 = val1.apply(v => ...);
-   const config2 = val2.apply(v => ...);
+   const config1 = val1.apply(v1 => ...);
+   const config2 = val2.apply(v2 => ...);
+   config3.apply(v3 => process3(v3));
    ```
 
 3. **Batch resource creation**
@@ -1971,563 +1951,6 @@ describe('MyService tests', () => {
 - Requires specific versions: Node.js 20, pnpm 8
 - Build process auto-generates tsconfig.json from source files
 - Uses cross-env for environment variables (Windows compatibility)
-
-## Performance Expectations
-
-### Command Timing (NEVER CANCEL these operations)
-- `pnpm install`: 2+ minutes (dependency download)
-- `pnpm run build`: ~30 seconds (full build with tsconfig update)
-- `pnpm run ciBuild`: ~15 seconds (CI build, faster)
-- `pnpm run lint`: ~10 seconds
-- `pnpm run pack`: <1 second
-- Individual tests: ~6 seconds
-
-### Memory Requirements
-- Build process uses `NODE_OPTIONS=--max-old-space-size=4096`
-- Large TypeScript project with ~200 source files
-- May require increased Node.js memory limits
-
-## Troubleshooting Guide
-
-### Common Build Issues
-
-#### Issue: "Cannot find module" errors
-```bash
-# Solution: Clean install
-rm -rf node_modules .pnpm-store pnpm-lock.yaml
-pnpm install
-pnpm run build
-```
-
-#### Issue: Build hangs or times out
-```bash
-# Solution: Increase Node.js memory
-export NODE_OPTIONS="--max-old-space-size=8192"
-pnpm run build
-```
-
-#### Issue: TypeScript compilation errors after adding files
-```bash
-# Solution: Regenerate tsconfig.json
-pnpm run update-tsconfig
-pnpm run build
-```
-
-#### Issue: ESLint crashes with "Cannot read tsconfig.json"
-```bash
-# Solution: Check eslint.config.mjs uses __dirname correctly
-# The file should have:
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-```
-
-### Common Runtime Issues
-
-#### Issue: "Resource already exists" during pulumi up
-```typescript
-// Solution: Import existing resource
-const storage = StorageBuilder({
-  name: 'existing',
-  group,
-  importUri: '/subscriptions/.../providers/Microsoft.Storage/storageAccounts/name',
-})
-  .asStorage()
-  .build();
-```
-
-#### Issue: "Cannot find vault" when loading roles
-```typescript
-// Solution: Ensure vault exists first
-const rs = await ResourceBuilder('app')
-  .createVault()  // Create vault first
-  .withRolesFromVault()  // Then load roles
-  .build();
-
-// OR use withVaultFrom for existing vault
-const rs = await ResourceBuilder('app')
-  .withVaultFrom('existing-vault-name')
-  .withRolesFromVault()
-  .build();
-```
-
-#### Issue: Private endpoint DNS not resolving
-```typescript
-// Solution: Check VNet is linked to private DNS zone
-VaultPrivateLink({
-  resourceInfo: vaultInfo,
-  subnetIds: [subnet.id],
-  extraVnetIds: [spokeVnet.id],  // Add all VNets that need DNS
-});
-```
-
-#### Issue: RBAC permissions not working
-```typescript
-// Solution: Wait for role assignments to propagate (60-90 seconds)
-// OR check principal ID is correct
-import { currentPrincipal } from '@drunk-pulumi/azure/Common';
-
-Role.create({
-  name: 'my-role',
-  principalId: currentPrincipal,  // Current user/SP
-  roleName: 'Contributor',
-  scope: resource.id,
-});
-```
-
-### Common Test Issues
-
-#### Issue: Tests fail with "Module not found"
-```bash
-# Solution: Use correct tsconfig for tests
-cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'src/z_tests/**/*.test.ts'
-```
-
-#### Issue: Tests timeout
-```bash
-# Solution: Increase timeout
-mocha --timeout 30000 ...
-```
-
-### Common Pulumi Issues
-
-#### Issue: "Stack is currently locked"
-```bash
-# Solution: Cancel lock (if safe)
-pulumi cancel
-# OR force unlock
-pulumi stack select <stack>
-pulumi cancel --yes
-```
-
-#### Issue: "Error: refusing to deploy" with preview errors
-```bash
-# Solution: Run preview first, fix errors
-pulumi preview
-# Then run up
-pulumi up
-```
-
-#### Issue: Resources created with wrong names
-```bash
-# Solution: Check environment variables
-echo $PULUMI_NODEJS_STACK
-echo $PULUMI_NODEJS_PROJECT
-echo $PULUMI_NODEJS_ORGANIZATION
-
-# Verify naming configuration
-export DPA_NAMING_DISABLE_PREFIX=false
-export DPA_NAMING_DISABLE_SUFFIX=false
-```
-
-## CLI Command Reference
-
-### Build Commands
-
-```bash
-# Full build (recommended)
-pnpm run build
-# 1. Generates tsconfig.json from src/
-# 2. Compiles TypeScript
-# 3. Copies clean package.json to .out-bin/
-# Time: ~30 seconds
-
-# Fast build (CI)
-pnpm run ciBuild
-# Skips tsconfig generation and package copy
-# Time: ~15 seconds
-
-# Development build
-pnpm run fastBuild
-# Just TypeScript compilation
-# Time: ~20 seconds
-
-# Update tsconfig only
-pnpm run update-tsconfig
-# Time: <1 second
-
-# Package for distribution
-pnpm run pack
-# Creates .tgz in .out-bin/
-# Time: <1 second
-```
-
-### Test Commands
-
-```bash
-# Run all tests
-pnpm run test
-
-# Run specific test file
-npx cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'src/z_tests/Common/Helpers.test.ts'
-
-# Run with coverage
-pnpm run test-cover
-
-# Run working tests only
-npx cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'src/z_tests/Common/Helpers.test.ts' 'src/z_tests/Vnet/Helper.test.ts'
-```
-
-### Lint Commands
-
-```bash
-# Run ESLint
-pnpm run lint
-# Expected: ~150 warnings (normal for this codebase)
-# Time: ~10 seconds
-
-# Lint specific files
-npx eslint src/Builder/StorageBuilder.ts
-```
-
-### Pulumi Commands (in pulumi-test/)
-
-```bash
-# Initialize new stack
-pnpm run new-stack
-# Creates stack with passphrase encryption
-
-# Preview changes
-pulumi preview
-
-# Deploy
-pnpm run up
-# Equivalent to: pulumi up --yes --skip-preview
-
-# Refresh and deploy
-pnpm run reup
-# Equivalent to: pulumi up --refresh --yes --skip-preview
-
-# Destroy
-pnpm run destroy
-# Equivalent to: pulumi destroy --yes --skip-preview
-
-# Export state
-pnpm run export
-# Saves to state.json
-
-# Import state
-pnpm run import
-# Loads from state.json
-```
-
-### Maintenance Commands
-
-```bash
-# Update dependencies
-pnpm run update
-# Uses npm-check-updates
-
-# Clean build artifacts
-rm -rf .out-bin/ node_modules/ .pnpm-store/
-
-# Full reset
-rm -rf .out-bin/ node_modules/ .pnpm-store/ pnpm-lock.yaml
-pnpm install
-pnpm run build
-```
-
-## Environment Variables Reference
-
-### Build-time Variables
-
-```bash
-# Node.js memory (for large builds)
-export NODE_OPTIONS="--max-old-space-size=4096"
-
-# Production build
-export NODE_ENV="production"
-```
-
-### Pulumi Variables
-
-```bash
-# Stack configuration (auto-set by Pulumi)
-PULUMI_NODEJS_STACK=dev
-PULUMI_NODEJS_PROJECT=my-project
-PULUMI_NODEJS_ORGANIZATION=my-org
-
-# Dry run mode
-PULUMI_NODEJS_DRY_RUN=true
-
-# Debug
-PULUMI_DEBUG_PROMISE_LEAKS=true
-```
-
-### DPA Configuration Variables
-
-```bash
-# Disable environment prefix in names
-export DPA_NAMING_DISABLE_PREFIX=true
-
-# Disable region code in names
-export DPA_NAMING_DISABLE_REGION=true
-
-# Disable service suffix in names
-export DPA_NAMING_DISABLE_SUFFIX=true
-
-# Disable vault item name formatting
-export DPA_VAULT_DISABLE_FORMAT_NAME=true
-
-# Enable secondary connection strings in vault
-export DPA_CONN_ENABLE_SECONDARY=true
-```
-
-### Azure Configuration (via Pulumi config or env)
-
-```bash
-# Set via Pulumi
-pulumi config set azure-native:tenantId <tenant-id>
-pulumi config set azure-native:subscriptionId <subscription-id>
-pulumi config set azure-native:location SoutheastAsia
-
-# OR via environment
-export ARM_TENANT_ID=<tenant-id>
-export ARM_SUBSCRIPTION_ID=<subscription-id>
-export ARM_CLIENT_ID=<client-id>
-export ARM_CLIENT_SECRET=<client-secret>
-```
-
-## Quick Start Guide
-
-### For New Developers
-
-```bash
-# 1. Clone repository
-git clone https://github.com/baoduy/drunk-pulumi-azure.git
-cd drunk-pulumi-azure
-
-# 2. Install pnpm globally (if not installed)
-npm install -g pnpm@8
-
-# 3. Install dependencies (NEVER CANCEL - takes 2+ minutes)
-pnpm install
-
-# 4. Build library (NEVER CANCEL - takes ~30 seconds)
-pnpm run build
-
-# 5. Verify build
-ls -la .out-bin/
-node -e "const h = require('./.out-bin/Common/Helpers.js'); console.log(h.getRootDomainFromUrl('test.example.com'))"
-
-# 6. Run tests
-npx cross-env TS_NODE_PROJECT='./tsconfig.test.json' mocha --timeout 10000 -r ts-node/register 'src/z_tests/Common/Helpers.test.ts'
-
-# 7. Try example project
-cd pulumi-test/
-pnpm install
-pulumi preview
-```
-
-### For Creating New Infrastructure
-
-```bash
-# 1. Create new Pulumi project
-mkdir my-infra && cd my-infra
-pulumi new typescript
-
-# 2. Install drunk-pulumi-azure
-pnpm add @drunk-pulumi/azure
-
-# 3. Create infrastructure (index.ts)
-cat > index.ts << 'EOF'
-import * as pulumi from '@pulumi/pulumi';
-import { ResourceBuilder, StorageBuilder } from '@drunk-pulumi/azure';
-
-export default (async () => {
-  const rs = await ResourceBuilder('my-app')
-    .createRoles()
-    .createRG({ enableVaultRoles: true })
-    .createVault()
-    .build();
-
-  const storage = StorageBuilder({ ...rs, name: 'mydata' })
-    .asStorage()
-    .withContainers([{ name: 'data', public: false }])
-    .build();
-
-  return {
-    resourceGroup: rs.group?.resourceGroupName,
-    storage: storage.name,
-  };
-})();
-EOF
-
-# 4. Configure Azure
-pulumi config set azure-native:location SoutheastAsia
-
-# 5. Deploy
-pulumi up
-```
-
-## Package Information
-
-- **Name**: @drunk-pulumi/azure
-- **Version**: Managed via GitHub Actions (semantic versioning)
-- **Type**: TypeScript library for Pulumi
-- **Target**: Azure infrastructure management
-- **Distribution**: npm package (published from GitHub Actions)
-- **License**: MIT
-- **Repository**: https://github.com/baoduy/drunk-pulumi-azure
-- **Documentation**: https://baoduy.github.io/drunk-pulumi-azure/
-
-### Key Dependencies
-
-**Core Dependencies:**
-- `@pulumi/pulumi` (^3.208.0) - Pulumi SDK
-- `@pulumi/azure-native` (^3.10.2) - Azure Native provider
-- `@pulumi/azuread` (6.7.0) - Azure AD provider
-- `@pulumi/random` (^4.18.4) - Random provider
-- `@pulumi/tls` (^5.2.3) - TLS provider
-- `@drunk-pulumi/azure-providers` (^1.0.10) - Custom providers
-- `@azure/keyvault-certificates` (^4.10.0) - Key Vault SDK
-- `@azure/keyvault-secrets` (^4.10.0) - Key Vault SDK
-- `netmask` (^2.0.2) - IP address utilities
-- `node-forge` (^1.3.1) - Cryptography utilities
-- `to-words` (^4.8.0) - Number to words conversion
-- `lodash` (^4.17.21) - Utility functions
-
-**Dev Dependencies:**
-- TypeScript 5.9.3
-- ESLint with TypeScript support
-- Mocha & Chai for testing
-- ts-node for running TypeScript
-- cross-env for environment variables
-- Various build tools
-
-### Build Output Structure
-
-```
-.out-bin/
-├── package.json          # Clean (no devDependencies)
-├── README.md             # Project documentation
-├── Aks/                  # Compiled JavaScript + type definitions
-│   ├── index.js
-│   ├── index.d.ts
-│   ├── Helper.js
-│   ├── Helper.d.ts
-│   └── ...
-├── Builder/              # All builders
-│   ├── index.js
-│   ├── index.d.ts
-│   ├── ResourceBuilder.js
-│   ├── ResourceBuilder.d.ts
-│   ├── types/
-│   │   ├── index.d.ts
-│   │   └── ...
-│   └── ...
-├── Common/               # Utilities
-├── AzAd/                 # AD & Identity
-├── VNet/                 # Networking
-├── Storage/              # Storage
-├── KeyVault/             # Key Vault
-└── ...                   # All other modules
-```
-
-## Advanced Topics
-
-### Custom Builder Creation
-
-To create a new builder for an Azure service:
-
-1. **Create type definitions** (`src/Builder/types/myServiceBuilder.ts`)
-2. **Implement builder** (`src/Builder/MyServiceBuilder.ts`)
-3. **Add helper functions** (`src/MyService/Helper.ts`)
-4. **Add to exports** (`src/Builder/index.ts`)
-5. **Add tests** (`src/z_tests/MyService/MyService.test.ts`)
-6. **Add documentation** (`docs/builders/MyServiceBuilder.md`)
-7. **Update copilot instructions**
-
-See existing builders as templates (e.g., `StorageBuilder`, `VnetBuilder`).
-
-### Custom Naming Rules
-
-To add custom naming rules:
-
-```typescript
-// In src/Common/Naming.ts
-export const rules = {
-  // ... existing rules
-  getMyServiceName: {
-    cleanName: true,
-    maxLength: 80,
-    suffix: 'mysvc',
-    includeOrgName: true,
-    replaces: [{ from: /[_]/g, to: '-' }],
-  },
-};
-
-// Then implement the function
-export const getMyServiceName = (name: NamingType) =>
-  getResourceName(name, rules.getMyServiceName);
-```
-
-### Custom Private Endpoint
-
-To add private endpoint for new service:
-
-```typescript
-// In src/VNet/PrivateEndpoint.ts
-export const MyServicePrivateLink = ({
-  resourceInfo,
-  subnetIds,
-  privateIpAddress,
-  extraVnetIds,
-  type,
-}: PrivateLinkPropsType & {
-  resourceInfo: ResourceInfo;
-  type?: ('endpoint1' | 'endpoint2')[];
-}) => {
-  const dnsZoneName = 'privatelink.myservice.azure.com';
-  
-  const dnsZone = PrivateDnsZone({
-    name: dnsZoneName,
-    group: resourceInfo.group,
-    vnetIds: [...subnetIds, ...(extraVnetIds || [])],
-  });
-
-  (type || ['endpoint1']).forEach((t) => {
-    PrivateEndpoint({
-      name: `${resourceInfo.name}-${t}`,
-      group: resourceInfo.group,
-      subnetIds,
-      privateLinkServiceId: resourceInfo.id,
-      groupIds: [t],
-      dnsZoneName,
-      dnsZoneId: dnsZone.id,
-      privateIpAddress,
-    });
-  });
-
-  return dnsZone;
-};
-```
-
-### Extending Environment Roles
-
-To add custom role types:
-
-```typescript
-// In src/types.ts
-export type EnvRoleKeyTypes = 
-  | 'readOnly' 
-  | 'contributor' 
-  | 'admin'
-  | 'customRole';  // Add custom role
-
-// In src/AzAd/EnvRoles/EnvRoles.Consts.ts
-export const RoleKeys = {
-  readOnly: 'readOnly',
-  contributor: 'contributor',
-  admin: 'admin',
-  customRole: 'customRole',  // Add custom role
-} as const;
-
-// Then use in builders
-const roles = EnvRoleBuilder.create()
-  .addAdmin({ objectId: '...', displayName: 'Admins' })
-  .addCustomRole({ objectId: '...', displayName: 'Custom' })
-  .build();
-```
 
 ## Performance Optimization
 
@@ -2711,3 +2134,188 @@ This library provides a comprehensive, production-ready TypeScript abstraction o
 - `.tasks/` - Build automation scripts
 
 **Always reference this file first** before making changes or answering questions about the project structure, patterns, or usage.
+
+## Copilot Memory Bank Addendum
+
+Purpose: Provide ultra-fast recall for implementing and extending the Builder Pattern, naming rules, RBAC/security flows, private endpoints, and async expansion. Use this section to guide future development without re-reading the full document.
+
+### 1. Builder Fluent Chains Quick Reference
+(Representative method order; some optional methods omitted. Always call the starter method first where required.)
+
+Foundation (ResourceBuilder - async build):
+- `ResourceBuilder(name)` → `createRoles()` → `createRG({ enableVaultRoles?, enableStorageRoles? })` → `createVault(vaultName?)` → `addSecrets({ ... })` / `addSecretsIf(cond,{ ... })` → `addCerts({...})` → `createEnvUID()` → `linkVaultTo({ subnetIds, extraVnetIds? })` → `withLogInfoFrom(name)` / `withLogInfo(logInfo)` → `enableEncryption()` → `build()`
+
+Network (VnetBuilder):
+- Hub: `VnetBuilder(args)` → `asHub({ addressSpaces, subnets, dnsServers? })` → `withPublicIP('prefix'|'individual')` → `withNatGateway()` → `withFirewall({ subnetSpace, policyType, managementSubnetSpace? })` → `withBastion()` → `enableSecurityGroup()` → `enableRouteTable()` → `addSecurityRule(rule)`* → `withPeering({...})` → `addPrivateDnsZone(zoneName)`* → `build()`
+- Spoke: `asSpoke({...})` + `withPeering({...})` + optional DNS additions.
+
+Storage (StorageBuilder):
+- `StorageBuilder(args)` → `asStorage({ enableEncryption?, allowSharedKeyAccess? ... })` | `asStaticWebStorage()` → `withContainers([{ name, public }])` → `withQueues([...])` → `withFileShares([...])` → `withPrivateEndpoint({ subnetIds, type, privateIpAddress? })` | `withNetwork({...})` → `withLifecyclePolicy({...})` → `withAFD({...})` | `withCdn({...})` → `lock()` → `build()`
+
+SQL (SqlBuilder):
+- `SqlBuilder(args)` → `generateLogin()` | `withLoginInfo({...})` → `withElasticPool({...})` → `addDatabase({...})`* → `withNetwork({ subnetId, privateEndpoint? })` → `enableEncryption()` → `enableThreatDetection()` → `lock()` → `build()`
+
+Vault (VaultBuilder):
+- `VaultBuilder(args)` → `addSecrets({...| fn(vaultInfo) })`* → `addSecretsIf(cond,{...})` → `addCerts({...})` → `privateLinkTo({ subnetIds, extraVnetIds?, privateIpAddress? })` → `build()`
+
+AKS (AksBuilder - async):
+- `AksBuilder(args)` → `withVersion(ver)` → `withNetwork({ subnetId, outboundIpAddressIds?, serviceCidr?, dnsServiceIP? })` → `withSystemNodePool({...})` → `addNodePool({...})`* → `enableMonitoring(logInfo)` → `enableAzurePolicy()` → `enableSecretProvider(vaultInfo)` → `build()` (await result)
+
+Service Bus (ServiceBusBuilder):
+- `ServiceBusBuilder(args)` → `withSku({ tier, capacity })` → `addQueue({...})`* → `addTopic({...})`* → `addSubscription(topicName,{...})`* → `build()`
+
+APIM (ApimBuilder):
+- `ApimBuilder(args)` → `withSku(tier, capacity)` → `withNetwork({ subnetId, type })` → `withCustomDomain({ gateway, portal, certFromVault })` → `addBackend({...})`* → `build()` → (API chain) `addApi({...})` → `withPolicy(name, config)`* → `build()`
+
+DNS Public (DnsZoneBuilder):
+- `DnsZoneBuilder(args)` → `addARecord({...})`* → `addCnameRecord({...})`* → `addTxtRecord({...})`* → `build()`
+
+Private DNS (PrivateDnsZoneBuilder):
+- `PrivateDnsZoneBuilder(args)` → `linkTo({ vnetIds })` → `addARecord({...})`* → `build()`
+
+VM (VmBuilder):
+- `VmBuilder(args)` → `withNetwork({ subnetId, nsgRules? })` → `withDisk({ sizeGb, type, encryptionSetId? })` → `addExtension({...})`* → `lock()` → `build()`
+
+Redis (RedisCacheBuilder):
+- `RedisCacheBuilder(args)` → `withSku({ tier, family, capacity })` → `enablePersistenceIf(cond,{ storageAccountId, format })` → `addPatchSchedule({...})`* → `build()`
+
+SignalR (SignalRBuilder):
+- `SignalRBuilder(args)` → `withCors(['domain'])` → `withUpstream({ templates })` → `build()`
+
+AppConfig (AppConfigBuilder):
+- `AppConfigBuilder(args)` → `addKey({ key, value, contentType? })`* → `addFeatureFlag({ name, enabled })`* → `build()`
+
+IotHub (IotHubBuilder):
+- `IotHubBuilder(args)` → `withSku({ name, units })` → `addRoute({...})`* → `addConsumerGroup(eventHubName,'name')`* → `build()`
+
+Edge (AFD/Cdn/FrontDoor) patterns follow: define endpoints/domains → security headers/WAF → build.
+
+### 2. RBAC Integration Checklist
+- Create or load roles early: `createRoles()` or `withRolesFromVault()` before dependent resources.
+- Vault roles: enable via `createRG({ enableVaultRoles: true })` or pass `enableVaultRoles` flags in specific builders.
+- Storage / Data-plane roles: set `enableStorageRoles` in RG creation or use `grantEnvRolesAccess({ enableStorageRoles: true })` internally.
+- Encryption identity access: ensure EnvUID principal has necessary key permissions (handled by EnvUID creation helper).
+- Persist roles: `envRoles.saveToVault(vaultInfo)` after creation when not using `createRoles()` auto-save.
+- Custom role assignment: use `Role.create({ principalId, roleName, scope })` only for non-standard scopes.
+- Propagation wait: expect 60–90s for new assignments; avoid immediate dependent operations requiring permissions.
+
+### 3. Pitfalls & Anti-Patterns
+- Multiple `apply` chains instead of `pulumi.all()` (performance penalty).
+- Hardcoded resource names (bypass naming conventions, causes drift across envs).
+- Missing `lock()` in production for stateful services (risk of accidental deletion).
+- Calling encryption-dependent features without `vaultInfo` or `envUIDInfo` (runtime throws).
+- Creating private endpoints before subnets exist (deployment failure).
+- Repeated `addSecrets` with duplicate keys (silent overwrites). Consolidate or validate.
+- Importing existing resources without `ignoreChanges` for immutable props (constant diffs).
+- Direct role assignments late in chain causing dependency race (assign early or depend on resource).
+- Storing secrets using `requireSecret` inside `apply` lambdas (inefficient, repeated fetch).
+
+### 4. Decision Matrix (Builder vs Raw vs Import)
+- Use Builder: Multi-feature resource (encryption, RBAC, private endpoints, naming, lifecycle) or consistent org standards.
+- Raw Resource: Simple one-off without organizational naming/roles or experimental prototype.
+- Builder + importUri: Adopt existing resource into standard process; combine with `ignoreChanges` for stable fields.
+- `rsInfo.get*Info()`: Reference existing resource without managing its lifecycle (read-only integration).
+- Composite scenario: Start with `ResourceBuilder` then add specialized builders for advanced infra composition.
+
+### 5. Private Endpoint Adapter Recipe
+Reusable pattern for new service:
+- Decide DNS zone: `privatelink.<service>.azure.com` OR Azure standard (e.g., blob/table variants handled by Storage).
+- Create or reuse Private DNS Zone (via `PrivateDnsZoneBuilder` or helper) linking required VNets: hub + spokes.
+- For multiple subresource types, iterate `type[]` creating endpoints with `groupIds` set accordingly.
+- Support static IP via `privateIpAddress` for deterministic addressing.
+- Return DNS zone info for downstream records; ensure idempotent naming using `naming.getXName()` base.
+
+### 6. Naming Rule Extension Recipe
+Steps:
+- Add entry to rules object in `Naming.ts`: define `suffix`, `cleanName`, `maxLength`, `includeOrgName`, `replaces` as needed.
+- Export function `getMyServiceName(name)` → `getResourceName(name, rules.getMyServiceName)`.
+- Test: new naming respects length & cleaning; add targeted test file or extend existing naming tests.
+- Avoid collisions: ensure unique suffix among resource families; document rationale in code comment.
+- Provide builder usage: call inside builder `build()` using standardized method.
+
+### 7. New Builder Skeleton & Checklist
+Checklist:
+- Types file: starter interface(s) (select service mode) → feature interface(s) → build interface returning `IBuilder<Result>`.
+- Class extends `Builder<T>` or `BuilderAsync<T>` (async resources only).
+- Private state for selected mode & feature toggles (no provisioning until `build()`).
+- Each fluent method: mutate config → return narrowed interface (this) maintaining chain type safety.
+- Use `ResourceCreator(Class, { name: naming.getXName(baseName), lock, dependsOn, ignoreChanges, importUri, ...props })`.
+- Provide `lock()` only if resource deletion risk justified.
+- Vault/encryption optional; guard with early errors: `if (needsVault && !vaultInfo) throw ...`.
+- Return shape includes `name`, `group`, `id`, `instance` plus any derived outputs.
+- Add minimal tests: naming, mode selection gating, required prop validation.
+- JSDoc: each public method states purpose + return interface.
+
+### 8. Async Builder Guidelines
+For future complex builders (e.g., generating credentials, external lookups):
+- Use `BuilderAsync<T>` base.
+- Keep all configuration synchronous; only `build()` performs async (Promise.all for parallel pre-steps).
+- Ensure idempotency: skip recreation if instance already built (internal flag).
+- Provide clear error messages before awaits for missing prerequisites.
+- Avoid nested `await` chains; aggregate necessary outputs.
+- Mirror result type structure of sync builders for consistency.
+
+### 9. Core TypeScript Pattern Summary
+- Interface Segregation: progressive narrowing prevents invalid method ordering.
+- Composition Types: small granular types combine into resource args/results (e.g., `BasicResourceArgs` + vault/encryption extensions).
+- ResourceCreator Abstraction: centralizes lock, monitoring, import, dependencies—builders stay declarative.
+- Conditional Methods: `withXIf(condition, props)` pattern reduces imperative branching at call sites.
+- Output Handling: prefer single `pulumi.all` apply over scattered applies.
+- Idempotent Build: state stored internally; multiple `build()` calls should not recreate resources.
+
+### 10. RBAC + Encryption Integration Flow (Condensed)
+1. Roles: create or load.
+2. RG: create with role enable flags.
+3. Vault: create; auto-grant required roles.
+4. EnvUID: create encryption identity, store in vault.
+5. Service Builders: pass `vaultInfo`, `envUIDInfo`, `envRoles` for encryption/RBAC.
+6. Lock critical resources in production.
+
+### 11. Minimal Test Patterns
+- Naming test: assert prefix, region code presence (unless env vars disable components).
+- Builder flow test: ensure calling feature before starter not possible (compile-time). Runtime check flags set after chain.
+- Error test: missing vault for encryption throws expected message.
+- Conditional feature test: `withXIf(false, ...)` does not mutate config.
+
+### 12. Mnemonic Memory Bank
+Phrase: "Foundational Networks Drive Secure Integrated Compute Messaging Edge Resources Async Named".
+Mapping:
+- Foundational = ResourceBuilder (RG, Vault, Roles, EnvUID)
+- Networks = VnetBuilder (subnets, firewall, NAT, DNS, peering)
+- Drive = Storage & Data (containers, queues, databases)
+- Secure = Vault, RBAC, Encryption
+- Integrated = APIM, Config, SignalR, IotHub
+- Compute = AKS, VM, Automation
+- Messaging = ServiceBus, SignalR
+- Edge = AFD, FrontDoor, CDN, DNS
+- Resources = Unified ResourceCreator / naming
+- Async = Builders needing pre-creation steps (ResourceBuilder, AksBuilder, future)
+- Named = Consistent naming rules extension
+
+### 13. Quick Anti-Pattern Reminders (One-Liners)
+- Avoid hardcoded names.
+- Avoid multiple sequential apply chains.
+- Do not enable shared key access unless required exception.
+- Do not skip private endpoints for production services.
+- Do not create roles after dependent resources.
+- Do not ignore encryption prerequisites.
+
+### 14. When Updating This Addendum
+- Add new builder chain in Section 1.
+- Extend mnemonic if a new category emerges (e.g., ML, Analytics).
+- Update RBAC checklist if new role enable flags introduced.
+- Add pitfalls if repeated mistakes observed in PRs.
+
+### 15. Fast Start Recipe (Builder Creation TL;DR)
+1. Add naming rule → test.
+2. Create types file (starter/feature/build interfaces).
+3. Implement builder class (no side-effects until `build`).
+4. Integrate ResourceCreator & naming in `build()`.
+5. Add lock/encryption/vault guards.
+6. Export via `src/Builder/index.ts`.
+7. Add minimal tests + doc file in `docs/builders/`.
+8. Append quick chain here.
+
+---
+This addendum is the high-compression memory layer for Copilot. Prefer referencing these bullets for rapid implementation and extension decisions.
+

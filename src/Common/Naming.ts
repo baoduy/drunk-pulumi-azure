@@ -28,6 +28,18 @@ export const rules = {
     suffix: 'app-plan',
     maxLength: 80,
   },
+  getContainerAppName: {
+    cleanName: true,
+    includeOrgName: true,
+    suffix: 'capp',
+    maxLength: 32,
+  },
+  getContainerAppEnvName: {
+    cleanName: true,
+    includeOrgName: true,
+    suffix: 'capp-env',
+    maxLength: 60,
+  },
   getAutomationAccountName: {
     cleanName: true,
     maxLength: 80,
