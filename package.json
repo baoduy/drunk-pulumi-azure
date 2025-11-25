@@ -17,11 +17,11 @@
     "url": "https://github.com/baoduy/drunk-pulumi-azure.git"
   },
   "scripts": {
-    "fastBuild": "cross-env NODE_ENV=production && NODE_OPTIONS=--max-old-space-size=4096 npx tsc",
+    "fastBuild": "cross-env NODE_ENV=production && npx tsc",
     "build": "pnpm run update-tsconfig && pnpm run fastBuild && pnpm run copy-pkg",
     "ciBuild": "pnpm run fastBuild",
     "copy-pkg": "ts-node ./.tasks/npm-package.ts && cpy README.md .out-bin/",
-    "update-tsconfig": "NODE_OPTIONS=--max-old-space-size=4096 && ts-node ./.tasks/update-tsconfig.ts",
+    "update-tsconfig": "ts-node ./.tasks/update-tsconfig.ts",
     "pack": "cd .out-bin && pnpm pack && cd ../",
     "new-stack": "pulumi stack init --secrets-provider=passphrase",
     "up": "pulumi up --yes --skip-preview",
