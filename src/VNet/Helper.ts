@@ -14,12 +14,12 @@ export const getIpsRange = (prefix: string) => new netmask.Netmask(prefix);
 export const convertToIpRange = (
   ipAddress: string[],
 ): Array<{ start: string; end: string }> =>
-  ipAddress.map((ip) => {
+  ipAddress.flatMap((ip) => {
     if (ip.includes('/')) {
       const range = getIpsRange(ip);
-      return { start: range.base, end: range.broadcast };
+      return { start: range.base!, end: range.broadcast! };
     }
-    return { start: ip, end: ip };
+    return [{ start: ip, end: ip }];
   });
 
 interface SubnetProps {
