@@ -18,7 +18,9 @@ import AppGatewaySecurityRule from './NSGRules/AppGatewaySecurityRule';
 
 export type DelegateServices =
   | 'Microsoft.ContainerInstance/containerGroups'
-  | 'Microsoft.Web/serverFarms';
+  | 'Microsoft.Web/serverFarms'
+  | 'Microsoft.App/environments'
+  | string;
 
 export interface VnetProps extends BasicResourceArgs {
   ddosId?: pulumi.Input<string>;
