@@ -65,9 +65,9 @@ export const addMemberToGroup = ({
   groupObjectId: Input<string>;
 }) =>
   output([objectId, groupObjectId]).apply(
-    ([oId, gId]) =>
+    ([oId, gId]) => (oId && gId)?
       new azuread.GroupMember(`${name}-${gId}-${oId}`, {
         groupObjectId: gId,
         memberObjectId: oId,
-      }),
+      }):undefined,
   );

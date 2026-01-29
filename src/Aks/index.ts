@@ -516,7 +516,7 @@ export default async ({
     pulumi
       .all([aks.identity, aks.identityProfile])
       .apply(async ([identity, identityProfile]) => {
-        if (identityProfile && identityProfile['kubeletidentity']) {
+        if (identityProfile && identityProfile['kubeletidentity']?.objectId) {
           //Add into EnvRoles for Other resources accessing and download container images
           envRoles?.addMember(
             'contributor',
