@@ -27,7 +27,7 @@ const autoScaleFor = ({
   minCount = 1,
 }: {
   env: Environments;
-  nodeType: 'Default' | 'System' | 'User';
+  nodeType: ccs.AgentPoolMode;
   enableAutoScaling?: boolean;
   maxCount?: number;
   minCount?: number;
@@ -40,7 +40,6 @@ const autoScaleFor = ({
         maxCount = 5;
         break;
 
-      case 'Default':
       case 'System':
       default:
         maxCount = 3;

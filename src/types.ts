@@ -390,6 +390,8 @@ export type RoleEnableTypes = {
   enableServiceBus?: RoleEnableItem;
   enableSignalR?: RoleEnableItem;
   enableRedisCache?: RoleEnableItem;
+  /** Container App Roles */
+  enableContainerAppRoles?: RoleEnableItem;
 };
 
 export type ListRoleType = Record<EnvRoleKeyTypes, Set<string>>;

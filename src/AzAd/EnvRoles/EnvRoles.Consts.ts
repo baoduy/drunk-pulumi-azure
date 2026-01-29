@@ -192,6 +192,12 @@ const RedisCacheRoles: Record<EnvRoleKeyTypes, string[]> = {
   admin: [],
 };
 
+const ContainerAppRoles: Record<EnvRoleKeyTypes, string[]> = {
+  readOnly: ['ContainerApp Reader'],
+  contributor: ['Azure ContainerApps Session Executor'],
+  admin: ['Contributor'],
+};
+
 export const getRoleNames = ({
   enableRGRoles,
   enableIotRoles,
@@ -203,6 +209,7 @@ export const getRoleNames = ({
   enableServiceBus,
   enableSignalR,
   enableRedisCache,
+  enableContainerAppRoles,
 }: RoleEnableTypes): Record<EnvRoleKeyTypes, string[]> => {
   const rs: ListRoleType = {
     readOnly: new Set<string>(),
@@ -220,6 +227,7 @@ export const getRoleNames = ({
   getRoleFor(enableServiceBus, ServiceBusRoles, rs);
   getRoleFor(enableSignalR, SignalRRoles, rs);
   getRoleFor(enableRedisCache, RedisCacheRoles, rs);
+  getRoleFor(enableContainerAppRoles, ContainerAppRoles, rs);
 
   return {
     readOnly: Array.from(rs.readOnly).sort(),

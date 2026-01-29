@@ -5,6 +5,7 @@ export * from './apimPolicyBuilder';
 export * from './apimProductBuilder';
 export * from './appCertBuilder';
 export * from './appConfigBuilder';
+export * from './appContainerBuilder';
 export * from './askBuilder';
 export * from './automationBuilder';
 export * from './azAppBuilder';
