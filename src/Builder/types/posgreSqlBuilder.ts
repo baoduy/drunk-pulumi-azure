@@ -34,7 +34,7 @@ type PostgreSkuArgs = {
  */
 export type PostgreSqlSkuBuilderType = {
   sku: PostgreSkuArgs;
-  version: postgresql.ServerVersion;
+  version: postgresql.PostgresMajorVersion;
 };
 
 /**

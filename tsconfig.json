@@ -78,7 +78,6 @@
     "src/Builder/PrivateDnsZoneBuilder.ts",
     "src/Builder/RedisCacheBuilder.ts",
     "src/Builder/ResourceBuilder.ts",
-    "src/Builder/Samples/AppContainerBuilder.example.ts",
     "src/Builder/ServiceBusBuilder.ts",
     "src/Builder/SignalRBuilder.ts",
     "src/Builder/SqlBuilder.ts",
