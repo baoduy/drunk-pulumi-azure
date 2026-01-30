@@ -27,7 +27,8 @@ export default async ({ name, permissions, members, owners }: AdGroupProps) => {
     mailEnabled: false,
     securityEnabled: true,
     owners,
-  });
+
+  },{ignoreChanges:['members']});
 
   if (members) {
     members.map(

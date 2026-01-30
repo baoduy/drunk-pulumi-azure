@@ -11,6 +11,7 @@ import {
   WithDiskEncryption,
   AdIdentityInfo,
 } from '../types';
+import {Role} from '../AzAd/Roles';
 import { currentEnv, rsInfo, isPrd, tenantId, stack, naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import aksIdentityCreator from './Identity';
@@ -215,6 +216,7 @@ export default async ({
   const aksName = naming.getAksName(name);
   const secretName = `${aksName}-config`;
   const nodeResourceGroup = naming.getResourceGroupName(`${aksName}-nodes`);
+const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
 
   //Auto-detect and disable Local Account
   if (aksAccess.disableLocalAccounts === undefined && vaultInfo) {
@@ -408,7 +410,7 @@ export default async ({
         ? {
             enableAzureRBAC: true,
             managed: true,
-            adminGroupObjectIDs: [envRoles.admin.objectId],
+            adminGroupObjectIDs: [adminGroup.objectId],
             tenantID: tenantId,
           }
         : undefined,
