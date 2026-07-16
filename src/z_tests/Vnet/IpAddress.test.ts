@@ -1,14 +1,20 @@
-import creator from '../../VNet/IpAddress';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import { create } from '../../VNet/IpAddress';
+import { naming } from '../../Common';
 
 describe('IpAddress Creator tests', () => {
   it('IpAddress Creator', async () => {
-    const rs = creator({
+    const rs = create({
       name: 'drunk',
       group: { resourceGroupName: 'drunk' },
     });
 
-    (rs as any).publicIpAddressName.apply(n => expect(n).to.equal('test-stack-drunk-ip'));
+    // `creator` (default export) is gone; `create` is the current named
+    // export. The resource only exposes `.name` (not `.publicIpAddressName`,
+    // which was never a real output property, just a cast to `any` before).
+    const name = await rs.name.promise();
+    assert.strictEqual(name, naming.getIpAddressName('drunk'));
   });
 });

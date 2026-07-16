@@ -1,27 +1,24 @@
-import creator from '../../VNet/PublicDns';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+// PublicDns.ts was replaced by DnsZoneBuilder (class-based Builder) under src/Builder.
+import creator from '../../Builder/DnsZoneBuilder';
 
 describe('PublicDns Creator tests', () => {
   it('PublicDns Creator', async () => {
     const rs = creator({
       name: 'drunkcoding.net',
-      defaultIpAddress: '10.0.0.1',
-      childZones: [
-        {
-          name: 'hello',
-          defaultIpAddress: '10.0.0.1',
-        },
-        {
-          name: 'office',
-          defaultIpAddress: '10.0.0.1',
-        },
-      ],
-    });
+      group: { resourceGroupName: 'global-grp-hbd' },
+    })
+      .withARecord({ recordName: '@', ipAddresses: ['10.0.0.1'] })
+      .withSubZone('hello')
+      .withSubZone('office')
+      .build();
 
-    (rs.zone as any).zoneName.apply(n => expect(n).to.equal('drunkcoding.net'));
-    (rs.zone as any).resourceGroupName.apply(g => expect(g).to.equal('global-grp-hbd'));
-
-    if (rs.child) rs.child.forEach((c) => { });
+    assert.strictEqual(rs.name, 'drunkcoding.net');
+    assert.strictEqual(rs.group.resourceGroupName, 'global-grp-hbd');
+    // Note: build() only returns the root zone ResourceInfo now; child zone
+    // instances are created internally and no longer exposed on the result,
+    // so there is nothing to iterate/assert on for `childZones` anymore.
   });
 });

@@ -1,3 +1,8 @@
+process.env.PULUMI_TEST_MODE = "true";
+// Common/StackEnv.ts reads this real env var directly (not via pulumi's
+// mock organization below), so naming rules with includeOrgName need it set.
+process.env.PULUMI_NODEJS_ORGANIZATION = "testOrganization";
+
 import * as pulumi from "@pulumi/pulumi";
 
 const tryFindName = (props: any) => {
@@ -25,7 +30,7 @@ export default pulumi.runtime.setMocks(
       name: string;
       state: any;
     } => {
-      const name = tryFindName(args.inputs);
+      const name = tryFindName(args.inputs) ?? args.name;
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
@@ -33,14 +38,11 @@ export default pulumi.runtime.setMocks(
         state: {
           name,
           ...args.inputs,
-          result: args.type.includes("Random")
-            ? "5c1c5657-085b-41c8-8d11-de897e70eae7"
+          ...(args.type.includes("Random")
+            ? { result: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
             : name.endsWith("ssh")
-              ? {
-                  publicKey: "1234567890",
-                  privateKey: "1234567890",
-                }
-              : "",
+              ? { publicKey: "1234567890", privateKey: "1234567890" }
+              : {}),
         },
       };
     },

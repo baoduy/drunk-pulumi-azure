@@ -1,6 +1,6 @@
 import '../_tools/Mocks';
 
-import { expect } from 'chai';
+import assert from 'node:assert/strict';
 
 import creator from '../../VNet/Vnet';
 
@@ -19,14 +19,23 @@ describe('Vnet Creator tests', () => {
           enablePrivateLinkService: true,
         },
       ],
-      features: { securityGroup: {} },
+      // securityGroup/routeTable now require an explicit `enabled: true`
+      // (the old API enabled them just by presence of the feature key).
+      features: { securityGroup: { enabled: true }, routeTable: { enabled: true } },
     });
 
-    (rs.vnet as any).virtualNetworkName.apply(n => expect(n).to.equal('test-stack-aks-vnt'));
+    // Output.apply() callbacks run on a microtask queue that outlives a
+    // non-awaited `it()` body, so assertions inside them never reach mocha.
+    // Use the (untyped) `.promise()` escape hatch to actually await the value.
+    const vnetName: string = await (
+      rs.vnet as any
+    ).virtualNetworkName.promise();
+    assert.strictEqual(vnetName, 'teststack-aks-sg-vnt');
 
-    expect(rs.routeTable).to.not.undefined;
-    expect(rs.securityGroup).to.not.undefined;
+    assert.notStrictEqual(rs.routeTable, undefined);
+    assert.notStrictEqual(rs.securityGroup, undefined);
 
-    rs.vnet.subnets.apply((s) => expect(s!.length).to.be.equal(1));
+    const subnets = await (rs.vnet.subnets as any).promise();
+    assert.strictEqual(subnets!.length, 1);
   });
 });

@@ -1,15 +1,21 @@
-import creator from '../../ContainerRegistry';
 import '../_tools/Mocks';
-import { expect } from 'chai';
 
+import assert from 'node:assert/strict';
+import creator from '../../Builder/AcrBuilder';
+import { naming } from '../../Common';
 
-describe('ContainerRegistry Creator tests', () => {
-  it('ContainerRegistry Creator', async () => {
-    const rs = await creator({
+describe('AcrBuilder Creator tests', () => {
+  it('AcrBuilder Creator', async () => {
+    const group = { resourceGroupName: 'RG' };
+
+    const rs = creator({
       name: 'drunkcoding',
-    });
+      group,
+    })
+      .withSku('Basic')
+      .build();
 
-    (rs.registry as any).registryName.apply(n => expect(n).to.equal('drunkcoding4acr'));
-    (rs.registry as any).resourceGroupName.apply(g => expect(g).to.equal('global-grp-hbd'));
+    assert.strictEqual(rs.name, naming.getAcrName('drunkcoding'));
+    assert.strictEqual(rs.group.resourceGroupName, 'RG');
   });
 });

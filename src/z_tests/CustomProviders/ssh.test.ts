@@ -1,24 +1,24 @@
-import { generateKeys } from '../../CustomProviders/SshKeyGenerator';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import { output } from '@pulumi/pulumi';
+// ponytail: SSH key generation moved out of CustomProviders into Core/KeyGenerators (generateSsh),
+// which wraps the external @drunk-pulumi/azure-providers SshKeyResource + vault secret storage.
+import { generateSsh } from '../../Core/KeyGenerators';
 
 describe('Generate ssh Keys tests', () => {
-  it('GenerateKeys test', async () => {
-    const rs = await generateKeys({
-      modulusLength: 4096,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-        cipher: 'aes-256-cbc',
-        passphrase: '1234567890',
-      },
-    });
+  it('generateSsh test', async () => {
+    const vaultInfo = {
+      name: 'vault',
+      id: output('vault-id'),
+      group: { resourceGroupName: 'RG' },
+    };
 
-    expect(rs.publicKey).to.be.a('string').and.not.empty;
-    expect(rs.privateKey).to.be.a('string').and.not.empty;
+    const rs = generateSsh({ name: 'test', vaultInfo });
+
+    const userName = await rs.userName.promise();
+    const publicKey = await rs.publicKey.promise();
+    assert.ok(userName);
+    assert.ok(publicKey);
   });
 });

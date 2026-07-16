@@ -1,7 +1,7 @@
 import '../_tools/Mocks';
 
+import assert from 'node:assert/strict';
 import creator from '../../Logs/AppInsight';
-import { expect } from 'chai';
 
 describe('AppInsight Creator tests', () => {
   it('AppInsight Creator', async () => {
@@ -11,6 +11,7 @@ describe('AppInsight Creator tests', () => {
       group,
     });
 
-    (rs as any).resourceName.apply(n => expect(n).to.equal('test-stack-dev-isg'));
+    const name = await (rs as any).resourceName.promise();
+    assert.strictEqual(name, 'teststack-dev-sg-isg');
   });
 });
