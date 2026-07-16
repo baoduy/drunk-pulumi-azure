@@ -7,9 +7,6 @@
     "esModuleInterop": true,
     "noImplicitAny": false
   },
-  "ts-node": {
-    "esm": true
-  },
   "include": [
     "**/*.ts",
     "**/*.d.ts",
