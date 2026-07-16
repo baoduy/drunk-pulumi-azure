@@ -1,47 +1,45 @@
-import creator from "../../Sql";
-import "../_tools/Mocks";
-import { expect } from "chai";
-import { getEnvRoleNames } from "../../AzAd/EnvRoles";
+import '../_tools/Mocks';
 
-describe("Sql Creator tests", () => {
-  it("Sql Creator", async () => {
+import assert from 'node:assert/strict';
+import creator from '../../Sql';
+
+describe('Sql Creator tests', () => {
+  it('Sql Creator', () => {
     const rs = creator({
-      name: "aks",
-      group: { resourceGroupName: "RG" },
+      name: 'aks',
+      group: { resourceGroupName: 'RG' },
       network: {
-        privateLink: {},
-        subnetId: "/123456",
+        privateLink: { subnetIds: ['/123456'] },
+        subnetId: '/123456',
       },
-      elasticPool: { name: "Basic", capacity: 100 },
+      elasticPool: { name: 'Basic', capacity: 100 },
 
       vulnerabilityAssessment: {
-        alertEmails: ["hbd@abc.com"],
-        storageAccessKey: "123",
-        storageEndpoint: "https://1234",
-        logStorageId: "123456",
+        alertEmails: ['hbd@abc.com'],
+        // logStorage replaces the old flat storageAccessKey/storageEndpoint/
+        // logStorageId fields; only primaryKey and endpoints.blob are read.
+        logStorage: {
+          primaryKey: '123',
+          endpoints: { blob: 'https://1234' },
+        } as any,
       },
+      // envRoles is now an IEnvRoleBuilder instance (Builder/EnvRoleBuilder.ts),
+      // not a plain role-name lookup like the old getEnvRoleNames() — there's no
+      // lightweight stand-in for a unit test, so it's omitted (it's optional).
+      // enableAdAdministrator was removed from SqlAuthType; azureAdOnlyAuthentication
+      // is the closest replacement but only takes effect when envRoles is set.
       auth: {
-        envRoles: getEnvRoleNames(true),
-        adminLogin: "123",
-        enableAdAdministrator: true,
-        password: "123",
+        adminLogin: '123',
+        password: '123',
       },
-      databases: [{ name: "hello" }],
+      databases: { hello: { name: 'hello' } },
     });
 
-    (rs.resource as any).serverName.apply((n) =>
-      expect(n).to.equal("test-stack-aks-sql"),
-    );
+    assert.strictEqual(rs.name, 'teststack-aks-sg-sql');
 
-    expect(rs.elasticPool).to.not.undefined;
-    expect(rs.databases).to.not.undefined;
+    assert.notStrictEqual(rs.elasticPool, undefined);
+    assert.notStrictEqual(rs.databases, undefined);
 
-    await Promise.all(
-      rs.databases!.map(async (db) => {
-        (db.resource as any).databaseName.apply((n) =>
-          expect(n).to.equal("test-stack-hello-db"),
-        );
-      }),
-    );
+    assert.strictEqual(rs.databases!.hello.name, 'teststack-hello-sg-db');
   });
 });

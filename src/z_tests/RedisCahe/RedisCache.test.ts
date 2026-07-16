@@ -1,15 +1,19 @@
-import creator from '../../RedisCache';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+// RedisCache moved into the Builder pattern; creator(...).withSku(...).build() replaces the old direct call.
+import creator from '../../Builder/RedisCacheBuilder';
 
 describe('RedisCache Creator tests', () => {
   it('Redis Cache Creator', async () => {
     const group = { resourceGroupName: 'RG' };
-    const rs = await creator({
+    const rs = creator({
       name: 'cache',
       group,
-    });
+    })
+      .withSku({ name: 'Basic', family: 'C', capacity: 0 })
+      .build();
 
-    rs.name.apply(n => expect(n).to.equal('test-stack-cache-rds'));
+    assert.strictEqual(rs.name, 'teststack-cache-sg-rds');
   });
 });

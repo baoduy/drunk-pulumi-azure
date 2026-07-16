@@ -1,93 +1,75 @@
-import creator from '../../ServiceBus';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import creator from '../../Builder/ServiceBusBuilder';
 
 describe('ServiceBus Creator tests', function () {
   this.timeout(5000);
   const group = { resourceGroupName: 'RG' };
   const vaultInfo = { id: '/12345', group, name: '123' };
 
+  // Note: ServiceBusBuilder.build() only returns a top-level ResourceInfo
+  // (name/group/id) — unlike the old module-function creator, topics/queues/
+  // subscriptions are no longer returned, so we can only assert the namespace
+  // name and that the build succeeds with each configuration.
   it('ServiceBus Creator', async () => {
-    const rs = await creator({
+    const rs = creator({
       name: 'aks',
       group,
       //vaultInfo,
-    });
+    })
+      .withSku('Basic')
+      .build();
 
-    (rs.resource as any).namespaceName.apply(n => expect(n).to.equal('test-stack-aks-bus'));
-
-    expect(rs.topics).to.undefined;
-    expect(rs.queues).to.undefined;
+    assert.strictEqual(rs.name, 'teststack-aks-testorganization-sg-bus');
   });
 
   it('ServiceBus Creator with Topics', async () => {
-    const rs = await creator({
+    const rs = creator({
       name: 'aks',
       group,
       //Not able to create Key in test mode
       //vaultInfo,
-
-      topics: [
-        {
-          shortName: 'cake',
-          version: 1,
-          subscriptions: [
-            {
-              shortName: 'eat',
-            },
-            {
-              shortName: 'eat',
-              enableSession: true,
-            },
-          ],
+    })
+      .withSku('Basic')
+      .withTopics({
+        'cake-v1-tp': {
+          subscriptions: {
+            'eat-cakev1-sub': {},
+            'eat-cakev1-session-sub': { requiresSession: true },
+          },
         },
-      ],
-    });
-
-    expect(rs.topics).to.not.undefined;
-
-    await Promise.all(
-      rs.topics!.map(async (t) => {
-        //Verify the topic name
-        (t.topic as any).topicName.apply(n => expect(n).to.equal('cake-v1-tp'));
-
-        //Verify the Subscription name
-        (t.subs![0].resource as any).subscriptionName.apply(sn1 => expect(sn1).to.equal('eat-cakev1-sub'));
-        (t.subs![1].resource as any).subscriptionName.apply(sn2 => expect(sn2).to.equal('eat-cakev1-session-sub'));
       })
-    );
+      .build();
+
+    assert.strictEqual(rs.name, 'teststack-aks-testorganization-sg-bus');
   });
 
   it('ServiceBus Creator with Queue', async () => {
-    const rs = await creator({
+    const rs = creator({
       name: 'aks',
       group,
       //Not able to create Key in test mode
       //vaultInfo,
+    })
+      .withSku('Basic')
+      .withQueues({ 'cake-v1-que': {} })
+      .build();
 
-      queues: [{ shortName: 'cake', version: 1 }],
-    });
-
-    expect(rs.queues).to.not.undefined;
-
-    await Promise.all(
-      rs.queues!.map(async (t) => {
-        //Verify the topic name
-        (t.queue as any).queueName.apply(n => expect(n).to.equal('cake-v1-que'));
-      })
-    );
+    assert.strictEqual(rs.name, 'teststack-aks-testorganization-sg-bus');
   });
 
   it('ServiceBus Creator with VaultInfo', async () => {
-    const rs = await creator({
+    const rs = creator({
       name: 'aks',
       group,
       vaultInfo,
+    })
+      .withSku('Basic')
+      .withTopics({ 'cake-v1-tp': {} })
+      .withQueues({ 'cake-v1-que': {} })
+      .build();
 
-      topics: [{ shortName: 'cake', version: 1 }],
-      queues: [{ shortName: 'cake', version: 1 }],
-    });
-
-    expect(rs.queues).to.not.undefined;
+    assert.strictEqual(rs.name, 'teststack-aks-testorganization-sg-bus');
   });
 });

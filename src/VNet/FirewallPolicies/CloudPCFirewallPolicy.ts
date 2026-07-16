@@ -136,7 +136,7 @@ export default ({
         '13.107.42.0/24',
         '13.107.43.0/24',
       ],
-      destinationPorts: ['443'],
+      destinationPorts: ['443','22'],
     });
     appRules.push({
       ruleType: 'ApplicationRule',

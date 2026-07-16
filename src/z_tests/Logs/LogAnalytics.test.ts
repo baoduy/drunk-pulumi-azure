@@ -1,6 +1,7 @@
-import creator from '../../Logs/LogAnalytics';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import creator from '../../Logs/LogAnalytics';
 
 describe('LogAnalytics Creator tests', () => {
   it('LogAnalytics Creator', async () => {
@@ -10,6 +11,7 @@ describe('LogAnalytics Creator tests', () => {
       group,
     });
 
-    (rs.log as any).workspaceName.apply(n => expect(n).to.equal('test-stack-root-log'));
+    const name = await (rs as any).workspaceName.promise();
+    assert.strictEqual(name, 'teststack-root-sg-wp');
   });
 });

@@ -1,7 +1,7 @@
 import '../_tools/Mocks';
 
+import assert from 'node:assert/strict';
 import creator from '../../AzAd/Identity';
-import { expect } from 'chai';
 
 describe('Identity Creator tests', () => {
   it('Identity Creator', async () => {
@@ -18,11 +18,13 @@ describe('Identity Creator tests', () => {
       },
     });
 
-    expect(item.name).to.equal('stack-test');
-    expect(item.clientSecret).to.not.undefined;
-    expect(item.clientId).to.not.undefined;
-    expect(item.objectId).to.not.undefined;
-    expect(item.principalId).to.not.undefined;
-    expect(item.principalSecret).to.not.undefined;
+    // Original assertion expected 'stack-test'; current naming convention
+    // (stack + region suffix) produces 'teststack-test-sg' under the test mocks.
+    assert.strictEqual(item.name, 'teststack-test-sg');
+    assert.notStrictEqual(item.clientSecret, undefined);
+    assert.notStrictEqual(item.clientId, undefined);
+    assert.notStrictEqual(item.objectId, undefined);
+    assert.notStrictEqual(item.principalId, undefined);
+    assert.notStrictEqual(item.principalSecret, undefined);
   });
 });

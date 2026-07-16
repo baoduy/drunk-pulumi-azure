@@ -1,6 +1,7 @@
-import { getRoleDefinitionByName } from '../../AzAd/RoleAssignment';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import { getRoleDefinitionByName } from '../../AzAd/Roles/RoleAssignment';
 
 describe('RoleAssignment tests', function () {
   this.timeout(5000);
@@ -10,18 +11,13 @@ describe('RoleAssignment tests', function () {
       roleName: 'Contributor',
     });
 
-    expect((rs as any).id).to.not.undefined;
+    assert.notStrictEqual((rs as any).id, undefined);
   });
 
   it('AzAd/RoleAssignment Creator', () => {
-    try {
-      getRoleDefinitionByName({
-        roleName: 'Contributor 1',
-      });
-    } catch (e) {
-      expect((e as Error).message).to.equal(
-        'The role Contributor 1 is not found.'
-      );
-    }
+    assert.throws(
+      () => getRoleDefinitionByName({ roleName: 'Contributor 1' }),
+      { message: 'The role Contributor 1 is not found.' },
+    );
   });
 });

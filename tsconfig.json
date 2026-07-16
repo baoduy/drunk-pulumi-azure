@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "rootDir": "./src",
     "outDir": "./.out-bin",
     "target": "ESNext",
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "declaration": true,
     "inlineSourceMap": true,
@@ -19,9 +19,6 @@
       "ESNext",
       "Decorators"
     ]
-  },
-  "ts-node": {
-    "experimentalResolver": true
   },
   "exclude": [
     "node_modules",

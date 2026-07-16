@@ -138,3 +138,9 @@ bin
 .fleet
 .env
 .pnpm-store
+.gitnexus
+
+# Understand-Anything scratch (regenerated locally; not shared)
+.understand-anything/intermediate/
+.understand-anything/tmp/
+.understand-anything/.trash-*/

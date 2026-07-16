@@ -1,0 +1,46 @@
+{
+  "enabledPlugins": {
+    "caveman@caveman": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "claude-smart@reflexioai": true,
+    "context-mode@context-mode": true,
+    "learning-output-style@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "team-share@drunkcoding": true,
+    "understand-anything@understand-anything": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      },
+      "autoUpdate": true
+    },
+    "context-mode": {
+      "source": {
+        "source": "github",
+        "repo": "mksglu/context-mode"
+      },
+      "autoUpdate": true
+    },
+    "reflexioai": {
+      "source": {
+        "source": "github",
+        "repo": "ReflexioAI/claude-smart"
+      }
+    },
+    "drunkcoding": {
+      "source": {
+        "source": "github",
+        "repo": "baoduy/agents-and-skills"
+      }
+    },
+    "understand-anything": {
+      "source": {
+        "source": "github",
+        "repo": "Egonex-AI/Understand-Anything"
+      }
+    }
+  }
+}

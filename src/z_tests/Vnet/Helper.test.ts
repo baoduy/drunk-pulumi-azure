@@ -1,13 +1,13 @@
-import { convertToIpRange } from '../../VNet/Helper';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import { convertToIpRange } from '../../VNet/Helper';
 
 describe('Vnet Helper tests', () => {
   it('convertToIpRange test', async () => {
     const rs = convertToIpRange(['192.168.0.0/24']);
 
-    expect(rs)
-      .to.be.an('array')
-      .and.to.deep.equal([{ start: '192.168.0.0', end: '192.168.0.255' }]);
+    assert.ok(Array.isArray(rs));
+    assert.deepStrictEqual(rs, [{ start: '192.168.0.0', end: '192.168.0.255' }]);
   });
 });
