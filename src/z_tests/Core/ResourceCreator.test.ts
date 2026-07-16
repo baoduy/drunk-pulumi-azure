@@ -1,39 +1,42 @@
 import '../_tools/Mocks';
 
+import assert from 'node:assert/strict';
 import * as native from '@pulumi/azure-native';
-
-import { DefaultResourceArgs } from '../../types';
-import { expect } from 'chai';
-import rsCreator from '../../Core/ResourceCreator';
+// DefaultResourceArgs (../../types) no longer exists; ResourceCreator now
+// exports its own props type, DefaultCreatorProps, which is the type its
+// second argument is actually constrained to.
+import rsCreator, { DefaultCreatorProps } from '../../Core/ResourceCreator';
 
 describe('Resource Creator tests. The resource creator will not reformat the name', () => {
   it('Resource Creator', async () => {
     const rs = await rsCreator(native.resources.ResourceGroup, {
       resourceGroupName: 'resource-group',
-    } as native.resources.ResourceGroupArgs & DefaultResourceArgs);
+    } as native.resources.ResourceGroupArgs & DefaultCreatorProps);
 
-    rs.resource.urn.apply(n => expect(n).to.include('resource-group'));
+    const urn = await rs.resource.urn.promise();
+    assert.ok(urn.includes('resource-group'));
   });
 
   it('Resource Creator with lock', async () => {
     const { locker } = await rsCreator(native.resources.ResourceGroup, {
       resourceGroupName: 'resource-group',
       lock: true,
-    } as native.resources.ResourceGroupArgs & DefaultResourceArgs);
+    } as native.resources.ResourceGroupArgs & DefaultCreatorProps);
 
-    expect(locker).to.not.undefined;
+    assert.notStrictEqual(locker, undefined);
 
-    locker!.name.apply(n => expect(n).to.be.equal('resource-group-CanNotDelete'));
+    const name = await locker!.name.promise();
+    assert.strictEqual(name, 'resource-group-CanNotDelete');
   });
 
   it('Resource Creator with diagnostic', async () => {
     const { diagnostic } = await rsCreator(native.resources.ResourceGroup, {
       resourceGroupName: 'resource-group',
       monitoring: { logsCategories: ['All'], logWpId: '12345667' },
-    } as native.resources.ResourceGroupArgs & DefaultResourceArgs);
+    } as native.resources.ResourceGroupArgs & DefaultCreatorProps);
 
-    expect(diagnostic).to.not.undefined;
+    assert.notStrictEqual(diagnostic, undefined);
 
-    diagnostic!.name.apply(n => expect(n).to.be.equal('resource-group-diag'));
+    diagnostic!.name.apply((n) => assert.strictEqual(n, 'resource-group-diag'));
   });
 });

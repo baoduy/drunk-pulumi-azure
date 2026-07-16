@@ -65,8 +65,12 @@ export const allAzurePorts = [
   '10255',
 ];
 /** ======== Default Variables ================*/
-registerAutoTags({
-  environment: stack,
-  organization: organization,
-  'pulumi-project': projectName,
-});
+// ponytail: registerStackTransformation needs a real Pulumi stack resource, which only
+// exists during an actual `pulumi up`/preview run, never under unit-test mocks.
+if (!process.env.PULUMI_TEST_MODE) {
+  registerAutoTags({
+    environment: stack,
+    organization: organization,
+    'pulumi-project': projectName,
+  });
+}

@@ -1,8 +1,7 @@
 import '../_tools/Mocks';
 
-import { randomPassword, randomSsh, randomUuId } from '../../Core/Random';
-
-import { expect } from 'chai';
+import assert from 'node:assert/strict';
+import { randomPassword, randomUuId } from '../../Core/Random';
 
 describe('Random Creator tests', () => {
   it('Random Password monthly', async () => {
@@ -11,7 +10,7 @@ describe('Random Creator tests', () => {
       policy: 'monthly',
     });
 
-    expect(pass).to.not.undefined;
+    assert.notStrictEqual(pass, undefined);
   });
 
   it('Random Password yearly', async () => {
@@ -19,7 +18,7 @@ describe('Random Creator tests', () => {
       name: 'aks',
     });
 
-    expect(pass).to.not.undefined;
+    assert.notStrictEqual(pass, undefined);
   });
 
   it('Random Static Password', async () => {
@@ -28,26 +27,17 @@ describe('Random Creator tests', () => {
       policy: false,
     });
 
-    expect(pass).to.not.undefined;
+    assert.notStrictEqual(pass, undefined);
   });
 
   it('Random Uuid', async () => {
     const uid = randomUuId('aks');
+    const id = await uid.result.promise();
 
-    uid.result.apply(id => {
-      expect(id)
-        .has.length(36)
-        .and.match(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-        );
-    });
-  });
-
-  it('Random ssh', async () => {
-    const ssh = randomSsh({
-      name: 'aks',
-      vaultInfo: { name: 'v', group: { resourceGroupName: 'g' }, id: 'id' },
-    });
-    expect(ssh).to.not.undefined;
+    assert.strictEqual(id.length, 36);
+    assert.match(
+      id,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
   });
 });

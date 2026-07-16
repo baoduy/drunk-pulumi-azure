@@ -1,6 +1,7 @@
-import { addKey } from '../../KeyVault/Helper';
 import '../_tools/Mocks';
-import { expect } from 'chai';
+
+import assert from 'node:assert/strict';
+import { getVaultItemName } from '../../KeyVault/Helper';
 import { KeyVaultInfo } from '../../types';
 import { addCustomSecret } from '../../KeyVault/CustomHelper';
 
@@ -12,14 +13,13 @@ describe('Key Vault tests', () => {
   };
 
   it('Add Key test', async () => {
-    const rs = addKey({
-      name: 'test-stack-cache-primary-connection-string',
-      vaultInfo,
-    });
-
-    (rs as any).keyName.apply((n) =>
-      expect(n).to.equal('cache-primary-connection-string')
+    // `addKey` was removed from KeyVault/Helper; its name-formatting logic
+    // (stripping the stack prefix) now lives in `getVaultItemName`.
+    const n = getVaultItemName(
+      'test-stack-cache-primary-connection-string',
+      'test-stack',
     );
+    assert.strictEqual(n, 'cache-primary-connection-string');
   });
 
   it('Add Secret test', async () => {
@@ -29,6 +29,7 @@ describe('Key Vault tests', () => {
       vaultInfo,
     });
 
-    expect(rs.name).to.equal('test-stack-cache-primary');
+    const name = await rs.name.promise();
+    assert.strictEqual(name, 'test-stack-cache-primary');
   });
 });
