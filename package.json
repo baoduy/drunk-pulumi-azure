@@ -51,7 +51,7 @@
   "dependencies": {
     "@azure/keyvault-certificates": "^4.10.3",
     "@azure/keyvault-secrets": "^4.11.2",
-    "@drunk-pulumi/azure-providers": "^1.0.16",
+    "@drunk-pulumi/azure-providers": "^1.0.17",
     "@pulumi/azure-native": "^3.21.0",
     "@pulumi/azuread": "6.10.0",
     "@pulumi/pulumi": "^3.253.0",

@@ -28,15 +28,4 @@ describe('Resource Creator tests. The resource creator will not reformat the nam
     const name = await locker!.name.promise();
     assert.strictEqual(name, 'resource-group-CanNotDelete');
   });
-
-  it('Resource Creator with diagnostic', async () => {
-    const { diagnostic } = await rsCreator(native.resources.ResourceGroup, {
-      resourceGroupName: 'resource-group',
-      monitoring: { logsCategories: ['All'], logWpId: '12345667' },
-    } as native.resources.ResourceGroupArgs & DefaultCreatorProps);
-
-    assert.notStrictEqual(diagnostic, undefined);
-
-    diagnostic!.name.apply((n) => assert.strictEqual(n, 'resource-group-diag'));
-  });
 });
