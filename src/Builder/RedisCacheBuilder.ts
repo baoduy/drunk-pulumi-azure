@@ -3,10 +3,11 @@ import {
   IRedisCacheBuilder,
   IRedisCacheSkuBuilder,
   RedisCacheBuilderArgs,
+  RedisCacheNetworkType,
   RedisCacheSkuBuilder,
 } from './types';
 import env from '../env';
-import { NetworkPropsType, ResourceInfo } from '../types';
+import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
 import * as cache from '@pulumi/azure-native/redis';
 import * as pulumi from '@pulumi/pulumi';
@@ -26,7 +27,7 @@ class RedisCacheBuilder
     family: 'C',
     capacity: 0,
   };
-  private _network: NetworkPropsType | undefined = undefined;
+  private _network: RedisCacheNetworkType | undefined = undefined;
   private _redisInstance: cache.Redis | undefined = undefined;
 
   constructor(private args: RedisCacheBuilderArgs) {
@@ -38,13 +39,13 @@ class RedisCacheBuilder
     this._sku = props;
     return this;
   }
-  public withNetwork(props: NetworkPropsType): IRedisCacheBuilder {
+  public withNetwork(props: RedisCacheNetworkType): IRedisCacheBuilder {
     this._network = props;
     return this;
   }
   public withNetworkIf(
     condition: boolean,
-    props: NetworkPropsType
+    props: RedisCacheNetworkType
   ): IRedisCacheBuilder {
     if (condition) this.withNetwork(props);
     return this;

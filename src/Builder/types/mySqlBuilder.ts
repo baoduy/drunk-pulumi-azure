@@ -38,8 +38,9 @@ export type MySqlSkuBuilderType = {
 
 /**
  * Properties for configuring the network settings of a MySQL server.
+ * Firewall rules are deny-by-default; there is no rule-set defaultAction.
  */
-export type MySqlNetworkBuilderType = NetworkPropsType & {
+export type MySqlNetworkBuilderType = Omit<NetworkPropsType, 'defaultAction'> & {
   allowsPublicAccess?: Input<boolean>;
 };
 
