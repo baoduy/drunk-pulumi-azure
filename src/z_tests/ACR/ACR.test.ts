@@ -4,23 +4,10 @@ import assert from 'node:assert/strict';
 import creator from '../../Builder/AcrBuilder';
 import { naming } from '../../Common';
 import { createdResources } from '../_tools/Mocks';
+import { waitForResource } from '../_tools/waitForResource';
 
-// AcrBuilder.build() only returns a top-level ResourceInfo — the
-// registry.Registry instance stays private — so read what was actually
-// emitted to it via the shared resource-capture list. Pulumi's mock runtime
-// resolves resource registration a few microtask hops after build() returns
-// (even for resources with no Output inputs), so poll rather than assert
-// synchronously.
-const waitForRegistry = async (before: number) => {
-  for (let i = 0; i < 50; i++) {
-    const found = createdResources
-      .slice(before)
-      .find((r) => r.type === 'azure-native:containerregistry:Registry');
-    if (found) return found.inputs;
-    await new Promise((resolve) => setImmediate(resolve));
-  }
-  throw new Error('Registry was not created in time');
-};
+const waitForRegistry = (before: number) =>
+  waitForResource('azure-native:containerregistry:Registry', before);
 
 describe('AcrBuilder Creator tests', () => {
   it('AcrBuilder Creator', async () => {
@@ -38,7 +25,7 @@ describe('AcrBuilder Creator tests', () => {
   });
 
   describe('networkRuleSet.defaultAction (PULUMI-SEC-006)', () => {
-    it('defaults to Deny when an ipAddresses rule is supplied on Premium (R3 security fix)', async () => {
+    it('defaults to Deny when an ipAddresses rule is supplied on Premium (R2 security fix)', async () => {
       const before = createdResources.length;
       creator({ name: 'drunkcoding', group: { resourceGroupName: 'RG' } })
         .withSku('Premium')

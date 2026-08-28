@@ -7,6 +7,9 @@ import { NetworkPropsType, ResourceInfo } from '../../types';
  */
 export type RedisCacheBuilderArgs = BuilderProps;
 
+/** Redis Cache network config creates FirewallRule resources; there is no rule-set defaultAction. */
+export type RedisCacheNetworkType = Omit<NetworkPropsType, 'defaultAction'>;
+
 /**
  * Arguments for defining the SKU of a Redis Cache.
  */
@@ -46,9 +49,9 @@ export interface IRedisCacheBuilder extends IBuilder<ResourceInfo> {
    * @param props - The network properties.
    * @returns An instance of IRedisCacheBuilder.
    */
-  withNetwork(props: NetworkPropsType): IRedisCacheBuilder;
+  withNetwork(props: RedisCacheNetworkType): IRedisCacheBuilder;
   withNetworkIf(
     condition: boolean,
-    props: NetworkPropsType,
+    props: RedisCacheNetworkType,
   ): IRedisCacheBuilder;
 }

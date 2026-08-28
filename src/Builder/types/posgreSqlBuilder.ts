@@ -39,8 +39,9 @@ export type PostgreSqlSkuBuilderType = {
 
 /**
  * Type for defining network properties for a PostgreSQL server.
+ * Firewall rules are deny-by-default; there is no rule-set defaultAction.
  */
-export type PostgreSqlNetworkBuilderType = NetworkPropsType & {
+export type PostgreSqlNetworkBuilderType = Omit<NetworkPropsType, 'defaultAction'> & {
   /**
    * Whether the server allows public access.
    */

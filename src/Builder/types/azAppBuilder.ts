@@ -26,7 +26,8 @@ export type AzFuncAppBuilderType = {
     name: Input<string>;
     type?: Input<enums.web.ConnectionStringType>;
   }>;
-  network?: NetworkPropsType;
+  /** App Service network config only reads privateLink; there is no rule-set defaultAction. */
+  network?: Omit<NetworkPropsType, 'defaultAction'>;
 };
 
 export interface IAzAppPlanBuilder {

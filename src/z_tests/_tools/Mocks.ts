@@ -24,8 +24,10 @@ const tryFindName = (props: any) => {
 // Captures every resource's construction inputs, keyed by Pulumi type token,
 // so tests can inspect args passed to resources a builder never returns
 // (e.g. ServiceBusBuilder/AcrBuilder keep their network rule-set/registry
-// instances private). Tests should look up the LAST matching entry, since
-// this list is never cleared between test files sharing the process.
+// instances private). This list is never cleared between test files sharing
+// the process, so tests should record `createdResources.length` as a
+// watermark before acting, then slice from it and find the first match —
+// isolating the search to resources created by that test alone.
 export const createdResources: Array<{ type: string; name: string; inputs: any }> = [];
 
 export default pulumi.runtime.setMocks(
