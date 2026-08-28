@@ -8,7 +8,7 @@ import {
   IAcrBuilder,
   IAcrSkuBuilder,
 } from './types';
-import { naming } from '../Common';
+import { getNetworkDefaultAction, naming } from '../Common';
 import * as registry from '@pulumi/azure-native/containerregistry';
 import { addEncryptKey } from '../KeyVault/Helper';
 import { AcrPrivateLink } from '../VNet';
@@ -146,7 +146,10 @@ class AcrBuilder
         networkRuleSet:
           this._sku === 'Premium' && this._network
             ? {
-                defaultAction: registry.DefaultAction.Allow,
+                defaultAction: getNetworkDefaultAction(
+                  Boolean(this._network.ipAddresses?.length),
+                  this._network.defaultAction
+                ),
                 ipRules: this._network.ipAddresses
                   ? this._network.ipAddresses.map((ip) => ({
                       iPAddressOrRange: ip,

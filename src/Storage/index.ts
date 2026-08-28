@@ -2,12 +2,13 @@ import * as storage from '@pulumi/azure-native/storage';
 import env from '../env';
 import {
   BasicEncryptResourceArgs,
+  NetworkRuleDefaultActionType,
   PrivateLinkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
 import { addEncryptKey, addCustomSecrets } from '../KeyVault';
-import { isPrd, naming } from '../Common';
+import { getNetworkDefaultAction, isPrd, naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import { StoragePrivateLink } from '../VNet';
 import { createManagementRules, ManagementRules } from './ManagementRules';
@@ -53,6 +54,8 @@ export type StorageNetworkType = {
   privateEndpoint?: Omit<PrivateLinkPropsType, 'type'> & {
     type: StorageEndpointTypes | StorageEndpointTypes[];
   };
+  /** Rule-set default action. Omitted → 'Deny' when any subnetId/ipAddresses rule is supplied, otherwise 'Allow'. */
+  defaultAction?: NetworkRuleDefaultActionType;
 };
 
 interface StorageProps extends BasicEncryptResourceArgs {
@@ -85,6 +88,22 @@ function Storage({
 }: StorageProps): ResourceInfoWithInstance<storage.StorageAccount> {
   name = naming.getStorageName(name);
   const publicNetworkAccess = network?.privateEndpoint ? 'Disabled' : 'Enabled';
+  const virtualNetworkRules = network?.vnet
+    ? network.vnet
+        .filter((v) => v.subnetId)
+        .map((v) => ({
+          virtualNetworkResourceId: v.subnetId!,
+        }))
+    : undefined;
+  const ipRules = network?.vnet
+    ? network.vnet
+        .filter((v) => v.ipAddresses?.length)
+        .flatMap((s) => s.ipAddresses)
+        .map((i) => ({
+          iPAddressOrRange: i!,
+          action: 'Allow' as const,
+        }))
+    : undefined;
   const encryptionKey = enableEncryption
     ? addEncryptKey(name, vaultInfo!)
     : undefined;
@@ -176,25 +195,14 @@ function Storage({
       publicNetworkAccess,
       networkRuleSet: {
         bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
-        defaultAction: 'Allow',
+        defaultAction: getNetworkDefaultAction(
+          Boolean(virtualNetworkRules?.length || ipRules?.length),
+          network?.defaultAction
+        ),
 
-        virtualNetworkRules: network?.vnet
-          ? network.vnet
-              .filter((v) => v.subnetId)
-              .map((v) => ({
-                virtualNetworkResourceId: v.subnetId!,
-              }))
-          : undefined,
+        virtualNetworkRules,
 
-        ipRules: network?.vnet
-          ? network.vnet
-              .filter((v) => v.ipAddresses)
-              .flatMap((s) => s.ipAddresses)
-              .map((i) => ({
-                iPAddressOrRange: i!,
-                action: 'Allow',
-              }))
-          : undefined,
+        ipRules,
       },
     },
     {

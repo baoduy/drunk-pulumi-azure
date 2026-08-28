@@ -1,5 +1,5 @@
 import * as bus from '@pulumi/azure-native/servicebus';
-import { isPrd, naming } from '../Common';
+import { getNetworkDefaultAction, isPrd, naming } from '../Common';
 import env from '../env';
 import { addCustomSecret, addCustomSecrets } from '../KeyVault/CustomHelper';
 import { addEncryptKey } from '../KeyVault/Helper';
@@ -252,7 +252,10 @@ class ServiceBusBuilder
       {
         ...this.args.group,
         namespaceName: this._sbInstance!.name,
-        defaultAction: 'Allow',
+        defaultAction: getNetworkDefaultAction(
+          ipAddresses.length > 0 || Boolean(subnetId),
+          this._network.defaultAction
+        ),
         trustedServiceAccessEnabled: true,
 
         ipRules: ipAddresses.map((i) => ({
