@@ -21,6 +21,13 @@ const tryFindName = (props: any) => {
   return name;
 };
 
+// Captures every resource's construction inputs, keyed by Pulumi type token,
+// so tests can inspect args passed to resources a builder never returns
+// (e.g. ServiceBusBuilder/AcrBuilder keep their network rule-set/registry
+// instances private). Tests should look up the LAST matching entry, since
+// this list is never cleared between test files sharing the process.
+export const createdResources: Array<{ type: string; name: string; inputs: any }> = [];
+
 export default pulumi.runtime.setMocks(
   {
     newResource: (
@@ -31,6 +38,7 @@ export default pulumi.runtime.setMocks(
       state: any;
     } => {
       const name = tryFindName(args.inputs) ?? args.name;
+      createdResources.push({ type: args.type, name, inputs: args.inputs });
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
@@ -51,6 +59,13 @@ export default pulumi.runtime.setMocks(
         return {
           id: "00000000-0000-0000-0000-000000000000",
           display_name: "subscription",
+        };
+      if (args.token === "azure-native:storage:listStorageAccountKeys")
+        return {
+          keys: [
+            { keyName: "key1", value: "key1-value" },
+            { keyName: "key2", value: "key2-value" },
+          ],
         };
       return args.inputs;
     },
