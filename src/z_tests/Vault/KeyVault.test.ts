@@ -46,7 +46,7 @@ describe('Key Vault Creator tests', () => {
   }).timeout(5000);
 
   describe('networkAcls.defaultAction / publicNetworkAccess (PULUMI-SEC-006)', () => {
-    it('defaults to Deny when a subnetId rule is supplied (R3 security fix)', async () => {
+    it('defaults to Deny when a subnetId rule is supplied (R2 security fix)', async () => {
       const rs = await vaultCreator({
         name: 'root',
         group: { resourceGroupName: 'RG' },
@@ -57,7 +57,7 @@ describe('Key Vault Creator tests', () => {
       assert.strictEqual(properties.networkAcls.defaultAction, 'Deny');
     });
 
-    it('defaults to Deny when an ipAddresses rule is supplied (R3 security fix)', async () => {
+    it('defaults to Deny when an ipAddresses rule is supplied (R2 security fix)', async () => {
       const rs = await vaultCreator({
         name: 'root',
         group: { resourceGroupName: 'RG' },

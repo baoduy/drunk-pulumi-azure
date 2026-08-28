@@ -72,7 +72,7 @@ describe('Storage Creator tests', () => {
   });
 
   describe('networkRuleSet.defaultAction (PULUMI-SEC-006)', () => {
-    it('defaults to Deny when a subnetId rule is supplied (R3 security fix)', async () => {
+    it('defaults to Deny when a subnetId rule is supplied (R2 security fix)', async () => {
       const rs = creator({
         name: 'storage',
         group: { resourceGroupName: 'RG' },
@@ -83,7 +83,7 @@ describe('Storage Creator tests', () => {
       assert.strictEqual(rule.defaultAction, 'Deny');
     });
 
-    it('defaults to Deny when an ipAddresses rule is supplied (R3 security fix)', async () => {
+    it('defaults to Deny when an ipAddresses rule is supplied (R2 security fix)', async () => {
       const rs = creator({
         name: 'storage',
         group: { resourceGroupName: 'RG' },
@@ -158,6 +158,7 @@ describe('Storage Creator tests', () => {
       name: 'key-vault',
     };
 
+    const before = createdResources.length;
     const rs = creator({
       name: 'storage',
       group: { resourceGroupName: 'RG' },
@@ -175,7 +176,9 @@ describe('Storage Creator tests', () => {
     const contentType = `Storage: ${accountName}`;
     let secret;
     for (let i = 0; i < 50 && !secret; i++) {
-      secret = createdResources.find((r) => r.inputs?.contentType === contentType);
+      secret = createdResources
+        .slice(before)
+        .find((r) => r.inputs?.contentType === contentType);
       if (!secret) await new Promise((resolve) => setImmediate(resolve));
     }
     assert.ok(secret, 'expected the storage account key to be saved as a secret');
