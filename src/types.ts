@@ -326,12 +326,19 @@ export type PrivateLinkPropsType = {
 };
 
 /**
+ * Rule-set default action for network access control lists.
+ */
+export type NetworkRuleDefaultActionType = 'Allow' | 'Deny';
+
+/**
  * Properties for network.
  */
 export type NetworkPropsType = {
   subnetId?: Input<string>;
   ipAddresses?: Input<string>[];
   privateLink?: PrivateLinkPropsType;
+  /** Rule-set default action. Omitted → 'Deny' when any ipAddresses/subnetId rule is supplied, otherwise 'Allow'. */
+  defaultAction?: NetworkRuleDefaultActionType;
 };
 
 /**

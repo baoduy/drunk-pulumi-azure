@@ -130,6 +130,7 @@
     "src/Common/Location/LocationBuiltIn.ts",
     "src/Common/Location/index.ts",
     "src/Common/Naming.ts",
+    "src/Common/Network.ts",
     "src/Common/OpenApi/index.ts",
     "src/Common/OpenApi/types.ts",
     "src/Common/RsInfo/Helper.ts",
