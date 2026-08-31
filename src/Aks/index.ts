@@ -256,19 +256,23 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
         // the empty-array fallback below means "no restriction" when the caller passes no
         // authorizedIPRanges and the cluster isn't private. This is deliberate — callers of this
         // builder are expected to supply authorizedIPRanges or set features.enablePrivateCluster
-        // themselves. Reviewed and accepted under DRK-779; do not "fix" this by throwing or by
-        // adding an allowPublicApiServer flag.
+        // themselves. Reviewed and accepted under DRK-779; not to be changed without revisiting
+        // DRK-779.
         authorizedIPRanges: features?.enablePrivateCluster
           ? undefined
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        // Hard-coded true on purpose: a private cluster's FQDN still needs to resolve from public
-        // DNS, so public FQDN resolution is enabled unconditionally. Reviewed and accepted under
-        // DRK-779 (PULUMI-SEC-010) — this is a decision, not a pending task.
+        // Hard-coded true on purpose: with privateDNSZone: 'system' below, a private cluster
+        // already resolves in-VNet without this. It's kept on so the cluster stays reachable from
+        // outside the VNet (CI runners, operator machines) without a jump host. The accepted
+        // exposure is a DNS record, not the API server itself — reachability is still governed by
+        // enablePrivateCluster and authorizedIPRanges above. Only has effect when
+        // enablePrivateCluster is set, so it's inert on this builder's default public-cluster path.
+        // Reviewed and accepted under DRK-779 (PULUMI-SEC-010) — this is a decision, not a pending
+        // task.
         enablePrivateClusterPublicFQDN: true,
         privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
-        //privateDNSZone: privateDnsZone?.id,
       },
 
       addonProfiles: {
