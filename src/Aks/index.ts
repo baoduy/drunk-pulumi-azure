@@ -252,12 +252,20 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
       dnsPrefix: aksName,
 
       apiServerAccessProfile: {
+        // Accepted risk (PULUMI-SEC-010, fingerprint drunk-pulumi-azure:PULUMI-SEC-010:src/Aks/index.ts:default):
+        // the empty-array fallback below means "no restriction" when the caller passes no
+        // authorizedIPRanges and the cluster isn't private. This is deliberate — callers of this
+        // builder are expected to supply authorizedIPRanges or set features.enablePrivateCluster
+        // themselves. Reviewed and accepted under DRK-779; do not "fix" this by throwing or by
+        // adding an allowPublicApiServer flag.
         authorizedIPRanges: features?.enablePrivateCluster
           ? undefined
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        //TODO: to make the life simple we enable this to allows IP DNS query from public internet.
+        // Hard-coded true on purpose: a private cluster's FQDN still needs to resolve from public
+        // DNS, so public FQDN resolution is enabled unconditionally. Reviewed and accepted under
+        // DRK-779 (PULUMI-SEC-010) — this is a decision, not a pending task.
         enablePrivateClusterPublicFQDN: true,
         privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
         //privateDNSZone: privateDnsZone?.id,
