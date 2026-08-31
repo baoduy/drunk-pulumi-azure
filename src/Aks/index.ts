@@ -257,14 +257,14 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
         // authorizedIPRanges and the cluster isn't private. This is deliberate — callers of this
         // builder are expected to supply authorizedIPRanges or set features.enablePrivateCluster
         // themselves. Reviewed and accepted under DRK-779; not to be changed without revisiting
-        // DRK-779.
+        // that decision.
         authorizedIPRanges: features?.enablePrivateCluster
           ? undefined
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
         // Hard-coded true on purpose: with privateDNSZone: 'system' below, a private cluster
-        // already resolves in-VNet without this. It's kept on so the cluster stays reachable from
+        // already resolves in-VNet without this. It's kept on so the cluster stays resolvable from
         // outside the VNet (CI runners, operator machines) without a jump host. The accepted
         // exposure is a DNS record, not the API server itself — reachability is still governed by
         // enablePrivateCluster and authorizedIPRanges above. Only has effect when
