@@ -196,4 +196,101 @@ describe('Storage Creator tests', () => {
     );
     assert.strictEqual(publicNetworkAccess, 'Disabled');
   });
+
+  describe('BlobServiceProperties data protection (DRK-1039)', () => {
+    // BlobServiceProperties is never returned from Storage() — read its
+    // construction inputs back from the shared mock resource log instead.
+    // Resource registration happens asynchronously, so poll the log the same
+    // way the vaultInfo test above does, rather than asserting synchronously.
+    const findBlobServiceProperties = async (watermark: number) => {
+      let created;
+      for (let i = 0; i < 50 && !created; i++) {
+        created = createdResources
+          .slice(watermark)
+          .find((r) => r.type === 'azure-native:storage:BlobServiceProperties');
+        if (!created) await new Promise((resolve) => setImmediate(resolve));
+      }
+      assert.ok(created, 'expected a BlobServiceProperties resource to be created');
+      return created!.inputs;
+    };
+
+    it('registers soft delete for blobs and containers by default (policies omitted)', async () => {
+      const watermark = createdResources.length;
+      creator({
+        name: 'storage',
+        group: { resourceGroupName: 'RG' },
+      });
+
+      const inputs = await findBlobServiceProperties(watermark);
+      assert.strictEqual(inputs.deleteRetentionPolicy?.enabled, true);
+      assert.strictEqual(inputs.containerDeleteRetentionPolicy?.enabled, true);
+    });
+
+    it('isBlobVersioningEnabled: true turns on blob versioning', async () => {
+      const watermark = createdResources.length;
+      creator({
+        name: 'storage',
+        group: { resourceGroupName: 'RG' },
+        policies: { isBlobVersioningEnabled: true },
+      });
+
+      const inputs = await findBlobServiceProperties(watermark);
+      assert.strictEqual(inputs.isVersioningEnabled, true);
+    });
+
+    it('defaults isVersioningEnabled to false, not isPrd, since this builder always sets isHnsEnabled: true', async () => {
+      const watermark = createdResources.length;
+      creator({
+        name: 'storage',
+        group: { resourceGroupName: 'RG' },
+      });
+
+      const inputs = await findBlobServiceProperties(watermark);
+      assert.strictEqual(inputs.isVersioningEnabled, false);
+    });
+
+    it('lets an explicit blobProperties override win over the policy defaults', async () => {
+      const watermark = createdResources.length;
+      creator({
+        name: 'storage',
+        group: { resourceGroupName: 'RG' },
+        policies: {
+          isBlobVersioningEnabled: true,
+          blobProperties: {
+            isVersioningEnabled: false,
+            deleteRetentionPolicy: { enabled: false },
+          },
+        },
+      });
+
+      const inputs = await findBlobServiceProperties(watermark);
+      assert.strictEqual(inputs.isVersioningEnabled, false);
+      assert.strictEqual(inputs.deleteRetentionPolicy?.enabled, false);
+    });
+
+    it('still builds management rules against a BlobServiceProperties that is always defined', async () => {
+      const watermark = createdResources.length;
+      const rs = creator({
+        name: 'storage',
+        group: { resourceGroupName: 'RG' },
+        policies: {
+          defaultManagementRules: [
+            {
+              actions: {
+                baseBlob: {
+                  delete: { daysAfterModificationGreaterThan: 30 },
+                },
+              },
+            },
+          ],
+        },
+      });
+
+      // The BlobServiceProperties resource exists (data-protection defaults
+      // are never skipped) and the Storage account itself still builds fine
+      // alongside a management policy that depends on it.
+      await findBlobServiceProperties(watermark);
+      assert.ok(rs.instance);
+    });
+  });
 });
