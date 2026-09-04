@@ -1128,7 +1128,6 @@ pulumi destroy  # Clean up
 | **ApimPolicyBuilder** | APIM Policies | XML policies, Transformations | ❌ No |
 | **AzAppBuilder** | App Services | Web Apps, Functions, App Plans | ❌ No |
 | **AFDBuilder** | Azure Front Door | Endpoints, Custom domains, WAF | ❌ No |
-| **FrontDoorBuilder** | Front Door Classic | Legacy Front Door | ❌ No |
 | **CdnBuilder** | CDN | Endpoints, Custom domains, Rules | ❌ No |
 | **DnsZoneBuilder** | Public DNS | Records (A, CNAME, TXT, MX) | ❌ No |
 | **PrivateDnsZoneBuilder** | Private DNS | VNet links, Private records | ❌ No |
@@ -2188,7 +2187,7 @@ AppConfig (AppConfigBuilder):
 IotHub (IotHubBuilder):
 - `IotHubBuilder(args)` → `withSku({ name, units })` → `addRoute({...})`* → `addConsumerGroup(eventHubName,'name')`* → `build()`
 
-Edge (AFD/Cdn/FrontDoor) patterns follow: define endpoints/domains → security headers/WAF → build.
+Edge (AFD/Cdn) patterns follow: define endpoints/domains → security headers/WAF → build.
 
 ### 2. RBAC Integration Checklist
 - Create or load roles early: `createRoles()` or `withRolesFromVault()` before dependent resources.
@@ -2287,7 +2286,7 @@ Mapping:
 - Integrated = APIM, Config, SignalR, IotHub
 - Compute = AKS, VM, Automation
 - Messaging = ServiceBus, SignalR
-- Edge = AFD, FrontDoor, CDN, DNS
+- Edge = AFD, CDN, DNS
 - Resources = Unified ResourceCreator / naming
 - Async = Builders needing pre-creation steps (ResourceBuilder, AksBuilder, future)
 - Named = Consistent naming rules extension
