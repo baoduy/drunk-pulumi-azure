@@ -1,4 +1,8 @@
-import { BasicEncryptResourceArgs, KeyVaultInfo } from '../types';
+import {
+  BasicEncryptResourceArgs,
+  KeyVaultInfo,
+  NetworkPropsType,
+} from '../types';
 import * as insights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';
@@ -9,6 +13,8 @@ import AppInsight from './AppInsight';
 type WorkspaceType = {
   sku?: insights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
+  network?: Pick<NetworkPropsType, 'privateLink'>;
+  disableLocalAuth?: boolean;
 };
 
 const defaultLogWorkspace: WorkspaceType = {
@@ -52,6 +58,8 @@ export default ({
     name,
     sku: workspace?.sku ?? defaultLogWorkspace.sku,
     dailyQuotaGb,
+    network: workspace?.network,
+    disableLocalAuth: workspace?.disableLocalAuth,
     vaultInfo,
   });
 
