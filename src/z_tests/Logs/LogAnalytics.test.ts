@@ -1,6 +1,6 @@
+import { createdResources } from '../_tools/Mocks';
 import assert from 'node:assert/strict';
 import creator from '../../Logs/LogAnalytics';
-import { createdResources } from '../_tools/Mocks';
 
 // Resolves a pulumi Output's value as a real awaited Promise. Using
 // `.apply()` directly and asserting inside its callback does NOT fail the
@@ -83,21 +83,22 @@ describe('LogAnalytics Creator tests', () => {
 
     // Secrets are pushed from inside `log.customerId.apply(async ...)`, which
     // for the disableLocalAuth:false path also chains a real async
-    // `getSharedKeys` call — poll instead of asserting synchronously, same
+    // `getSharedKeys` call — poll until the expected count lands (not just
+    // the first non-empty poll) instead of asserting synchronously, same
     // approach as Storage.test.ts's vaultInfo test.
-    const findSecrets = async (watermark: number) => {
+    const findSecrets = async (watermark: number, minCount: number) => {
       let found: typeof createdResources = [];
-      for (let i = 0; i < 50 && found.length === 0; i++) {
+      for (let i = 0; i < 50 && found.length < minCount; i++) {
         found = createdResources
           .slice(watermark)
           .filter((r) => r.inputs?.contentType === 'Log Analytics');
-        if (found.length === 0)
+        if (found.length < minCount)
           await new Promise((resolve) => setImmediate(resolve));
       }
       return found;
     };
 
-    it('writes only the workspace-Id secret when local auth is disabled (default) and does not call getSharedKeys', async () => {
+    it('writes only the workspace-Id secret when local auth is disabled (default)', async () => {
       const watermark = createdResources.length;
       const rs = creator({
         name: 'Root',
@@ -106,7 +107,7 @@ describe('LogAnalytics Creator tests', () => {
       });
 
       await resolveOutput(rs.customerId);
-      const secrets = await findSecrets(watermark);
+      const secrets = await findSecrets(watermark, 1);
       assert.strictEqual(secrets.length, 1);
       assert.ok(secrets.every((s) => !/-primary$|-secondary$/.test(s.name)));
     });
@@ -121,7 +122,7 @@ describe('LogAnalytics Creator tests', () => {
       });
 
       await resolveOutput(rs.customerId);
-      const secrets = await findSecrets(watermark);
+      const secrets = await findSecrets(watermark, 3);
       assert.strictEqual(secrets.length, 3);
     });
   });
@@ -166,7 +167,7 @@ describe('LogAnalytics Creator tests', () => {
     assert.ok(!workspace!.id, 'expected no import id when importUri is omitted');
   });
 
-  it('stores the workspace shared keys as Key Vault secrets when vaultInfo is supplied', async () => {
+  it('writes a Log Analytics secret when vaultInfo is supplied', async () => {
     const group = { resourceGroupName: 'RG' };
     const vaultInfo = { id: '/s/123', group, name: 'key-vault' };
     const before = createdResources.length;

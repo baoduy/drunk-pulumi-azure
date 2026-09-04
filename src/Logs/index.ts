@@ -14,6 +14,14 @@ type WorkspaceType = {
   sku?: insights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
   network?: Pick<NetworkPropsType, 'privateLink'>;
+  /**
+   * Disable shared-key (local auth) ingestion. Defaults to true.
+   * When true (the default), the workspace's primary/secondary shared keys are
+   * NOT written to Key Vault — only the workspace id secret is. Consumers that
+   * ship container-app logs via `AppContainerBuilder` (which reads
+   * `logWp.primarySharedKey`) must pass `disableLocalAuth: false` to get a
+   * usable shared key.
+   */
   disableLocalAuth?: boolean;
 };
 

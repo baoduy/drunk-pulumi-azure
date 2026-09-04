@@ -8,7 +8,14 @@ interface Props extends BasicResourceWithVaultArgs {
   dailyQuotaGb?: number;
   /** Only `privateLink` is honoured: it flips both public-access values to 'Disabled'. */
   network?: Pick<NetworkPropsType, 'privateLink'>;
-  /** Disable shared-key (local auth) ingestion. Defaults to true. */
+  /**
+   * Disable shared-key (local auth) ingestion. Defaults to true.
+   * When true (the default), the workspace's primary/secondary shared keys are
+   * NOT written to Key Vault — only the workspace id secret is. Consumers that
+   * ship container-app logs via `AppContainerBuilder` (which reads
+   * `logWp.primarySharedKey`) must pass `disableLocalAuth: false` to get a
+   * usable shared key.
+   */
   disableLocalAuth?: boolean;
 }
 
