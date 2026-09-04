@@ -71,6 +71,21 @@ describe('Storage Creator tests', () => {
     assert.strictEqual(allowSharedKeyAccess, true);
   });
 
+  it('defaults allowSharedKeyAccess to false when no features are supplied (DRK-1082)', async () => {
+    // features?.allowSharedKeyAccess ?? features?.enableStaticWebsite ?? false —
+    // with neither flag set, the derived value is now an explicit `false`,
+    // not `undefined`. Recorded here as a decision, not an incidental value.
+    const rs = creator({
+      name: 'storage',
+      group: { resourceGroupName: 'RG' },
+    });
+
+    const allowSharedKeyAccess = await resolveOutput(
+      rs.instance.allowSharedKeyAccess,
+    );
+    assert.strictEqual(allowSharedKeyAccess, false);
+  });
+
   describe('networkRuleSet.defaultAction (PULUMI-SEC-006)', () => {
     it('defaults to Deny when a subnetId rule is supplied (R2 security fix)', async () => {
       const rs = creator({
