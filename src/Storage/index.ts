@@ -108,7 +108,7 @@ function Storage({
     ? addEncryptKey(name, vaultInfo!)
     : undefined;
   const allowSharedKeyAccess =
-    features.allowSharedKeyAccess || features.enableStaticWebsite;
+    features.allowSharedKeyAccess ?? features.enableStaticWebsite ?? false;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
   const stg = new storage.StorageAccount(
