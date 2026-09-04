@@ -31,6 +31,11 @@ export type StorageFeatureType = {
 
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
+  /**
+   * @deprecated Superseded by `blobProperties.isVersioningEnabled`. Will be removed in the
+   * next major. Blob versioning is unsupported on hierarchical-namespace accounts, which is
+   * every account this builder creates (`isHnsEnabled: true`).
+   */
   isBlobVersioningEnabled?: boolean;
   blobProperties?: Omit<
     storage.BlobServicePropertiesArgs,
@@ -236,19 +241,22 @@ function Storage({
     );
   }
 
-  //Life Cycle Management
-  const props = policies?.blobProperties
-    ? new storage.BlobServiceProperties(
-        name,
-        {
-          ...group,
-          accountName: stg.name,
-          blobServicesName: 'default',
-          ...policies.blobProperties,
-        },
-        { dependsOn: stg }
-      )
-    : undefined;
+  //Blob data protection + Life Cycle Management
+  const props = new storage.BlobServiceProperties(
+    name,
+    {
+      ...group,
+      accountName: stg.name,
+      blobServicesName: 'default',
+      deleteRetentionPolicy: { enabled: true, days: isPrd ? 7 : 1 },
+      containerDeleteRetentionPolicy: { enabled: true, days: isPrd ? 7 : 1 },
+      // Blob versioning is unsupported on hierarchical-namespace accounts and this
+      // builder always sets isHnsEnabled: true — off unless the caller opts in.
+      isVersioningEnabled: policies?.isBlobVersioningEnabled ?? false,
+      ...policies?.blobProperties,
+    },
+    { dependsOn: stg }
+  );
 
   if (policies?.defaultManagementRules) {
     createManagementRules({
