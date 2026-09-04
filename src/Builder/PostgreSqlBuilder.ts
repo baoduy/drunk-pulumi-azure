@@ -37,6 +37,12 @@ class PostgreSqlBuilder
   private _options: PostgreSqlOptionsBuilderType | undefined = undefined;
   private _databases = new Set<string>();
   private _lock: boolean = isPrd;
+  private _resolvedAuthConfig:
+    | {
+      passwordAuth: 'Enabled' | 'Disabled';
+      activeDirectoryAuth: 'Enabled' | 'Disabled';
+    }
+    | undefined = undefined;
 
   constructor(private args: PostgreSqlBuilderArgs) {
     super(args);
@@ -106,6 +112,19 @@ class PostgreSqlBuilder
     envRoles?.addMember('readOnly', this._uid.principalId);
   }
 
+  /** Resolves passwordAuth/activeDirectoryAuth once, per R1/R2, so buildPostgreSql and buildAdAdmin cannot drift. */
+  private resolveAuthConfig() {
+    if (!this._resolvedAuthConfig) {
+      this._resolvedAuthConfig = {
+        passwordAuth: this._options?.authConfig?.passwordAuth ?? 'Enabled',
+        activeDirectoryAuth:
+          this._options?.authConfig?.activeDirectoryAuth ??
+          (this.args.envRoles ? 'Enabled' : 'Disabled'),
+      };
+    }
+    return this._resolvedAuthConfig;
+  }
+
   private buildPostgreSql() {
     const {
       group,
@@ -115,6 +134,8 @@ class PostgreSqlBuilder
       dependsOn,
       ignoreChanges = [],
     } = this.args;
+
+    const { passwordAuth, activeDirectoryAuth } = this.resolveAuthConfig();
 
     const encryptKey = enableEncryption
       ? addEncryptKey(this._instanceName, vaultInfo!)
@@ -153,14 +174,17 @@ class PostgreSqlBuilder
           ),
         },
 
-        //TODO: move this options to out of hard code
         authConfig: {
-          passwordAuth: 'Enabled',
-          activeDirectoryAuth: 'Disabled',
+          passwordAuth,
+          activeDirectoryAuth,
           tenantId,
         },
-        administratorLogin: this._loginInfo!.adminLogin,
-        administratorLoginPassword: this._loginInfo!.password,
+        ...(passwordAuth !== 'Disabled'
+          ? {
+            administratorLogin: this._loginInfo!.adminLogin,
+            administratorLoginPassword: this._loginInfo!.password,
+          }
+          : {}),
         network: { publicNetworkAccess: this._network?.allowsPublicAccess ? "Enabled" : this._network?.privateLink ? 'Disabled' : 'Enabled' },
         dataEncryption: encryptKey
           ? {
@@ -198,6 +222,26 @@ class PostgreSqlBuilder
     if (this._lock) {
       Locker({ name: this._instanceName, resource: this._sqlInstance });
     }
+  }
+
+  private buildAdAdmin() {
+    const { group, envRoles } = this.args;
+    const { activeDirectoryAuth } = this.resolveAuthConfig();
+    if (!envRoles || activeDirectoryAuth === 'Disabled') return;
+
+    new postgresql.Administrator(
+      this._instanceName,
+      {
+        ...group,
+        serverName: this._sqlInstance!.name,
+
+        objectId: envRoles.admin.objectId,
+        principalName: envRoles.admin.displayName,
+        principalType: postgresql.PrincipalType.Group,
+        tenantId,
+      },
+      { dependsOn: this._sqlInstance },
+    );
   }
 
   private buildSecrets() {
@@ -290,6 +334,7 @@ class PostgreSqlBuilder
     this.buildLogin();
     this.buildUID();
     this.buildPostgreSql();
+    this.buildAdAdmin();
     this.buildSecrets();
     this.buildNetwork();
     this.buildDatabases();

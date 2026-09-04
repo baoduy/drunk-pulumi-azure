@@ -1,4 +1,8 @@
-import { BasicEncryptResourceArgs, KeyVaultInfo } from '../types';
+import {
+  BasicEncryptResourceArgs,
+  KeyVaultInfo,
+  NetworkPropsType,
+} from '../types';
 import * as insights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';
@@ -9,6 +13,16 @@ import AppInsight from './AppInsight';
 type WorkspaceType = {
   sku?: insights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
+  network?: Pick<NetworkPropsType, 'privateLink'>;
+  /**
+   * Disable shared-key (local auth) ingestion. Defaults to true.
+   * When true (the default), the workspace's primary/secondary shared keys are
+   * NOT written to Key Vault — only the workspace id secret is. Consumers that
+   * ship container-app logs via `AppContainerBuilder` (which reads
+   * `logWp.primarySharedKey`) must pass `disableLocalAuth: false` to get a
+   * usable shared key.
+   */
+  disableLocalAuth?: boolean;
 };
 
 const defaultLogWorkspace: WorkspaceType = {
@@ -32,6 +46,13 @@ interface Props extends BasicEncryptResourceArgs {
   workspace?: WorkspaceType;
   deleteAfterDays: number;
   vaultInfo?: KeyVaultInfo;
+  /**
+   * Overrides `allowSharedKeyAccess` on the log-archive storage account.
+   * Set to `false` to force Entra-only data-plane auth (flips
+   * `defaultToOAuthAuthentication` to `true` on the Storage builder).
+   * Omit to keep the documented default (see call site comment below).
+   */
+  storage?: { allowSharedKeyAccess?: boolean };
 }
 
 export default ({
@@ -40,6 +61,7 @@ export default ({
   deleteAfterDays,
   workspace,
   vaultInfo,
+  storage,
   ...others
 }: Props) => {
   name = getResourceName(name, { suffix: 'logs' });
@@ -52,6 +74,8 @@ export default ({
     name,
     sku: workspace?.sku ?? defaultLogWorkspace.sku,
     dailyQuotaGb,
+    network: workspace?.network,
+    disableLocalAuth: workspace?.disableLocalAuth,
     vaultInfo,
   });
 
@@ -74,7 +98,16 @@ export default ({
     policies: {
       defaultManagementRules: getStorageAutoDeleteRules(deleteAfterDays),
     },
-    features: { allowSharedKeyAccess: true },
+    // Default kept `true`: whether every diagnostic-setting log-archive writer can
+    // authenticate to the destination storage account via managed identity/Entra ID
+    // instead of the account key is resource-dependent, not guaranteed platform-wide
+    // (see https://learn.microsoft.com/azure/storage/common/shared-key-authorization-prevent
+    // and https://learn.microsoft.com/azure/azure-monitor/essentials/create-diagnostic-settings —
+    // "the selection of the authentication method depends on the specific resource ...
+    // and the capabilities of that resource"). Flipping this default risks silently
+    // breaking diagnostic settings for callers whose log source can't yet use
+    // managed identity, so it stays caller-controlled instead.
+    features: { allowSharedKeyAccess: storage?.allowSharedKeyAccess ?? true },
   });
 
   return {

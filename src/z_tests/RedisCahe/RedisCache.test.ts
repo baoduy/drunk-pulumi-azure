@@ -146,7 +146,7 @@ describe('RedisCache Creator tests', () => {
 
     // `import` (unlike `protect`) IS observable through the mock harness:
     // the pulumi runtime forwards the `import` resource option to
-    // `newResource` as `args.id` (see Mocks.ts's `importId` capture), so
+    // `newResource` as `args.id` (see Mocks.ts's `id` capture), so
     // this proves `import: importUri` still reaches the Redis resource
     // alongside the new `protect: this._lock`.
     let redis;
@@ -157,6 +157,6 @@ describe('RedisCache Creator tests', () => {
       if (!redis) await new Promise((resolve) => setImmediate(resolve));
     }
     assert.ok(redis, 'expected the Redis resource to be created');
-    assert.strictEqual(redis!.importId, importUri);
+    assert.strictEqual(redis!.id, importUri);
   });
 });

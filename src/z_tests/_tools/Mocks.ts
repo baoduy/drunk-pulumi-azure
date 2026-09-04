@@ -28,11 +28,15 @@ const tryFindName = (props: any) => {
 // the process, so tests should record `createdResources.length` as a
 // watermark before acting, then slice from it and find the first match —
 // isolating the search to resources created by that test alone.
-// `importId` mirrors `args.id`, which the pulumi runtime populates from a
-// resource's `import` option (`req.getImportid()` in runtime/mocks.js) — the
-// only one of the new lock-guard's two resource options observable through
-// this mock harness; `protect` is never forwarded to `newResource` at all.
-export const createdResources: Array<{ type: string; name: string; inputs: any; importId?: string }> = [];
+// `id` mirrors MockResourceArgs.id — the physical id of an existing resource
+// to import, i.e. the `import` ResourceOption a builder passed — undefined
+// when the resource wasn't constructed with `import`.
+export const createdResources: Array<{
+  type: string;
+  name: string;
+  inputs: any;
+  id?: string;
+}> = [];
 
 export default pulumi.runtime.setMocks(
   {
@@ -44,7 +48,7 @@ export default pulumi.runtime.setMocks(
       state: any;
     } => {
       const name = tryFindName(args.inputs) ?? args.name;
-      createdResources.push({ type: args.type, name, inputs: args.inputs, importId: args.id });
+      createdResources.push({ type: args.type, name, inputs: args.inputs, id: args.id });
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
@@ -56,7 +60,9 @@ export default pulumi.runtime.setMocks(
             ? { result: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
             : name.endsWith("ssh")
               ? { publicKey: "1234567890", privateKey: "1234567890" }
-              : {}),
+              : args.type.includes("operationalinsights") && args.type.includes("Workspace")
+                ? { customerId: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
+                : {}),
         },
       };
     },
@@ -72,6 +78,11 @@ export default pulumi.runtime.setMocks(
             { keyName: "key1", value: "key1-value" },
             { keyName: "key2", value: "key2-value" },
           ],
+        };
+      if (args.token === "azure-native:operationalinsights:getSharedKeys")
+        return {
+          primarySharedKey: "log-primary-key",
+          secondarySharedKey: "log-secondary-key",
         };
       return args.inputs;
     },
