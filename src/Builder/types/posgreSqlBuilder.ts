@@ -64,6 +64,20 @@ export type PostgreSqlOptionsBuilderType = {
     startHour: Input<number>;
     startMinute: Input<number>;
   };
+  /**
+   * Authentication configuration for the PostgreSQL server.
+   */
+  authConfig?: {
+    /**
+     * Whether password authentication is enabled. Default: 'Enabled'.
+     */
+    passwordAuth?: Input<'Enabled' | 'Disabled'>;
+    /**
+     * Whether Microsoft Entra (Azure AD) authentication is enabled.
+     * Default: 'Enabled' when `envRoles` is provided, otherwise 'Disabled'.
+     */
+    activeDirectoryAuth?: Input<'Enabled' | 'Disabled'>;
+  };
 };
 
 /**
