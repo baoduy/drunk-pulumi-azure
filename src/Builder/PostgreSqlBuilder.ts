@@ -11,6 +11,7 @@ import {
 import { IdentityInfoWithInstance, LoginArgs, ResourceInfo } from '../types';
 import { isPrd, naming, tenantId } from '../Common';
 import { randomLogin } from '../Core/Random';
+import { Locker } from '../Core/Locker';
 import * as postgresql from '@pulumi/azure-native/dbforpostgresql';
 import * as mid from '@pulumi/azure-native/managedidentity';
 import { addEncryptKey } from '../KeyVault/Helper';
@@ -35,6 +36,7 @@ class PostgreSqlBuilder
   private _network: PostgreSqlNetworkBuilderType | undefined = undefined;
   private _options: PostgreSqlOptionsBuilderType | undefined = undefined;
   private _databases = new Set<string>();
+  private _lock: boolean = isPrd;
 
   constructor(private args: PostgreSqlBuilderArgs) {
     super(args);
@@ -63,6 +65,10 @@ class PostgreSqlBuilder
   }
   public withDatabases(...props: string[]): IPostgreSqlBuilder {
     props.forEach((i) => this._databases.add(i));
+    return this;
+  }
+  public lock(lock: boolean = true): IPostgreSqlBuilder {
+    this._lock = lock;
     return this;
   }
 
@@ -185,8 +191,13 @@ class PostgreSqlBuilder
       {
         dependsOn: this._uid?.instance ?? dependsOn,
         ignoreChanges: [...ignoreChanges, 'administratorLogin'],
+        protect: this._lock,
       },
     );
+
+    if (this._lock) {
+      Locker({ name: this._instanceName, resource: this._sqlInstance });
+    }
   }
 
   private buildSecrets() {
