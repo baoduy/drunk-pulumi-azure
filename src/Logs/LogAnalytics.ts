@@ -46,7 +46,7 @@ export default ({
       retentionInDays: sku === insights.WorkspaceSkuNameEnum.Free ? 7 : 30, //DO NOT changes this
       sku: { name: sku },
     },
-    { dependsOn, ignoreChanges },
+    { dependsOn, ignoreChanges, import: importUri },
   );
 
   if (vaultInfo) {
