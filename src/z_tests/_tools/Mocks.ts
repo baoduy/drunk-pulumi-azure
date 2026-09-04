@@ -28,7 +28,11 @@ const tryFindName = (props: any) => {
 // the process, so tests should record `createdResources.length` as a
 // watermark before acting, then slice from it and find the first match —
 // isolating the search to resources created by that test alone.
-export const createdResources: Array<{ type: string; name: string; inputs: any }> = [];
+// `importId` mirrors `args.id`, which the pulumi runtime populates from a
+// resource's `import` option (`req.getImportid()` in runtime/mocks.js) — the
+// only one of the new lock-guard's two resource options observable through
+// this mock harness; `protect` is never forwarded to `newResource` at all.
+export const createdResources: Array<{ type: string; name: string; inputs: any; importId?: string }> = [];
 
 export default pulumi.runtime.setMocks(
   {
@@ -40,7 +44,7 @@ export default pulumi.runtime.setMocks(
       state: any;
     } => {
       const name = tryFindName(args.inputs) ?? args.name;
-      createdResources.push({ type: args.type, name, inputs: args.inputs });
+      createdResources.push({ type: args.type, name, inputs: args.inputs, importId: args.id });
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
