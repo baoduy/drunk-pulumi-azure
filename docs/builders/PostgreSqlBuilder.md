@@ -129,6 +129,26 @@ builder.withDatabases('db1', 'db2');
 
 
 
+#### Method: `lock`
+**Purpose**: Enables or disables the deletion guard on the PostgreSQL server.
+
+- Defaults to `isPrd` — production stacks are guarded without the caller asking for it; other environments are not.
+- When enabled, the server is created with Pulumi `protect: true` **and** an Azure `CanNotDelete` management lock. Without the guard, dropping the builder call from a stack — or a rename that turns the diff into a delete-then-create — destroys the server and its data.
+- `.lock(false)` opts out explicitly, including in production.
+- Once the guard is on, deleting the server deliberately requires `pulumi state unprotect` and removing the Azure lock first. That is the guard doing its job, not a bug.
+
+**Usage**:
+```typescript
+builder.lock(); // guard the server explicitly
+builder.lock(false); // opt out, even in a production stack
+```
+
+
+
+
+
+
+
 #### Method: `build`
 **Purpose**: Builds the entire PostgreSQL server resource with the configured properties.
 
@@ -187,7 +207,8 @@ builder
       startMinute: 0,
     },
   })
-  .withDatabases('db1', 'db2');
+  .withDatabases('db1', 'db2')
+  .lock();
 
 const resourceInfo = builder.build();
 console.log(resourceInfo);
@@ -330,6 +351,26 @@ builder.withDatabases('db1', 'db2');
 
 
 
+#### Method: `lock`
+**Purpose**: Enables or disables the deletion guard on the PostgreSQL server.
+
+- Defaults to `isPrd` — production stacks are guarded without the caller asking for it; other environments are not.
+- When enabled, the server is created with Pulumi `protect: true` **and** an Azure `CanNotDelete` management lock. Without the guard, dropping the builder call from a stack — or a rename that turns the diff into a delete-then-create — destroys the server and its data.
+- `.lock(false)` opts out explicitly, including in production.
+- Once the guard is on, deleting the server deliberately requires `pulumi state unprotect` and removing the Azure lock first. That is the guard doing its job, not a bug.
+
+**Usage**:
+```typescript
+builder.lock(); // guard the server explicitly
+builder.lock(false); // opt out, even in a production stack
+```
+
+
+
+
+
+
+
 #### Method: `build`
 **Purpose**: Builds the entire PostgreSQL server resource with the configured properties.
 
@@ -388,7 +429,8 @@ builder
       startMinute: 0,
     },
   })
-  .withDatabases('db1', 'db2');
+  .withDatabases('db1', 'db2')
+  .lock();
 
 const resourceInfo = builder.build();
 console.log(resourceInfo);
