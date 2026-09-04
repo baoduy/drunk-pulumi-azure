@@ -1,4 +1,4 @@
-import { BuilderProps, IBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
 import {
   LoginArgs,
   NetworkPropsType,
@@ -89,7 +89,8 @@ export interface IMySqlLoginBuilder {
 /**
  * Interface for building a MySQL server.
  */
-export interface IMySqlBuilder extends IBuilder<ResourceInfo> {
+export interface IMySqlBuilder
+  extends IBuilder<ResourceInfo>, ILockable<IMySqlBuilder> {
   /**
    * Method to set network properties for the MySQL server.
    * @param props - Properties for the network configuration.

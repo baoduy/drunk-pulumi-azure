@@ -11,6 +11,7 @@ import {
 import { IdentityInfoWithInstance, LoginArgs, ResourceInfo } from '../types';
 import { isPrd, naming, tenantId } from '../Common';
 import { randomLogin } from '../Core/Random';
+import { Locker } from '../Core/Locker';
 import * as mysql from '@pulumi/azure-native/dbformysql';
 import * as mid from '@pulumi/azure-native/managedidentity';
 import { addEncryptKey } from '../KeyVault/Helper';
@@ -34,6 +35,7 @@ class MySqlBuilder
   private _network: MySqlNetworkBuilderType | undefined = undefined;
   private _options: MySqlOptionsBuilderType | undefined = undefined;
   private _databases = new Set<string>();
+  private _lock: boolean = isPrd;
 
   constructor(private args: MySqlBuilderArgs) {
     super(args);
@@ -62,6 +64,10 @@ class MySqlBuilder
   }
   public withDatabases(...props: string[]): IMySqlBuilder {
     props.forEach((i) => this._databases.add(i));
+    return this;
+  }
+  public lock(lock: boolean = true): IMySqlBuilder {
+    this._lock = lock;
     return this;
   }
 
@@ -164,8 +170,13 @@ class MySqlBuilder
       {
         dependsOn: this._uid?.instance ?? dependsOn,
         ignoreChanges: [...ignoreChanges, 'administratorLogin'],
+        protect: this._lock,
       },
     );
+
+    if (this._lock) {
+      Locker({ name: this._instanceName, resource: this._mySqlInstance });
+    }
   }
 
   private buildAdAdmin() {

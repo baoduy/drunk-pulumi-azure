@@ -1,4 +1,4 @@
-import { BuilderProps, IBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
 import {
   LoginArgs,
   NetworkPropsType,
@@ -113,7 +113,8 @@ export interface IPostgreSqlLoginBuilder {
 /**
  * Interface for building a PostgreSQL server.
  */
-export interface IPostgreSqlBuilder extends IBuilder<ResourceInfo> {
+export interface IPostgreSqlBuilder
+  extends IBuilder<ResourceInfo>, ILockable<IPostgreSqlBuilder> {
   /**
    * Sets the network properties for the PostgreSQL server.
    * @param props - The network properties.

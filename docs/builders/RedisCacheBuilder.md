@@ -43,6 +43,21 @@ redisBuilder.withNetwork({
 });
 ```
 
+### `lock`
+#### Purpose:
+Enables or disables the deletion guard on the Redis Cache instance.
+
+- Defaults to `isPrd` — production stacks are guarded without the caller asking for it; other environments are not.
+- When enabled, the cache is created with Pulumi `protect: true` **and** an Azure `CanNotDelete` management lock. Without the guard, dropping the builder call from a stack — or a rename that turns the diff into a delete-then-create — destroys the cache and its data.
+- `.lock(false)` opts out explicitly, including in production.
+- Once the guard is on, deleting the cache deliberately requires `pulumi state unprotect` and removing the Azure lock first. That is the guard doing its job, not a bug.
+
+#### Sample Usage:
+```typescript
+redisBuilder.lock(); // guard the cache explicitly
+redisBuilder.lock(false); // opt out, even in a production stack
+```
+
 ### `buildRedis`
 #### Purpose:
 Creates the Redis Cache instance with the specified configurations.
@@ -101,7 +116,8 @@ redisBuilder
       // private link properties
     },
     ipAddresses: ['192.168.1.1', '192.168.1.2'],
-  });
+  })
+  .lock();
 
 const resourceInfo = redisBuilder.build();
 console.log(resourceInfo);
@@ -111,6 +127,7 @@ console.log(resourceInfo);
 - **Constructor**: Initializes the builder with necessary arguments.
 - **withSku**: Configures the SKU for the Redis Cache.
 - **withNetwork**: Configures network settings for the Redis Cache.
+- **lock**: Enables or disables the deletion guard on the Redis Cache instance (defaults to `isPrd`).
 - **buildRedis**: Internally creates the Redis Cache instance.
 - **buildNetwork**: Internally configures network settings.
 - **buildSecrets**: Internally stores connection details in Key Vault.

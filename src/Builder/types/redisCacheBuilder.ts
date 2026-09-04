@@ -1,4 +1,4 @@
-import { BuilderProps, IBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
 import * as cache from '@pulumi/azure-native/redis';
 import { NetworkPropsType, ResourceInfo } from '../../types';
 
@@ -43,7 +43,8 @@ export interface IRedisCacheSkuBuilder {
 /**
  * Interface for building a Redis Cache.
  */
-export interface IRedisCacheBuilder extends IBuilder<ResourceInfo> {
+export interface IRedisCacheBuilder
+  extends IBuilder<ResourceInfo>, ILockable<IRedisCacheBuilder> {
   /**
    * Sets the network properties for the Redis Cache.
    * @param props - The network properties.
