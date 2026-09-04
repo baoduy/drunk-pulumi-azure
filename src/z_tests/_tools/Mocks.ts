@@ -52,7 +52,9 @@ export default pulumi.runtime.setMocks(
             ? { result: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
             : name.endsWith("ssh")
               ? { publicKey: "1234567890", privateKey: "1234567890" }
-              : {}),
+              : args.type === "azure-native:operationalinsights:Workspace"
+                ? { customerId: "11111111-1111-1111-1111-111111111111" }
+                : {}),
         },
       };
     },
@@ -68,6 +70,11 @@ export default pulumi.runtime.setMocks(
             { keyName: "key1", value: "key1-value" },
             { keyName: "key2", value: "key2-value" },
           ],
+        };
+      if (args.token === "azure-native:operationalinsights:getSharedKeys")
+        return {
+          primarySharedKey: "log-primary-key",
+          secondarySharedKey: "log-secondary-key",
         };
       return args.inputs;
     },
