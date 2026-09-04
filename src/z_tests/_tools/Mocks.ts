@@ -28,7 +28,15 @@ const tryFindName = (props: any) => {
 // the process, so tests should record `createdResources.length` as a
 // watermark before acting, then slice from it and find the first match —
 // isolating the search to resources created by that test alone.
-export const createdResources: Array<{ type: string; name: string; inputs: any }> = [];
+// `id` mirrors MockResourceArgs.id — the physical id of an existing resource
+// to import, i.e. the `import` ResourceOption a builder passed — undefined
+// when the resource wasn't constructed with `import`.
+export const createdResources: Array<{
+  type: string;
+  name: string;
+  inputs: any;
+  id?: string;
+}> = [];
 
 export default pulumi.runtime.setMocks(
   {
@@ -40,7 +48,7 @@ export default pulumi.runtime.setMocks(
       state: any;
     } => {
       const name = tryFindName(args.inputs) ?? args.name;
-      createdResources.push({ type: args.type, name, inputs: args.inputs });
+      createdResources.push({ type: args.type, name, inputs: args.inputs, id: args.id });
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
@@ -52,8 +60,8 @@ export default pulumi.runtime.setMocks(
             ? { result: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
             : name.endsWith("ssh")
               ? { publicKey: "1234567890", privateKey: "1234567890" }
-              : args.type === "azure-native:operationalinsights:Workspace"
-                ? { customerId: "11111111-1111-1111-1111-111111111111" }
+              : args.type.includes("operationalinsights") && args.type.includes("Workspace")
+                ? { customerId: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
                 : {}),
         },
       };
