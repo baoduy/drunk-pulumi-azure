@@ -1,11 +1,22 @@
 import * as insights from '@pulumi/azure-native/operationalinsights';
-import { BasicResourceWithVaultArgs } from '../types';
+import { BasicResourceWithVaultArgs, NetworkPropsType } from '../types';
 import { naming } from '../Common';
 import { addCustomSecrets } from '../KeyVault';
 
 interface Props extends BasicResourceWithVaultArgs {
   sku?: insights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
+  /** Only `privateLink` is honoured: it flips both public-access values to 'Disabled'. */
+  network?: Pick<NetworkPropsType, 'privateLink'>;
+  /**
+   * Disable shared-key (local auth) ingestion. Defaults to true.
+   * When true (the default), the workspace's primary/secondary shared keys are
+   * NOT written to Key Vault — only the workspace id secret is. Consumers that
+   * ship container-app logs via `AppContainerBuilder` (which reads
+   * `logWp.primarySharedKey`) must pass `disableLocalAuth: false` to get a
+   * usable shared key.
+   */
+  disableLocalAuth?: boolean;
 }
 
 export default ({
@@ -17,11 +28,14 @@ export default ({
   dependsOn,
   ignoreChanges,
   importUri,
+  network,
+  disableLocalAuth,
 }: Props) => {
   name = naming.getLogWpName(name);
   const workspaceIdKeyName = `${name}-Id`;
   const primaryKeyName = `${name}-primary`;
   const secondaryKeyName = `${name}-secondary`;
+  const localAuthDisabled = disableLocalAuth ?? true;
 
   const log = new insights.Workspace(
     name,
@@ -29,11 +43,15 @@ export default ({
       workspaceName: name,
       ...group,
 
-      publicNetworkAccessForIngestion: 'Enabled',
-      publicNetworkAccessForQuery: 'Enabled',
+      publicNetworkAccessForIngestion: network?.privateLink
+        ? 'Disabled'
+        : 'Enabled',
+      publicNetworkAccessForQuery: network?.privateLink
+        ? 'Disabled'
+        : 'Enabled',
       features: {
         //clusterResourceId?: pulumi.Input<string>;
-        //disableLocalAuth: true,
+        disableLocalAuth: localAuthDisabled,
         //enableDataExport: false,
         //enableLogAccessUsingOnlyResourcePermissions?: pulumi.Input<boolean>;
         immediatePurgeDataOn30Days: true,
@@ -53,25 +71,24 @@ export default ({
     log.customerId.apply(async (id) => {
       if (!id) return;
 
-      const keys = await insights.getSharedKeys({
-        workspaceName: name,
-        resourceGroupName: group.resourceGroupName,
-      });
+      const items = [{ name: workspaceIdKeyName, value: id }];
+
+      if (!localAuthDisabled) {
+        const keys = await insights.getSharedKeys({
+          workspaceName: name,
+          resourceGroupName: group.resourceGroupName,
+        });
+
+        items.push(
+          { name: primaryKeyName, value: keys.primarySharedKey! },
+          { name: secondaryKeyName, value: keys.secondarySharedKey! },
+        );
+      }
 
       addCustomSecrets({
         contentType: 'Log Analytics',
         vaultInfo,
-        items: [
-          { name: workspaceIdKeyName, value: id },
-          {
-            name: primaryKeyName,
-            value: keys.primarySharedKey!,
-          },
-          {
-            name: secondaryKeyName,
-            value: keys.secondarySharedKey!,
-          },
-        ],
+        items,
       });
     });
   }

@@ -79,6 +79,11 @@ export default pulumi.runtime.setMocks(
             { keyName: "key2", value: "key2-value" },
           ],
         };
+      if (args.token === "azure-native:operationalinsights:getSharedKeys")
+        return {
+          primarySharedKey: "log-primary-key",
+          secondarySharedKey: "log-secondary-key",
+        };
       return args.inputs;
     },
   },

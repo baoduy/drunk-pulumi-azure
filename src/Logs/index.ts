@@ -1,4 +1,8 @@
-import { BasicEncryptResourceArgs, KeyVaultInfo } from '../types';
+import {
+  BasicEncryptResourceArgs,
+  KeyVaultInfo,
+  NetworkPropsType,
+} from '../types';
 import * as insights from '@pulumi/azure-native/operationalinsights';
 import LogWp from './LogAnalytics';
 import Storage from '../Storage';
@@ -9,6 +13,16 @@ import AppInsight from './AppInsight';
 type WorkspaceType = {
   sku?: insights.WorkspaceSkuNameEnum;
   dailyQuotaGb?: number;
+  network?: Pick<NetworkPropsType, 'privateLink'>;
+  /**
+   * Disable shared-key (local auth) ingestion. Defaults to true.
+   * When true (the default), the workspace's primary/secondary shared keys are
+   * NOT written to Key Vault — only the workspace id secret is. Consumers that
+   * ship container-app logs via `AppContainerBuilder` (which reads
+   * `logWp.primarySharedKey`) must pass `disableLocalAuth: false` to get a
+   * usable shared key.
+   */
+  disableLocalAuth?: boolean;
 };
 
 const defaultLogWorkspace: WorkspaceType = {
@@ -60,6 +74,8 @@ export default ({
     name,
     sku: workspace?.sku ?? defaultLogWorkspace.sku,
     dailyQuotaGb,
+    network: workspace?.network,
+    disableLocalAuth: workspace?.disableLocalAuth,
     vaultInfo,
   });
 
