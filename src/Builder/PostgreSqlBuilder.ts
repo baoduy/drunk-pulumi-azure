@@ -37,8 +37,8 @@ class PostgreSqlBuilder
   private _databases = new Set<string>();
   private _resolvedAuthConfig:
     | {
-      passwordAuth: pulumi.Input<'Enabled' | 'Disabled'>;
-      activeDirectoryAuth: pulumi.Input<'Enabled' | 'Disabled'>;
+      passwordAuth: 'Enabled' | 'Disabled';
+      activeDirectoryAuth: 'Enabled' | 'Disabled';
     }
     | undefined = undefined;
 
@@ -229,7 +229,7 @@ class PostgreSqlBuilder
         principalType: postgresql.PrincipalType.Group,
         tenantId,
       },
-      { dependsOn: this._sqlInstance, ignoreChanges: ['objectId'] },
+      { dependsOn: this._sqlInstance },
     );
   }
 

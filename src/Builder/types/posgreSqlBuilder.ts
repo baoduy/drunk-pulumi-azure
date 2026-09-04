@@ -71,12 +71,12 @@ export type PostgreSqlOptionsBuilderType = {
     /**
      * Whether password authentication is enabled. Default: 'Enabled'.
      */
-    passwordAuth?: Input<'Enabled' | 'Disabled'>;
+    passwordAuth?: 'Enabled' | 'Disabled';
     /**
      * Whether Microsoft Entra (Azure AD) authentication is enabled.
      * Default: 'Enabled' when `envRoles` is provided, otherwise 'Disabled'.
      */
-    activeDirectoryAuth?: Input<'Enabled' | 'Disabled'>;
+    activeDirectoryAuth?: 'Enabled' | 'Disabled';
   };
 };
 
