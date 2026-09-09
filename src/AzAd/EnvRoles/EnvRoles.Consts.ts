@@ -90,6 +90,7 @@ const AksRoleNames: Record<EnvRoleKeyTypes, string[]> = {
   admin: [
     'Azure Kubernetes Service RBAC Cluster Admin',
     'Azure Kubernetes Service RBAC Admin',
+    'Azure Kubernetes Service Agent Pool Manager Role'
   ],
 };
 
