@@ -106,6 +106,7 @@ export type NodePoolProps = {
   osDiskType?: ccs.OSDiskType | string;
   maxPods?: number;
   subnetId?: pulumi.Input<string>;
+  retainOnDelete?:boolean;
   //osType?: pulumi.Input<string | ccs.OSType>;
   //role?: pulumi.Input<string>;
 };
@@ -447,7 +448,6 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
     {
       dependsOn: serviceIdentity.instance,
       import: importUri,
-      deleteBeforeReplace: true,
       ignoreChanges,
       protect: lock,
     }
@@ -505,7 +505,7 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
             osSKU: 'Ubuntu',
             osType: 'Linux',
           },
-          { dependsOn: aks }
+          { dependsOn: aks,retainOnDelete:p.retainOnDelete }
         )
     );
   }
