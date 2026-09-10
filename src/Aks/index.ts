@@ -106,6 +106,7 @@ export type NodePoolProps = {
   osDiskType?: ccs.OSDiskType | string;
   maxPods?: number;
   subnetId?: pulumi.Input<string>;
+  retainOnDelete?:boolean;
   //osType?: pulumi.Input<string | ccs.OSType>;
   //role?: pulumi.Input<string>;
 };
@@ -252,15 +253,27 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
       dnsPrefix: aksName,
 
       apiServerAccessProfile: {
+        // Accepted risk (PULUMI-SEC-010, fingerprint drunk-pulumi-azure:PULUMI-SEC-010:src/Aks/index.ts:default):
+        // the empty-array fallback below means "no restriction" when the caller passes no
+        // authorizedIPRanges and the cluster isn't private. This is deliberate — callers of this
+        // builder are expected to supply authorizedIPRanges or set features.enablePrivateCluster
+        // themselves. Reviewed and accepted under DRK-779; not to be changed without revisiting
+        // that decision.
         authorizedIPRanges: features?.enablePrivateCluster
           ? undefined
           : aksAccess.authorizedIPRanges || [],
         disableRunCommand: true,
         enablePrivateCluster: features?.enablePrivateCluster,
-        //TODO: to make the life simple we enable this to allows IP DNS query from public internet.
+        // Hard-coded true on purpose: with privateDNSZone: 'system' below, a private cluster
+        // already resolves in-VNet without this. It's kept on so the cluster stays resolvable from
+        // outside the VNet (CI runners, operator machines) without a jump host. The accepted
+        // exposure is a DNS record, not the API server itself — reachability is still governed by
+        // enablePrivateCluster and authorizedIPRanges above. Only has effect when
+        // enablePrivateCluster is set, so it's inert on this builder's default public-cluster path.
+        // Reviewed and accepted under DRK-779 (PULUMI-SEC-010) — this is a decision, not a pending
+        // task.
         enablePrivateClusterPublicFQDN: true,
         privateDNSZone: features?.enablePrivateCluster ? 'system' : undefined,
-        //privateDNSZone: privateDnsZone?.id,
       },
 
       addonProfiles: {
@@ -447,7 +460,6 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
     {
       dependsOn: serviceIdentity.instance,
       import: importUri,
-      deleteBeforeReplace: true,
       ignoreChanges,
       protect: lock,
     }
@@ -505,7 +517,7 @@ const adminGroup =  Role({appName:"AKS",roleName:"Admin"});
             osSKU: 'Ubuntu',
             osType: 'Linux',
           },
-          { dependsOn: aks }
+          { dependsOn: aks,retainOnDelete:p.retainOnDelete }
         )
     );
   }

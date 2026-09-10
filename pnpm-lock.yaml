@@ -15,23 +15,23 @@ importers:
         specifier: ^4.11.2
         version: 4.11.2
       '@drunk-pulumi/azure-providers':
-        specifier: ^1.0.16
-        version: 1.0.16(@types/node@26.1.1)
+        specifier: ^1.0.17
+        version: 1.0.17(@types/node@26.1.1)(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))
       '@pulumi/azure-native':
         specifier: ^3.21.0
-        version: 3.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+        version: 3.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
       '@pulumi/azuread':
         specifier: 6.10.0
-        version: 6.10.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+        version: 6.10.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
       '@pulumi/pulumi':
         specifier: ^3.253.0
-        version: 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+        version: 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
       '@pulumi/random':
         specifier: ^4.21.0
-        version: 4.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+        version: 4.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
       '@pulumi/tls':
         specifier: ^5.5.0
-        version: 5.5.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+        version: 5.5.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -68,7 +68,7 @@ importers:
         version: 11.7.6
       nyc:
         specifier: ^18.0.0
-        version: 18.0.0
+        version: 18.0.0(supports-color@8.1.1)
       replace-in-file:
         specifier: 8.4.0
         version: 8.4.0
@@ -117,17 +117,17 @@ packages:
     resolution: {integrity: sha512-ykAPY+EDYaKKzQCiYQJ0iv8uzxpTb71y8fZ2LX4+nYe8V6AzuvshdiiN9YAo1C0NGFyshss/h4fjCDs/SW3CNA==}
     engines: {node: '>=14.0.0'}
 
-  '@azure/arm-network@36.0.0':
-    resolution: {integrity: sha512-fTVEl0u0VfvcrZJ6296W5/kVDae49yyx/PD91D+OgZJCzgechOsJtx1oLTiDXvAmY/2CrcSJpNsAWNhbmV0cKQ==}
-    engines: {node: '>=20.0.0'}
+  '@azure/arm-network@37.0.0':
+    resolution: {integrity: sha512-D2dpV2IHz8TBkzj7/6GBqr1eEPu4u7lsH3F6a9vjVU668NURfLVwLRGWiFvJy7dr1EVDrQeZhh70soVC7Dklgw==}
+    engines: {node: '>=22.0.0'}
 
   '@azure/arm-postgresql-flexible@9.0.0':
     resolution: {integrity: sha512-SGE2uAFAfVv8tgv9I1Ij49M/Q9MSqSVRpF99matu2lDjUAwdrpCcpU1QpTU0eA1lKryrmYGhHGy9ESUGTPzBGg==}
     engines: {node: '>=20.0.0'}
 
-  '@azure/arm-sql@10.0.0':
-    resolution: {integrity: sha512-SwaX0qaSTPCjqPcgLOtGv1kimBal5awetTYkW6KJl/LA6xDhm3IdlAZgWp45Sf+iG6awxawSnb07O4f3toxpdA==}
-    engines: {node: '>=14.0.0'}
+  '@azure/arm-sql@11.0.0':
+    resolution: {integrity: sha512-XuM/fuNfWN8KM30PABKEzSGrTzbauJGroXBrJgeqQ/HtbrYM/OjP0T5GCDFFInJtYrFaN9hKHw1GuYOb6+wyMw==}
+    engines: {node: '>=22.0.0'}
 
   '@azure/core-auth@1.11.0':
     resolution: {integrity: sha512-IUZydyTUkDnYdstOW9pFOOUQlBjAepK5teihDE3x6yxsPJs/hsAaaYpeGxdxrgtOiJbBKSjKW7MDk7AEhb4LRg==}
@@ -268,8 +268,8 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@drunk-pulumi/azure-providers@1.0.16':
-    resolution: {integrity: sha512-mNHl+8DYWEQw2DV1Oneu29H4aC8sdw2bUp43XuAG90dEOhEIf9jl4PClvrYFIb4x/vYm4JsALSkyh5MuGp6kJQ==}
+  '@drunk-pulumi/azure-providers@1.0.17':
+    resolution: {integrity: sha512-pWr1d4UodWl0+djV4Zplc6A54YOnlVOGAVOQoSrifTLPXKTJN9V2ZAde0v09s1Wfw3BCTsOxIUqToQKJ8OJgZw==}
 
   '@epic-web/invariant@1.0.0':
     resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
@@ -488,10 +488,6 @@ packages:
     resolution: {integrity: sha512-XGSsWDweP80Fks16lwkAUIr54ICyBs6PsI4mpfTLQaWgEJRtY9xEV+PeyDpJ+sJEGZxqINlpmAwe/6tS1pP8Ng==}
     engines: {node: '>=10.3.0'}
 
-  '@mattiasbuelens/web-streams-adapter@0.1.0':
-    resolution: {integrity: sha512-oV4PyZfwJNtmFWhvlJLqYIX1Nn22ML8FZpS16ZUKv0hg7414xV1fjsGqxQzLT2dyK92TKxsJSwMOd7VNHAtPmA==}
-    engines: {node: '>= 12'}
-
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -562,8 +558,17 @@ packages:
     resolution: {integrity: sha512-mGUWr1uMnf0le2TwfOZY4SFxZGXGfm4Jtay/nwAa2FLNAKXUoUwaGwBMNH36UHPtinWfTSJ3nqFQr0091CxVGg==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
-  '@openpgp/web-stream-tools@0.0.11':
-    resolution: {integrity: sha512-52NMPRmlXIVajd5dhpDNsG7WJRCdlcS1wXY03OGH1rxm7p6i3QzJvTVyKEAcW0T9KojvLKakV2uTICceELqSMw==}
+  '@openpgp/web-stream-tools@0.3.1':
+    resolution: {integrity: sha512-EV+VQ4Dr8b+JmlGnc74FLgx7EhLyydOr4j6s6Hp+2scQh6sLQMs2h+1oEYUIslXcQPicWKG5ZQx+/dua0dgPWA==}
+    engines: {node: '>= 18.0.0'}
+    peerDependencies:
+      '@types/node': '>=18.0.0'
+      typescript: '>=4.7'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      typescript:
+        optional: true
 
   '@opentelemetry/api-logs@0.220.0':
     resolution: {integrity: sha512-CmVa4ImJ+ynfrPMNaAXHET6Bhb44SwzmfyVJFq9ni2jgXJR/l7C6gfVFddNmHP+ZOkP9cf4f9DBe68qVLTHc9w==}
@@ -2168,10 +2173,6 @@ packages:
     resolution: {integrity: sha512-3hu+tD8YzSLGuFYtPRb48vdhKMi0KQV5sn+uWr8+7dMEq/2G/dtLrdDinkLjqq5TIbIBjYJ4Ax/n3YiaW7QM8A==}
     engines: {node: 20 || >=22}
 
-  web-streams-polyfill@3.0.3:
-    resolution: {integrity: sha512-d2H/t0eqRNM4w2WvmTdoeIvzAUSpK7JmATB8Nr2lb7nQ9BTIJVjbQ/TRFVEh2gUH1HwclPdoPtfMoFfetXaZnA==}
-    engines: {node: '>= 8'}
-
   which-module@2.0.1:
     resolution: {integrity: sha512-iBdZ57RDvnOR9AGBhML2vFZf7h8vmBjhoaZqODJBFWHVtKkDmKuHai3cx5PgVMrX5YDNp27AofYbAwctSS+vhQ==}
 
@@ -2364,14 +2365,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/arm-network@36.0.0':
+  '@azure/arm-network@37.0.0':
     dependencies:
+      '@azure-rest/core-client': 2.8.0
       '@azure/abort-controller': 2.2.0
       '@azure/core-auth': 1.11.0
-      '@azure/core-client': 1.11.0
-      '@azure/core-lro': 2.7.2
-      '@azure/core-paging': 1.7.0
+      '@azure/core-lro': 3.4.0
       '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -2388,14 +2390,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/arm-sql@10.0.0':
+  '@azure/arm-sql@11.0.0':
     dependencies:
-      '@azure/abort-controller': 1.1.0
+      '@azure-rest/core-client': 2.8.0
+      '@azure/abort-controller': 2.2.0
       '@azure/core-auth': 1.11.0
-      '@azure/core-client': 1.11.0
-      '@azure/core-lro': 2.7.2
-      '@azure/core-paging': 1.7.0
+      '@azure/core-lro': 3.4.0
       '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -2569,7 +2572,7 @@ snapshots:
 
   '@babel/compat-data@7.29.7': {}
 
-  '@babel/core@7.29.7':
+  '@babel/core@7.29.7(supports-color@8.1.1)':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.7
@@ -2578,7 +2581,7 @@ snapshots:
       '@babel/helpers': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/template': 7.29.7
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.29.7(supports-color@8.1.1)
       '@babel/types': 7.29.7
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
@@ -2609,17 +2612,17 @@ snapshots:
 
   '@babel/helper-module-imports@7.29.7':
     dependencies:
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.29.7(supports-color@8.1.1)
       '@babel/types': 7.29.7
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-module-transforms@7.29.7(@babel/core@7.29.7)':
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/helper-module-imports': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.29.7(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -2644,7 +2647,7 @@ snapshots:
       '@babel/parser': 7.29.7
       '@babel/types': 7.29.7
 
-  '@babel/traverse@7.29.7':
+  '@babel/traverse@7.29.7(supports-color@8.1.1)':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.7
@@ -2664,8 +2667,9 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+    optional: true
 
-  '@drunk-pulumi/azure-providers@1.0.16(@types/node@26.1.1)':
+  '@drunk-pulumi/azure-providers@1.0.17(@types/node@26.1.1)(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))':
     dependencies:
       '@azure/arm-apimanagement': 10.0.0
       '@azure/arm-cdn': 9.1.0
@@ -2673,25 +2677,23 @@ snapshots:
       '@azure/arm-containerservice': 25.3.0
       '@azure/arm-keyvault': 5.0.0
       '@azure/arm-mysql-flexible': 3.1.0
-      '@azure/arm-network': 36.0.0
+      '@azure/arm-network': 37.0.0
       '@azure/arm-postgresql-flexible': 9.0.0
-      '@azure/arm-sql': 10.0.0
+      '@azure/arm-sql': 11.0.0
       '@azure/identity': 4.13.1
       '@azure/keyvault-certificates': 4.10.3
       '@azure/keyvault-keys': 4.10.2
       '@azure/keyvault-secrets': 4.11.2
-      '@openpgp/web-stream-tools': 0.0.11
+      '@openpgp/web-stream-tools': 0.3.1(@types/node@26.1.1)(typescript@6.0.3)
       '@pulumi/azure-native': 3.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@6.0.3)
       '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@6.0.3)
       node-forge: 1.4.0
-      openpgp: 6.3.1(@openpgp/web-stream-tools@0.0.11)
-      ts-node: 10.9.2(@types/node@26.1.1)(typescript@6.0.3)
+      openpgp: 6.3.1(@openpgp/web-stream-tools@0.3.1(@types/node@26.1.1)(typescript@6.0.3))
       typescript: 6.0.3
     transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
       - '@types/node'
       - supports-color
+      - ts-node
 
   '@epic-web/invariant@1.0.0': {}
 
@@ -2835,12 +2837,11 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+    optional: true
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
   '@logdna/tail-file@2.2.0': {}
-
-  '@mattiasbuelens/web-streams-adapter@0.1.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -2972,10 +2973,10 @@ snapshots:
       node-gyp: 12.4.0
       proc-log: 6.1.0
 
-  '@openpgp/web-stream-tools@0.0.11':
-    dependencies:
-      '@mattiasbuelens/web-streams-adapter': 0.1.0
-      web-streams-polyfill: 3.0.3
+  '@openpgp/web-stream-tools@0.3.1(@types/node@26.1.1)(typescript@6.0.3)':
+    optionalDependencies:
+      '@types/node': 26.1.1
+      typescript: 6.0.3
 
   '@opentelemetry/api-logs@0.220.0':
     dependencies:
@@ -3117,14 +3118,6 @@ snapshots:
 
   '@protobufjs/utf8@1.1.2': {}
 
-  '@pulumi/azure-native@3.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)':
-    dependencies:
-      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
-    transitivePeerDependencies:
-      - supports-color
-      - ts-node
-      - typescript
-
   '@pulumi/azure-native@3.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@6.0.3)':
     dependencies:
       '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@6.0.3)
@@ -3133,46 +3126,21 @@ snapshots:
       - ts-node
       - typescript
 
-  '@pulumi/azuread@6.10.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)':
+  '@pulumi/azure-native@3.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)':
     dependencies:
-      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
       - ts-node
       - typescript
 
-  '@pulumi/pulumi@3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)':
+  '@pulumi/azuread@6.10.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)':
     dependencies:
-      '@grpc/grpc-js': 1.14.4
-      '@logdna/tail-file': 2.2.0
-      '@npmcli/arborist': 9.9.0
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/exporter-trace-otlp-grpc': 0.220.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/exporter-zipkin': 2.9.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation': 0.220.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-grpc': 0.220.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-trace-base': 2.9.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-trace-node': 2.9.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/semantic-conventions': 1.43.0
-      '@types/google-protobuf': 3.15.12
-      '@types/semver': 7.7.1
-      execa: 5.1.1
-      google-protobuf: 3.21.4
-      ini: 2.0.0
-      js-yaml: 4.3.0
-      minimist: 1.2.8
-      normalize-package-data: 6.0.2
-      require-from-string: 2.0.2
-      semver: 7.8.5
-      source-map-support: 0.5.21
-      upath: 1.2.0
-    optionalDependencies:
-      ts-node: 10.9.2(@types/node@26.1.1)(typescript@6.0.3)
-      typescript: 7.0.2
+      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
+      - ts-node
+      - typescript
 
   '@pulumi/pulumi@3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@6.0.3)':
     dependencies:
@@ -3202,22 +3170,55 @@ snapshots:
       source-map-support: 0.5.21
       upath: 1.2.0
     optionalDependencies:
-      ts-node: 10.9.2(@types/node@26.1.1)(typescript@6.0.3)
+      ts-node: 10.9.2(@types/node@26.1.1)(typescript@7.0.2)
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@pulumi/random@4.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)':
+  '@pulumi/pulumi@3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)':
     dependencies:
-      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+      '@grpc/grpc-js': 1.14.4
+      '@logdna/tail-file': 2.2.0
+      '@npmcli/arborist': 9.9.0
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-trace-otlp-grpc': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-zipkin': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-grpc': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-base': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-node': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.43.0
+      '@types/google-protobuf': 3.15.12
+      '@types/semver': 7.7.1
+      execa: 5.1.1
+      google-protobuf: 3.21.4
+      ini: 2.0.0
+      js-yaml: 4.3.0
+      minimist: 1.2.8
+      normalize-package-data: 6.0.2
+      require-from-string: 2.0.2
+      semver: 7.8.5
+      source-map-support: 0.5.21
+      upath: 1.2.0
+    optionalDependencies:
+      ts-node: 10.9.2(@types/node@26.1.1)(typescript@7.0.2)
+      typescript: 7.0.2
+    transitivePeerDependencies:
+      - supports-color
+
+  '@pulumi/random@4.21.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)':
+    dependencies:
+      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
       - ts-node
       - typescript
 
-  '@pulumi/tls@5.5.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)':
+  '@pulumi/tls@5.5.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)':
     dependencies:
-      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3))(typescript@7.0.2)
+      '@pulumi/pulumi': 3.253.0(ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2))(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
       - ts-node
@@ -3257,13 +3258,17 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@tsconfig/node10@1.0.12': {}
+  '@tsconfig/node10@1.0.12':
+    optional: true
 
-  '@tsconfig/node12@1.0.11': {}
+  '@tsconfig/node12@1.0.11':
+    optional: true
 
-  '@tsconfig/node14@1.0.3': {}
+  '@tsconfig/node14@1.0.3':
+    optional: true
 
-  '@tsconfig/node16@1.0.4': {}
+  '@tsconfig/node16@1.0.4':
+    optional: true
 
   '@tufjs/canonical-json@2.0.0': {}
 
@@ -3361,8 +3366,10 @@ snapshots:
   acorn-walk@8.3.5:
     dependencies:
       acorn: 8.17.0
+    optional: true
 
-  acorn@8.17.0: {}
+  acorn@8.17.0:
+    optional: true
 
   agent-base@7.1.4: {}
 
@@ -3387,7 +3394,8 @@ snapshots:
 
   archy@1.0.0: {}
 
-  arg@4.1.3: {}
+  arg@4.1.3:
+    optional: true
 
   argparse@1.0.10:
     dependencies:
@@ -3536,7 +3544,8 @@ snapshots:
       p-filter: 4.1.0
       p-map: 7.0.5
 
-  create-require@1.1.1: {}
+  create-require@1.1.1:
+    optional: true
 
   cross-env@10.1.0:
     dependencies:
@@ -3574,7 +3583,8 @@ snapshots:
 
   define-lazy-prop@3.0.0: {}
 
-  diff@4.0.4: {}
+  diff@4.0.4:
+    optional: true
 
   diff@7.0.0: {}
 
@@ -3854,9 +3864,9 @@ snapshots:
     dependencies:
       append-transform: 2.0.0
 
-  istanbul-lib-instrument@6.0.3:
+  istanbul-lib-instrument@6.0.3(supports-color@8.1.1):
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/parser': 7.29.7
       '@istanbuljs/schema': 0.1.6
       istanbul-lib-coverage: 3.2.2
@@ -3878,7 +3888,7 @@ snapshots:
       make-dir: 4.0.0
       supports-color: 7.2.0
 
-  istanbul-lib-source-maps@4.0.1:
+  istanbul-lib-source-maps@4.0.1(supports-color@8.1.1):
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       istanbul-lib-coverage: 3.2.2
@@ -3999,7 +4009,8 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
-  make-error@1.3.6: {}
+  make-error@1.3.6:
+    optional: true
 
   make-fetch-happen@15.0.6:
     dependencies:
@@ -4184,7 +4195,7 @@ snapshots:
     dependencies:
       path-key: 3.1.1
 
-  nyc@18.0.0:
+  nyc@18.0.0(supports-color@8.1.1):
     dependencies:
       '@istanbuljs/load-nyc-config': 1.1.0
       '@istanbuljs/schema': 0.1.6
@@ -4198,10 +4209,10 @@ snapshots:
       glob: 13.0.6
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-hook: 3.0.0
-      istanbul-lib-instrument: 6.0.3
+      istanbul-lib-instrument: 6.0.3(supports-color@8.1.1)
       istanbul-lib-processinfo: 3.0.1
       istanbul-lib-report: 3.0.1
-      istanbul-lib-source-maps: 4.0.1
+      istanbul-lib-source-maps: 4.0.1(supports-color@8.1.1)
       istanbul-reports: 3.2.0
       make-dir: 3.1.0
       node-preload: 0.2.1
@@ -4227,9 +4238,9 @@ snapshots:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
 
-  openpgp@6.3.1(@openpgp/web-stream-tools@0.0.11):
+  openpgp@6.3.1(@openpgp/web-stream-tools@0.3.1(@types/node@26.1.1)(typescript@6.0.3)):
     optionalDependencies:
-      '@openpgp/web-stream-tools': 0.0.11
+      '@openpgp/web-stream-tools': 0.3.1(@types/node@26.1.1)(typescript@6.0.3)
 
   p-event@6.0.1:
     dependencies:
@@ -4567,7 +4578,7 @@ snapshots:
 
   treeverse@3.0.0: {}
 
-  ts-node@10.9.2(@types/node@26.1.1)(typescript@6.0.3):
+  ts-node@10.9.2(@types/node@26.1.1)(typescript@7.0.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.12
@@ -4581,9 +4592,10 @@ snapshots:
       create-require: 1.1.1
       diff: 4.0.4
       make-error: 1.3.6
-      typescript: 6.0.3
+      typescript: 7.0.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    optional: true
 
   tslib@2.8.1: {}
 
@@ -4648,7 +4660,8 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  v8-compile-cache-lib@3.0.1: {}
+  v8-compile-cache-lib@3.0.1:
+    optional: true
 
   validate-npm-package-license@3.0.4:
     dependencies:
@@ -4658,8 +4671,6 @@ snapshots:
   validate-npm-package-name@7.0.2: {}
 
   walk-up-path@4.0.0: {}
-
-  web-streams-polyfill@3.0.3: {}
 
   which-module@2.0.1: {}
 
@@ -4771,6 +4782,7 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 22.0.0
 
-  yn@3.1.1: {}
+  yn@3.1.1:
+    optional: true
 
   yocto-queue@0.1.0: {}

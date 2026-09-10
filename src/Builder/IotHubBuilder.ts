@@ -167,7 +167,6 @@ class IotHubBuilder
           //ipFilterRules: {},
           // networkRuleSets: {
           //   applyToBuiltInEventHubEndpoint: true,
-          //   defaultAction: 'Deny',
           //   ipRules: [
           //     {
           //       action: 'Allow',

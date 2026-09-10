@@ -1,9 +1,10 @@
 /* eslint  @typescript-eslint/no-explicit-any: "off" */
 import * as authorization from '@pulumi/azure-native/authorization';
 import * as pulumi from '@pulumi/pulumi';
-import { DiagnosticSetting } from '@pulumi/azure-native/aadiam/diagnosticSetting';
+import { DiagnosticSetting } from '@pulumi/azure-native/monitor/diagnosticSetting';
 import { Locker } from './Locker';
-import { OptsArgs, DiagnosticProps } from '../types';
+import { createDiagnostic } from '../Monitor';
+import { OptsArgs } from '../types';
 
 const tryFindName = (props: unknown, isResourceGroup: boolean): string => {
   const rs = props as {
@@ -43,7 +44,11 @@ type ClassOf = new (
 };
 
 export type DefaultCreatorProps = OptsArgs & {
-  monitoring?: Omit<DiagnosticProps, 'name' | 'targetResourceId'>;
+  monitoring?: {
+    logWpId?: pulumi.Input<string>;
+    logsCategories?: string[];
+    metricsCategories?: string[];
+  };
   lock?: boolean;
 };
 
@@ -73,12 +78,17 @@ export default function <
   //Azure DiagnosticSetting
   let diagnostic: DiagnosticSetting | undefined = undefined;
   if (monitoring) {
-    // diagnostic = createDiagnostic({
-    //   name,
-    //   targetResourceId: resource.id,
-    //   ...monitoring,
-    //   dependsOn: resource,
-    // });
+    diagnostic = createDiagnostic(`${name}-diag`, {
+      resourceUri: resource.id,
+      workspaceId: monitoring.logWpId,
+      logs: monitoring.logsCategories?.map((categoryGroup) => ({
+        categoryGroup,
+      })),
+      metrics: monitoring.metricsCategories?.map((category) => ({
+        category,
+      })),
+      dependsOn: resource,
+    });
   }
 
   return { resource, locker, diagnostic };

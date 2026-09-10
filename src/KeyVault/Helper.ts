@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Output, output } from '@pulumi/pulumi';
+import { Output, output, secret } from '@pulumi/pulumi';
 import { KeyVaultInfo, NamedWithVaultType, WithVaultInfo } from '../types';
 import getKeyVaultBase from '@drunk-pulumi/azure-providers/AzBase/KeyVaultBase';
 import { KeyVaultCertificateWithPolicy } from '@azure/keyvault-certificates';
@@ -86,7 +86,7 @@ export const getSecret = async ({
 };
 
 export const getSecretOutput = (props: GetVaultItemProps) =>
-  output(getSecret(props));
+  secret(output(getSecret(props)));
 
 interface GetSecretsType<T extends Record<string, string>>
   extends Required<WithVaultInfo> {
@@ -102,7 +102,7 @@ export const getSecrets = <T extends Record<string, string>>({
   Object.keys(names).forEach((k) => {
     const name = names[k];
     const item = output(getSecret({ name, ...others }));
-    rs[k] = item.apply((i) => i?.value ?? '');
+    rs[k] = secret(item.apply((i) => i?.value ?? ''));
   });
 
   return rs as Record<keyof T, Output<string>>;

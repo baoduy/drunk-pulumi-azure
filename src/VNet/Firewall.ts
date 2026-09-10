@@ -151,9 +151,9 @@ export const create = ({
       resourceUri: firewall.id,
       workspaceId: logInfo.logWp.id,
       logs: [
-        { categoryGroup: 'AzureFirewallApplicationRule', dayRetention: 7 },
-        { categoryGroup: 'AzureFirewallNetworkRule', dayRetention: 7 },
-        { categoryGroup: 'AzureFirewallDnsProxy', dayRetention: 7 },
+        { categoryGroup: 'AzureFirewallApplicationRule' },
+        { categoryGroup: 'AzureFirewallNetworkRule' },
+        { categoryGroup: 'AzureFirewallDnsProxy' },
       ],
       dependsOn: firewall,
     });

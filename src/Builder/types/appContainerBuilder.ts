@@ -1,6 +1,5 @@
 import { BuilderProps, IBuilder } from './genericBuilder';
 import {
-  NetworkPropsType,
   ResourceInfo,
   WithEnvRoles,
   WithLogInfo,

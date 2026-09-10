@@ -2,6 +2,11 @@ import '../_tools/Mocks';
 
 import assert from 'node:assert/strict';
 import creator from '../../Builder/ServiceBusBuilder';
+import { createdResources } from '../_tools/Mocks';
+import { waitForResource } from '../_tools/waitForResource';
+
+const waitForNetworkRuleSet = (before: number) =>
+  waitForResource('azure-native:servicebus:NamespaceNetworkRuleSet', before);
 
 describe('ServiceBus Creator tests', function () {
   this.timeout(5000);
@@ -71,5 +76,59 @@ describe('ServiceBus Creator tests', function () {
       .build();
 
     assert.strictEqual(rs.name, 'teststack-aks-testorganization-sg-bus');
+  });
+
+  describe('NamespaceNetworkRuleSet.defaultAction (PULUMI-SEC-006)', () => {
+    it('defaults to Deny when a subnetId rule is supplied (R2 security fix)', async () => {
+      const before = createdResources.length;
+      creator({ name: 'aks', group })
+        .withSku('Premium')
+        .withNetwork({ subnetId: '/subnet/1' })
+        .build();
+
+      const inputs = await waitForNetworkRuleSet(before);
+      assert.strictEqual(inputs.defaultAction, 'Deny');
+    });
+
+    it('defaults to Deny when an ipAddresses rule is supplied (R2 security fix)', async () => {
+      const before = createdResources.length;
+      creator({ name: 'aks', group })
+        .withSku('Premium')
+        .withNetwork({ ipAddresses: ['1.2.3.4'] })
+        .build();
+
+      const inputs = await waitForNetworkRuleSet(before);
+      assert.strictEqual(inputs.defaultAction, 'Deny');
+    });
+
+    it('stays Allow when network is configured with no rules (R3 regression guard)', async () => {
+      const before = createdResources.length;
+      creator({ name: 'aks', group }).withSku('Premium').withNetwork({}).build();
+
+      const inputs = await waitForNetworkRuleSet(before);
+      assert.strictEqual(inputs.defaultAction, 'Allow');
+    });
+
+    it('stays Allow when ipAddresses is an empty array (empty array is not a rule)', async () => {
+      const before = createdResources.length;
+      creator({ name: 'aks', group })
+        .withSku('Premium')
+        .withNetwork({ ipAddresses: [] })
+        .build();
+
+      const inputs = await waitForNetworkRuleSet(before);
+      assert.strictEqual(inputs.defaultAction, 'Allow');
+    });
+
+    it('an explicit defaultAction overrides the derived value', async () => {
+      const before = createdResources.length;
+      creator({ name: 'aks', group })
+        .withSku('Premium')
+        .withNetwork({ subnetId: '/subnet/1', defaultAction: 'Allow' })
+        .build();
+
+      const inputs = await waitForNetworkRuleSet(before);
+      assert.strictEqual(inputs.defaultAction, 'Allow');
+    });
   });
 });

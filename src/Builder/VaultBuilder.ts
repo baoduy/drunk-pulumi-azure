@@ -54,6 +54,8 @@ export class VaultBuilderResults implements IVaultBuilderResults {
 
   /**
    * Creates a private link for the Key Vault.
+   * This adds a private endpoint to an already-created vault and does NOT close public access;
+   * pass `network.privateLink` to the builder args (VaultBuilderArgs) for that.
    * @param {PrivateLinkPropsType} props - The private link configuration properties.
    * @returns {IVaultBuilderResults} The current VaultBuilderResults instance.
    */

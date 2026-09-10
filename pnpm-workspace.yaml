@@ -1,8 +1,9 @@
 packages:
-- src/*
+  - src/*
 
 allowBuilds:
   esbuild: true
   protobufjs: true
 minimumReleaseAgeExclude:
   - '@pulumi/azure-native@3.21.0'
+  - '@drunk-pulumi/azure-providers@1.0.17'

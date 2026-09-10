@@ -101,6 +101,51 @@ storageBuilder.withPolicies({
 });
 ```
 
+#### Blob data-protection defaults
+
+A `storage.BlobServiceProperties` resource (blob service `default`) is created for **every** storage account this builder makes — it is no longer created only when you pass `policies.blobProperties`. It turns on soft delete for both blobs and containers so an accidental delete is recoverable.
+
+| Setting | Non-production default | Production default |
+|---|---|---|
+| `deleteRetentionPolicy.enabled` (blobs) | `true` | `true` |
+| `deleteRetentionPolicy.days` | `1` | `7` |
+| `containerDeleteRetentionPolicy.enabled` | `true` | `true` |
+| `containerDeleteRetentionPolicy.days` | `1` | `7` |
+| `isVersioningEnabled` | `false` | `false` |
+
+"Production" is the library-wide `isPrd` flag — true when the Pulumi stack name contains `prd` (`src/Common/AzureEnv/index.ts`). No other environment gets the 7-day retention.
+
+**Blob versioning is off by default on purpose.** The builder hard-codes `isHnsEnabled: true` on the storage account (Data Lake Gen2 hierarchical namespace), and Azure does not support blob versioning on hierarchical-namespace accounts — enabling it is rejected at deployment time. Only opt in when you know versioning is valid for the account you are building.
+
+Everything you pass in `policies.blobProperties` is applied **after** the defaults, so any field you set wins field-by-field while the ones you omit keep the default above:
+
+```typescript
+storageBuilder.withPolicies({
+  blobProperties: {
+    // keeps container soft delete at the default, overrides blob soft delete only
+    deleteRetentionPolicy: { enabled: true, days: 30 },
+  },
+});
+```
+
+> **Upgrading an existing stack:** the first `pulumi up` after taking this version will show a new `BlobServiceProperties` resource being created for every storage account, including accounts that never configured `blobProperties`. This is expected — it is a create, not a replacement of the storage account.
+
+#### Deprecated: `policies.isBlobVersioningEnabled`
+
+`StoragePolicyType.isBlobVersioningEnabled` was declared but never read, so setting it had no effect. It is now honoured, and deprecated at the same time — it will be removed in the next major. Move to `blobProperties.isVersioningEnabled`, which is applied last and therefore wins over the old flag:
+
+```typescript
+// before — silently did nothing
+storageBuilder.withPolicies({ isBlobVersioningEnabled: true });
+
+// after
+storageBuilder.withPolicies({
+  blobProperties: { isVersioningEnabled: true },
+});
+```
+
+If you were relying on the old flag, note that it now actually reaches Azure — read the hierarchical-namespace limitation above before keeping it on.
+
 
 
 ### `withNetwork`

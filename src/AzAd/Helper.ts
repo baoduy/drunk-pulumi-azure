@@ -1,7 +1,7 @@
 import { naming } from '../Common';
 import { getSecret } from '../KeyVault/Helper';
 import { IdentityInfo, KeyVaultInfo, WithNamedType } from '../types';
-import { output } from '@pulumi/pulumi';
+import { output, secret } from '@pulumi/pulumi';
 
 interface Props extends WithNamedType {
   includePrincipal?: boolean;
@@ -56,7 +56,7 @@ export const getIdentityInfo = async ({
 };
 
 export const getIdentityInfoOutput = (props: Props) =>
-  output<IdentityInfoResults>(getIdentityInfo(props));
+  secret(output<IdentityInfoResults>(getIdentityInfo(props)));
 
 export const getUserAssignedIdentityInfo = (
   name: string,
