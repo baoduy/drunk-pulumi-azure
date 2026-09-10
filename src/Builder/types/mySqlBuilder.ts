@@ -1,4 +1,4 @@
-import { BuilderProps, IBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
 import {
   LoginArgs,
   NetworkPropsType,
@@ -38,8 +38,9 @@ export type MySqlSkuBuilderType = {
 
 /**
  * Properties for configuring the network settings of a MySQL server.
+ * Firewall rules are deny-by-default; there is no rule-set defaultAction.
  */
-export type MySqlNetworkBuilderType = NetworkPropsType & {
+export type MySqlNetworkBuilderType = Omit<NetworkPropsType, 'defaultAction'> & {
   allowsPublicAccess?: Input<boolean>;
 };
 
@@ -88,7 +89,8 @@ export interface IMySqlLoginBuilder {
 /**
  * Interface for building a MySQL server.
  */
-export interface IMySqlBuilder extends IBuilder<ResourceInfo> {
+export interface IMySqlBuilder
+  extends IBuilder<ResourceInfo>, ILockable<IMySqlBuilder> {
   /**
    * Method to set network properties for the MySQL server.
    * @param props - Properties for the network configuration.

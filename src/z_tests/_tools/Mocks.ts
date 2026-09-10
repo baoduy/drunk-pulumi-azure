@@ -21,6 +21,23 @@ const tryFindName = (props: any) => {
   return name;
 };
 
+// Captures every resource's construction inputs, keyed by Pulumi type token,
+// so tests can inspect args passed to resources a builder never returns
+// (e.g. ServiceBusBuilder/AcrBuilder keep their network rule-set/registry
+// instances private). This list is never cleared between test files sharing
+// the process, so tests should record `createdResources.length` as a
+// watermark before acting, then slice from it and find the first match —
+// isolating the search to resources created by that test alone.
+// `id` mirrors MockResourceArgs.id — the physical id of an existing resource
+// to import, i.e. the `import` ResourceOption a builder passed — undefined
+// when the resource wasn't constructed with `import`.
+export const createdResources: Array<{
+  type: string;
+  name: string;
+  inputs: any;
+  id?: string;
+}> = [];
+
 export default pulumi.runtime.setMocks(
   {
     newResource: (
@@ -31,6 +48,7 @@ export default pulumi.runtime.setMocks(
       state: any;
     } => {
       const name = tryFindName(args.inputs) ?? args.name;
+      createdResources.push({ type: args.type, name, inputs: args.inputs, id: args.id });
 
       return {
         id: `/subscriptions/12345/resourceGroups/resr-group/providers/${name}`,
@@ -42,7 +60,9 @@ export default pulumi.runtime.setMocks(
             ? { result: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
             : name.endsWith("ssh")
               ? { publicKey: "1234567890", privateKey: "1234567890" }
-              : {}),
+              : args.type.includes("operationalinsights") && args.type.includes("Workspace")
+                ? { customerId: "5c1c5657-085b-41c8-8d11-de897e70eae7" }
+                : {}),
         },
       };
     },
@@ -51,6 +71,18 @@ export default pulumi.runtime.setMocks(
         return {
           id: "00000000-0000-0000-0000-000000000000",
           display_name: "subscription",
+        };
+      if (args.token === "azure-native:storage:listStorageAccountKeys")
+        return {
+          keys: [
+            { keyName: "key1", value: "key1-value" },
+            { keyName: "key2", value: "key2-value" },
+          ],
+        };
+      if (args.token === "azure-native:operationalinsights:getSharedKeys")
+        return {
+          primarySharedKey: "log-primary-key",
+          secondarySharedKey: "log-secondary-key",
         };
       return args.inputs;
     },

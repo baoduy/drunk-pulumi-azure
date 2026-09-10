@@ -3,11 +3,13 @@ import {
   IRedisCacheBuilder,
   IRedisCacheSkuBuilder,
   RedisCacheBuilderArgs,
+  RedisCacheNetworkType,
   RedisCacheSkuBuilder,
 } from './types';
 import env from '../env';
-import { NetworkPropsType, ResourceInfo } from '../types';
+import { ResourceInfo } from '../types';
 import { isPrd, naming } from '../Common';
+import { Locker } from '../Core/Locker';
 import * as cache from '@pulumi/azure-native/redis';
 import * as pulumi from '@pulumi/pulumi';
 import { convertToIpRange } from '../VNet/Helper';
@@ -26,8 +28,9 @@ class RedisCacheBuilder
     family: 'C',
     capacity: 0,
   };
-  private _network: NetworkPropsType | undefined = undefined;
+  private _network: RedisCacheNetworkType | undefined = undefined;
   private _redisInstance: cache.Redis | undefined = undefined;
+  private _lock: boolean = isPrd;
 
   constructor(private args: RedisCacheBuilderArgs) {
     super(args);
@@ -38,15 +41,19 @@ class RedisCacheBuilder
     this._sku = props;
     return this;
   }
-  public withNetwork(props: NetworkPropsType): IRedisCacheBuilder {
+  public withNetwork(props: RedisCacheNetworkType): IRedisCacheBuilder {
     this._network = props;
     return this;
   }
   public withNetworkIf(
     condition: boolean,
-    props: NetworkPropsType
+    props: RedisCacheNetworkType
   ): IRedisCacheBuilder {
     if (condition) this.withNetwork(props);
+    return this;
+  }
+  public lock(lock: boolean = true): IRedisCacheBuilder {
+    this._lock = lock;
     return this;
   }
   private buildRedis() {
@@ -67,8 +74,12 @@ class RedisCacheBuilder
           ? 'Disabled'
           : 'Enabled',
       },
-      { dependsOn, import: importUri, ignoreChanges }
+      { dependsOn, import: importUri, ignoreChanges, protect: this._lock }
     );
+
+    if (this._lock) {
+      Locker({ name: this._instanceName, resource: this._redisInstance });
+    }
   }
   private buildNetwork() {
     //Whitelist IpAddress

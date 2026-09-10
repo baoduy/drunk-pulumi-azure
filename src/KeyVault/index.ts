@@ -1,7 +1,6 @@
 import * as keyvault from '@pulumi/azure-native/keyvault';
-import { enums } from '@pulumi/azure-native/types';
 import { Input } from '@pulumi/pulumi';
-import { naming, tenantId } from '../Common';
+import { getNetworkDefaultAction, naming, tenantId } from '../Common';
 import { BasicResourceArgs, NetworkPropsType } from '../types';
 import { VaultPrivateLink } from '../VNet';
 
@@ -38,6 +37,7 @@ export default ({
   ...others
 }: KeyVaultProps) => {
   const vaultName = naming.getKeyVaultName(name);
+  const hasRules = Boolean(network?.ipAddresses?.length || network?.subnetId);
 
   const vault = new keyvault.Vault(
     vaultName,
@@ -62,9 +62,14 @@ export default ({
         enabledForDiskEncryption: true,
         enabledForTemplateDeployment: true,
 
+        publicNetworkAccess: network?.privateLink ? 'Disabled' : 'Enabled',
+
         networkAcls: {
           bypass: 'AzureServices',
-          defaultAction: enums.keyvault.NetworkRuleAction.Allow,
+          defaultAction: getNetworkDefaultAction(
+            hasRules,
+            network?.defaultAction
+          ),
 
           ipRules: network?.ipAddresses
             ? network.ipAddresses.map((i) => ({ value: i }))

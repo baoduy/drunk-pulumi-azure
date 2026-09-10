@@ -2,6 +2,18 @@
 
 Welcome to the developer reference documentation. Below you will find links to various builder guides and their summaries.
 
+## [AFDBuilder Documentation](./builders/AFDBuilder.md)
+
+### Overview
+The `AFDBuilder` class provides a fluent API for creating and configuring Azure Front Door (Standard/Premium) profiles. It is the builder to use for any Front Door scenario.
+
+### Key Sections
+- **Constructor**: Initializes the `AFDBuilder` with the provided arguments.
+- **Methods**: Various methods to configure the SKU, endpoints, custom domains, and response headers.
+- **Full Example**: Demonstrates how to use the `AFDBuilder` class.
+
+For more details, refer to the full documentation [here](./builders/AFDBuilder.md).
+
 ## [AcrBuilder Usage Guide](./builders/AcrBuilder.md)
 
 ### Overview

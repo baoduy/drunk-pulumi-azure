@@ -1,4 +1,4 @@
-import { BuilderProps, IBuilder } from './genericBuilder';
+import { BuilderProps, IBuilder, ILockable } from './genericBuilder';
 import {
   LoginArgs,
   NetworkPropsType,
@@ -39,8 +39,9 @@ export type PostgreSqlSkuBuilderType = {
 
 /**
  * Type for defining network properties for a PostgreSQL server.
+ * Firewall rules are deny-by-default; there is no rule-set defaultAction.
  */
-export type PostgreSqlNetworkBuilderType = NetworkPropsType & {
+export type PostgreSqlNetworkBuilderType = Omit<NetworkPropsType, 'defaultAction'> & {
   /**
    * Whether the server allows public access.
    */
@@ -62,6 +63,20 @@ export type PostgreSqlOptionsBuilderType = {
     dayOfWeek: Input<number>;
     startHour: Input<number>;
     startMinute: Input<number>;
+  };
+  /**
+   * Authentication configuration for the PostgreSQL server.
+   */
+  authConfig?: {
+    /**
+     * Whether password authentication is enabled. Default: 'Enabled'.
+     */
+    passwordAuth?: 'Enabled' | 'Disabled';
+    /**
+     * Whether Microsoft Entra (Azure AD) authentication is enabled.
+     * Default: 'Enabled' when `envRoles` is provided, otherwise 'Disabled'.
+     */
+    activeDirectoryAuth?: 'Enabled' | 'Disabled';
   };
 };
 
@@ -98,7 +113,8 @@ export interface IPostgreSqlLoginBuilder {
 /**
  * Interface for building a PostgreSQL server.
  */
-export interface IPostgreSqlBuilder extends IBuilder<ResourceInfo> {
+export interface IPostgreSqlBuilder
+  extends IBuilder<ResourceInfo>, ILockable<IPostgreSqlBuilder> {
   /**
    * Sets the network properties for the PostgreSQL server.
    * @param props - The network properties.

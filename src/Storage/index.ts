@@ -2,12 +2,13 @@ import * as storage from '@pulumi/azure-native/storage';
 import env from '../env';
 import {
   BasicEncryptResourceArgs,
+  NetworkRuleDefaultActionType,
   PrivateLinkPropsType,
   ResourceInfoWithInstance,
 } from '../types';
 import { Input } from '@pulumi/pulumi';
 import { addEncryptKey, addCustomSecrets } from '../KeyVault';
-import { isPrd, naming } from '../Common';
+import { getNetworkDefaultAction, isPrd, naming } from '../Common';
 import { Locker } from '../Core/Locker';
 import { StoragePrivateLink } from '../VNet';
 import { createManagementRules, ManagementRules } from './ManagementRules';
@@ -30,6 +31,11 @@ export type StorageFeatureType = {
 
 export type StoragePolicyType = {
   keyExpirationPeriodInDays?: number;
+  /**
+   * @deprecated Superseded by `blobProperties.isVersioningEnabled`. Will be removed in the
+   * next major. Blob versioning is unsupported on hierarchical-namespace accounts, which is
+   * every account this builder creates (`isHnsEnabled: true`).
+   */
   isBlobVersioningEnabled?: boolean;
   blobProperties?: Omit<
     storage.BlobServicePropertiesArgs,
@@ -53,6 +59,8 @@ export type StorageNetworkType = {
   privateEndpoint?: Omit<PrivateLinkPropsType, 'type'> & {
     type: StorageEndpointTypes | StorageEndpointTypes[];
   };
+  /** Rule-set default action. Omitted → 'Deny' when any subnetId/ipAddresses rule is supplied, otherwise 'Allow'. */
+  defaultAction?: NetworkRuleDefaultActionType;
 };
 
 interface StorageProps extends BasicEncryptResourceArgs {
@@ -85,11 +93,27 @@ function Storage({
 }: StorageProps): ResourceInfoWithInstance<storage.StorageAccount> {
   name = naming.getStorageName(name);
   const publicNetworkAccess = network?.privateEndpoint ? 'Disabled' : 'Enabled';
+  const virtualNetworkRules = network?.vnet
+    ? network.vnet
+        .filter((v) => v.subnetId)
+        .map((v) => ({
+          virtualNetworkResourceId: v.subnetId!,
+        }))
+    : undefined;
+  const ipRules = network?.vnet
+    ? network.vnet
+        .filter((v) => v.ipAddresses?.length)
+        .flatMap((s) => s.ipAddresses)
+        .map((i) => ({
+          iPAddressOrRange: i!,
+          action: 'Allow' as const,
+        }))
+    : undefined;
   const encryptionKey = enableEncryption
     ? addEncryptKey(name, vaultInfo!)
     : undefined;
   const allowSharedKeyAccess =
-    features.allowSharedKeyAccess || features.enableStaticWebsite;
+    features.allowSharedKeyAccess ?? features.enableStaticWebsite ?? false;
 
   //To fix identity issue then using this approach https://github.com/pulumi/pulumi-azure-native/blob/master/examples/keyvault/index.ts
   const stg = new storage.StorageAccount(
@@ -176,25 +200,14 @@ function Storage({
       publicNetworkAccess,
       networkRuleSet: {
         bypass: network?.defaultByPass ?? 'AzureServices', // Logging,Metrics,AzureServices or None
-        defaultAction: 'Allow',
+        defaultAction: getNetworkDefaultAction(
+          Boolean(virtualNetworkRules?.length || ipRules?.length),
+          network?.defaultAction
+        ),
 
-        virtualNetworkRules: network?.vnet
-          ? network.vnet
-              .filter((v) => v.subnetId)
-              .map((v) => ({
-                virtualNetworkResourceId: v.subnetId!,
-              }))
-          : undefined,
+        virtualNetworkRules,
 
-        ipRules: network?.vnet
-          ? network.vnet
-              .filter((v) => v.ipAddresses)
-              .flatMap((s) => s.ipAddresses)
-              .map((i) => ({
-                iPAddressOrRange: i!,
-                action: 'Allow',
-              }))
-          : undefined,
+        ipRules,
       },
     },
     {
@@ -228,19 +241,22 @@ function Storage({
     );
   }
 
-  //Life Cycle Management
-  const props = policies?.blobProperties
-    ? new storage.BlobServiceProperties(
-        name,
-        {
-          ...group,
-          accountName: stg.name,
-          blobServicesName: 'default',
-          ...policies.blobProperties,
-        },
-        { dependsOn: stg }
-      )
-    : undefined;
+  //Blob data protection + Life Cycle Management
+  const props = new storage.BlobServiceProperties(
+    name,
+    {
+      ...group,
+      accountName: stg.name,
+      blobServicesName: 'default',
+      deleteRetentionPolicy: { enabled: true, days: isPrd ? 7 : 1 },
+      containerDeleteRetentionPolicy: { enabled: true, days: isPrd ? 7 : 1 },
+      // Blob versioning is unsupported on hierarchical-namespace accounts and this
+      // builder always sets isHnsEnabled: true — off unless the caller opts in.
+      isVersioningEnabled: policies?.isBlobVersioningEnabled ?? false,
+      ...policies?.blobProperties,
+    },
+    { dependsOn: stg }
+  );
 
   if (policies?.defaultManagementRules) {
     createManagementRules({

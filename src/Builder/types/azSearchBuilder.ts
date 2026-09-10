@@ -8,7 +8,8 @@ import * as search from '@pulumi/azure-native/search';
 import { Input } from '@pulumi/pulumi';
 
 export type AzSearchBuilderArgs = BuilderProps & WithEncryptionInfo;
-export type AzSearchNetworkType = NetworkPropsType & {
+/** Azure Search's networkRuleSet has no defaultAction member; restriction is expressed via publicNetworkAccess. */
+export type AzSearchNetworkType = Omit<NetworkPropsType, 'defaultAction'> & {
   disableLocalAuth?: Input<boolean>;
 };
 
