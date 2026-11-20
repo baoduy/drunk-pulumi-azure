@@ -19,6 +19,45 @@ import { SqlPrivateLink } from '../VNet';
 import sqlDbCreator from './SqlDb';
 
 type ElasticPoolCapacityProps = 50 | 100 | 200 | 300 | 400 | 800 | 1200;
+type PremiumElasticPoolCapacityProps =
+  | 125
+  | 250
+  | 500
+  | 1000
+  | 1500
+  | 2000
+  | 2500
+  | 3000
+  | 3500
+  | 4000;
+
+type ElasticPoolSkuProps =
+  | { name: 'Basic' | 'Standard'; capacity: ElasticPoolCapacityProps }
+  | { name: 'Premium'; capacity: PremiumElasticPoolCapacityProps };
+
+/** Highest eDTU one database may use in a Premium pool of the given size. */
+const premiumPerDatabaseMaxCapacity: Record<
+  PremiumElasticPoolCapacityProps,
+  number
+> = {
+  125: 125,
+  250: 250,
+  500: 500,
+  1000: 1000,
+  1500: 1000,
+  2000: 1750,
+  2500: 1750,
+  3000: 1750,
+  3500: 1750,
+  4000: 4000,
+};
+
+const getPerDatabaseMaxCapacity = (sku: ElasticPoolSkuProps): number => {
+  if (sku.name === 'Basic') return 5;
+  if (sku.name === 'Premium')
+    return premiumPerDatabaseMaxCapacity[sku.capacity];
+  return sku.capacity;
+};
 
 interface ElasticPoolProps extends BasicResourceArgs {
   sqlName: Output<string>;
@@ -27,7 +66,7 @@ interface ElasticPoolProps extends BasicResourceArgs {
   preferredEnclaveType?:
     | sql.AlwaysEncryptedEnclaveType
     | string;
-  sku?: { name: 'Standard' | 'Basic'; capacity: ElasticPoolCapacityProps };
+  sku?: ElasticPoolSkuProps;
 }
 
 const createElasticPool = ({
@@ -61,11 +100,12 @@ const createElasticPool = ({
       },
       perDatabaseSettings: {
         minCapacity: 0,
-        maxCapacity: sku.name === 'Basic' ? 5 : sku.capacity,
+        maxCapacity: getPerDatabaseMaxCapacity(sku),
       },
       preferredEnclaveType,
       //licenseType: sql.ElasticPoolLicenseType.BasePrice,
-      //zoneRedundant: isPrd,
+      // Only Premium pools in PRD are zone-redundant; elsewhere the key stays absent.
+      ...(isPrd && sku.name === 'Premium' ? { zoneRedundant: true } : {}),
     },
     { dependsOn },
   );
@@ -83,9 +123,11 @@ export type SqlNetworkType = NetworkPropsType & {
   acceptAllPublicConnect?: boolean;
 };
 
-export type SqlElasticPoolType = {
-  name: 'Standard' | 'Basic';
-  capacity: ElasticPoolCapacityProps;
+/**
+ * DTU elastic pool. Premium pools are zone-redundant in PRD and cap each
+ * database at the Azure per-database limit for the pool size.
+ */
+export type SqlElasticPoolType = ElasticPoolSkuProps & {
   maxSizeBytesGb?: 50 | number;
 };
 

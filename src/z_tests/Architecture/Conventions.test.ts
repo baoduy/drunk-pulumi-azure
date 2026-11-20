@@ -77,10 +77,7 @@ describe('Architecture — Pulumi conventions', () => {
     const destructuresImportUri = /(?:^|[{,])\s*importUri\s*(?:,|\}|=)/m;
     const passesImportUri = /import:\s*importUri/;
 
-    const knownViolations = [
-      // DRK-1045 [A1037-8] — LogAnalytics accepts importUri and drops it.
-      'src/Logs/LogAnalytics.ts',
-    ];
+    const knownViolations: string[] = [];
 
     const offenders = productionFiles()
       .filter((f) => {
