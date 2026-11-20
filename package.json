@@ -31,9 +31,11 @@
     "export": "pulumi stack export --file state.json",
     "import": "pulumi stack import --file state.json",
     "test-leak": "cross-env PULUMI_DEBUG_PROMISE_LEAKS=true NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' mocha --timeout 10000 'src/z_tests/**/*.ts'",
-    "test": "cross-env NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' mocha --timeout 10000 'src/z_tests/**/*.test.ts'",
+    "test": "pnpm run test:main; main=$?; pnpm run test:prd; prd=$?; [ $main -eq 0 ] && [ $prd -eq 0 ]",
+    "test:main": "cross-env NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' mocha --timeout 10000 'src/z_tests/**/*.test.ts' --ignore 'src/z_tests/**/*.prd.test.ts'",
+    "test:prd": "cross-env PULUMI_NODEJS_STACK=teststack-prd NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' mocha --timeout 10000 'src/z_tests/**/*.prd.test.ts'",
     "testcert": "cross-env NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' mocha --timeout 10000 '**/*.ts'",
-    "test-cover": "cross-env NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' nyc mocha --timeout 10000 'src/z_tests/**/*.ts'"
+    "test-cover": "cross-env NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' nyc mocha --timeout 10000 'src/z_tests/**/*.ts' --ignore 'src/z_tests/**/*.prd.test.ts'; main=$?; cross-env PULUMI_NODEJS_STACK=teststack-prd NODE_OPTIONS='--import tsx' TSX_TSCONFIG_PATH='./tsconfig.test.json' nyc --no-clean mocha --timeout 10000 'src/z_tests/**/*.prd.test.ts'; prd=$?; [ $main -eq 0 ] && [ $prd -eq 0 ]"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
