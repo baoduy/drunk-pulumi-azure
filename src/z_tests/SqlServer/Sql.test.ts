@@ -2,6 +2,8 @@ import '../_tools/Mocks';
 
 import assert from 'node:assert/strict';
 import creator from '../../Sql';
+import { createdResources } from '../_tools/Mocks';
+import { waitForResource } from '../_tools/waitForResource';
 
 describe('Sql Creator tests', () => {
   it('Sql Creator', () => {
@@ -41,5 +43,31 @@ describe('Sql Creator tests', () => {
     assert.notStrictEqual(rs.databases, undefined);
 
     assert.strictEqual(rs.databases!.hello.name, 'teststack-hello-sg-db');
+  });
+
+  it('sizes the elastic pool from maxSizeBytesGb and opens one firewall rule per allowed IP', async () => {
+    const before = createdResources.length;
+    const rs = creator({
+      name: 'sqlfw',
+      group: { resourceGroupName: 'RG' },
+      network: { ipAddresses: ['10.0.0.1'] },
+      elasticPool: { name: 'Standard', capacity: 100, maxSizeBytesGb: 50 },
+      auth: { adminLogin: '123', password: '123' },
+    });
+
+    const pool = await waitForResource(
+      'azure-native:sql:ElasticPool',
+      before,
+      (i) => i.elasticPoolName === rs.elasticPool!.name,
+    );
+    assert.strictEqual(pool.maxSizeBytes, 53687091200);
+
+    const rule = await waitForResource(
+      'azure-native:sql:FirewallRule',
+      before,
+      (i) => i.firewallRuleName === 'teststack-sqlfw-sg-fwRule-0',
+    );
+    assert.strictEqual(rule.startIpAddress, '10.0.0.1');
+    assert.strictEqual(rule.endIpAddress, '10.0.0.1');
   });
 });

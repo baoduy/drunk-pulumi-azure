@@ -202,7 +202,7 @@ class PostgreSqlBuilder
         },
 
         backup: {
-          geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
+          geoRedundantBackup: 'Disabled',
           backupRetentionDays: isPrd ? 30 : 7,
         },
 
