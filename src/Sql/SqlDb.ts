@@ -21,13 +21,13 @@ export type SqlDbSku =
   | 'P11';
 
 /** Standalone SKUs that get zone redundancy in PRD. */
-const zoneRedundantSkus: ReadonlyArray<SqlDbSku> = [
+const zoneRedundantSkus: ReadonlySet<SqlDbSku> = new Set<SqlDbSku>([
   'P1',
   'P2',
   'P4',
   'P6',
   'P11',
-];
+]);
 
 export interface SqlDbProps extends BasicResourceArgs, WithLockable {
   sqlServerName: Input<string>;
@@ -70,7 +70,7 @@ export default ({
 
   // Pooled databases follow their pool; only standalone Premium databases
   // in PRD are zone-redundant. Elsewhere the key stays absent.
-  if (isPrd && !elasticPoolId && zoneRedundantSkus.includes(sku)) {
+  if (isPrd && !elasticPoolId && zoneRedundantSkus.has(sku)) {
     dbProps.zoneRedundant = true;
   }
 
