@@ -5,9 +5,17 @@ import { createdResources } from './Mocks';
 // that resource's inputs can depend on an Output off another resource, so
 // its mock registration lands a few microtask hops after build() returns —
 // poll the shared capture list instead of asserting synchronously.
-export const waitForResource = async (type: string, before: number) => {
+// `match` narrows the search to one resource by its inputs, for tests whose
+// resources of the same type land late (after the next test's watermark).
+export const waitForResource = async (
+  type: string,
+  before: number,
+  match: (inputs: any) => boolean = () => true,
+) => {
   for (let i = 0; i < 50; i++) {
-    const found = createdResources.slice(before).find((r) => r.type === type);
+    const found = createdResources
+      .slice(before)
+      .find((r) => r.type === type && match(r.inputs));
     if (found) return found.inputs;
     await new Promise((resolve) => setImmediate(resolve));
   }

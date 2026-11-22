@@ -158,7 +158,7 @@ class MySqlBuilder
         },
 
         backup: {
-          geoRedundantBackup: isPrd ? 'Enabled' : 'Disabled',
+          geoRedundantBackup: 'Disabled',
           backupRetentionDays: isPrd ? 7 : 1,
         },
         highAvailability: {
